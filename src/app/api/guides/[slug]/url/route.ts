@@ -24,9 +24,9 @@ export async function GET(
     if (!guide.preview_path) {
       return NextResponse.json({ error: 'Preview not available yet' }, { status: 404 })
     }
-    const url = await signedUrlForBucket(PREVIEWS_BUCKET, guide.preview_path, 300)
-    if (!url) return NextResponse.json({ error: 'Preview unavailable' }, { status: 500 })
-    return NextResponse.json({ url })
+    const result = await signedUrlForBucket(PREVIEWS_BUCKET, guide.preview_path, 300)
+    if (!result.url) return NextResponse.json({ error: result.error ?? 'Preview unavailable' }, { status: 500 })
+    return NextResponse.json({ url: result.url })
   }
 
   if (kind !== 'full' && kind !== 'download') {
@@ -63,15 +63,22 @@ export async function GET(
     return NextResponse.json({ error: 'Full guide not uploaded yet' }, { status: 404 })
   }
 
-  const url = await signedUrlForBucket(FULL_BUCKET, guide.full_path, 300)
-  if (!url) return NextResponse.json({ error: 'Could not generate URL' }, { status: 500 })
-  return NextResponse.json({ url })
+  const result = await signedUrlForBucket(FULL_BUCKET, guide.full_path, 300)
+  if (!result.url) {
+    return NextResponse.json(
+      { error: result.error ?? 'Could not generate URL', bucket: FULL_BUCKET, path: guide.full_path },
+      { status: 500 },
+    )
+  }
+  return NextResponse.json({ url: result.url })
 }
 
-async function signedUrlForBucket(bucket: string, path: string, expiresSeconds: number): Promise<string | null> {
+type SignedUrlResult = { url: string | null; error?: string }
+
+async function signedUrlForBucket(bucket: string, path: string, expiresSeconds: number): Promise<SignedUrlResult> {
   // Service role bypasses RLS and works whether the bucket is public or private.
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!serviceKey) return null
+  if (!serviceKey) return { url: null, error: 'SUPABASE_SERVICE_ROLE_KEY not set as a Worker secret' }
   const cookieStore = await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -84,6 +91,8 @@ async function signedUrlForBucket(bucket: string, path: string, expiresSeconds: 
     },
   )
   const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, expiresSeconds)
-  if (error || !data) return null
-  return data.signedUrl
+  if (error || !data) {
+    return { url: null, error: error?.message ?? 'Unknown storage error' }
+  }
+  return { url: data.signedUrl }
 }

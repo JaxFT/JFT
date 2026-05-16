@@ -37,6 +37,7 @@ const RECOMMENDED: RecommendedSite[] = [
     blurb: 'Project-based learning and a global community of travelling families. Curriculum that meets kids where they are and gives them real challenges to work on alongside other worldschoolers.',
     cta: 'Visit Future Explorers Club',
     icon: GraduationCap,
+    image: '/images/learning/future-explorers-club.png',
   },
   {
     name: 'Tuition-Up',
@@ -45,6 +46,7 @@ const RECOMMENDED: RecommendedSite[] = [
     blurb: 'Live, one-to-one online tuition that works around your family\'s schedule — handy whether you\'re full worldschooling, supplementing local school, or keeping skills sharp during a gap.',
     cta: 'Visit Tuition-Up',
     icon: GraduationCap,
+    image: '/images/learning/tuition-up.png',
   },
   {
     name: 'Worldschooling Club',
@@ -53,6 +55,7 @@ const RECOMMENDED: RecommendedSite[] = [
     blurb: 'A community of families travelling and worldschooling together — meet-ups, advice, and shared experience. Apply via the form to join.',
     cta: 'Apply to join',
     icon: Users,
+    image: '/images/learning/Worldschooling-club.png',
   },
 ]
 

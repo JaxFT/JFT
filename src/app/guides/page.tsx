@@ -39,34 +39,49 @@ export default async function GuidesPage() {
             <p>No guides yet — check back soon.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {guides.map(guide => (
               <Link
                 key={guide.slug}
                 href={`/guides/${guide.slug}`}
-                className="group bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md hover:border-brand-200 transition-all"
+                className="group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all aspect-[3/4] block"
               >
-                {/* Cover */}
-                <div className="h-48 bg-gradient-to-br from-brand-100 via-brand-50 to-brand-200 flex items-center justify-center relative overflow-hidden">
-                  {guide.cover_image ? (
-                    <img src={guide.cover_image} alt={guide.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <Map className="w-14 h-14 text-brand-400" />
-                  )}
-                </div>
-                <div className="p-5 flex flex-col flex-1">
-                  <div className="flex flex-wrap gap-1.5 mb-3">
-                    {guide.tags.slice(0, 3).map(tag => (
-                      <span key={tag} className="text-xs font-semibold text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">{tag}</span>
+                {/* Full-card cover image */}
+                {guide.cover_image ? (
+                  <img
+                    src={guide.cover_image}
+                    alt={guide.name}
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-brand-200 via-brand-300 to-brand-500 flex items-center justify-center">
+                    <Map className="w-16 h-16 text-brand-800" />
+                  </div>
+                )}
+
+                {/* Tags floating top-left */}
+                {guide.tags.length > 0 && (
+                  <div className="absolute top-4 left-4 flex flex-wrap gap-1.5 max-w-[calc(100%-2rem)]">
+                    {guide.tags.slice(0, 2).map(tag => (
+                      <span
+                        key={tag}
+                        className="text-xs font-semibold text-white bg-black/45 backdrop-blur-sm px-2.5 py-1 rounded-full"
+                      >
+                        {tag}
+                      </span>
                     ))}
                   </div>
-                  <h3 className="font-bold text-gray-900 mb-1 leading-snug">{guide.name}</h3>
+                )}
+
+                {/* Opaque bottom panel — sits over the image */}
+                <div className="absolute inset-x-0 bottom-0 bg-brand-950/85 backdrop-blur-sm text-white p-5">
+                  <h3 className="font-bold leading-snug mb-1 line-clamp-2">{guide.name}</h3>
                   {guide.subtitle && (
-                    <p className="text-sm text-gray-500 leading-relaxed flex-1 line-clamp-3">{guide.subtitle}</p>
+                    <p className="text-sm text-white/70 leading-snug line-clamp-2 mb-3">{guide.subtitle}</p>
                   )}
-                  <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
-                    <span className="font-bold text-gray-900">{formatPrice(guide.price_pence)}</span>
-                    <span className="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 group-hover:gap-2 transition-all">
+                  <div className="flex items-center justify-between pt-3 border-t border-white/15">
+                    <span className="font-bold text-base">{formatPrice(guide.price_pence)}</span>
+                    <span className="inline-flex items-center gap-1 text-sm font-semibold text-brand-200 group-hover:gap-2 transition-all">
                       View <ArrowRight className="w-3.5 h-3.5" />
                     </span>
                   </div>

@@ -10,7 +10,26 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
-const RECOMMENDED = [
+type RecommendedSite = {
+  name: string
+  url: string
+  eyebrow: string
+  blurb: string
+  cta: string
+  icon: typeof GraduationCap
+  image?: string
+}
+
+const RECOMMENDED: RecommendedSite[] = [
+  {
+    name: 'Doodle Learning',
+    url: 'https://doodlelearning.com',
+    eyebrow: 'Maths & English app',
+    blurb: 'Adaptive maths and English for kids 4–14, on phone or tablet. Used in UK schools and brilliant on the road — short daily sessions, works offline, and the levelling keeps it appropriate without a parent hovering.',
+    cta: 'Visit Doodle Learning',
+    icon: GraduationCap,
+    image: '/images/learning/doodle-learning.png',
+  },
   {
     name: 'Tuition-Up',
     url: 'https://tuition-up.com',
@@ -57,26 +76,37 @@ export default async function LearningPage() {
         {/* RECOMMENDED SITES (public) */}
         <section className="mb-16">
           <p className="text-xs font-bold tracking-widest uppercase text-gray-500 mb-5">Recommended sites</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {RECOMMENDED.map(item => (
               <a
                 key={item.url}
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-brand-200 transition-all p-6 flex flex-col"
+                className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-brand-200 transition-all overflow-hidden flex flex-col"
               >
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center group-hover:bg-brand-700 transition-colors">
-                    <item.icon className="w-5 h-5 text-white" />
-                  </div>
-                  <p className="text-xs font-bold tracking-widest uppercase text-brand-600">{item.eyebrow}</p>
+                {/* Top: image if provided, else gradient + icon */}
+                <div className="aspect-[4/3] bg-gradient-to-br from-brand-100 via-brand-50 to-brand-200 relative overflow-hidden">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <item.icon className="w-14 h-14 text-brand-700" />
+                    </div>
+                  )}
                 </div>
-                <h2 className="text-xl font-bold text-gray-900 mb-2">{item.name}</h2>
-                <p className="text-sm text-gray-500 leading-relaxed flex-1">{item.blurb}</p>
-                <span className="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 group-hover:gap-2 transition-all mt-5">
-                  {item.cta} <ExternalLink className="w-3.5 h-3.5" />
-                </span>
+                <div className="p-5 flex flex-col flex-1">
+                  <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">{item.eyebrow}</p>
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">{item.name}</h2>
+                  <p className="text-sm text-gray-500 leading-relaxed flex-1">{item.blurb}</p>
+                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 group-hover:gap-2 transition-all mt-5">
+                    {item.cta} <ExternalLink className="w-3.5 h-3.5" />
+                  </span>
+                </div>
               </a>
             ))}
           </div>

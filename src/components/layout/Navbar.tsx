@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Plane, Menu, X, User, LogOut } from 'lucide-react'
+import { isAdminEmail } from '@/lib/admin'
+import { Plane, Menu, X, User, LogOut, ShieldCheck } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 const navLinks = [
@@ -47,6 +48,7 @@ export default function Navbar() {
   }
 
   const transparent = isHome && !scrolled
+  const isAdmin = isAdminEmail(user?.email)
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -86,6 +88,14 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <div className="flex items-center gap-2">
+                {isAdmin && (
+                  <Link href="/admin" className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                    transparent ? 'text-brand-200 hover:text-white' : 'text-brand-600 hover:text-brand-700'
+                  }`}>
+                    <ShieldCheck className="w-4 h-4" />
+                    Admin
+                  </Link>
+                )}
                 <Link href="/account" className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
                   transparent ? 'text-white/80 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                 }`}>
@@ -139,6 +149,9 @@ export default function Navbar() {
             <div className="pt-3 border-t border-gray-100 mt-3">
               {user ? (
                 <div className="space-y-1">
+                  {isAdmin && (
+                    <Link href="/admin" onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm font-semibold text-brand-600">Admin</Link>
+                  )}
                   <Link href="/account" onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm text-gray-700">Account</Link>
                   <button onClick={handleSignOut} className="block w-full text-left px-3 py-2 text-sm text-gray-500">Sign out</button>
                 </div>

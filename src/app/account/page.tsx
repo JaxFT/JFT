@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Crown, ShoppingBag, ArrowRight, Mail, Calendar } from 'lucide-react'
+import { Crown, ShoppingBag, ArrowRight, Calendar } from 'lucide-react'
 import type { Metadata } from 'next'
 import SignOutButton from './SignOutButton'
+import AccountEditor from './AccountEditor'
 
 export const metadata: Metadata = { title: 'Account' }
 
@@ -40,26 +41,23 @@ export default async function AccountPage() {
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-10">
-          <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Your account</p>
-          <h1 className="text-4xl font-bold text-gray-900">{profile?.full_name || 'Hello'}</h1>
+        <div className="mb-10 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Your account</p>
+            <h1 className="text-4xl font-bold text-gray-900">{profile?.full_name || 'Hello'}</h1>
+            <p className="text-sm text-gray-500 mt-2 inline-flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5" /> Member since {memberSince}
+            </p>
+          </div>
+          <SignOutButton />
         </div>
 
-        {/* Profile card */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Mail className="w-4 h-4 text-gray-400" />
-                <span>{user.email}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Calendar className="w-4 h-4 text-gray-400" />
-                <span>Member since {memberSince}</span>
-              </div>
-            </div>
-            <SignOutButton />
-          </div>
+        {/* Editable profile + password */}
+        <div className="mb-6">
+          <AccountEditor
+            initialFullName={profile?.full_name ?? ''}
+            email={user.email ?? ''}
+          />
         </div>
 
         {/* Subscription */}

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { PenLine, ArrowRight, ShieldCheck, FileText } from 'lucide-react'
+import { PenLine, ArrowRight, ShieldCheck, FileText, Upload } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -19,6 +19,12 @@ const TOOLS = [
     title: 'Blog Post Generator',
     desc: 'Draft a new blog post with Claude — saves as a draft you can review and publish from Blog Posts.',
     icon: PenLine,
+  },
+  {
+    href: '/admin/blog/import',
+    title: 'Paste / Import a Post',
+    desc: 'For when you have a post written elsewhere (Claude.ai, ChatGPT, by hand). Includes the prompt template to copy.',
+    icon: Upload,
   },
 ]
 

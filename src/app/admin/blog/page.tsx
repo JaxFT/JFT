@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Plus, FileText, ExternalLink, ShieldCheck } from 'lucide-react'
+import { Plus, FileText, ExternalLink, ShieldCheck, Upload } from 'lucide-react'
 import type { Metadata } from 'next'
 import { listAllPostsForAdmin } from '@/lib/blog-db'
 
@@ -27,9 +27,14 @@ export default async function AdminBlogListPage() {
             <h1 className="text-3xl font-bold text-gray-900">Blog posts</h1>
             <p className="text-gray-500 mt-1">Drafts and published posts. Generate new ones with the writer or edit existing ones below.</p>
           </div>
-          <Link href="/admin/blog-writer" className="btn-primary !py-2.5 !px-5 !text-sm shrink-0">
-            <Plus className="w-4 h-4" /> Generate new post
-          </Link>
+          <div className="flex gap-2 shrink-0">
+            <Link href="/admin/blog/import" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-4 py-2 rounded-lg">
+              <Upload className="w-4 h-4" /> Paste / import
+            </Link>
+            <Link href="/admin/blog-writer" className="btn-primary !py-2.5 !px-5 !text-sm">
+              <Plus className="w-4 h-4" /> Generate
+            </Link>
+          </div>
         </div>
 
         {posts.length === 0 ? (

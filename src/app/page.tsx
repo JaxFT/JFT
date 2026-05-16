@@ -62,17 +62,17 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* Right: featured posts carousel — shifted right on desktop so it doesn't cover the family photo subject */}
+            {/* Right: featured posts carousel — anchored to the right edge of the hero so it sits in the right third regardless of screen width */}
             {posts.length > 0 && (
               <div className="hidden lg:block">
-                <div className="relative h-96 lg:translate-x-32 xl:translate-x-40">
+                <div className="relative h-96">
                   {posts.slice(0, 3).map((post, i) => (
                     <Link
                       key={post.slug}
                       href={`/blog/${post.slug}`}
                       className="absolute bg-white rounded-2xl overflow-hidden shadow-2xl w-56 transition-transform hover:scale-105 hover:z-30"
                       style={{
-                        left:  `${i * 80}px`,
+                        right: `${(2 - i) * 80}px`,
                         top:   `${i * 24}px`,
                         zIndex: 3 - i,
                         transform: `rotate(${[-3, 0, 3][i]}deg)`,

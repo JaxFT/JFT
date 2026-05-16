@@ -15,9 +15,12 @@ build/
 .dev.vars
 
 # env
+# .env.production IS committed — public NEXT_PUBLIC_* values needed by
+# the Cloudflare auto-build. Anything secret stays in Worker secrets.
 .env
 .env.local
 .env.*.local
+!.env.production
 
 # misc
 .DS_Store

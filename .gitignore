@@ -11,6 +11,8 @@ build/
 # cloudflare
 .vercel/
 .wrangler/
+.open-next/
+.dev.vars
 
 # env
 .env

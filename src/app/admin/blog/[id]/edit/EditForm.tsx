@@ -23,6 +23,7 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
   const [error, setError] = useState<string | null>(null)
   const [savedAt, setSavedAt] = useState<Date | null>(null)
   const [view, setView] = useState<'edit' | 'preview'>('edit')
+  const [toast, setToast] = useState<{ message: string; kind: 'success' | 'info' } | null>(null)
   const [uploadingCover, setUploadingCover] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const coverFileInputRef = useRef<HTMLInputElement>(null)
@@ -58,6 +59,7 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
     try {
       const tags = tagsText.split(',').map(t => t.trim()).filter(Boolean)
       const finalStatus = override?.status ?? status
+      const previousStatus = status
       const res = await fetch(`/api/admin/blog-posts/${post.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -80,6 +82,21 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
       if (updated.slug && updated.slug !== slug) setSlug(updated.slug)
       setSavedAt(new Date())
       router.refresh()
+
+      // Friendly feedback + redirect on publish
+      const justPublished = finalStatus === 'published' && previousStatus !== 'published'
+      const justUnpublished = finalStatus === 'draft' && previousStatus === 'published'
+      let message = 'Draft saved.'
+      if (justPublished) message = 'Published! Returning to all posts…'
+      else if (justUnpublished) message = 'Moved back to draft.'
+      else if (finalStatus === 'published') message = 'Changes published.'
+
+      setToast({ message, kind: 'success' })
+      if (justPublished) {
+        setTimeout(() => router.push('/admin/blog'), 1200)
+      } else {
+        setTimeout(() => setToast(null), 3000)
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -116,6 +133,17 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
             <Check className="w-5 h-5 text-brand-700 mt-0.5 shrink-0" />
             <div className="text-sm text-brand-900">
               <strong>Draft saved.</strong> Review the title, slug, and body below, then publish when ready.
+            </div>
+          </div>
+        )}
+
+        {toast && (
+          <div className="fixed top-20 inset-x-0 z-50 flex justify-center px-4 pointer-events-none">
+            <div className={`flex items-center gap-2 px-5 py-3 rounded-xl shadow-lg pointer-events-auto ${
+              toast.kind === 'success' ? 'bg-brand-700 text-white' : 'bg-gray-900 text-white'
+            }`}>
+              <Check className="w-5 h-5 shrink-0" />
+              <span className="text-sm font-semibold">{toast.message}</span>
             </div>
           </div>
         )}

@@ -28,23 +28,46 @@ export async function GET() {
 
   const result: Record<string, unknown> = {}
 
-  for (const bucket of ['guide-files', 'guide-previews']) {
-    const { data, error } = await admin.storage.from(bucket).list('', { limit: 100 })
-    result[bucket] = error
-      ? { error: error.message }
-      : (data ?? []).map(f => ({
-          name: f.name,
-          size: f.metadata?.size,
-          mime: f.metadata?.mimetype,
-          updated_at: f.updated_at,
-        }))
+  // Decode the JWT payload to see what role the key actually claims
+  try {
+    const parts = serviceKey.split('.')
+    if (parts.length === 3) {
+      // base64url-decode the payload segment (middle of the JWT)
+      const json = Buffer.from(parts[1], 'base64url').toString('utf-8')
+      result._key_payload = JSON.parse(json)
+    } else {
+      result._key_payload = { error: 'Not a JWT (no 3 segments)' }
+    }
+  } catch (e) {
+    result._key_payload = { error: e instanceof Error ? e.message : 'decode failed' }
   }
 
-  // Also list bucket metadata itself
-  const { data: buckets, error: bucketsErr } = await admin.storage.listBuckets()
-  result._all_buckets = bucketsErr
-    ? { error: bucketsErr.message }
-    : (buckets ?? []).map(b => ({ name: b.name, public: b.public, created_at: b.created_at }))
+  // SDK calls — what we've been seeing
+  for (const bucket of ['guide-files', 'guide-previews']) {
+    const { data, error } = await admin.storage.from(bucket).list('', { limit: 100 })
+    result[`${bucket}_sdk`] = error
+      ? { error: error.message }
+      : (data ?? []).map(f => ({ name: f.name, size: f.metadata?.size }))
+  }
+  const { data: bucketsSdk, error: bucketsSdkErr } = await admin.storage.listBuckets()
+  result._buckets_sdk = bucketsSdkErr
+    ? { error: bucketsSdkErr.message }
+    : (bucketsSdk ?? []).map(b => ({ name: b.name, public: b.public }))
+
+  // Raw HTTP call — bypasses the SDK entirely
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  try {
+    const r = await fetch(`${supabaseUrl}/storage/v1/bucket`, {
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+      },
+    })
+    const body = await r.text()
+    result._buckets_raw = { status: r.status, body: body.slice(0, 500) }
+  } catch (e) {
+    result._buckets_raw = { error: e instanceof Error ? e.message : 'fetch failed' }
+  }
 
   return NextResponse.json(result, { status: 200 })
 }

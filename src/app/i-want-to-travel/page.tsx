@@ -1,3 +1,5 @@
+import { promises as fs } from 'fs'
+import path from 'path'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -47,19 +49,18 @@ export default async function IWantToTravelPage() {
     )
   }
 
-  // Premium user — show the tool
-  return (
-    <div className="min-h-screen bg-sand-50 pt-24 pb-20">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6">
-        <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Decision tool</p>
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">I Want To Travel</h1>
-        <p className="text-gray-500 mb-10">Answer a few honest questions and we'll tell you if long-term family travel is realistic for you right now.</p>
+  // Premium user — load and embed the Family Way questionnaire
+  const familyWayPath = path.join(process.cwd(), 'src/app/i-want-to-travel/family-way.html')
+  const familyWayHtml = await fs.readFile(familyWayPath, 'utf8')
 
-        {/* The Family Way questionnaire will be embedded here */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center text-gray-400">
-          <p className="font-medium">Questionnaire coming soon — check back shortly.</p>
-        </div>
-      </div>
+  return (
+    <div className="pt-16 bg-sand-50">
+      <iframe
+        srcDoc={familyWayHtml}
+        title="Family Way questionnaire"
+        className="w-full border-0 block"
+        style={{ height: 'calc(100vh - 4rem)' }}
+      />
     </div>
   )
 }

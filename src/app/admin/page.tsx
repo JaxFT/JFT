@@ -9,21 +9,21 @@ export const metadata: Metadata = {
 
 const TOOLS = [
   {
-    href: '/admin/blog',
-    title: 'Blog Posts',
-    desc: 'Edit, publish, and unpublish blog posts. View drafts you have generated.',
-    icon: FileText,
-  },
-  {
-    href: '/admin/blog-writer',
-    title: 'Blog Post Generator',
-    desc: 'Draft a new blog post with Claude — saves as a draft you can review and publish from Blog Posts.',
+    href: '/admin/blog/draft',
+    title: 'New Post — Phone Wizard',
+    desc: 'The mobile-first flow: answer a few questions, add photos, copy the prompt into Claude.ai or ChatGPT, paste the response back. No API credit needed.',
     icon: PenLine,
   },
   {
+    href: '/admin/blog',
+    title: 'All Posts',
+    desc: 'Edit, publish, and unpublish blog posts. Your drafts and published posts in one place.',
+    icon: FileText,
+  },
+  {
     href: '/admin/blog/import',
-    title: 'Paste / Import a Post',
-    desc: 'For when you have a post written elsewhere (Claude.ai, ChatGPT, by hand). Includes the prompt template to copy.',
+    title: 'Paste markdown directly',
+    desc: 'Already have markdown ready (from anywhere)? Paste it here to create a draft in one step.',
     icon: Upload,
   },
 ]

@@ -31,8 +31,8 @@ export default async function AdminBlogListPage() {
             <Link href="/admin/blog/import" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-4 py-2 rounded-lg">
               <Upload className="w-4 h-4" /> Paste / import
             </Link>
-            <Link href="/admin/blog-writer" className="btn-primary !py-2.5 !px-5 !text-sm">
-              <Plus className="w-4 h-4" /> Generate
+            <Link href="/admin/blog/draft" className="btn-primary !py-2.5 !px-5 !text-sm">
+              <Plus className="w-4 h-4" /> New post
             </Link>
           </div>
         </div>
@@ -40,9 +40,9 @@ export default async function AdminBlogListPage() {
         {posts.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
             <FileText className="w-10 h-10 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 mb-5">No posts yet. Generate your first one with the writer.</p>
-            <Link href="/admin/blog-writer" className="btn-primary !py-2.5 !px-5 !text-sm inline-flex">
-              <Plus className="w-4 h-4" /> Generate new post
+            <p className="text-gray-500 mb-5">No posts yet. Start your first one with the wizard.</p>
+            <Link href="/admin/blog/draft" className="btn-primary !py-2.5 !px-5 !text-sm inline-flex">
+              <Plus className="w-4 h-4" /> New post
             </Link>
           </div>
         ) : (

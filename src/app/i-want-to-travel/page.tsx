@@ -1,10 +1,9 @@
-import { promises as fs } from 'fs'
-import path from 'path'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Lock, ArrowRight } from 'lucide-react'
 import type { Metadata } from 'next'
+import { FAMILY_WAY_HTML } from './family-way'
 
 export const metadata: Metadata = { title: 'I Want To Travel' }
 
@@ -49,14 +48,11 @@ export default async function IWantToTravelPage() {
     )
   }
 
-  // Premium user — load and embed the Family Way questionnaire
-  const familyWayPath = path.join(process.cwd(), 'src/app/i-want-to-travel/family-way.html')
-  const familyWayHtml = await fs.readFile(familyWayPath, 'utf8')
-
+  // Premium user — embed the Family Way questionnaire (HTML bundled at build time)
   return (
     <div className="pt-16 bg-sand-50">
       <iframe
-        srcDoc={familyWayHtml}
+        srcDoc={FAMILY_WAY_HTML}
         title="Family Way questionnaire"
         className="w-full border-0 block"
         style={{ height: 'calc(100vh - 4rem)' }}

@@ -1,10 +1,33 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { BookOpen, Lock, ArrowRight } from 'lucide-react'
+import { BookOpen, Lock, ArrowRight, ExternalLink, GraduationCap, Users } from 'lucide-react'
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'Learning Packs' }
+export const metadata: Metadata = {
+  title: 'Learning',
+  description: 'Learning resources for families travelling long-term — sites we use and trust, plus our own learning packs.',
+}
+
+export const dynamic = 'force-dynamic'
+
+const RECOMMENDED = [
+  {
+    name: 'Tuition-Up',
+    url: 'https://tuition-up.com',
+    eyebrow: 'Online tutoring',
+    blurb: 'Live, one-to-one online tuition that works around your family\'s schedule — handy whether you\'re full worldschooling, supplementing local school, or keeping skills sharp during a gap.',
+    cta: 'Visit Tuition-Up',
+    icon: GraduationCap,
+  },
+  {
+    name: 'Worldschooling Club',
+    url: 'https://docs.google.com/forms/d/e/1FAIpQLSfdrRajDbHY1migV1-kfe0BXj81s4101Yp3u6IwHun2zmv_AA/viewform',
+    eyebrow: 'Community (from @thebackpackingfamily)',
+    blurb: 'A community of families travelling and worldschooling together — meet-ups, advice, and shared experience. Apply via the form to join.',
+    cta: 'Apply to join',
+    icon: Users,
+  },
+]
 
 export default async function LearningPage() {
   const supabase = await createClient()
@@ -20,40 +43,93 @@ export default async function LearningPage() {
     isPremium = profile?.subscription_tier === 'premium'
   }
 
-  if (!user) redirect('/login?next=/learning')
-
-  if (!isPremium) {
-    return (
-      <div className="min-h-screen bg-sand-50 pt-24 pb-20 flex items-center justify-center px-4">
-        <div className="max-w-md w-full text-center">
-          <div className="w-14 h-14 bg-brand-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <Lock className="w-6 h-6 text-brand-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-3">Premium content</h1>
-          <p className="text-gray-500 mb-6 leading-relaxed">
-            Learning packs are included in Premium membership (£25/year).
-          </p>
-          <Link href="/account" className="btn-primary justify-center">
-            Upgrade to Premium <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Members</p>
-        <h1 className="text-3xl font-bold text-gray-900 mb-3">Learning Packs</h1>
-        <p className="text-gray-500 mb-10">Practical resources for families on the road — written by Bec.</p>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* Packs will live here once Bec's content is ready */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center text-gray-400">
-          <BookOpen className="w-10 h-10 mx-auto mb-3 text-brand-200" />
-          <p className="font-medium">Learning packs coming soon.</p>
-          <p className="text-sm mt-1">Bec is putting the finishing touches on the first pack — you'll be notified when it's live.</p>
+        {/* HEADER */}
+        <div className="mb-12 max-w-2xl">
+          <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Learning</p>
+          <h1 className="text-4xl font-bold text-gray-900">Resources for families on the road</h1>
+          <p className="text-gray-500 mt-2 text-lg">Sites we actually use and trust — plus our own learning packs for members.</p>
         </div>
+
+        {/* RECOMMENDED SITES (public) */}
+        <section className="mb-16">
+          <p className="text-xs font-bold tracking-widest uppercase text-gray-500 mb-5">Recommended sites</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {RECOMMENDED.map(item => (
+              <a
+                key={item.url}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-brand-200 transition-all p-6 flex flex-col"
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center group-hover:bg-brand-700 transition-colors">
+                    <item.icon className="w-5 h-5 text-white" />
+                  </div>
+                  <p className="text-xs font-bold tracking-widest uppercase text-brand-600">{item.eyebrow}</p>
+                </div>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">{item.name}</h2>
+                <p className="text-sm text-gray-500 leading-relaxed flex-1">{item.blurb}</p>
+                <span className="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 group-hover:gap-2 transition-all mt-5">
+                  {item.cta} <ExternalLink className="w-3.5 h-3.5" />
+                </span>
+              </a>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 mt-4">
+            We only recommend services we use ourselves. Some links may be affiliate or referral links — they never change what we recommend.
+          </p>
+        </section>
+
+        {/* PREMIUM LEARNING PACKS (gated) */}
+        <section>
+          <p className="text-xs font-bold tracking-widest uppercase text-gray-500 mb-5">Members-only</p>
+          {isPremium ? (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center">
+              <BookOpen className="w-10 h-10 mx-auto mb-3 text-brand-300" />
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Learning packs are on the way</h2>
+              <p className="text-gray-500 text-sm max-w-md mx-auto">
+                Bec is putting the finishing touches on the first pack. You'll be notified the moment it goes live — your premium membership already includes it.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-0">
+                <div className="bg-brand-950 text-white p-8 sm:col-span-1 flex flex-col justify-center">
+                  <Lock className="w-6 h-6 text-brand-300 mb-3" />
+                  <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-1">Premium</p>
+                  <p className="text-2xl font-bold leading-tight">Learning Packs</p>
+                </div>
+                <div className="p-8 sm:col-span-2">
+                  <h3 className="font-bold text-gray-900 mb-2">JFT Learning Packs</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed mb-5">
+                    Practical resources for families on the road — written by Bec from years of doing it for real. Schooling rhythm, money on the move, packing for the long haul, and more. Included in Premium membership (&pound;25/year).
+                  </p>
+                  <div className="flex gap-3 flex-wrap">
+                    {user ? (
+                      <Link href="/account" className="btn-primary !py-2 !px-5 !text-sm">
+                        Upgrade to Premium <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    ) : (
+                      <>
+                        <Link href="/signup?next=/learning" className="btn-primary !py-2 !px-5 !text-sm">
+                          Sign up to get started <ArrowRight className="w-4 h-4" />
+                        </Link>
+                        <Link href="/login?next=/learning" className="text-sm font-medium text-gray-500 hover:text-gray-800 underline underline-offset-4 decoration-gray-300 self-center">
+                          Already a member? Log in
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
       </div>
     </div>
   )

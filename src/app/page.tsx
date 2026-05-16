@@ -37,34 +37,18 @@ export default async function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-br from-brand-800/85 via-brand-600/40 to-brand-300/20" />
         </div>
 
-        {/* Decorative dots */}
-        <div className="absolute top-32 left-12 grid grid-cols-5 gap-2 opacity-30 z-10">
-          {Array.from({ length: 25 }).map((_, i) => (
-            <div key={i} className="w-1.5 h-1.5 rounded-full bg-white" />
-          ))}
-        </div>
-        <div className="absolute bottom-24 left-1/3 grid grid-cols-5 gap-2 opacity-20 z-10">
-          {Array.from({ length: 25 }).map((_, i) => (
-            <div key={i} className="w-1.5 h-1.5 rounded-full bg-white" />
-          ))}
-        </div>
-
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
             {/* Left: headline */}
             <div>
-              {/* Chevrons */}
-              <div className="flex gap-1 text-brand-300 mb-6 text-xl font-bold tracking-widest">
-                {'>>>>>>'}
-              </div>
               <div className="w-1 h-20 bg-brand-400 inline-block mr-6 align-middle" />
               <h1 className="inline align-middle text-white font-black uppercase leading-none"
                   style={{ fontSize: 'clamp(40px, 6vw, 72px)', letterSpacing: '-0.02em' }}>
                 <span className="block">EXPLORE</span>
                 <span className="block text-brand-300">THE WORLD</span>
               </h1>
-              <p className="text-white/70 text-lg leading-relaxed mt-6 max-w-md">
+              <p className="text-white/85 text-lg leading-relaxed mt-6 max-w-md">
                 Real family travel without filters or overcomplication. Practical guidance, honest planning tools, and real experience to help your family save, plan, and make long-term travel possible in a realistic way. Clear steps, real costs, and what we actually did so you can figure out how to do it for your own family.
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
@@ -74,9 +58,6 @@ export default async function HomePage() {
                 <Link href="/blog" className="inline-flex items-center gap-2 text-white/80 hover:text-white font-medium transition-colors">
                   Read the blog <ArrowRight className="w-4 h-4" />
                 </Link>
-              </div>
-              <div className="mt-4 flex gap-1 text-brand-300 text-xl font-bold tracking-widest">
-                {'>>>>>>'}
               </div>
             </div>
 

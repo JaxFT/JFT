@@ -10,17 +10,17 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          50:  '#ecfaf2',
-          100: '#d4f1de',
-          200: '#9FE2BF',  // mint (chosen)
-          300: '#96DED1',  // aqua-mint (chosen)
-          400: '#5fc7a3',
-          500: '#34a886',
-          600: '#1e8a6e',  // primary — deep mint-teal, passes contrast on white text
-          700: '#176d57',
-          800: '#115441',
-          900: '#0d4434',
-          950: '#062821',
+          50:  '#f4faf7',  // very pale mint wash
+          100: '#e3f1ea',  // pale, calm background tint
+          200: '#c9e3d2',  // soft pastel mint (used for badges, hover tints)
+          300: '#a6d4ba',  // softer mid mint
+          400: '#7bbf99',  // gentle medium
+          500: '#4ea27a',  // medium pastel-green
+          600: '#2d8163',  // primary — slightly softer than before, still passes AA on white text
+          700: '#235d4a',  // deeper for hover/active
+          800: '#1e4c3d',  // dark mint
+          900: '#173b30',  // very dark
+          950: '#112b23',  // softer near-black, calmer for dark sections than before
         },
         sand: {
           50: '#fafaf7',

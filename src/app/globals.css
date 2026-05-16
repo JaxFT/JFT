@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --brand: #1e8a6e;
+    --brand: #2d8163;
   }
 
   html { scroll-behavior: smooth; }

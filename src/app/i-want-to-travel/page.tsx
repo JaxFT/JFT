@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { ArrowRight, Compass, ClipboardCheck, Target, Check } from 'lucide-react'
+import { ArrowRight, Compass, ClipboardCheck, Target, Check, MessageCircle } from 'lucide-react'
 import type { Metadata } from 'next'
 import { FAMILY_WAY_HTML } from './family-way'
 
@@ -145,6 +145,25 @@ export default async function IWantToTravelPage() {
               ))}
             </ul>
           </div>
+        </div>
+      </section>
+
+      {/* 1:1 CALL CTA — prefer a real conversation */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 flex items-start gap-4 flex-wrap">
+          <div className="w-12 h-12 bg-brand-100 rounded-xl flex items-center justify-center shrink-0">
+            <MessageCircle className="w-6 h-6 text-brand-700" />
+          </div>
+          <div className="flex-1 min-w-[14rem]">
+            <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-1">Or skip the form</p>
+            <h3 className="text-xl font-bold text-gray-900 mb-1">Talk it through with us, one-to-one</h3>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              Sometimes a real conversation is more useful than an assessment. Book a 1:1 call with Bec and Oli — we'll talk through your family's plans, costs, and the bits you can't find in a guide.
+            </p>
+          </div>
+          <Link href="/work-with-us" className="btn-primary !py-2.5 !px-5 !text-sm shrink-0 w-full sm:w-auto justify-center">
+            Book a 1:1 call <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </section>
 

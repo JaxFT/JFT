@@ -40,41 +40,41 @@ export default function PlanningPage() {
   return (
     <div className="min-h-screen bg-sand-50">
 
-      {/* HERO */}
-      <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <div className="absolute inset-0 -z-10">
-          <img src={HERO_IMAGE} alt="Family travelling across the Sahara dunes in Morocco" className="w-full h-full object-cover" />
-          {/* Strong dark base for solid contrast with the white text */}
-          <div className="absolute inset-0 bg-brand-950/90" />
-          {/* Subtle gradient for depth without lifting opacity at the corners */}
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-950/30 via-transparent to-brand-800/20" />
-        </div>
-        <div className="max-w-4xl mx-auto text-center text-white">
-          <p className="text-xs font-bold tracking-widest uppercase text-white/90 mb-4">Planning &amp; Tracking</p>
-          <h1 className="font-light leading-[1.05] tracking-tight mb-6 text-white" style={{ fontSize: 'clamp(36px, 5.5vw, 60px)' }}>
-            Your trip. Every country.<br />
-            <span className="font-bold">Every penny.</span>
-          </h1>
-          <p className="text-lg text-white/95 leading-relaxed max-w-xl mx-auto mb-10">
-            Waystaq is the trip planner and budget tracker we use every day on the road. Built by long-term travellers for long-term travellers — designed to replace the spreadsheet.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
-            <a
-              href="https://waystaq.com/app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary text-base px-7 py-3.5"
-            >
-              Open Waystaq <ArrowRight className="w-4 h-4" />
-            </a>
-            <a
-              href="https://www.waystaq.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-medium text-white/70 hover:text-white underline underline-offset-4 decoration-white/30"
-            >
-              Learn more at waystaq.com
-            </a>
+      {/* HERO — light style, matches /blog and /learning */}
+      <section className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 bg-sand-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="max-w-2xl mb-10">
+            <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Planning &amp; Tracking</p>
+            <h1 className="text-4xl font-bold text-gray-900">Your trip. Every country. Every penny.</h1>
+            <p className="text-gray-500 mt-2 text-lg">
+              Waystaq is the trip planner and budget tracker we use every day on the road. Built by long-term travellers for long-term travellers — designed to replace the spreadsheet.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3 sm:gap-4 items-center">
+              <a
+                href="https://waystaq.com/app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary"
+              >
+                Open Waystaq <ArrowRight className="w-4 h-4" />
+              </a>
+              <a
+                href="https://www.waystaq.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-gray-600 hover:text-brand-700 underline underline-offset-4 decoration-gray-300"
+              >
+                Learn more at waystaq.com
+              </a>
+            </div>
+          </div>
+          {/* Optional feature image of the family — sits below the header, not as an overlay */}
+          <div className="rounded-2xl overflow-hidden shadow-md max-h-72">
+            <img
+              src={HERO_IMAGE}
+              alt="Family travelling across the Sahara dunes in Morocco"
+              className="w-full h-72 object-cover object-center"
+            />
           </div>
         </div>
       </section>

@@ -25,7 +25,10 @@ export default function GuideViewer({ slug, mode, previewPageCount }: Props) {
         const body = await r.json().catch(() => null)
         if (cancelled) return
         if (!r.ok) {
-          setError(body?.error ?? `HTTP ${r.status}`)
+          const detail = body?.bucket && body?.path
+            ? `${body.error} (looking for "${body.path}" in bucket "${body.bucket}")`
+            : body?.error ?? `HTTP ${r.status}`
+          setError(detail)
         } else {
           setPdfUrl(body.url)
         }

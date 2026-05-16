@@ -65,7 +65,7 @@ export default async function HomePage() {
                 <span className="block text-brand-300">THE WORLD</span>
               </h1>
               <p className="text-white/70 text-lg leading-relaxed mt-6 max-w-md">
-                Real family travel — no filters, no fluff. Practical guides, honest planning tools, and everything your family needs to explore the world together.
+                Real family travel without filters or overcomplication. Practical guidance, honest planning tools, and real experience to help your family save, plan, and make long-term travel possible in a realistic way. Clear steps, real costs, and what we actually did so you can figure out how to do it for your own family.
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
                 <Link href="/i-want-to-travel" className="btn-primary text-base px-7 py-3.5">
@@ -120,7 +120,7 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-3">What we offer</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Built for families who actually travel</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Built for families who want to, or love to travel</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[

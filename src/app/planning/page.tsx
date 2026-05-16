@@ -44,18 +44,18 @@ export default function PlanningPage() {
       <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0 -z-10">
           <img src={HERO_IMAGE} alt="Family travelling across the Sahara dunes in Morocco" className="w-full h-full object-cover" />
-          {/* Solid dark base ensures white text stays readable over the sandy photo */}
-          <div className="absolute inset-0 bg-brand-950/75" />
-          {/* Gradient on top adds depth without going too transparent at the corners */}
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-950/40 via-transparent to-brand-700/30" />
+          {/* Strong dark base for solid contrast with the white text */}
+          <div className="absolute inset-0 bg-brand-950/90" />
+          {/* Subtle gradient for depth without lifting opacity at the corners */}
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-950/30 via-transparent to-brand-800/20" />
         </div>
         <div className="max-w-4xl mx-auto text-center text-white">
-          <p className="text-xs font-bold tracking-widest uppercase text-brand-200 mb-4">Planning &amp; Tracking</p>
-          <h1 className="font-light leading-[1.05] tracking-tight mb-6" style={{ fontSize: 'clamp(36px, 5.5vw, 60px)' }}>
+          <p className="text-xs font-bold tracking-widest uppercase text-white/90 mb-4">Planning &amp; Tracking</p>
+          <h1 className="font-light leading-[1.05] tracking-tight mb-6 text-white" style={{ fontSize: 'clamp(36px, 5.5vw, 60px)' }}>
             Your trip. Every country.<br />
-            <span className="font-bold text-brand-200">Every penny.</span>
+            <span className="font-bold">Every penny.</span>
           </h1>
-          <p className="text-lg text-white/80 leading-relaxed max-w-xl mx-auto mb-10">
+          <p className="text-lg text-white/95 leading-relaxed max-w-xl mx-auto mb-10">
             Waystaq is the trip planner and budget tracker we use every day on the road. Built by long-term travellers for long-term travellers — designed to replace the spreadsheet.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
@@ -164,11 +164,11 @@ export default function PlanningPage() {
       {/* CTA STRIP */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-brand-950 text-white">
         <div className="max-w-2xl mx-auto text-center">
-          <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-4">Ready to try it?</p>
+          <p className="text-xs font-bold tracking-widest uppercase text-white/90 mb-4">Ready to try it?</p>
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
             Free to start. <span className="text-brand-300">£24.99 / year</span> for Premium.
           </h2>
-          <p className="text-white/70 text-lg leading-relaxed mb-10 max-w-lg mx-auto">
+          <p className="text-white/90 text-lg leading-relaxed mb-10 max-w-lg mx-auto">
             Premium adds trip sharing with travelling companions and the deeper budget views. 14-day refund. Cancel any time.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">

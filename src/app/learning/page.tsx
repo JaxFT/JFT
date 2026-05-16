@@ -31,6 +31,14 @@ const RECOMMENDED: RecommendedSite[] = [
     image: '/images/learning/doodle-learning.png',
   },
   {
+    name: 'Future Explorers Club',
+    url: 'https://futureexplorersclub.com?sca_ref=8670249.cDmoZ599P3lpdNMI',
+    eyebrow: 'Worldschooling & community',
+    blurb: 'Project-based learning and a global community of travelling families. Curriculum that meets kids where they are and gives them real challenges to work on alongside other worldschoolers.',
+    cta: 'Visit Future Explorers Club',
+    icon: GraduationCap,
+  },
+  {
     name: 'Tuition-Up',
     url: 'https://tuition-up.com',
     eyebrow: 'Online tutoring',

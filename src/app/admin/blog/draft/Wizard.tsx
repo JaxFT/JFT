@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft, ArrowRight, Camera, Check, Copy, Image as ImageIcon,
-  Loader2, ShieldCheck, Trash2, X,
+  Loader2, ShieldCheck, Star, Trash2, X,
 } from 'lucide-react'
 
 type Photo = {
@@ -13,6 +13,7 @@ type Photo = {
   status: 'uploading' | 'done' | 'error'
   url?: string
   caption: string
+  isCover: boolean
   error?: string
 }
 
@@ -52,6 +53,7 @@ export default function Wizard() {
       id: `${Date.now()}-${i}-${f.name}`,
       status: 'uploading',
       caption: '',
+      isCover: false,
     }))
     setPhotos(prev => [...prev, ...newPhotos])
 
@@ -85,20 +87,38 @@ export default function Wizard() {
     setPhotos(prev => prev.map(p => p.id === id ? { ...p, caption } : p))
   }
 
+  const toggleCover = (id: string) => {
+    setPhotos(prev => prev.map(p => ({
+      ...p,
+      isCover: p.id === id ? !p.isCover : false,
+    })))
+  }
+
   const allPhotosReady = photos.every(p => p.status !== 'uploading')
   const doneCount = photos.filter(p => p.status === 'done').length
 
   const today = new Date().toISOString().slice(0, 10)
+  const donePhotos = photos.filter(p => p.status === 'done')
+  const coverPhoto = donePhotos.find(p => p.isCover)
 
-  const builtPrompt = `You are writing a blog post for JaxFamilyTravels.com. The blog is written by Bec and Oli, a UK couple who left England with their 8-year-old son Jax to travel long-term. They document their real family life — honest, warm, funny, and specific. Never generic. Never life-coach-y or preachy.
+  const builtPrompt = `You are writing a blog post for JaxFamilyTravels.com. The blog is by Bec and Oli, a UK couple who left England with their 8-year-old son Jax to travel long-term. They write honestly about real family life on the road. Never preachy. Never life-coach-y. Never sound like a brand.
 
 VOICE RULES:
-- Write as "we" (Bec and Oli speaking together) — natural, warm, occasionally funny
-- Jax is named throughout — specific things he said or did
-- Professional but genuinely friendly — like a smart, funny friend who travels, not a brand
-- Honest: include what was hard or unexpected, not just the highlights
-- No clichés like "hidden gem", "off the beaten path", "life-changing", "bucket list"
-- Short punchy paragraphs. Real sentences. No waffle.
+- Write as "we" (Bec and Oli together). Natural, warm, sometimes funny.
+- Name Jax throughout. Quote specific things he said or did.
+- Tone of a smart, funny friend telling you about their trip at a dinner party.
+- Be honest about what was hard, awkward, or unexpected — not just the highlights.
+- Short, punchy paragraphs. Vary sentence length: three short ones, a long one, a fragment.
+
+DO NOT WRITE LIKE AN AI — these are dead giveaways. Avoid all of them:
+- NO em-dashes anywhere (—). Use a comma, a regular hyphen (-), or just start a new sentence.
+- NO "It's not just X, it's Y" / "X isn't just about Y, it's about Z" constructions.
+- NO words: nestled, vibrant, bustling, stunning, breathtaking, picturesque, charming, quaint, idyllic, hidden gem, off the beaten path, life-changing, bucket list, must-see, rich tapestry, vibrant tapestry, sprawling.
+- NO transitions: delve, ultimately, moreover, furthermore, in essence, that said.
+- NO formulaic openers: "Have you ever wondered…", "Picture this…", "There's something about…".
+- NO summary at the end ("In conclusion", "All in all", "Overall"). Just stop, or sign off naturally.
+- NO bullet-point lists unless they're a genuine list of practical tips at the very end. Body should be paragraphs.
+- NO grand claims. Small, specific, observable details only ("RM 4 for a bowl" beats "incredibly affordable").
 
 POST DETAILS:
 Location: ${location || 'not specified'}
@@ -106,34 +126,36 @@ What this post is about: ${about || 'not specified'}
 What actually happened (raw notes): ${detail || 'none'}
 Tone/vibe: ${vibes.length ? vibes.join(', ') : 'warm and honest'}
 
-PHOTOS TO PLACE (use these exact URLs in the markdown):
-${photos.filter(p => p.status === 'done').length === 0
-  ? 'No photos this post.'
-  : photos
-      .filter(p => p.status === 'done')
-      .map((p, i) => `Photo ${i + 1}: ${p.url}\n  Caption: ${p.caption || '(no caption — pick one from the body)'}`)
-      .join('\n')}
+${coverPhoto
+  ? `COVER PHOTO (put this URL in the coverImage frontmatter field; do NOT also place it in the body):
+${coverPhoto.url}
+Cover caption: ${coverPhoto.caption || '(no caption)'}`
+  : 'COVER PHOTO: none selected — leave the coverImage frontmatter field empty.'}
+
+${donePhotos.filter(p => !p.isCover).length === 0
+  ? 'PHOTOS IN THE BODY: none beyond the cover.'
+  : `PHOTOS IN THE BODY (place each one at the moment in the story it matches — use the caption to pick where):
+${donePhotos.filter(p => !p.isCover).map((p, i) => `  ${i + 1}. ${p.url}
+     Caption: ${p.caption || '(no caption — pick a natural moment)'}`).join('\n')}
+
+Use markdown image syntax: ![caption text](URL). Read the caption, then place the image at the point in the body where that moment is described. Do not stack all photos at the top or bottom.`}
 
 OUTPUT FORMAT — IMPORTANT: Return the entire blog post WRAPPED IN A SINGLE TRIPLE-BACKTICK CODE BLOCK so I can copy the raw text. Like this:
 
 \`\`\`
 ---
-title: "<compelling, specific title — not generic>"
-excerpt: "<one-sentence hook for the blog listing, ~25 words>"
+title: "<compelling, specific title, not generic>"
+excerpt: "<one sentence hook for the blog listing, ~25 words>"
 date: "${today}"
 author: "Jax Family Travels"
-coverImage: ""
+coverImage: "${coverPhoto?.url ?? ''}"
 tags: ["<3 to 5 short tags, e.g. Country, Region, Theme>"]
 ---
 
-<Body in markdown, 800–1200 words. Use ## for section headings, **bold** for emphasis. Short punchy paragraphs.
-
-Place each photo above using ![caption text](URL from the list above) at a natural moment in the post.
-
-End with a warm, natural sign-off in Bec & Oli's voice.>
+<Body in markdown, 800 to 1200 words. Use ## for section headings, **bold** for emphasis. Short punchy paragraphs. No em-dashes.>
 \`\`\`
 
-Do NOT add any text before or after the code block. The code block is the entire response. This is critical — without the code block the markdown can't be copied properly.`
+Do NOT add any text before or after the code block. The code block is the entire response.`
 
   const canAdvance = () => {
     if (step === 1) return location.trim() && about.trim()
@@ -298,7 +320,12 @@ Do NOT add any text before or after the code block. The code block is the entire
             {photos.length > 0 && (
               <div className="space-y-4">
                 {photos.map(p => (
-                  <div key={p.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  <div
+                    key={p.id}
+                    className={`bg-white rounded-2xl shadow-sm overflow-hidden border-2 transition-colors ${
+                      p.isCover ? 'border-brand-500' : 'border-transparent'
+                    }`}
+                  >
                     <div className="aspect-[4/3] bg-gray-100 relative">
                       {p.status === 'uploading' && (
                         <div className="absolute inset-0 flex items-center justify-center text-gray-500 gap-2">
@@ -313,6 +340,11 @@ Do NOT add any text before or after the code block. The code block is the entire
                           <X className="w-6 h-6 mb-1" /> {p.error}
                         </div>
                       )}
+                      {p.isCover && (
+                        <div className="absolute top-2 left-2 inline-flex items-center gap-1 bg-brand-600 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
+                          <Star className="w-3 h-3 fill-current" /> Cover
+                        </div>
+                      )}
                       <button
                         type="button"
                         onClick={() => removePhoto(p.id)}
@@ -322,13 +354,27 @@ Do NOT add any text before or after the code block. The code block is the entire
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
-                    <div className="p-3">
+                    <div className="p-3 space-y-2">
                       <input
                         value={p.caption}
                         onChange={e => setCaption(p.id, e.target.value)}
                         placeholder="Caption (one short sentence)"
                         className="w-full text-sm px-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
                       />
+                      {p.status === 'done' && (
+                        <button
+                          type="button"
+                          onClick={() => toggleCover(p.id)}
+                          className={`w-full inline-flex items-center justify-center gap-1.5 text-sm font-semibold rounded-lg py-2 transition-colors ${
+                            p.isCover
+                              ? 'bg-brand-50 text-brand-800 border border-brand-200'
+                              : 'text-gray-600 border border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          <Star className={`w-4 h-4 ${p.isCover ? 'fill-current text-brand-600' : ''}`} />
+                          {p.isCover ? 'Cover photo (tap to unset)' : 'Use as cover photo'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}

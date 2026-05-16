@@ -10,17 +10,17 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          50:  '#f0f7f3',
-          100: '#dceee4',
-          200: '#b9ddca',
-          300: '#8dc4a9',
-          400: '#5ea484',
-          500: '#3d8566',
-          600: '#2d6b4f',  // primary
-          700: '#245540',
-          800: '#1e4434',
-          900: '#19382c',
-          950: '#0d2019',
+          50:  '#ecfaf2',
+          100: '#d4f1de',
+          200: '#9FE2BF',  // mint (chosen)
+          300: '#96DED1',  // aqua-mint (chosen)
+          400: '#5fc7a3',
+          500: '#34a886',
+          600: '#1e8a6e',  // primary — deep mint-teal, passes contrast on white text
+          700: '#176d57',
+          800: '#115441',
+          900: '#0d4434',
+          950: '#062821',
         },
         sand: {
           50: '#fafaf7',

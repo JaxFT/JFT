@@ -7,11 +7,11 @@ export const metadata: Metadata = { title: 'Guides' }
 // Guides will be pulled from Supabase products table — static placeholders for now
 const GUIDES = [
   {
-    slug: 'family-travel-penang',
-    title: 'Family Travel in Penang',
-    desc: 'Everything you need to know about visiting Penang with kids — food, beaches, culture, and where to stay.',
+    slug: 'penang-trip-planner',
+    title: 'Penang Complete Trip Planner',
+    desc: 'A practical end-to-end planning guide for visiting Penang with kids — itineraries, where to stay by neighbourhood, food markets, and family logistics.',
     price: '£4.99',
-    tags: ['Asia', 'Malaysia', 'Food'],
+    tags: ['Asia', 'Malaysia', 'Planner'],
     free: false,
   },
   {

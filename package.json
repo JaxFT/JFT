@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "deploy": "opennextjs-cloudflare build && wrangler deploy .open-next/worker.js",
+    "deploy": "rm -rf .next .open-next && opennextjs-cloudflare build && wrangler deploy .open-next/worker.js",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview"
   },
   "dependencies": {

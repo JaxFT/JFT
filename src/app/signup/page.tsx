@@ -22,7 +22,10 @@ export default function SignupPage() {
     setLoading(true)
     const { error } = await supabase.auth.signUp({
       email, password,
-      options: { data: { full_name: fullName } },
+      options: {
+        data: { full_name: fullName },
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/account`,
+      },
     })
     if (error) { setError(error.message); setLoading(false); return }
     setDone(true)

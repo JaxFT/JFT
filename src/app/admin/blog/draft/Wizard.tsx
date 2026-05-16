@@ -114,8 +114,9 @@ ${photos.filter(p => p.status === 'done').length === 0
       .map((p, i) => `Photo ${i + 1}: ${p.url}\n  Caption: ${p.caption || '(no caption — pick one from the body)'}`)
       .join('\n')}
 
-OUTPUT FORMAT — Return a markdown blog post file with YAML frontmatter. Exact structure:
+OUTPUT FORMAT — IMPORTANT: Return the entire blog post WRAPPED IN A SINGLE TRIPLE-BACKTICK CODE BLOCK so I can copy the raw text. Like this:
 
+\`\`\`
 ---
 title: "<compelling, specific title — not generic>"
 excerpt: "<one-sentence hook for the blog listing, ~25 words>"
@@ -130,8 +131,9 @@ tags: ["<3 to 5 short tags, e.g. Country, Region, Theme>"]
 Place each photo above using ![caption text](URL from the list above) at a natural moment in the post.
 
 End with a warm, natural sign-off in Bec & Oli's voice.>
+\`\`\`
 
-Return ONLY the markdown file. No preamble, no \`\`\` code fences. Start with the opening --- of the frontmatter.`
+Do NOT add any text before or after the code block. The code block is the entire response. This is critical — without the code block the markdown can't be copied properly.`
 
   const canAdvance = () => {
     if (step === 1) return location.trim() && about.trim()

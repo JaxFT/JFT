@@ -32,7 +32,14 @@ export async function POST(request: Request) {
   let bodyMd = ''
 
   if (typeof body.markdown === 'string' && body.markdown.trim().length > 0) {
-    const parsed = matter(body.markdown)
+    // Strip outer code fences if the AI wrapped its response (we ask
+    // it to, so the user can copy the raw text from ChatGPT/Claude).
+    const stripped = body.markdown
+      .trim()
+      .replace(/^```(?:markdown|md)?\s*\n?/i, '')
+      .replace(/\n?```\s*$/i, '')
+      .trim()
+    const parsed = matter(stripped)
     const fm = parsed.data as Record<string, unknown>
     if (!title && typeof fm.title === 'string') title = fm.title
     if (typeof fm.excerpt === 'string') excerpt = fm.excerpt

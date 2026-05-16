@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "deploy": "rm -rf .next .open-next && opennextjs-cloudflare build && wrangler deploy .open-next/worker.js",
+    "deploy": "rm -rf .next .open-next && dotenv -e .env.local -- opennextjs-cloudflare build && wrangler deploy .open-next/worker.js",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview"
   },
   "dependencies": {
@@ -31,6 +31,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.0.1",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^8",
     "eslint-config-next": "15.5.18",
     "postcss": "^8",

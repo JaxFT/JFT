@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { ArrowLeft, Save, Trash2, ExternalLink, Eye, FileEdit, Check } from 'lucide-react'
+import { ArrowLeft, Save, Trash2, ExternalLink, Eye, FileEdit, Check, Upload, Loader2 } from 'lucide-react'
 import type { BlogPostRow } from '@/lib/blog-db'
 
 export default function EditForm({ post, justCreated }: { post: BlogPostRow; justCreated: boolean }) {
@@ -23,6 +23,26 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
   const [error, setError] = useState<string | null>(null)
   const [savedAt, setSavedAt] = useState<Date | null>(null)
   const [view, setView] = useState<'edit' | 'preview'>('edit')
+  const [uploadingCover, setUploadingCover] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const coverFileInputRef = useRef<HTMLInputElement>(null)
+
+  const uploadCover = async (file: File) => {
+    setUploadError(null)
+    setUploadingCover(true)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const res = await fetch('/api/admin/blog-photos/upload', { method: 'POST', body: form })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`)
+      setCoverImage(body.url)
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : 'Upload failed')
+    } finally {
+      setUploadingCover(false)
+    }
+  }
 
   // Hide the "just created" banner after a moment
   const [showJustCreated, setShowJustCreated] = useState(justCreated)
@@ -161,13 +181,63 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
           </div>
 
           <div>
-            <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Cover image URL</label>
+            <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Cover image</label>
             <input
-              value={coverImage}
-              onChange={e => setCoverImage(e.target.value)}
-              className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500"
-              placeholder="https://..."
+              ref={coverFileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={e => {
+                const f = e.target.files?.[0]
+                if (f) uploadCover(f)
+                e.target.value = ''
+              }}
             />
+            <div className="flex items-start gap-3 flex-wrap">
+              {coverImage ? (
+                <img
+                  src={coverImage}
+                  alt="Cover preview"
+                  className="w-24 h-24 object-cover rounded-lg border border-gray-200 shrink-0"
+                />
+              ) : (
+                <div className="w-24 h-24 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-gray-300 shrink-0">
+                  <Upload className="w-6 h-6" />
+                </div>
+              )}
+              <div className="flex-1 min-w-[12rem] space-y-2">
+                <button
+                  type="button"
+                  onClick={() => coverFileInputRef.current?.click()}
+                  disabled={uploadingCover}
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-3 py-2 rounded-md disabled:opacity-50"
+                >
+                  {uploadingCover ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</>
+                  ) : (
+                    <><Upload className="w-4 h-4" /> {coverImage ? 'Replace cover image' : 'Upload cover image'}</>
+                  )}
+                </button>
+                {coverImage && (
+                  <button
+                    type="button"
+                    onClick={() => setCoverImage('')}
+                    className="block text-xs text-gray-500 hover:text-red-700"
+                  >
+                    Remove cover image
+                  </button>
+                )}
+                <input
+                  value={coverImage}
+                  onChange={e => setCoverImage(e.target.value)}
+                  className="w-full text-xs text-gray-500 font-mono border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  placeholder="…or paste an image URL"
+                />
+                {uploadError && (
+                  <p className="text-xs text-red-700">{uploadError}</p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 

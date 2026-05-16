@@ -1,10 +1,13 @@
 import Link from 'next/link'
-import { getAllPosts } from '@/lib/blog'
+import { listPublishedPosts, rowToView } from '@/lib/blog-db'
 import BlogCard from '@/components/blog/BlogCard'
 import { ArrowRight, Map, BookOpen, Compass } from 'lucide-react'
 
-export default function HomePage() {
-  const posts = getAllPosts().slice(0, 3)
+export const dynamic = 'force-dynamic'
+
+export default async function HomePage() {
+  const rows = await listPublishedPosts()
+  const posts = rows.slice(0, 3).map(rowToView)
 
   return (
     <>

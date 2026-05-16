@@ -1,4 +1,3 @@
-import { getPostBySlug, getAllPosts } from '@/lib/blog'
 import { notFound } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -6,26 +5,27 @@ import { format } from 'date-fns'
 import { Clock, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { getPublishedPostBySlug, rowToView } from '@/lib/blog-db'
 
-export async function generateStaticParams() {
-  return getAllPosts().map(p => ({ slug: p.slug }))
-}
+export const dynamic = 'force-dynamic'
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+export async function generateMetadata(
+  { params }: { params: Promise<{ slug: string }> },
+): Promise<Metadata> {
   const { slug } = await params
-  const post = getPostBySlug(slug)
-  if (!post) return {}
-  return { title: post.title, description: post.excerpt }
+  const row = await getPublishedPostBySlug(slug)
+  if (!row) return {}
+  return { title: row.title, description: row.excerpt ?? undefined }
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const post = getPostBySlug(slug)
-  if (!post) notFound()
+  const row = await getPublishedPostBySlug(slug)
+  if (!row) notFound()
+  const post = rowToView(row)
 
   return (
     <div className="min-h-screen bg-white pt-20">
-      {/* Hero image */}
       {post.coverImage && (
         <div className="w-full h-72 sm:h-96 overflow-hidden">
           <img src={post.coverImage} alt={post.title} className="w-full h-full object-cover" />
@@ -37,7 +37,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <ArrowLeft className="w-4 h-4" /> Back to blog
         </Link>
 
-        {/* Tags */}
         <div className="flex flex-wrap gap-2 mb-4">
           {post.tags.map(tag => (
             <span key={tag} className="text-xs font-semibold text-brand-600 bg-brand-50 px-2.5 py-1 rounded-full">{tag}</span>

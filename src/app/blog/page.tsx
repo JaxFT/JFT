@@ -1,11 +1,13 @@
-import { getAllPosts } from '@/lib/blog'
+import { listPublishedPosts, rowToView } from '@/lib/blog-db'
 import BlogCard from '@/components/blog/BlogCard'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Blog' }
+export const dynamic = 'force-dynamic'
 
-export default function BlogPage() {
-  const posts = getAllPosts()
+export default async function BlogPage() {
+  const rows = await listPublishedPosts()
+  const posts = rows.map(rowToView)
 
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">

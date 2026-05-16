@@ -661,25 +661,25 @@ Additional details to include: ${extras || 'none'}
 PHOTOS TO INCLUDE: ${photoCount} photo(s)
 ${photoDescriptions || 'No photo captions provided.'}
 
-OUTPUT INSTRUCTIONS:
-Generate a complete, self-contained HTML blog post page. Include:
-1. A compelling post title (not generic — specific to this experience)
-2. A subtitle or opening hook
-3. The full blog post body (800–1200 words) with proper paragraphs
-4. Photo placeholders using <figure> tags at natural points in the post — use the caption info to place them contextually. Format: <figure class="post-photo"><div class="photo-placeholder">[PHOTO ${'{N}'}: description from caption]</div><figcaption>caption text here</figcaption></figure>
-5. A natural, warm sign-off in Bec & Oli's voice
+OUTPUT FORMAT:
+Return a markdown blog post file with YAML frontmatter. Exact structure:
 
-The HTML must:
-- Use the JaxFamilyTravels brand colours: --clay: #C8834A, --ink: #1A1008, --sand: #F5EDD8, --sage: #7A9E7E
-- Use Google Fonts: Playfair Display for headings, DM Sans for body
-- Include all CSS inline in a <style> tag
-- Be a standalone article page that can be dropped into their website
-- Have a clean, editorial blog layout — not too wide, good line height, generous spacing
-- Include a header with the JaxFamilyTravels logo and the post date
-- Include social share encouragement at the bottom
-- Look genuinely professional — not like a template
+---
+title: "<compelling, specific title — not generic>"
+excerpt: "<one-sentence hook for the blog listing, ~25 words>"
+date: "${new Date().toISOString().slice(0, 10)}"
+author: "Jax Family Travels"
+coverImage: ""
+tags: ["<3 to 5 short tags, e.g. Country, Region, Theme>"]
+---
 
-Return ONLY the complete HTML. No explanation, no preamble, no markdown code fences. Start with <!DOCTYPE html> and end with </html>.`;
+<Body in markdown, 800–1200 words. Use ## for section headings, **bold** for emphasis, *italics* sparingly. Short punchy paragraphs.
+
+${photoCount > 0 ? `Place ${photoCount} photo${photoCount > 1 ? 's' : ''} at natural moments in the text using this exact markdown image syntax: ![alt text from caption](photo-placeholder-N) where N is 1..${photoCount}. The user will replace photo-placeholder-N with real image URLs after generation.` : 'No photos this post.'}
+
+End with a warm, natural sign-off in Bec & Oli's voice.>
+
+Return ONLY the markdown file. No explanation, no preamble, no \`\`\` fences. Start with the opening --- of the frontmatter.`;
 
   try {
     const response = await fetch('/api/admin/blog-writer/generate', {
@@ -697,37 +697,38 @@ Return ONLY the complete HTML. No explanation, no preamble, no markdown code fen
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
-    let html = '';
+    let markdown = '';
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
-      html += decoder.decode(value, { stream: true });
+      markdown += decoder.decode(value, { stream: true });
     }
-    html += decoder.decode();
+    markdown += decoder.decode();
 
-    const errMatch = html.match(/\[GENERATION_ERROR\] (.*)$/);
+    const errMatch = markdown.match(/\[GENERATION_ERROR\] (.*)$/);
     if (errMatch) throw new Error(errMatch[1]);
 
-    // Strip markdown fences if present
-    html = html.replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+    // Strip code fences if the model added them despite the instructions
+    markdown = markdown.replace(/^```(?:markdown|md)?\s*/i, '').replace(/\s*```$/i, '').trim();
 
-    generatedHTML = html;
+    // Save as a draft post in Supabase, then redirect parent window to the editor
+    const saveResp = await fetch('/api/admin/blog-posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ markdown })
+    });
+    if (!saveResp.ok) {
+      const err = await saveResp.json().catch(() => ({}));
+      throw new Error('Could not save draft: ' + (err.error || saveResp.status));
+    }
+    const saved = await saveResp.json();
 
-    // Extract title for display
-    const titleMatch = html.match(/<title>(.*?)<\/title>/i) || html.match(/<h1[^>]*>(.*?)<\/h1>/i);
-    const postTitle = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '') : 'Your post is ready';
-
-    document.getElementById('output-title').textContent = postTitle;
-    document.getElementById('code-output').textContent = html;
-
-    // Load preview
-    const iframe = document.getElementById('preview-iframe');
-    iframe.srcdoc = html;
-    iframe.onload = () => {
-      iframe.style.height = (iframe.contentDocument.body.scrollHeight + 40) + 'px';
-    };
-
-    goTo(3);
+    // Hop the parent window out of the iframe to the edit screen
+    if (window.top) {
+      window.top.location.href = '/admin/blog/' + saved.id + '/edit?new=1';
+    } else {
+      window.location.href = '/admin/blog/' + saved.id + '/edit?new=1';
+    }
 
   } catch (err) {
     goTo(1);

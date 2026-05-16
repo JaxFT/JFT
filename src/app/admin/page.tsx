@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { PenLine, ArrowRight, ShieldCheck } from 'lucide-react'
+import { PenLine, ArrowRight, ShieldCheck, FileText } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -9,9 +9,15 @@ export const metadata: Metadata = {
 
 const TOOLS = [
   {
+    href: '/admin/blog',
+    title: 'Blog Posts',
+    desc: 'Edit, publish, and unpublish blog posts. View drafts you have generated.',
+    icon: FileText,
+  },
+  {
     href: '/admin/blog-writer',
     title: 'Blog Post Generator',
-    desc: 'Draft a new blog post with the JFT writer tool. Outputs ready-to-paste markdown for content/blog/.',
+    desc: 'Draft a new blog post with Claude — saves as a draft you can review and publish from Blog Posts.',
     icon: PenLine,
   },
 ]

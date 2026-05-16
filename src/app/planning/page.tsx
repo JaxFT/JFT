@@ -44,7 +44,10 @@ export default function PlanningPage() {
       <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0 -z-10">
           <img src={HERO_IMAGE} alt="Family travelling across the Sahara dunes in Morocco" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-950/85 via-brand-800/65 to-brand-300/30" />
+          {/* Solid dark base ensures white text stays readable over the sandy photo */}
+          <div className="absolute inset-0 bg-brand-950/75" />
+          {/* Gradient on top adds depth without going too transparent at the corners */}
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-950/40 via-transparent to-brand-700/30" />
         </div>
         <div className="max-w-4xl mx-auto text-center text-white">
           <p className="text-xs font-bold tracking-widest uppercase text-brand-200 mb-4">Planning &amp; Tracking</p>

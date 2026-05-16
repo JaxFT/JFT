@@ -62,10 +62,10 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* Right: featured posts carousel */}
+            {/* Right: featured posts carousel — shifted right on desktop so it doesn't cover the family photo subject */}
             {posts.length > 0 && (
               <div className="hidden lg:block">
-                <div className="relative h-96">
+                <div className="relative h-96 lg:translate-x-32 xl:translate-x-40">
                   {posts.slice(0, 3).map((post, i) => (
                     <Link
                       key={post.slug}

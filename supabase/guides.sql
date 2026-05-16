@@ -30,7 +30,7 @@ values
     array['Asia','Sri Lanka','Family']::text[]
   ),
   (
-    'How to Save for Full-Time Travel — The Blueprint',
+    'How We Saved for Full-Time Travel — The Blueprint',
     'how-to-save-blueprint',
     'The exact playbook we used to fund leaving the UK with our family.',
     'A no-fluff blueprint for families who want to do this for real. How we restructured spend, what we sold, what we kept, the timeline that worked, and the mistakes we''d undo if we did it again.',

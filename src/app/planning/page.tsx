@@ -68,14 +68,6 @@ export default function PlanningPage() {
               </a>
             </div>
           </div>
-          {/* Optional feature image of the family — sits below the header, not as an overlay */}
-          <div className="rounded-2xl overflow-hidden shadow-md max-h-72">
-            <img
-              src={HERO_IMAGE}
-              alt="Family travelling across the Sahara dunes in Morocco"
-              className="w-full h-72 object-cover object-center"
-            />
-          </div>
         </div>
       </section>
 

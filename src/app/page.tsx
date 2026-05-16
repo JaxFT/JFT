@@ -1,13 +1,26 @@
 import Link from 'next/link'
 import { listPublishedPosts, rowToView } from '@/lib/blog-db'
 import BlogCard from '@/components/blog/BlogCard'
-import { ArrowRight, Map, BookOpen, Compass } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+import { ArrowRight, Map, BookOpen, Compass, Crown, Sparkles } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
   const rows = await listPublishedPosts()
   const posts = rows.slice(0, 3).map(rowToView)
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  let isPremium = false
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('subscription_tier')
+      .eq('id', user.id)
+      .single()
+    isPremium = profile?.subscription_tier === 'premium'
+  }
 
   return (
     <>
@@ -111,24 +124,33 @@ export default async function HomePage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { icon: Compass, title: 'I Want To Travel', desc: 'Our decision tool that tells you honestly if long-term family travel is realistic for you right now.', href: '/i-want-to-travel', badge: 'Premium' },
-              { icon: Map, title: 'Guides', desc: 'Destination guides written from real family experience — what actually worked, what didn\'t.', href: '/guides', badge: null },
-              { icon: BookOpen, title: 'Learning Packs', desc: 'Practical resources for travelling families — from schooling on the road to managing money abroad.', href: '/learning', badge: 'Premium' },
-            ].map(item => (
-              <Link key={item.href} href={item.href} className="group relative bg-sand-50 rounded-2xl p-7 hover:bg-brand-50 transition-colors border border-sand-200 hover:border-brand-200">
-                {item.badge && (
-                  <span className="absolute top-4 right-4 text-xs font-semibold bg-brand-600 text-white px-2 py-0.5 rounded-full">{item.badge}</span>
-                )}
-                <div className="w-11 h-11 bg-brand-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-brand-700 transition-colors">
-                  <item.icon className="w-5 h-5 text-white" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">{item.desc}</p>
-                <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 group-hover:gap-2 transition-all">
-                  Explore <ArrowRight className="w-3.5 h-3.5" />
-                </span>
-              </Link>
-            ))}
+              { icon: Compass, title: 'I Want To Travel', desc: 'Our decision tool that tells you honestly if long-term family travel is realistic for you right now.', href: '/i-want-to-travel', premiumFeature: true },
+              { icon: Map, title: 'Guides', desc: 'Destination guides written from real family experience — what actually worked, what didn\'t.', href: '/guides', premiumFeature: false },
+              { icon: BookOpen, title: 'Learning Packs', desc: 'Practical resources for travelling families — from schooling on the road to managing money abroad.', href: '/learning', premiumFeature: true },
+            ].map(item => {
+              const showBadge = item.premiumFeature
+              const badgeText = isPremium ? 'Included' : 'Premium'
+              return (
+                <Link key={item.href} href={item.href} className="group relative bg-sand-50 rounded-2xl p-7 hover:bg-brand-50 transition-colors border border-sand-200 hover:border-brand-200">
+                  {showBadge && (
+                    <span className={`absolute top-4 right-4 inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                      isPremium ? 'bg-brand-100 text-brand-800' : 'bg-brand-600 text-white'
+                    }`}>
+                      {isPremium && <Crown className="w-3 h-3" />}
+                      {badgeText}
+                    </span>
+                  )}
+                  <div className="w-11 h-11 bg-brand-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-brand-700 transition-colors">
+                    <item.icon className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">{item.desc}</p>
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 group-hover:gap-2 transition-all">
+                    Explore <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                </Link>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -158,18 +180,40 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ── PREMIUM CTA ── */}
+      {/* ── PREMIUM CTA — varies by auth/tier ── */}
       <section className="py-20 bg-brand-950 text-white">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-4">Premium membership</p>
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">Everything, for £25 a year</h2>
-          <p className="text-white/70 text-lg mb-8 leading-relaxed">
-            Get full access to every guide, learning pack, and travel tool — including I Want To Travel. Cancel any time.
-          </p>
-          <Link href="/signup" className="btn-primary text-base px-8 py-3.5">
-            Get started <ArrowRight className="w-4 h-4" />
-          </Link>
-          <p className="mt-4 text-sm text-white/40">Or buy individual guides separately.</p>
+          {isPremium ? (
+            <>
+              <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-4 inline-flex items-center gap-1.5 justify-center">
+                <Sparkles className="w-3.5 h-3.5" /> Your membership
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">You have access to everything</h2>
+              <p className="text-white/70 text-lg mb-8 leading-relaxed">
+                Every guide, every learning pack, and the travel tool are open to you. Here are a few places to start.
+              </p>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <Link href="/guides" className="btn-primary text-base px-7 py-3.5">
+                  Browse guides <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link href="/i-want-to-travel" className="inline-flex items-center gap-2 text-white/80 hover:text-white text-base font-semibold transition-colors">
+                  I Want To Travel <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-4">Premium membership</p>
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">Everything, for £25 a year</h2>
+              <p className="text-white/70 text-lg mb-8 leading-relaxed">
+                Get full access to every guide, learning pack, and travel tool — including I Want To Travel. Cancel any time.
+              </p>
+              <Link href={user ? '/account' : '/signup'} className="btn-primary text-base px-8 py-3.5">
+                {user ? 'Upgrade to Premium' : 'Get started'} <ArrowRight className="w-4 h-4" />
+              </Link>
+              <p className="mt-4 text-sm text-white/40">Or buy individual guides separately.</p>
+            </>
+          )}
         </div>
       </section>
     </>

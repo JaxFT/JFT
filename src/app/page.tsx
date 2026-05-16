@@ -17,8 +17,8 @@ export default function HomePage() {
             alt="Aerial jungle"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-brand-950/70" />
-          <div className="absolute inset-0 bg-gradient-to-r from-brand-950/80 via-brand-950/50 to-transparent" />
+          <div className="absolute inset-0 bg-brand-800/60" />
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-800/85 via-brand-600/40 to-brand-300/20" />
         </div>
 
         {/* Decorative dots */}

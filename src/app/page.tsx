@@ -29,12 +29,13 @@ export default async function HomePage() {
         {/* Background */}
         <div className="absolute inset-0 z-0">
           <img
-            src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1600&q=80"
-            alt="Aerial jungle"
-            className="w-full h-full object-cover"
+            src="/images/homepage/homepage_header_jft.jpg"
+            alt="The Jax Family Travels family on the road"
+            className="w-full h-full object-cover object-center"
           />
-          <div className="absolute inset-0 bg-brand-800/60" />
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-800/85 via-brand-600/40 to-brand-300/20" />
+          {/* Lighter overlay than before — let the photo speak, just enough dark to keep the white headline readable */}
+          <div className="absolute inset-0 bg-brand-950/40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-brand-950/70 via-brand-950/30 to-transparent" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-20">

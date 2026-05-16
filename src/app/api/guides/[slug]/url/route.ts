@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient as createSbClient } from '@supabase/supabase-js'
 import { getGuideBySlug, userHasPurchased, PREVIEWS_BUCKET, FULL_BUCKET } from '@/lib/guides-db'
 import { createClient } from '@/lib/supabase/server'
 
@@ -76,19 +75,16 @@ export async function GET(
 type SignedUrlResult = { url: string | null; error?: string }
 
 async function signedUrlForBucket(bucket: string, path: string, expiresSeconds: number): Promise<SignedUrlResult> {
-  // Service role bypasses RLS and works whether the bucket is public or private.
+  // Service role bypasses RLS. Use plain @supabase/supabase-js client —
+  // NOT @supabase/ssr's createServerClient, which folds in the caller's
+  // session cookie and overrides the service-role JWT, silently
+  // downgrading auth to user-level and breaking private-bucket access.
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!serviceKey) return { url: null, error: 'SUPABASE_SERVICE_ROLE_KEY not set as a Worker secret' }
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
+  const supabase = createSbClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     serviceKey,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll() {},
-      },
-    },
+    { auth: { persistSession: false, autoRefreshToken: false } },
   )
   const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, expiresSeconds)
   if (error || !data) {

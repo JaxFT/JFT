@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient as createSbClient } from '@supabase/supabase-js'
 import { stripeClient } from '@/lib/stripe'
 import type Stripe from 'stripe'
 
@@ -55,21 +54,17 @@ export async function POST(request: Request) {
       )
     }
 
-    // Service role bypasses RLS — this runs without a user session
+    // Service role bypasses RLS. Plain @supabase/supabase-js client —
+    // @supabase/ssr's createServerClient folds in cookies and downgrades
+    // auth to user-level, which means the INSERT would fail RLS.
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (!serviceKey) {
       return NextResponse.json({ error: 'Service role key not configured' }, { status: 500 })
     }
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
+    const supabase = createSbClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       serviceKey,
-      {
-        cookies: {
-          getAll() { return cookieStore.getAll() },
-          setAll() {},
-        },
-      },
+      { auth: { persistSession: false, autoRefreshToken: false } },
     )
 
     // unique(user_id, product_id) prevents duplicate rows if Stripe retries

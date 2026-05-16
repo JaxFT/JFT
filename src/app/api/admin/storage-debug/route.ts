@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient as createSbClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/admin'
 
@@ -8,7 +7,8 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 // Admin-only diagnostic: ask Supabase what's actually in our buckets
-// using the same service-role path the guide-URL endpoint uses.
+// using a true service-role client (NOT @supabase/ssr which mixes in
+// the user's session JWT and silently downgrades auth).
 export async function GET() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -20,16 +20,10 @@ export async function GET() {
   if (!serviceKey) {
     return NextResponse.json({ error: 'SUPABASE_SERVICE_ROLE_KEY not set' }, { status: 500 })
   }
-  const cookieStore = await cookies()
-  const admin = createServerClient(
+  const admin = createSbClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     serviceKey,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll() {},
-      },
-    },
+    { auth: { persistSession: false, autoRefreshToken: false } },
   )
 
   const result: Record<string, unknown> = {}

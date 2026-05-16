@@ -19,13 +19,38 @@ export default function UpdatePasswordPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
-  // The /auth/callback exchange should have created a session by now.
-  // If not, the reset link expired or was opened on a different device.
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setHasSession(!!data.user)
+    // Two paths set hasSession=true:
+    // 1. PASSWORD_RECOVERY event fires when the user arrives from the reset
+    //    email link — the supabase-js browser client picks up the auth params
+    //    on load (whether in ?code= or in the URL fragment) and emits this.
+    // 2. The user is already signed in (e.g. they navigated here from
+    //    /account to set a new password while logged in).
+    let resolved = false
+    const settle = (ok: boolean) => {
+      if (resolved) return
+      resolved = true
+      setHasSession(ok)
       setCheckingSession(false)
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' || (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED'))) {
+        settle(true)
+      }
     })
+
+    // Fallback: if no auth-state event fires within ~2s and there's no
+    // existing session, the link was expired or invalid.
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) settle(true)
+    })
+    const timeoutId = setTimeout(() => settle(false), 2500)
+
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeoutId)
+    }
   }, [supabase.auth])
 
   const submit = async (e: React.FormEvent) => {

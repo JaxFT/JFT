@@ -25,7 +25,10 @@ function ResetPasswordForm() {
     setLoading(true)
     setError(null)
     try {
-      const redirectTo = `${window.location.origin}/auth/callback?next=/update-password`
+      // Send users straight to /update-password — that page handles the
+      // PASSWORD_RECOVERY auth event itself, which is the canonical
+      // Supabase pattern and sidesteps query-param mangling on redirectTo.
+      const redirectTo = `${window.location.origin}/update-password`
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo })
       if (error) throw new Error(error.message)
       setSent(true)

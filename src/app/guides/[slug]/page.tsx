@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { getGuideBySlug, userHasPurchased, formatPrice } from '@/lib/guides-db'
 import GuideViewer from './GuideViewer'
+import BuyButton from './BuyButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -96,13 +97,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-1">{formatPrice(guide.price_pence)}</h3>
               <p className="text-sm text-gray-500 mb-5 flex-1">Pay once. Download the full PDF and keep it on your device forever.</p>
-              <button
-                disabled
-                title="Stripe checkout is being wired up — coming soon."
-                className="btn-primary w-full justify-center opacity-60 cursor-not-allowed"
-              >
-                Buy — coming soon
-              </button>
+              <BuyButton slug={guide.slug} priceLabel={formatPrice(guide.price_pence)} />
             </div>
 
             {/* Premium upgrade */}

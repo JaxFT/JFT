@@ -22,6 +22,10 @@ build/
 .env.*.local
 !.env.production
 
+# source PDFs (kept locally, uploaded to Supabase Storage — don't bloat git)
+/guides/*.pdf
+/guides/previews/
+
 # misc
 .DS_Store
 *.pem

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Map, ArrowRight } from 'lucide-react'
+import { Map, ArrowRight, Crown } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
 import { listActiveGuides, formatPrice } from '@/lib/guides-db'
 
 export const metadata: Metadata = { title: 'Guides' }
@@ -8,6 +9,18 @@ export const dynamic = 'force-dynamic'
 
 export default async function GuidesPage() {
   const guides = await listActiveGuides()
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  let isPremium = false
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('subscription_tier')
+      .eq('id', user.id)
+      .single()
+    isPremium = profile?.subscription_tier === 'premium'
+  }
 
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
@@ -20,18 +33,27 @@ export default async function GuidesPage() {
           </p>
         </div>
 
-        {/* Premium banner */}
-        <div className="bg-brand-950 text-white rounded-2xl p-6 mb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <p className="font-bold text-lg">Get every guide for £25/year</p>
-            <p className="text-white/60 text-sm">
-              Premium membership includes on-site access to every guide, the travel tool, and learning packs. View on the site (no downloads).
+        {/* Premium banner — hidden for premium members */}
+        {isPremium ? (
+          <div className="bg-brand-50 border border-brand-200 rounded-2xl p-4 mb-10 flex items-center gap-3 text-brand-900">
+            <Crown className="w-5 h-5 text-brand-700 shrink-0" />
+            <p className="text-sm">
+              <strong>Premium member.</strong> Every guide below is included — click any to read on the site.
             </p>
           </div>
-          <Link href="/signup?next=/account" className="btn-primary shrink-0">
-            Go Premium <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
+        ) : (
+          <div className="bg-brand-950 text-white rounded-2xl p-6 mb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <p className="font-bold text-lg">Get every guide for £25/year</p>
+              <p className="text-white/60 text-sm">
+                Premium membership includes on-site access to every guide, the travel tool, and learning packs. View on the site (no downloads).
+              </p>
+            </div>
+            <Link href="/signup?next=/account" className="btn-primary shrink-0">
+              Go Premium <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        )}
 
         {guides.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center text-gray-500">
@@ -80,7 +102,13 @@ export default async function GuidesPage() {
                     <p className="text-sm text-white/70 leading-snug line-clamp-2 mb-3">{guide.subtitle}</p>
                   )}
                   <div className="flex items-center justify-between pt-3 border-t border-white/15">
-                    <span className="font-bold text-base">{formatPrice(guide.price_pence)}</span>
+                    {isPremium ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold tracking-widest uppercase text-brand-200">
+                        <Crown className="w-3.5 h-3.5" /> Included
+                      </span>
+                    ) : (
+                      <span className="font-bold text-base">{formatPrice(guide.price_pence)}</span>
+                    )}
                     <span className="inline-flex items-center gap-1 text-sm font-semibold text-brand-200 group-hover:gap-2 transition-all">
                       View <ArrowRight className="w-3.5 h-3.5" />
                     </span>

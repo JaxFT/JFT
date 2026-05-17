@@ -55,13 +55,15 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   return (
     <div className="min-h-screen bg-white pt-20">
       {post.coverImage && (
-        <div className="w-full h-72 sm:h-96 overflow-hidden">
-          <img
-            src={post.coverImage}
-            alt={post.title}
-            className="w-full h-full object-cover"
-            style={{ objectPosition: `${post.coverFocalX}% ${post.coverFocalY}%` }}
-          />
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-8">
+          <div className="aspect-square w-full overflow-hidden rounded-2xl bg-gray-100">
+            <img
+              src={post.coverImage}
+              alt={post.title}
+              className="w-full h-full object-cover"
+              style={{ objectPosition: `${post.coverFocalX}% ${post.coverFocalY}%` }}
+            />
+          </div>
         </div>
       )}
 

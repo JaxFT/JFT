@@ -72,10 +72,10 @@ export default function CoverFocalPicker({
         </div>
       </div>
 
-      {/* Cropped previews showing what listing card / hero will look like */}
+      {/* Cropped previews showing what the post hero + listing card will look like */}
       <div className="grid grid-cols-2 gap-3">
-        <FocalPreviewBox label="Card preview" src={src} x={x} y={y} aspect="3 / 4" />
-        <FocalPreviewBox label="Hero preview" src={src} x={x} y={y} aspect="16 / 9" />
+        <FocalPreviewBox label="Post hero (square)" src={src} x={x} y={y} aspect="1 / 1" />
+        <FocalPreviewBox label="Listing card" src={src} x={x} y={y} aspect="16 / 9" />
       </div>
     </div>
   )

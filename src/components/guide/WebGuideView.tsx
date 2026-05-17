@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Crown, Lock, Map, ListOrdered } from 'lucide-react'
 import GuideMarkdown from './GuideMarkdown'
-import type { GuideRow } from '@/lib/guide-types'
+import type { GuideRow, GuideContentBlock } from '@/lib/guide-types'
 import type { AutoLinkPhrase } from '@/lib/blog-links'
 
 type Props = {
@@ -13,7 +13,6 @@ type Props = {
   isPremium: boolean
 }
 
-// Anchor-friendly id from arbitrary text.
 function anchor(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 60)
 }
@@ -22,35 +21,41 @@ function formatPrice(pence: number): string {
   return `£${(pence / 100).toFixed(2)}`
 }
 
+// Block id is unique within a guide — safe anchor even if two blocks
+// share a heading.
+function blockAnchor(b: GuideContentBlock): string {
+  const h = anchor(b.heading) || 'section'
+  return `block-${h}-${b.id.slice(0, 6)}`
+}
+
 export default function WebGuideView({
   guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, isPremium,
 }: Props) {
-  const s = guide.sections
-  const destinations = (s.destinations ?? []).slice().sort((a, b) => a.order - b.order)
-  const themed = (s.themedSections ?? []).slice().sort((a, b) => a.order - b.order)
+  const blocks = (guide.sections.blocks ?? []).slice().sort((a, b) => a.order - b.order)
+  const hideAbout = !!guide.sections.hideAbout
 
-  // For non-buyers: show About + Why + Highlights + first N destinations, then paywall.
-  const previewCount = Math.max(0, guide.preview_destinations)
-  const visibleDestinations = canViewFull ? destinations : destinations.slice(0, previewCount)
-  const hiddenDestinationCount = destinations.length - visibleDestinations.length
+  // Split blocks into visible vs hidden for non-buyers.
+  // Rule: all freePreview blocks are shown to everyone. As soon as we hit
+  // a non-free block, anything from that point on is paywalled.
+  let firstPaywalledIdx = -1
+  if (!canViewFull) {
+    for (let i = 0; i < blocks.length; i++) {
+      if (!blocks[i].freePreview) { firstPaywalledIdx = i; break }
+    }
+  }
+  const visibleBlocks = !canViewFull && firstPaywalledIdx !== -1
+    ? blocks.slice(0, firstPaywalledIdx)
+    : blocks
+  const hiddenCount = blocks.length - visibleBlocks.length
 
-  // Build TOC entries for everything that has a body.
+  // TOC: only sections actually rendered.
   const toc: Array<{ id: string; label: string }> = []
-  if (aboutUsMarkdown.trim() && !s.hideAbout) toc.push({ id: 'about-us', label: 'About us' })
-  if ((s.why?.body ?? '').trim())          toc.push({ id: 'why', label: `Why ${guide.country ?? 'this country'}` })
-  if ((s.highlights?.body ?? '').trim())   toc.push({ id: 'highlights', label: 'Destination highlights' })
-  if ((s.needToKnows?.body ?? '').trim())  toc.push({ id: 'need-to-knows', label: 'Need to knows' })
-  for (const d of destinations) {
-    if ((d.body ?? '').trim() || d.name.trim()) {
-      toc.push({ id: `dest-${anchor(d.name)}`, label: d.name || 'Destination' })
+  if (aboutUsMarkdown.trim() && !hideAbout) toc.push({ id: 'about-us', label: 'About us' })
+  for (const b of visibleBlocks) {
+    if ((b.body ?? '').trim() || b.heading.trim()) {
+      toc.push({ id: blockAnchor(b), label: b.heading || 'Section' })
     }
   }
-  for (const t of themed) {
-    if ((t.body ?? '').trim() || t.title.trim()) {
-      toc.push({ id: `themed-${anchor(t.title)}`, label: t.title || 'Section' })
-    }
-  }
-  if ((s.finalThoughts?.body ?? '').trim()) toc.push({ id: 'final-thoughts', label: 'Final thoughts' })
 
   return (
     <div className="min-h-screen bg-sand-50 pb-20">
@@ -92,7 +97,7 @@ export default function WebGuideView({
                 <><Crown className="w-3.5 h-3.5 text-brand-300" /> Full guide</>
               )
             ) : (
-              <><Lock className="w-3.5 h-3.5 text-amber-200" /> Preview — first {previewCount} destination{previewCount === 1 ? '' : 's'} shown</>
+              <><Lock className="w-3.5 h-3.5 text-amber-200" /> Preview — {hiddenCount} section{hiddenCount === 1 ? '' : 's'} hidden</>
             )}
           </div>
         </div>
@@ -127,58 +132,31 @@ export default function WebGuideView({
 
       {/* CONTENT */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 mt-12 space-y-12">
-        {aboutUsMarkdown.trim() && !s.hideAbout && (
+        {aboutUsMarkdown.trim() && !hideAbout && (
           <GuideSection id="about-us" title="About us">
             <GuideMarkdown markdown={aboutUsMarkdown} autoLinkPhrases={autoLinkPhrases} />
           </GuideSection>
         )}
 
-        {(s.why?.body ?? '').trim() && (
-          <GuideSection id="why" title={`Why ${guide.country ?? 'this country'}`}>
-            <GuideMarkdown markdown={s.why!.body} autoLinkPhrases={autoLinkPhrases} />
-          </GuideSection>
-        )}
-
-        {(s.highlights?.body ?? '').trim() && (
-          <GuideSection id="highlights" title="Destination highlights">
-            <GuideMarkdown markdown={s.highlights!.body} autoLinkPhrases={autoLinkPhrases} />
-          </GuideSection>
-        )}
-
-        {(s.needToKnows?.body ?? '').trim() && (
-          <GuideSection id="need-to-knows" title="Need to knows">
-            <GuideMarkdown markdown={s.needToKnows!.body} autoLinkPhrases={autoLinkPhrases} />
-          </GuideSection>
-        )}
-
-        {visibleDestinations.map(d => (
-          <GuideSection key={d.id} id={`dest-${anchor(d.name)}`} title={d.name || 'Destination'} eyebrow="Destination">
-            <GuideMarkdown markdown={d.body} autoLinkPhrases={autoLinkPhrases} />
+        {visibleBlocks.map(b => (
+          <GuideSection
+            key={b.id}
+            id={blockAnchor(b)}
+            title={b.heading || 'Section'}
+            eyebrow={b.kind === 'destination' ? 'Destination' : undefined}
+          >
+            <GuideMarkdown markdown={b.body} autoLinkPhrases={autoLinkPhrases} />
           </GuideSection>
         ))}
 
-        {/* PAYWALL */}
-        {!canViewFull && hiddenDestinationCount > 0 && (
+        {!canViewFull && hiddenCount > 0 && (
           <Paywall
             isLoggedIn={isLoggedIn}
             slug={guide.slug}
-            hiddenCount={hiddenDestinationCount}
+            hiddenCount={hiddenCount}
             hasOneOff={guide.price_pence > 0}
             priceLabel={formatPrice(guide.price_pence)}
           />
-        )}
-
-        {/* Themed + final only shown to full-access users. */}
-        {canViewFull && themed.map(t => (
-          <GuideSection key={t.id} id={`themed-${anchor(t.title)}`} title={t.title || 'Section'}>
-            <GuideMarkdown markdown={t.body} autoLinkPhrases={autoLinkPhrases} />
-          </GuideSection>
-        ))}
-
-        {canViewFull && (s.finalThoughts?.body ?? '').trim() && (
-          <GuideSection id="final-thoughts" title="Final thoughts">
-            <GuideMarkdown markdown={s.finalThoughts!.body} autoLinkPhrases={autoLinkPhrases} />
-          </GuideSection>
         )}
       </div>
     </div>
@@ -215,12 +193,11 @@ function Paywall({
 }) {
   return (
     <div className="relative">
-      {/* Fade hint */}
       <div className="pointer-events-none absolute -top-16 inset-x-0 h-16 bg-gradient-to-b from-sand-50/0 to-sand-50" />
 
       <div className="bg-brand-950 text-white rounded-2xl p-6 sm:p-8 text-center">
         <span className="inline-flex items-center gap-1.5 text-xs font-bold tracking-widest uppercase text-brand-300 mb-3">
-          <Lock className="w-3.5 h-3.5" /> {hiddenCount} more destination{hiddenCount === 1 ? '' : 's'} + themed sections
+          <Lock className="w-3.5 h-3.5" /> {hiddenCount} more section{hiddenCount === 1 ? '' : 's'}
         </span>
         <h3 className="text-2xl sm:text-3xl font-bold mb-3">Keep reading with Premium</h3>
         <p className="text-white/70 leading-relaxed max-w-md mx-auto mb-6">

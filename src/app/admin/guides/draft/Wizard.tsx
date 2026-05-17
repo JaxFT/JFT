@@ -1,38 +1,43 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-  ArrowLeft, ArrowRight, Camera, Check, Copy, ShieldCheck, Loader2, Upload,
-  Plus, Trash2, ChevronDown, ChevronUp, Globe, Sparkles, ListTree,
+  ArrowLeft, ArrowRight, Check, Copy, ShieldCheck, Loader2, Upload,
+  Plus, Trash2, ChevronDown, ChevronUp, Sparkles, ListTree,
+  Eye, EyeOff, ExternalLink, Map as MapIcon,
 } from 'lucide-react'
 import type {
-  GuideRow, GuideSections, GuideDestination, GuideThemedSection,
+  GuideRow, GuideSections, GuideContentBlock, GuideBlockKind,
 } from '@/lib/guide-types'
-import { genLocalId } from '@/lib/guide-types'
 import {
-  buildCoverImagePrompt, buildWhyPrompt, buildHighlightsPrompt,
-  buildNeedToKnowsPrompt, buildDestinationPrompt,
-  buildThemedSectionPrompt, buildFinalThoughtsPrompt,
-} from '@/lib/guide-prompts'
+  genLocalId, defaultHeadingFor, defaultFreePreviewFor,
+} from '@/lib/guide-types'
+import { buildBlockPrompt } from '@/lib/guide-prompts'
 
-const TOTAL_STEPS = 9
+const TOTAL_STEPS = 4
 
-type StepNum = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+type StepNum = 1 | 2 | 3 | 4
 const STEP_LABELS: Record<StepNum, string> = {
   1: 'Basics',
   2: 'Cover image',
-  3: 'Why this country',
-  4: 'Destination highlights',
-  5: 'Need to knows',
-  6: 'Destinations',
-  7: 'Themed sections',
-  8: 'Final thoughts',
-  9: 'Review & publish',
+  3: 'Sections',
+  4: 'Review & publish',
 }
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
+
+// In-wizard block carries transient `notes` (user's bullet points the AI
+// turns into the body). Notes are not persisted to Supabase.
+type WizardBlock = GuideContentBlock & { notes: string }
+
+const KIND_LABELS: Record<GuideBlockKind, { label: string; hint: string }> = {
+  intro:       { label: 'Intro / framing',  hint: 'Why-this, who-we-are, what-to-expect' },
+  destination: { label: 'Destination',      hint: 'A place chapter — where, eat, do, stay' },
+  themed:      { label: 'Themed section',   hint: 'A cross-cutting topic, not tied to one place' },
+  closing:     { label: 'Closing / final',  hint: 'The wrap-up at the end of the guide' },
+}
 
 export default function Wizard({ guide }: { guide: GuideRow }) {
   const router = useRouter()
@@ -50,36 +55,16 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
   const [uploadError, setUploadError] = useState<string | null>(null)
   const coverFileInputRef = useRef<HTMLInputElement>(null)
 
-  // Sections (paste-back targets)
-  const [whyNotes, setWhyNotes] = useState('')
-  const [whyBody, setWhyBody] = useState(guide.sections.why?.body ?? '')
-
-  const [highlightsNotes, setHighlightsNotes] = useState('')
-  const [highlightsBody, setHighlightsBody] = useState(guide.sections.highlights?.body ?? '')
-
-  const [needsNotes, setNeedsNotes] = useState('')
-  const [needsBody, setNeedsBody] = useState(guide.sections.needToKnows?.body ?? '')
-
-  const [destinations, setDestinations] = useState<(GuideDestination & { notes: string })[]>(
-    () => (guide.sections.destinations ?? []).map(d => ({ ...d, notes: '' })),
-  )
-  const [themed, setThemed] = useState<(GuideThemedSection & { notes: string })[]>(
-    () => (guide.sections.themedSections ?? []).map(t => ({ ...t, notes: '' })),
+  // Blocks (single ordered array, any kind)
+  const [blocks, setBlocks] = useState<WizardBlock[]>(
+    () => (guide.sections.blocks ?? []).map(b => ({ ...b, notes: '' })),
   )
 
-  const [finalNotes, setFinalNotes] = useState('')
-  const [finalBody, setFinalBody] = useState(guide.sections.finalThoughts?.body ?? '')
-
-  // Wizard navigation
   const [step, setStep] = useState<StepNum>(1)
-
-  // Save state for the auto-save indicator
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [saveError, setSaveError] = useState<string | null>(null)
 
   // ── Save helpers ────────────────────────────
-  // Save the basics + cover + per-section bodies. We do this on user actions
-  // (Next, Paste, manual Save) so a closed tab doesn't lose work.
   const saveAll = async (
     overrides?: { status?: 'draft' | 'published' },
   ): Promise<{ ok: true; slug: string } | { ok: false; err: string }> => {
@@ -88,16 +73,9 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
     try {
       const tags = tagsText.split(',').map(t => t.trim()).filter(Boolean)
       const sections: GuideSections = {
-        why: { body: whyBody },
-        highlights: { body: highlightsBody },
-        needToKnows: { body: needsBody },
-        destinations: destinations
-          .map(({ notes: _omit, ...d }) => d)
+        blocks: blocks
+          .map(({ notes: _omit, ...b }) => b)
           .sort((a, b) => a.order - b.order),
-        themedSections: themed
-          .map(({ notes: _omit, ...t }) => t)
-          .sort((a, b) => a.order - b.order),
-        finalThoughts: { body: finalBody },
         hideAbout: guide.sections.hideAbout ?? false,
       }
       const res = await fetch(`/api/admin/guides/${guide.id}`, {
@@ -127,46 +105,41 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
     }
   }
 
-  // ── Destinations / Themed CRUD (local state only; persisted on save) ──
-  const addDestination = () => {
-    setDestinations(prev => [
+  // ── Block CRUD ──────────────────────────────
+  const addBlock = (kind: GuideBlockKind) => {
+    setBlocks(prev => [
       ...prev,
-      { id: genLocalId(), name: '', body: '', notes: '', order: prev.length },
+      {
+        id: genLocalId(),
+        kind,
+        heading: defaultHeadingFor(kind, country || null),
+        body: '',
+        notes: '',
+        freePreview: defaultFreePreviewFor(kind),
+        order: prev.length,
+      },
     ])
   }
-  const removeDestination = (id: string) => {
-    setDestinations(prev => prev.filter(d => d.id !== id).map((d, i) => ({ ...d, order: i })))
+  const removeBlock = (id: string) => {
+    setBlocks(prev => prev.filter(b => b.id !== id).map((b, i) => ({ ...b, order: i })))
   }
-  const patchDestination = (id: string, patch: Partial<typeof destinations[number]>) => {
-    setDestinations(prev => prev.map(d => (d.id === id ? { ...d, ...patch } : d)))
+  const patchBlock = (id: string, patch: Partial<WizardBlock>) => {
+    setBlocks(prev => prev.map(b => (b.id === id ? { ...b, ...patch } : b)))
   }
-  const moveDestination = (id: string, dir: -1 | 1) => {
-    setDestinations(prev => {
-      const idx = prev.findIndex(d => d.id === id)
+  const moveBlock = (id: string, dir: -1 | 1) => {
+    setBlocks(prev => {
+      const idx = prev.findIndex(b => b.id === id)
       if (idx === -1) return prev
       const target = idx + dir
       if (target < 0 || target >= prev.length) return prev
       const copy = [...prev]
       const [picked] = copy.splice(idx, 1)
       copy.splice(target, 0, picked)
-      return copy.map((d, i) => ({ ...d, order: i }))
+      return copy.map((b, i) => ({ ...b, order: i }))
     })
   }
 
-  const addThemed = () => {
-    setThemed(prev => [
-      ...prev,
-      { id: genLocalId(), title: '', body: '', notes: '', order: prev.length },
-    ])
-  }
-  const removeThemed = (id: string) => {
-    setThemed(prev => prev.filter(t => t.id !== id).map((t, i) => ({ ...t, order: i })))
-  }
-  const patchThemed = (id: string, patch: Partial<typeof themed[number]>) => {
-    setThemed(prev => prev.map(t => (t.id === id ? { ...t, ...patch } : t)))
-  }
-
-  // ── Cover upload (reuses the blog photo upload endpoint) ──
+  // ── Cover upload ────────────────────────────
   const uploadCover = async (file: File) => {
     setUploadError(null)
     setUploadingCover(true)
@@ -184,9 +157,9 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
     }
   }
 
-  // ── Validation per step ────────────────────────────
+  // ── Navigation ──────────────────────────────
   const canAdvance = (): boolean => {
-    if (step === 1) return title.trim().length > 0 && country.trim().length > 0
+    if (step === 1) return title.trim().length > 0
     return true
   }
 
@@ -199,6 +172,11 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
   const back = () => {
     setStep(s => (Math.max(s - 1, 1) as StepNum))
     if (typeof window !== 'undefined') window.scrollTo({ top: 0 })
+  }
+
+  const openPreview = async () => {
+    await saveAll()
+    window.open(`/admin/guides/${guide.id}/preview`, '_blank', 'noopener')
   }
 
   const publish = async () => {
@@ -243,28 +221,31 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
               The basics
             </Header>
             <p className="text-gray-500 text-base">
-              Title, country, and pricing for this guide. You can change any of it later.
+              Title, scope, tags. Pricing comes at the end, after you've seen the guide.
             </p>
 
             <Field label="Title">
               <input
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                placeholder="e.g. The Real Vietnam Family Guide"
+                placeholder="e.g. The Real Vietnam Family Guide / Worldschooling: Our Year on the Road"
                 className="w-full text-lg px-4 py-3.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </Field>
 
-            <Field label="Country">
+            <Field
+              label="Scope"
+              sub="A country name, a theme like 'Worldschooling', or leave blank for global / no specific place. Used in AI prompts so the writing fits."
+            >
               <input
                 value={country}
                 onChange={e => setCountry(e.target.value)}
-                placeholder="e.g. Vietnam"
+                placeholder="Vietnam   /   Worldschooling   /   (leave blank for global)"
                 className="w-full text-lg px-4 py-3.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </Field>
 
-            <Field label="Subtitle" sub="One line that appears under the title on the listing card.">
+            <Field label="Subtitle" sub="One line under the title on listing cards.">
               <input
                 value={subtitle}
                 onChange={e => setSubtitle(e.target.value)}
@@ -273,44 +254,26 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
               />
             </Field>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Tags (comma-separated)">
-                <input
-                  value={tagsText}
-                  onChange={e => setTagsText(e.target.value)}
-                  placeholder="Asia, Vietnam, Family"
-                  className="w-full text-sm px-3 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-              </Field>
-
-              <Field label="One-off price (pence)" sub="0 = Premium-only (no one-off purchase)">
-                <input
-                  type="number"
-                  min={0}
-                  value={pricePence}
-                  onChange={e => setPricePence(Math.max(0, Number(e.target.value) || 0))}
-                  className="w-full text-sm px-3 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono"
-                />
-                <p className="text-xs text-gray-400 mt-1">£{(pricePence / 100).toFixed(2)}</p>
-              </Field>
-            </div>
+            <Field label="Tags (comma-separated)">
+              <input
+                value={tagsText}
+                onChange={e => setTagsText(e.target.value)}
+                placeholder="Asia, Vietnam, Family"
+                className="w-full text-sm px-3 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+            </Field>
           </div>
         )}
 
-        {/* STEP 2: Cover image */}
+        {/* STEP 2: Cover image (upload only) */}
         {step === 2 && (
           <div className="space-y-6">
-            <Header step={2} icon={<Sparkles className="w-3.5 h-3.5" />}>
+            <Header step={2} icon={<MapIcon className="w-3.5 h-3.5" />}>
               Cover image
             </Header>
             <p className="text-gray-500 text-base">
-              Copy the prompt below, paste into Midjourney / DALL-E / your image tool of choice, then upload the result. Style is locked to match the illustrated map look from the Sri Lanka guide.
+              Upload the image you want at the top of the guide. Portrait works best (3:4 or 2:3). You can also paste a URL.
             </p>
-
-            <CopyableBlock
-              prompt={buildCoverImagePrompt({ country: country || '<country>', title: title || '<title>' })}
-              label="Image generation prompt"
-            />
 
             <Field label="Upload cover image">
               <input
@@ -371,176 +334,96 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
           </div>
         )}
 
-        {/* STEP 3: Why this country */}
+        {/* STEP 3: Sections (single page) */}
         {step === 3 && (
-          <PromptedSectionStep
-            stepNum={3}
-            heading="Why this country"
-            blurb={`Why ${country || 'this country'} works as a family destination. Include what surprised you, what worked with kids, what scared you that turned out fine.`}
-            notes={whyNotes}
-            setNotes={setWhyNotes}
-            body={whyBody}
-            setBody={setWhyBody}
-            promptBuilder={() => buildWhyPrompt({ country: country || '<country>', title, notes: whyNotes })}
-            placeholder="We were worried about food spice / chaos / kids on long flights. What we found instead was… Jax loved the elephants. The buses were cheap. People always greeted him with…"
-          />
+          <div className="space-y-6">
+            <Header step={3} icon={<ListTree className="w-3.5 h-3.5" />}>
+              Sections
+            </Header>
+            <p className="text-gray-500 text-base">
+              Add as many sections as you want, in any order. Each one suggests an AI prompt tailored to its kind — but the heading is yours to set however you like.
+            </p>
+
+            {blocks.length === 0 && (
+              <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-8 text-center space-y-3">
+                <p className="text-sm text-gray-500">No sections yet. Add your first.</p>
+                <AddBlockBar onAdd={addBlock} />
+              </div>
+            )}
+
+            {blocks.map((b, idx) => (
+              <BlockCard
+                key={b.id}
+                index={idx}
+                total={blocks.length}
+                guideTitle={title}
+                scope={country}
+                block={b}
+                onPatch={patch => patchBlock(b.id, patch)}
+                onRemove={() => removeBlock(b.id)}
+                onMoveUp={() => moveBlock(b.id, -1)}
+                onMoveDown={() => moveBlock(b.id, 1)}
+                onSave={() => saveAll()}
+              />
+            ))}
+
+            {blocks.length > 0 && (
+              <div className="bg-white rounded-2xl border-2 border-dashed border-brand-200 p-5">
+                <AddBlockBar onAdd={addBlock} />
+              </div>
+            )}
+          </div>
         )}
 
-        {/* STEP 4: Destination highlights */}
+        {/* STEP 4: Review + price + preview + publish */}
         {step === 4 && (
-          <PromptedSectionStep
-            stepNum={4}
-            heading="Destination highlights"
-            blurb="Top spots, must-sees, headline experiences. Short and scannable — the AI will format as bullet lists."
-            notes={highlightsNotes}
-            setNotes={setHighlightsNotes}
-            body={highlightsBody}
-            setBody={setHighlightsBody}
-            promptBuilder={() => buildHighlightsPrompt({ country: country || '<country>', notes: highlightsNotes })}
-            placeholder="Top spots: Hoi An — best family base. Hanoi — culture, food, world schooling. Sapa — mountains, trekking. Must-sees: Hoi An lantern festival, Ha Long Bay cruise, Mekong Delta…"
-          />
-        )}
-
-        {/* STEP 5: Need to knows */}
-        {step === 5 && (
-          <PromptedSectionStep
-            stepNum={5}
-            heading="Need to knows"
-            blurb="Visa, SIM, money, mosquitoes, spice, alcohol rules — the stuff you wish you'd known before arriving. Include specific brands and exact prices where you have them."
-            notes={needsNotes}
-            setNotes={setNeedsNotes}
-            body={needsBody}
-            setBody={setNeedsBody}
-            promptBuilder={() => buildNeedToKnowsPrompt({ country: country || '<country>', notes: needsNotes })}
-            placeholder="Visa: 30-day e-visa $25 each. SIM: Viettel — local SIM way better than eSIM. Cash: ATMs charge 80,000 VND. Starling no fee. Mosquitoes: bad in Mekong, fine in Hanoi…"
-            tall
-          />
-        )}
-
-        {/* STEP 6: Destinations */}
-        {step === 6 && (
           <div className="space-y-6">
-            <Header step={6} icon={<Globe className="w-3.5 h-3.5" />}>
-              Destinations
+            <Header step={4} icon={<Check className="w-3.5 h-3.5" />}>
+              Review &amp; publish
             </Header>
             <p className="text-gray-500 text-base">
-              Add a block for every destination you want a full chapter for. Each one gets its own AI prompt so you can do them one at a time.
-            </p>
-
-            {destinations.length === 0 && (
-              <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-10 text-center">
-                <p className="text-sm text-gray-500 mb-4">No destinations yet.</p>
-                <button onClick={addDestination} className="btn-primary !py-2 !px-4 !text-sm">
-                  <Plus className="w-4 h-4" /> Add first destination
-                </button>
-              </div>
-            )}
-
-            {destinations.map((d, idx) => (
-              <DestinationCard
-                key={d.id}
-                index={idx}
-                total={destinations.length}
-                country={country}
-                destination={d}
-                onPatch={patch => patchDestination(d.id, patch)}
-                onRemove={() => removeDestination(d.id)}
-                onMoveUp={() => moveDestination(d.id, -1)}
-                onMoveDown={() => moveDestination(d.id, 1)}
-                onSave={() => saveAll()}
-              />
-            ))}
-
-            {destinations.length > 0 && (
-              <button
-                onClick={addDestination}
-                className="w-full bg-white border-2 border-dashed border-brand-300 hover:border-brand-500 hover:bg-brand-50 rounded-2xl py-4 flex items-center justify-center gap-2 text-brand-700 font-semibold text-sm"
-              >
-                <Plus className="w-4 h-4" /> Add another destination
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* STEP 7: Themed sections */}
-        {step === 7 && (
-          <div className="space-y-6">
-            <Header step={7} icon={<ListTree className="w-3.5 h-3.5" />}>
-              Themed sections (optional)
-            </Header>
-            <p className="text-gray-500 text-base">
-              Cross-cutting chapters like "Choosing the right safari", "Places to avoid", "Renting a tuk-tuk". Skip this step if you don't need any.
-            </p>
-
-            {themed.length === 0 && (
-              <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-10 text-center">
-                <p className="text-sm text-gray-500 mb-4">No themed sections yet — totally optional.</p>
-                <button onClick={addThemed} className="btn-primary !py-2 !px-4 !text-sm">
-                  <Plus className="w-4 h-4" /> Add themed section
-                </button>
-              </div>
-            )}
-
-            {themed.map((t, idx) => (
-              <ThemedCard
-                key={t.id}
-                index={idx}
-                country={country}
-                section={t}
-                onPatch={patch => patchThemed(t.id, patch)}
-                onRemove={() => removeThemed(t.id)}
-                onSave={() => saveAll()}
-              />
-            ))}
-
-            {themed.length > 0 && (
-              <button
-                onClick={addThemed}
-                className="w-full bg-white border-2 border-dashed border-brand-300 hover:border-brand-500 hover:bg-brand-50 rounded-2xl py-4 flex items-center justify-center gap-2 text-brand-700 font-semibold text-sm"
-              >
-                <Plus className="w-4 h-4" /> Add another themed section
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* STEP 8: Final thoughts */}
-        {step === 8 && (
-          <PromptedSectionStep
-            stepNum={8}
-            heading="Final thoughts"
-            blurb="The closing reflection. What did this country ask of you as a family? What would you tell another family considering it?"
-            notes={finalNotes}
-            setNotes={setFinalNotes}
-            body={finalBody}
-            setBody={setFinalBody}
-            promptBuilder={() => buildFinalThoughtsPrompt({ country: country || '<country>', notes: finalNotes })}
-            placeholder="Slow down, let the route evolve, say yes to invitations. The kids who ran across the rice fields. The first time Jax tried to count in Vietnamese…"
-          />
-        )}
-
-        {/* STEP 9: Review & publish */}
-        {step === 9 && (
-          <div className="space-y-6">
-            <Header step={9} icon={<Check className="w-3.5 h-3.5" />}>
-              Review & publish
-            </Header>
-            <p className="text-gray-500 text-base">
-              Everything is saved as a draft. Click <strong>Publish</strong> to make this guide live, or come back later via Admin → Guides.
+              Take a last look. Preview opens the guide as readers will see it. Set the price, then publish.
             </p>
 
             <ReviewChecklist
               items={[
-                { label: 'Title', ok: title.trim().length > 0, value: title },
-                { label: 'Country', ok: country.trim().length > 0, value: country },
-                { label: 'Cover image', ok: !!coverImage, value: coverImage ? 'Uploaded' : 'Missing' },
-                { label: 'Why ' + (country || 'country'), ok: whyBody.trim().length > 100, value: `${whyBody.trim().length} chars` },
-                { label: 'Highlights', ok: highlightsBody.trim().length > 50, value: `${highlightsBody.trim().length} chars` },
-                { label: 'Need to knows', ok: needsBody.trim().length > 100, value: `${needsBody.trim().length} chars` },
-                { label: 'Destinations', ok: destinations.length > 0 && destinations.every(d => d.body.trim().length > 100), value: `${destinations.length} destination${destinations.length === 1 ? '' : 's'}` },
-                { label: 'Final thoughts', ok: finalBody.trim().length > 50, value: `${finalBody.trim().length} chars` },
+                { label: 'Title',           ok: title.trim().length > 0, value: title },
+                { label: 'Cover image',     ok: !!coverImage, value: coverImage ? 'Uploaded' : 'Missing (optional)' },
+                { label: 'Sections',        ok: blocks.length > 0 && blocks.every(b => b.body.trim().length > 50), value: `${blocks.length} block${blocks.length === 1 ? '' : 's'}` },
+                { label: 'Free preview',    ok: blocks.some(b => b.freePreview), value: `${blocks.filter(b => b.freePreview).length} visible to non-buyers` },
               ]}
             />
+
+            <Field
+              label="One-off price (pence)"
+              sub="0 = Premium-only (no one-off purchase). £25/year premium always includes this guide."
+            >
+              <div className="flex items-center gap-3">
+                <input
+                  type="number"
+                  min={0}
+                  value={pricePence}
+                  onChange={e => setPricePence(Math.max(0, Number(e.target.value) || 0))}
+                  className="w-40 text-sm px-3 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono"
+                />
+                <span className="text-sm text-gray-500">= £{(pricePence / 100).toFixed(2)}</span>
+              </div>
+            </Field>
+
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center justify-between gap-4 flex-wrap">
+              <div>
+                <p className="text-sm font-semibold text-gray-900">Preview the guide</p>
+                <p className="text-xs text-gray-500 mt-0.5">Opens in a new tab. Saves first so you see your latest edits.</p>
+              </div>
+              <button
+                type="button"
+                onClick={openPreview}
+                disabled={saveState === 'saving'}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-4 py-2.5 rounded-md disabled:opacity-50"
+              >
+                <ExternalLink className="w-4 h-4" /> Open preview
+              </button>
+            </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <button
@@ -552,7 +435,7 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
               </button>
               <button
                 onClick={publish}
-                disabled={saveState === 'saving' || !title.trim() || !country.trim()}
+                disabled={saveState === 'saving' || !title.trim()}
                 className="flex-1 btn-primary justify-center !text-sm !py-3 disabled:opacity-50"
               >
                 Publish guide <ArrowRight className="w-4 h-4" />
@@ -566,7 +449,7 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
         )}
       </div>
 
-      {/* Sticky bottom nav (steps 1-8) */}
+      {/* Sticky bottom nav (steps 1-3) */}
       {step < TOTAL_STEPS && (
         <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 px-4 py-3 z-20">
           <div className="max-w-3xl mx-auto flex items-center gap-3">
@@ -664,87 +547,89 @@ function CopyableBlock({ prompt, label }: { prompt: string; label: string }) {
   )
 }
 
-type PromptedSectionStepProps = {
-  stepNum: StepNum
-  heading: string
-  blurb: string
-  notes: string
-  setNotes: (v: string) => void
-  body: string
-  setBody: (v: string) => void
-  promptBuilder: () => string
-  placeholder: string
-  tall?: boolean
-}
-
-function PromptedSectionStep({
-  stepNum, heading, blurb, notes, setNotes, body, setBody, promptBuilder, placeholder, tall,
-}: PromptedSectionStepProps) {
+function AddBlockBar({ onAdd }: { onAdd: (kind: GuideBlockKind) => void }) {
+  const kinds: GuideBlockKind[] = ['intro', 'destination', 'themed', 'closing']
   return (
-    <div className="space-y-6">
-      <Header step={stepNum} icon={<Sparkles className="w-3.5 h-3.5" />}>{heading}</Header>
-      <p className="text-gray-500 text-base">{blurb}</p>
-
-      <Field label="Your raw notes" sub="Bullet points, quotes, prices, anything you remember. The AI turns it into the section.">
-        <textarea
-          value={notes}
-          onChange={e => setNotes(e.target.value)}
-          rows={tall ? 12 : 8}
-          placeholder={placeholder}
-          className="w-full text-sm px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 leading-relaxed"
-        />
-      </Field>
-
-      <CopyableBlock prompt={promptBuilder()} label="AI prompt — copy this" />
-
-      <Field label="Paste the AI's response here" sub="The markdown the AI gives you. You can edit it any time.">
-        <textarea
-          value={body}
-          onChange={e => setBody(e.target.value)}
-          rows={tall ? 18 : 14}
-          placeholder={'## …\n\n…'}
-          spellCheck={false}
-          className="w-full text-sm font-mono text-gray-800 px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 leading-relaxed"
-        />
-      </Field>
+    <div>
+      <p className="text-xs font-bold tracking-widest uppercase text-gray-500 mb-2.5 text-center">Add a section</p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {kinds.map(k => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => onAdd(k)}
+            className="text-left px-3 py-2.5 rounded-lg border border-gray-200 bg-white hover:border-brand-400 hover:bg-brand-50 transition-colors"
+            title={KIND_LABELS[k].hint}
+          >
+            <span className="flex items-center gap-1.5 text-sm font-semibold text-gray-800">
+              <Plus className="w-3.5 h-3.5 text-brand-600" /> {KIND_LABELS[k].label}
+            </span>
+            <span className="block text-xs text-gray-500 mt-0.5">{KIND_LABELS[k].hint}</span>
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
 
-type DestinationCardProps = {
+type BlockCardProps = {
   index: number
   total: number
-  country: string
-  destination: GuideDestination & { notes: string }
-  onPatch: (patch: Partial<GuideDestination & { notes: string }>) => void
+  guideTitle: string
+  scope: string
+  block: WizardBlock
+  onPatch: (patch: Partial<WizardBlock>) => void
   onRemove: () => void
   onMoveUp: () => void
   onMoveDown: () => void
   onSave: () => void
 }
 
-function DestinationCard({
-  index, total, country, destination, onPatch, onRemove, onMoveUp, onMoveDown, onSave,
-}: DestinationCardProps) {
-  const [open, setOpen] = useState(!destination.body)
-  const prompt = buildDestinationPrompt({
-    country: country || '<country>',
-    destinationName: destination.name || '<destination>',
-    notes: destination.notes,
+function BlockCard({
+  index, total, guideTitle, scope, block, onPatch, onRemove, onMoveUp, onMoveDown, onSave,
+}: BlockCardProps) {
+  const [open, setOpen] = useState(!block.body)
+  const prompt = buildBlockPrompt({
+    kind: block.kind,
+    heading: block.heading || '<section heading>',
+    guideTitle: guideTitle || '<guide title>',
+    scope: scope || null,
+    notes: block.notes,
   })
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
-        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-brand-50 text-brand-700 text-sm font-bold">
+      <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3 flex-wrap">
+        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-brand-50 text-brand-700 text-sm font-bold shrink-0">
           {index + 1}
         </span>
         <input
-          value={destination.name}
-          onChange={e => onPatch({ name: e.target.value })}
-          placeholder="Destination name (e.g. Hoi An)"
-          className="flex-1 text-base font-semibold text-gray-900 border-0 focus:outline-none bg-transparent"
+          value={block.heading}
+          onChange={e => onPatch({ heading: e.target.value })}
+          placeholder="Section heading"
+          className="flex-1 min-w-[12rem] text-base font-semibold text-gray-900 border-0 focus:outline-none bg-transparent"
         />
+        <select
+          value={block.kind}
+          onChange={e => onPatch({ kind: e.target.value as GuideBlockKind })}
+          className="text-xs font-semibold text-gray-700 bg-gray-50 border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500"
+          title="Changes which AI prompt template is suggested"
+        >
+          {(['intro','destination','themed','closing'] as GuideBlockKind[]).map(k => (
+            <option key={k} value={k}>{KIND_LABELS[k].label}</option>
+          ))}
+        </select>
+        <button
+          onClick={() => onPatch({ freePreview: !block.freePreview })}
+          className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1.5 rounded-md border ${
+            block.freePreview
+              ? 'bg-amber-50 border-amber-200 text-amber-800'
+              : 'bg-gray-50 border-gray-200 text-gray-600'
+          }`}
+          title={block.freePreview ? 'Visible to non-buyers' : 'Paywalled'}
+        >
+          {block.freePreview ? <><Eye className="w-3.5 h-3.5" /> Free</> : <><EyeOff className="w-3.5 h-3.5" /> Paid</>}
+        </button>
         <button onClick={onMoveUp} disabled={index === 0} className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30" title="Move up">
           <ChevronUp className="w-4 h-4" />
         </button>
@@ -761,92 +646,39 @@ function DestinationCard({
 
       {open && (
         <div className="p-5 space-y-5">
-          <Field label="Your notes for this destination" sub="Hotel name + price, restaurants, activities, prices, what worked with kids, discount codes…">
+          <Field
+            label="Your raw notes"
+            sub="Bullet points, quotes, prices, anything. The AI turns it into the section body. Empty is fine — the AI will write a brief version from common knowledge."
+          >
             <textarea
-              value={destination.notes}
+              value={block.notes}
               onChange={e => onPatch({ notes: e.target.value })}
               rows={8}
-              placeholder={'Stayed: Sujeewa Apartment, £17.66/night for 29 nights. Loved the location. Ate: Nilu — local curry £2. Mr Taco. Activities: turtle snorkelling at Dikwella. Surfed at Lucky\'s Surf School…'}
+              placeholder="Stayed: Sujeewa Apartment, £17.66/night for 29 nights. Loved the location. Ate: Nilu — local curry £2. Mr Taco. Activities: turtle snorkelling at Dikwella…"
               className="w-full text-sm px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 leading-relaxed"
             />
           </Field>
 
-          <CopyableBlock prompt={prompt} label="AI prompt for this destination" />
+          <div className="flex items-start gap-2 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+            <Sparkles className="w-3.5 h-3.5 text-brand-500 mt-0.5 shrink-0" />
+            <span>The AI prompt below uses the heading <strong className="text-gray-800">"{block.heading || '(unset)'}"</strong> and the kind <strong className="text-gray-800">{KIND_LABELS[block.kind].label}</strong>. Change either above to retarget it.</span>
+          </div>
+
+          <CopyableBlock prompt={prompt} label="AI prompt for this section" />
 
           <Field label="Paste the AI's response here">
             <textarea
-              value={destination.body}
+              value={block.body}
               onChange={e => onPatch({ body: e.target.value })}
               onBlur={onSave}
               rows={16}
               spellCheck={false}
-              placeholder={'### What ' + (destination.name || 'this place') + ' is like\n\n…'}
+              placeholder={'## …\n\n…'}
               className="w-full text-sm font-mono text-gray-800 px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 leading-relaxed"
             />
           </Field>
         </div>
       )}
-    </div>
-  )
-}
-
-type ThemedCardProps = {
-  index: number
-  country: string
-  section: GuideThemedSection & { notes: string }
-  onPatch: (patch: Partial<GuideThemedSection & { notes: string }>) => void
-  onRemove: () => void
-  onSave: () => void
-}
-
-function ThemedCard({ index, country, section, onPatch, onRemove, onSave }: ThemedCardProps) {
-  const prompt = buildThemedSectionPrompt({
-    country: country || '<country>',
-    title: section.title || '<title>',
-    notes: section.notes,
-  })
-
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
-        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-brand-50 text-brand-700 text-sm font-bold">
-          {index + 1}
-        </span>
-        <input
-          value={section.title}
-          onChange={e => onPatch({ title: e.target.value })}
-          placeholder="Section title (e.g. Choosing the right safari)"
-          className="flex-1 text-base font-semibold text-gray-900 border-0 focus:outline-none bg-transparent"
-        />
-        <button onClick={onRemove} className="p-1 text-gray-400 hover:text-red-600" title="Remove">
-          <Trash2 className="w-4 h-4" />
-        </button>
-      </div>
-
-      <div className="p-5 space-y-5">
-        <Field label="Your notes for this section">
-          <textarea
-            value={section.notes}
-            onChange={e => onPatch({ notes: e.target.value })}
-            rows={7}
-            placeholder="What this section should cover. Specific examples, comparisons, prices, our opinion…"
-            className="w-full text-sm px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 leading-relaxed"
-          />
-        </Field>
-
-        <CopyableBlock prompt={prompt} label="AI prompt for this section" />
-
-        <Field label="Paste the AI's response here">
-          <textarea
-            value={section.body}
-            onChange={e => onPatch({ body: e.target.value })}
-            onBlur={onSave}
-            rows={14}
-            spellCheck={false}
-            className="w-full text-sm font-mono text-gray-800 px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 leading-relaxed"
-          />
-        </Field>
-      </div>
     </div>
   )
 }

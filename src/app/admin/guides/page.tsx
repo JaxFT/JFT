@@ -1,8 +1,10 @@
 import Link from 'next/link'
-import { Plus, Map, ExternalLink, ShieldCheck, Users, BookOpen } from 'lucide-react'
+import { Map, ExternalLink, ShieldCheck, Users, BookOpen, FileText } from 'lucide-react'
 import type { Metadata } from 'next'
 import { listAllWebGuidesForAdmin } from '@/lib/guides-content-db'
+import { listAllLegacyGuidesForAdmin } from '@/lib/guides-db'
 import NewGuideButton from './NewGuideButton'
+import LegacyGuideRow from './LegacyGuideRow'
 
 export const metadata: Metadata = {
   title: 'Admin · Guides',
@@ -12,7 +14,13 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function AdminGuidesListPage() {
-  const guides = await listAllWebGuidesForAdmin()
+  const [guides, legacyGuides] = await Promise.all([
+    listAllWebGuidesForAdmin(),
+    listAllLegacyGuidesForAdmin(),
+  ])
+  const publishedWebSlugs = new Set(
+    guides.filter(g => g.status === 'published').map(g => g.slug),
+  )
 
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
@@ -107,9 +115,36 @@ export default async function AdminGuidesListPage() {
           </div>
         )}
 
-        <p className="text-xs text-gray-400 text-center mt-6">
-          Looking for PDF guides? They're seeded via Supabase SQL and shown on the public /guides page alongside web guides.
-        </p>
+        {/* ── LEGACY PDF GUIDES ── */}
+        {legacyGuides.length > 0 && (
+          <section className="mt-12">
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <div>
+                <p className="text-xs font-bold tracking-widest uppercase text-gray-500 flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5" /> Legacy PDF guides
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Old PDF-based guides from the original seed. Hide any that you've replaced with a web guide. iOS Safari renders these PDFs badly, so superseded ones should be hidden.
+                </p>
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <ul className="divide-y divide-gray-100">
+                {legacyGuides.map(lg => (
+                  <LegacyGuideRow
+                    key={lg.id}
+                    id={lg.id}
+                    slug={lg.slug}
+                    name={lg.name}
+                    subtitle={lg.subtitle}
+                    active={lg.active}
+                    supersededByWeb={publishedWebSlugs.has(lg.slug)}
+                  />
+                ))}
+              </ul>
+            </div>
+          </section>
+        )}
       </div>
     </div>
   )

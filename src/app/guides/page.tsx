@@ -24,6 +24,9 @@ export default async function GuidesPage() {
   ])
 
   // Merge into one list. Web guides first (newest published_at on top).
+  // Hide any PDF guide whose slug is also present as a published web guide —
+  // the web version supersedes the PDF.
+  const webSlugs = new Set(webGuides.map(g => g.slug))
   const guides: GuideCardModel[] = [
     ...webGuides.map(g => ({
       slug: g.slug,
@@ -33,14 +36,16 @@ export default async function GuidesPage() {
       tags: g.tags,
       price_pence: g.price_pence,
     })),
-    ...pdfGuides.map(g => ({
-      slug: g.slug,
-      name: g.name,
-      subtitle: g.subtitle,
-      cover_image: g.cover_image,
-      tags: g.tags,
-      price_pence: g.price_pence,
-    })),
+    ...pdfGuides
+      .filter(g => !webSlugs.has(g.slug))
+      .map(g => ({
+        slug: g.slug,
+        name: g.name,
+        subtitle: g.subtitle,
+        cover_image: g.cover_image,
+        tags: g.tags,
+        price_pence: g.price_pence,
+      })),
   ]
 
   const supabase = await createClient()

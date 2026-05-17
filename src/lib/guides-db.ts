@@ -26,6 +26,18 @@ export async function listActiveGuides(): Promise<GuideRow[]> {
   return (data ?? []) as GuideRow[]
 }
 
+// Admin view: all PDF guides regardless of active flag so admin can
+// toggle them on/off without going into Supabase.
+export async function listAllLegacyGuidesForAdmin(): Promise<GuideRow[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('products')
+    .select('id, slug, name, subtitle, description, price_pence, cover_image, preview_path, full_path, preview_page_count, tags, active')
+    .eq('type', 'guide')
+    .order('name', { ascending: true })
+  return (data ?? []) as GuideRow[]
+}
+
 export async function getGuideBySlug(slug: string): Promise<GuideRow | null> {
   const supabase = await createClient()
   const { data } = await supabase

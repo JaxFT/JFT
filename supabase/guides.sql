@@ -19,7 +19,7 @@ values
   (
     'The Real Sri Lanka Family Guide',
     'sri-lanka-family-guide',
-    'A practical, no-fluff guide to travelling Sri Lanka with kids.',
+    'A practical, honest guide to travelling Sri Lanka with kids.',
     'Everything we wish we had known before going — where to base, how long for each region, what worked with the family and what we''d skip next time. Written from a real family trip across the island.',
     899,
     'guide',
@@ -33,7 +33,7 @@ values
     'How We Saved for Full-Time Travel — The Blueprint',
     'how-to-save-blueprint',
     'The exact playbook we used to fund leaving the UK with our family.',
-    'A no-fluff blueprint for families who want to do this for real. How we restructured spend, what we sold, what we kept, the timeline that worked, and the mistakes we''d undo if we did it again.',
+    'An honest blueprint for families who want to do this for real. How we restructured spend, what we sold, what we kept, the timeline that worked, and the mistakes we''d undo if we did it again.',
     699,
     'guide',
     true,

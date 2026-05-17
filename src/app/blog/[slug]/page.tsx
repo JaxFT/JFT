@@ -7,6 +7,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getPublishedPostBySlug, rowToView } from '@/lib/blog-db'
 import { createClient } from '@/lib/supabase/server'
+import { getAutoLinkPhrases, remarkAutoLink } from '@/lib/blog-links'
 
 export const dynamic = 'force-dynamic'
 
@@ -49,6 +50,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const gated = post.isPremium && !userIsPremium
   const visibleContent = gated ? truncateMarkdownToPercent(post.content, 20) : post.content
 
+  const autoLinkPhrases = await getAutoLinkPhrases()
+
   return (
     <div className="min-h-screen bg-white pt-20">
       {post.coverImage && (
@@ -85,7 +88,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
         <div className="relative">
           <div className="prose-jft">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{visibleContent}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm, remarkAutoLink(autoLinkPhrases)]}>{visibleContent}</ReactMarkdown>
           </div>
 
           {gated && (

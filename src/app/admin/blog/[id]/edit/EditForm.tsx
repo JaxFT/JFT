@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { ArrowLeft, Save, Trash2, ExternalLink, Eye, FileEdit, Check, Upload, Loader2, Crown } from 'lucide-react'
 import type { BlogPostRow } from '@/lib/blog-db'
+import { BLOG_CATEGORIES, type BlogCategory } from '@/lib/blog-categories'
 
 export default function EditForm({ post, justCreated }: { post: BlogPostRow; justCreated: boolean }) {
   const router = useRouter()
@@ -19,6 +20,9 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
   const [body, setBody] = useState(post.body_markdown)
   const [status, setStatus] = useState<'draft' | 'published'>(post.status)
   const [isPremium, setIsPremium] = useState<boolean>(post.is_premium)
+  const [category, setCategory] = useState<BlogCategory | ''>(post.category ?? '')
+  const [placeName, setPlaceName] = useState(post.place_name ?? '')
+  const [placeLink, setPlaceLink] = useState(post.place_link ?? '')
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -73,6 +77,9 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
           body_markdown: body,
           status: finalStatus,
           is_premium: isPremium,
+          category: category || null,
+          place_name: placeName.trim() || null,
+          place_link: placeLink.trim() || null,
         }),
       })
       if (!res.ok) {
@@ -229,6 +236,42 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
                 </span>
               </span>
             </label>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Post type</label>
+              <select
+                value={category}
+                onChange={e => setCategory(e.target.value as BlogCategory | '')}
+                className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+              >
+                <option value="">— Not set —</option>
+                {BLOG_CATEGORIES.map(c => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Place name</label>
+              <input
+                value={placeName}
+                onChange={e => setPlaceName(e.target.value)}
+                className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                placeholder="e.g. Casa Fuzetta"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Place link</label>
+              <input
+                value={placeLink}
+                onChange={e => setPlaceLink(e.target.value)}
+                className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono"
+                placeholder="https://…"
+                inputMode="url"
+              />
+              <p className="text-xs text-gray-400 mt-1.5">Used by the wizard prompt only — does not change the post body after save. To add the link into an existing post, edit the markdown directly.</p>
+            </div>
           </div>
 
           <div>

@@ -7,6 +7,7 @@ import {
   ArrowLeft, ArrowRight, Camera, Check, Copy, Image as ImageIcon,
   Loader2, ShieldCheck, Star, Trash2, X,
 } from 'lucide-react'
+import { BLOG_CATEGORIES, type BlogCategory } from '@/lib/blog-categories'
 
 type Photo = {
   id: string
@@ -27,11 +28,28 @@ const VIBES = [
   'logistical',
 ]
 
-const TOTAL_STEPS = 5
+const TOTAL_STEPS = 6
+
+const CATEGORY_LABEL: Record<BlogCategory, string> =
+  Object.fromEntries(BLOG_CATEGORIES.map(c => [c.value, c.label])) as Record<BlogCategory, string>
+
+// Suggested CTA phrases the AI can use as the link text when wrapping the
+// place link. Choose phrasing that reads naturally inside a sentence; the AI
+// picks the one that fits best (or coins something similar).
+const LINK_CTA_HINTS: Record<BlogCategory, string> = {
+  accommodation: '"book here", "see availability", "check rates", "their website"',
+  restaurant:    '"see the menu", "book a table", "find them here", "their website"',
+  bar:           '"find them here", "see what they pour", "their website"',
+  activity:      '"book tickets", "check opening times", "more on their website", "their website"',
+  general:       '"more here", "their website", "see the full details"',
+}
 
 export default function Wizard() {
   const router = useRouter()
   const [step, setStep] = useState(1)
+  const [category, setCategory] = useState<BlogCategory | ''>('')
+  const [placeName, setPlaceName] = useState('')
+  const [placeLink, setPlaceLink] = useState('')
   const [location, setLocation] = useState('')
   const [about, setAbout] = useState('')
   const [detail, setDetail] = useState('')
@@ -42,6 +60,10 @@ export default function Wizard() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const categoryConfig = BLOG_CATEGORIES.find(c => c.value === category) ?? null
+  const placeNameRequired = category !== '' && category !== 'general'
+  const placePromptLabel = categoryConfig?.placePrompt ?? 'Place name (optional)'
 
   const toggleVibe = (v: string) => {
     setVibes(prev => prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v])
@@ -121,8 +143,16 @@ DO NOT WRITE LIKE AN AI — these are dead giveaways. Avoid all of them:
 - NO grand claims. Small, specific, observable details only ("RM 4 for a bowl" beats "incredibly affordable").
 
 POST DETAILS:
+Type of post: ${category ? CATEGORY_LABEL[category] : 'not specified'}
 Location: ${location || 'not specified'}
 What this post is about: ${about || 'not specified'}
+${placeName.trim()
+  ? `Name to feature in the post (mention this by name early in the body): ${placeName.trim()}`
+  : 'Name to feature: none — write generally about the location.'}
+${placeLink.trim()
+  ? `Link for that place: ${placeLink.trim()}
+LINK STYLE — IMPORTANT: do NOT show the URL as raw text, and do NOT use the place name as the link text. Instead, embed the URL in a short, natural call-to-action phrase that flows in a sentence. Use markdown link syntax \`[phrase](URL)\`. Pick whichever phrasing reads most naturally${category ? ` (good options for a ${CATEGORY_LABEL[category].toLowerCase()} post: ${LINK_CTA_HINTS[category]})` : ''}. Examples of what good looks like: "We stayed three nights and you can [book here](URL) if you fancy it." / "Worth a stop — [see the menu](URL) before you go." Place this link ONCE, naturally, where it makes sense in the story (often near where you first describe the place, or in a closing practical note).`
+  : ''}
 What actually happened (raw notes): ${detail || 'none'}
 Tone/vibe: ${vibes.length ? vibes.join(', ') : 'warm and honest'}
 
@@ -158,9 +188,14 @@ tags: ["<3 to 5 short tags, e.g. Country, Region, Theme>"]
 Do NOT add any text before or after the code block. The code block is the entire response.`
 
   const canAdvance = () => {
-    if (step === 1) return location.trim() && about.trim()
-    if (step === 2) return detail.trim()
-    if (step === 3) return allPhotosReady
+    if (step === 1) {
+      if (!category) return false
+      if (placeNameRequired && !placeName.trim()) return false
+      return true
+    }
+    if (step === 2) return location.trim() && about.trim()
+    if (step === 3) return detail.trim()
+    if (step === 4) return allPhotosReady
     return true
   }
 
@@ -180,7 +215,12 @@ Do NOT add any text before or after the code block. The code block is the entire
       const res = await fetch('/api/admin/blog-posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ markdown: aiResponse.trim() }),
+        body: JSON.stringify({
+          markdown: aiResponse.trim(),
+          category: category || null,
+          place_name: placeName.trim() || null,
+          place_link: placeLink.trim() || null,
+        }),
       })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`)
@@ -215,13 +255,78 @@ Do NOT add any text before or after the code block. The code block is the entire
 
       <div className="max-w-2xl mx-auto px-4 py-8 pb-32">
 
-        {/* STEP 1: Trip basics */}
+        {/* STEP 1: What kind of post + place + link */}
         {step === 1 && (
           <div className="space-y-6">
             <div>
               <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2 flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5" /> Step 1 of 5
+                <ShieldCheck className="w-3.5 h-3.5" /> Step 1 of 6
               </p>
+              <h1 className="text-3xl font-bold text-gray-900 leading-tight">What kind of post is this?</h1>
+              <p className="text-gray-500 mt-2 text-base">Pick the type, then name the place (and a link if you've got one). The AI will weave both into the post.</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Post type</label>
+              <div className="grid grid-cols-1 gap-2">
+                {BLOG_CATEGORIES.map(c => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onClick={() => setCategory(c.value)}
+                    className={`text-left px-4 py-3 rounded-xl border transition-colors ${
+                      category === c.value
+                        ? 'bg-brand-600 text-white border-brand-600'
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
+                    }`}
+                  >
+                    <span className="font-semibold">{c.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {placePromptLabel}
+                {placeNameRequired && <span className="text-red-500 ml-1">*</span>}
+              </label>
+              <input
+                value={placeName}
+                onChange={e => setPlaceName(e.target.value)}
+                placeholder={
+                  category === 'accommodation' ? 'e.g. Casa Fuzetta, Olhão'
+                  : category === 'restaurant' ? 'e.g. Kedai Kopi Heng Huat'
+                  : category === 'bar' ? 'e.g. The Tippling Club'
+                  : category === 'activity' ? 'e.g. Sigiriya Rock'
+                  : 'e.g. Marrakech (optional for general posts)'
+                }
+                autoComplete="off"
+                className="w-full text-lg px-4 py-3.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+              <p className="text-xs text-gray-400 mt-1.5">The AI is told to mention this name in the post.</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Website or link (optional)</label>
+              <input
+                value={placeLink}
+                onChange={e => setPlaceLink(e.target.value)}
+                placeholder="https://…"
+                inputMode="url"
+                autoComplete="off"
+                className="w-full text-base px-4 py-3.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+              <p className="text-xs text-gray-400 mt-1.5">If you add a link, the first mention of the name will be turned into a clickable link to this URL.</p>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2: Trip basics */}
+        {step === 2 && (
+          <div className="space-y-6">
+            <div>
+              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 2 of 6</p>
               <h1 className="text-3xl font-bold text-gray-900 leading-tight">Where, and what's this post about?</h1>
               <p className="text-gray-500 mt-2 text-base">Keep it short — single line is fine.</p>
             </div>
@@ -250,11 +355,11 @@ Do NOT add any text before or after the code block. The code block is the entire
           </div>
         )}
 
-        {/* STEP 2: The story */}
-        {step === 2 && (
+        {/* STEP 3: The story */}
+        {step === 3 && (
           <div className="space-y-6">
             <div>
-              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 2 of 5</p>
+              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 3 of 6</p>
               <h1 className="text-3xl font-bold text-gray-900 leading-tight">What actually happened?</h1>
               <p className="text-gray-500 mt-2 text-base">Raw notes are fine. Anything you remember — quotes, prices, what surprised you, what was hard, what Jax said. The AI will turn it into the post.</p>
             </div>
@@ -289,11 +394,11 @@ Do NOT add any text before or after the code block. The code block is the entire
           </div>
         )}
 
-        {/* STEP 3: Photos */}
-        {step === 3 && (
+        {/* STEP 4: Photos */}
+        {step === 4 && (
           <div className="space-y-6">
             <div>
-              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 3 of 5</p>
+              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 4 of 6</p>
               <h1 className="text-3xl font-bold text-gray-900 leading-tight">Photos</h1>
               <p className="text-gray-500 mt-2 text-base">Tap to add photos from your camera roll. Caption each one so the AI puts it in the right spot.</p>
             </div>
@@ -389,11 +494,11 @@ Do NOT add any text before or after the code block. The code block is the entire
           </div>
         )}
 
-        {/* STEP 4: Copy prompt */}
-        {step === 4 && (
+        {/* STEP 5: Copy prompt */}
+        {step === 5 && (
           <div className="space-y-6">
             <div>
-              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 4 of 5</p>
+              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 5 of 6</p>
               <h1 className="text-3xl font-bold text-gray-900 leading-tight">Copy this into Claude or ChatGPT</h1>
               <p className="text-gray-500 mt-2 text-base">Tap Copy, switch to Claude.ai or ChatGPT in your phone, paste, send. When you get the response back, paste it on the next screen.</p>
             </div>
@@ -421,11 +526,11 @@ Do NOT add any text before or after the code block. The code block is the entire
           </div>
         )}
 
-        {/* STEP 5: Paste response */}
-        {step === 5 && (
+        {/* STEP 6: Paste response */}
+        {step === 6 && (
           <div className="space-y-6">
             <div>
-              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 5 of 5</p>
+              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 6 of 6</p>
               <h1 className="text-3xl font-bold text-gray-900 leading-tight">Paste the AI's response</h1>
               <p className="text-gray-500 mt-2 text-base">Paste everything from the AI — the bit that starts with <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">---</code> and ends with the post body.</p>
             </div>
@@ -487,7 +592,7 @@ Do NOT add any text before or after the code block. The code block is the entire
               disabled={!canAdvance()}
               className="btn-primary !py-3 !px-6 !text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {step === 3 && photos.length === 0 ? 'Skip photos' : 'Next'} <ArrowRight className="w-4 h-4" />
+              {step === 4 && photos.length === 0 ? 'Skip photos' : 'Next'} <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>

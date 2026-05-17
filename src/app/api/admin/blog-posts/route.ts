@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server'
 import matter from 'gray-matter'
 import { createClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/admin'
-import { slugify } from '@/lib/blog-db'
+import { slugify, type BlogCategory } from '@/lib/blog-db'
+
+const VALID_CATEGORIES: BlogCategory[] = ['accommodation', 'restaurant', 'bar', 'activity', 'general']
 
 export const dynamic = 'force-dynamic'
 
@@ -21,9 +23,22 @@ export async function POST(request: Request) {
   if (!auth.ok) return NextResponse.json({ error: 'Not authorized' }, { status: 404 })
 
   const body = await request.json().catch(() => null) as
-    | { markdown?: string; title?: string }
+    | {
+        markdown?: string
+        title?: string
+        category?: string | null
+        place_name?: string | null
+        place_link?: string | null
+      }
     | null
   if (!body) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+
+  const category: BlogCategory | null =
+    typeof body.category === 'string' && VALID_CATEGORIES.includes(body.category as BlogCategory)
+      ? (body.category as BlogCategory)
+      : null
+  const placeName = typeof body.place_name === 'string' && body.place_name.trim() ? body.place_name.trim() : null
+  const placeLink = typeof body.place_link === 'string' && body.place_link.trim() ? body.place_link.trim() : null
 
   let title = (body.title ?? '').trim()
   let excerpt: string | null = null
@@ -66,6 +81,9 @@ export async function POST(request: Request) {
     body_markdown: bodyMd,
     cover_image: coverImage,
     tags,
+    category,
+    place_name: placeName,
+    place_link: placeLink,
     status: 'draft',
     created_by: auth.user.id,
   }

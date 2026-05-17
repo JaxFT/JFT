@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/admin'
-import { slugify } from '@/lib/blog-db'
+import { slugify, type BlogCategory } from '@/lib/blog-db'
 
 export const dynamic = 'force-dynamic'
+
+const VALID_CATEGORIES: BlogCategory[] = ['accommodation', 'restaurant', 'bar', 'activity', 'general']
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -21,6 +23,9 @@ type UpdateBody = {
   tags?: string[]
   status?: 'draft' | 'published'
   is_premium?: boolean
+  category?: string | null
+  place_name?: string | null
+  place_link?: string | null
 }
 
 export async function PATCH(
@@ -41,6 +46,21 @@ export async function PATCH(
   if (body.cover_image !== undefined) update.cover_image = body.cover_image ?? null
   if (Array.isArray(body.tags)) update.tags = body.tags
   if (typeof body.is_premium === 'boolean') update.is_premium = body.is_premium
+  if (body.category !== undefined) {
+    if (body.category === null || body.category === '') {
+      update.category = null
+    } else if (VALID_CATEGORIES.includes(body.category as BlogCategory)) {
+      update.category = body.category
+    }
+  }
+  if (body.place_name !== undefined) {
+    const v = body.place_name === null ? null : String(body.place_name).trim()
+    update.place_name = v ? v : null
+  }
+  if (body.place_link !== undefined) {
+    const v = body.place_link === null ? null : String(body.place_link).trim()
+    update.place_link = v ? v : null
+  }
   if (body.status === 'draft' || body.status === 'published') {
     update.status = body.status
     if (body.status === 'published') update.published_at = new Date().toISOString()

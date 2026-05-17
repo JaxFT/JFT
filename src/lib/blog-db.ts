@@ -1,4 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
+import type { BlogCategory } from '@/lib/blog-categories'
+
+export { BLOG_CATEGORIES, VALID_BLOG_CATEGORIES } from '@/lib/blog-categories'
+export type { BlogCategory } from '@/lib/blog-categories'
 
 export type BlogPostStatus = 'draft' | 'published'
 
@@ -13,6 +17,9 @@ export type BlogPostRow = {
   author: string
   status: BlogPostStatus
   is_premium: boolean
+  category: BlogCategory | null
+  place_name: string | null
+  place_link: string | null
   published_at: string | null
   created_at: string
   updated_at: string

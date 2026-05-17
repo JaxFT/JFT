@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { listPublishedPosts, rowToView } from '@/lib/blog-db'
 import BlogCard from '@/components/blog/BlogCard'
+import HeroBlogStack from '@/components/blog/HeroBlogStack'
 import { createClient } from '@/lib/supabase/server'
 import { ArrowRight, Map, BookOpen, Compass, Crown, Sparkles } from 'lucide-react'
 
@@ -62,35 +63,10 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* Right: featured posts carousel — anchored to the right edge of the hero so it sits in the right third regardless of screen width */}
+            {/* Right: featured posts stack — draggable on desktop, swipe to flip between latest 3 posts */}
             {posts.length > 0 && (
               <div className="hidden lg:block">
-                <div className="relative h-96">
-                  {posts.slice(0, 3).map((post, i) => (
-                    <Link
-                      key={post.slug}
-                      href={`/blog/${post.slug}`}
-                      className="absolute bg-white rounded-2xl overflow-hidden shadow-2xl w-56 transition-transform hover:scale-105 hover:z-30"
-                      style={{
-                        right: `${(2 - i) * 80}px`,
-                        top:   `${i * 24}px`,
-                        zIndex: 3 - i,
-                        transform: `rotate(${[-3, 0, 3][i]}deg)`,
-                      }}
-                    >
-                      {post.coverImage && (
-                        <img src={post.coverImage} alt={post.title} className="w-full h-36 object-cover" />
-                      )}
-                      <div className="p-3">
-                        <p className="font-bold text-gray-900 text-sm leading-snug line-clamp-2">{post.title}</p>
-                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">{post.excerpt}</p>
-                        <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand-600">
-                          Read More <ArrowRight className="w-3 h-3" />
-                        </span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+                <HeroBlogStack posts={posts.slice(0, 3)} />
               </div>
             )}
           </div>

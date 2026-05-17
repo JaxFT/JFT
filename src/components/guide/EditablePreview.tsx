@@ -177,7 +177,10 @@ function SingleDocPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
   }
 
   return (
-    <div>
+    // pt-16 pushes everything below the fixed site Navbar (h-16) so the
+    // sticky admin banner is actually visible. Without this, the banner
+    // sat at top:0 underneath the Navbar and the writer never saw it.
+    <div className="pt-16">
       <Banner
         guide={guide}
         status={status}
@@ -403,7 +406,8 @@ function BlocksPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
   }
 
   return (
-    <div>
+    // pt-16 keeps the sticky admin banner visible under the fixed Navbar.
+    <div className="pt-16">
       <Banner
         guide={guide}
         status={status}
@@ -472,7 +476,10 @@ function Banner({
   onManualSave?: () => void
 }) {
   return (
-    <div className="sticky top-0 z-30 bg-amber-500 text-amber-950 text-sm font-semibold">
+    // top-16 sits below the fixed site Navbar (which is h-16 + z-50).
+    // We use z-40 to stay below the Navbar (so Navbar always wins z-wise)
+    // and shadow-md so it visually separates from the content below.
+    <div className="sticky top-16 z-40 bg-amber-500 text-amber-950 text-sm font-semibold shadow-md">
       <div className="max-w-5xl mx-auto px-4 py-2 flex items-center justify-between gap-3 flex-wrap">
         <span className="inline-flex items-center gap-2">
           <Eye className="w-4 h-4" />
@@ -649,7 +656,7 @@ function BlockSection({
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onStartEdit() }}
-          className="absolute -top-2 right-2 z-10 inline-flex items-center gap-1 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 px-2.5 py-1 rounded-md shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute -top-2 right-2 z-10 inline-flex items-center gap-1 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 px-2.5 py-1 rounded-md shadow-sm"
         >
           <Pencil className="w-3 h-3" /> Edit
         </button>

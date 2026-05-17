@@ -8,10 +8,12 @@ import remarkGfm from 'remark-gfm'
 import {
   ArrowLeft, Save, Trash2, ExternalLink, Eye, FileEdit, Check, Upload,
   Loader2, Crown, Plus, Link as LinkIcon, Clock, CalendarDays,
+  Sparkles, Copy, ChevronDown, ChevronUp, RefreshCw,
 } from 'lucide-react'
 import type { BlogPostRow, BlogLink } from '@/lib/blog-db'
 import { BLOG_CATEGORIES, type BlogCategory } from '@/lib/blog-categories'
 import CoverFocalPicker from '@/components/blog/CoverFocalPicker'
+import { buildRewritePrompt } from '@/lib/blog-rewrite-prompt'
 
 const MAX_MINUTES = 20
 const WORDS_PER_MIN = 200
@@ -72,6 +74,15 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
   const [uploadingCover, setUploadingCover] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const coverFileInputRef = useRef<HTMLInputElement>(null)
+
+  // Rewrite panel state
+  const [rewriteOpen, setRewriteOpen] = useState(false)
+  const [rewriteMinutes, setRewriteMinutes] = useState<number>(targetMinutes)
+  const [rewriteNotes, setRewriteNotes] = useState('')
+  const [rewriteResponse, setRewriteResponse] = useState('')
+  const [rewriteCopied, setRewriteCopied] = useState(false)
+  const [rewriteApplyError, setRewriteApplyError] = useState<string | null>(null)
+  const [rewriteApplied, setRewriteApplied] = useState(false)
 
   const suggestedLabels = suggestedLabelsFor(category)
 
@@ -220,6 +231,79 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
     } finally {
       setSaving(false)
     }
+  }
+
+  // ── Rewrite helpers ──
+  const openRewriteWith = (minutes: number) => {
+    setRewriteMinutes(Math.max(1, Math.min(MAX_MINUTES, minutes)))
+    setRewriteOpen(true)
+    setRewriteApplyError(null)
+    setRewriteApplied(false)
+    // Scroll into view after the next paint.
+    setTimeout(() => {
+      document.getElementById('rewrite-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 30)
+  }
+
+  const cleanLinksForPrompt: BlogLink[] = links
+    .map(l => ({ url: l.url.trim(), label: l.label.trim() || 'Website' }))
+    .filter(l => l.url.length > 0)
+
+  const rewritePrompt = buildRewritePrompt({
+    title,
+    excerpt: excerpt.trim() || null,
+    category: category || null,
+    placeName: placeName.trim() || null,
+    location: null,            // location lives in the wizard only; not modelled on the row
+    tripDate: tripDate || null,
+    links: cleanLinksForPrompt,
+    currentBody: body,
+    currentMinutes: actualMinutes,
+    targetMinutes: rewriteMinutes,
+    additionalNotes: rewriteNotes,
+  })
+
+  const copyRewritePrompt = async () => {
+    await navigator.clipboard.writeText(rewritePrompt)
+    setRewriteCopied(true)
+    setTimeout(() => setRewriteCopied(false), 2000)
+  }
+
+  // Strip outer triple-backticks (with optional language tag) if present.
+  const stripCodeFence = (s: string): string => {
+    const t = s.trim()
+    if (!t.startsWith('```')) return t
+    return t
+      .replace(/^```(?:markdown|md)?\s*\n?/i, '')
+      .replace(/\n?```\s*$/i, '')
+      .trim()
+  }
+
+  const looksLikeQuestions = (s: string): boolean =>
+    /^\s*QUESTIONS\s*:/im.test(s) && !s.trim().startsWith('```')
+
+  const applyRewrite = () => {
+    setRewriteApplyError(null)
+    const raw = rewriteResponse.trim()
+    if (!raw) {
+      setRewriteApplyError('Paste the AI response first.')
+      return
+    }
+    if (looksLikeQuestions(raw)) {
+      setRewriteApplyError("The AI returned questions, not a rewrite. Answer them in the notes field above and copy the prompt again.")
+      return
+    }
+    const newBody = stripCodeFence(raw)
+    if (newBody.length < 50) {
+      setRewriteApplyError('That response looks too short to be a post body. Did you paste the whole thing?')
+      return
+    }
+    setBody(newBody)
+    setTargetMinutes(rewriteMinutes)
+    setRewriteApplied(true)
+    setRewriteResponse('')
+    setView('preview')
+    setTimeout(() => setRewriteApplied(false), 4000)
   }
 
   const remove = async () => {
@@ -385,14 +469,135 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
                 <p className="font-medium leading-snug">{lengthSignal.message}</p>
                 <p className="text-xs opacity-70 mt-0.5">Currently ~{actualWords} words.</p>
               </div>
-              {lengthSignal.suggestion !== null && lengthSignal.suggestion !== targetMinutes && (
+              <div className="shrink-0 flex items-center gap-1.5 flex-wrap">
+                {lengthSignal.suggestion !== null && lengthSignal.suggestion !== targetMinutes && (
+                  <button
+                    type="button"
+                    onClick={() => setTargetMinutes(lengthSignal.suggestion!)}
+                    className="text-xs font-semibold bg-white/80 hover:bg-white border border-current/30 px-3 py-1.5 rounded-md"
+                  >
+                    Set target to {lengthSignal.suggestion} min
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={() => setTargetMinutes(lengthSignal.suggestion!)}
-                  className="shrink-0 text-xs font-semibold bg-white/80 hover:bg-white border border-current/30 px-3 py-1.5 rounded-md"
+                  onClick={() => openRewriteWith(targetMinutes)}
+                  className="text-xs font-semibold bg-white/80 hover:bg-white border border-current/30 px-3 py-1.5 rounded-md inline-flex items-center gap-1"
                 >
-                  Set target to {lengthSignal.suggestion} min
+                  <Sparkles className="w-3 h-3" /> Rewrite to {targetMinutes} min
                 </button>
+              </div>
+            </div>
+
+            {/* Rewrite-to-N-min panel (collapsible) */}
+            <div id="rewrite-panel" className="mt-3 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setRewriteOpen(o => !o)}
+                className="w-full px-4 py-2.5 flex items-center justify-between gap-2 text-sm font-semibold text-gray-700 hover:bg-gray-100"
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-brand-600" />
+                  Ask the AI to rewrite this post to a different length
+                </span>
+                {rewriteOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+
+              {rewriteOpen && (
+                <div className="px-4 pb-4 pt-1 space-y-4">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <label className="text-sm font-medium text-gray-700">Rewrite to</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={MAX_MINUTES}
+                      value={rewriteMinutes}
+                      onChange={e => setRewriteMinutes(Math.max(1, Math.min(MAX_MINUTES, Number(e.target.value) || 1)))}
+                      className="w-20 text-sm font-mono px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    />
+                    <span className="text-sm text-gray-500">min (currently ~{actualMinutes} min)</span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">
+                      Anything to add? (optional)
+                    </label>
+                    <textarea
+                      value={rewriteNotes}
+                      onChange={e => setRewriteNotes(e.target.value)}
+                      rows={4}
+                      placeholder={rewriteMinutes > actualMinutes
+                        ? "New things to include if expanding — extra moments, prices, what Jax said, anything you forgot first time. Also paste answers here if the AI came back with QUESTIONS."
+                        : "Anything to emphasise or de-emphasise when trimming."}
+                      className="w-full text-sm px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 leading-relaxed"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={copyRewritePrompt}
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 bg-brand-100 hover:bg-brand-200 px-4 py-2 rounded-md"
+                    >
+                      {rewriteCopied ? <><Check className="w-4 h-4" /> Copied</> : <><Copy className="w-4 h-4" /> Copy rewrite prompt</>}
+                    </button>
+                    <span className="text-xs text-gray-500">
+                      Paste into your Claude Project, then paste the response below.
+                    </span>
+                  </div>
+
+                  <details className="bg-white rounded-lg border border-gray-200">
+                    <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50">
+                      Show the prompt
+                    </summary>
+                    <pre className="text-xs text-gray-700 px-3 pb-3 whitespace-pre-wrap font-mono leading-relaxed overflow-x-auto max-h-64 overflow-y-auto">{rewritePrompt}</pre>
+                  </details>
+
+                  <div>
+                    <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">
+                      Paste the AI response
+                    </label>
+                    <textarea
+                      value={rewriteResponse}
+                      onChange={e => setRewriteResponse(e.target.value)}
+                      rows={10}
+                      spellCheck={false}
+                      placeholder={'```\n<rewritten body>\n```'}
+                      className="w-full text-sm font-mono px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 leading-relaxed"
+                    />
+                  </div>
+
+                  {rewriteApplyError && (
+                    <p className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-md px-3 py-2">{rewriteApplyError}</p>
+                  )}
+                  {rewriteApplied && (
+                    <p className="text-sm text-brand-900 bg-brand-50 border border-brand-200 rounded-md px-3 py-2 inline-flex items-center gap-2">
+                      <Check className="w-4 h-4" /> Body replaced. Switched to Preview. Remember to Save below.
+                    </p>
+                  )}
+
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={applyRewrite}
+                      disabled={!rewriteResponse.trim()}
+                      className="btn-primary !py-2 !px-4 !text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <RefreshCw className="w-4 h-4" /> Replace post body
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setRewriteResponse(''); setRewriteApplyError(null) }}
+                      className="text-sm font-medium text-gray-600 hover:text-gray-900 px-3 py-2"
+                    >
+                      Clear
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    The prompt keeps your existing photos and links intact, and tells the AI to ask follow-up questions instead of padding if there isn't enough material to extend honestly. If you see a <code className="text-xs bg-gray-200 px-1 rounded">QUESTIONS:</code> response, paste your answers into the notes field above and copy the prompt again.
+                  </p>
+                </div>
               )}
             </div>
           </div>

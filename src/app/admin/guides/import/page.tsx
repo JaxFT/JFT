@@ -4,7 +4,7 @@ import { ArrowLeft, ShieldCheck } from 'lucide-react'
 import ImportForm from './ImportForm'
 
 export const metadata: Metadata = {
-  title: 'Import guide · Admin',
+  title: 'New guide · Admin',
   robots: { index: false, follow: false },
 }
 
@@ -20,7 +20,7 @@ export default function ImportGuidePage() {
           <span className="text-gray-400">/</span>
           <Link href="/admin/guides" className="text-brand-600 hover:underline">Guides</Link>
           <span className="text-gray-400">/</span>
-          <span className="text-gray-500">Import</span>
+          <span className="text-gray-500">New</span>
         </div>
 
         <Link href="/admin/guides" className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 mb-4">
@@ -28,9 +28,9 @@ export default function ImportGuidePage() {
         </Link>
 
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Import a guide</h1>
+          <h1 className="text-3xl font-bold text-gray-900">New guide</h1>
           <p className="text-gray-500 mt-2 text-base leading-relaxed">
-            Paste a guide you&apos;ve written in Claude or anywhere else. We split the markdown on every <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">##</code> heading into a section, auto-classify each section&apos;s kind, and drop you into the wizard to review and publish.
+            Paste the whole guide as one markdown doc. Fill in the cover, title, and tags. We&apos;ll create the draft and drop you on the preview where you can edit text, add photos, and publish.
           </p>
         </div>
 

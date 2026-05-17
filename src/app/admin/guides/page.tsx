@@ -1,9 +1,8 @@
 import Link from 'next/link'
-import { Map, ExternalLink, ShieldCheck, Users, BookOpen, FileText, Upload } from 'lucide-react'
+import { Map, ExternalLink, ShieldCheck, Users, BookOpen, FileText, Plus } from 'lucide-react'
 import type { Metadata } from 'next'
 import { listAllWebGuidesForAdmin } from '@/lib/guides-content-db'
 import { listAllLegacyGuidesForAdmin } from '@/lib/guides-db'
-import NewGuideButton from './NewGuideButton'
 import LegacyGuideRow from './LegacyGuideRow'
 import DeleteGuideButton from './DeleteGuideButton'
 
@@ -41,10 +40,9 @@ export default async function AdminGuidesListPage() {
             <Link href="/admin/settings/about-us" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg">
               <Users className="w-4 h-4" /> About Us
             </Link>
-            <Link href="/admin/guides/import" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg">
-              <Upload className="w-4 h-4" /> Import guide
+            <Link href="/admin/guides/import" className="btn-primary !py-2.5 !px-5 !text-sm">
+              <Plus className="w-4 h-4" /> New guide
             </Link>
-            <NewGuideButton />
           </div>
         </div>
 
@@ -52,7 +50,9 @@ export default async function AdminGuidesListPage() {
           <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
             <BookOpen className="w-10 h-10 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 mb-5">No web guides yet. Start your first one.</p>
-            <NewGuideButton />
+            <Link href="/admin/guides/import" className="btn-primary !py-2.5 !px-5 !text-sm">
+              <Plus className="w-4 h-4" /> New guide
+            </Link>
           </div>
         ) : (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">

@@ -88,7 +88,7 @@ export default function HeroBlogStack({ posts }: { posts: StackPost[] }) {
 
   return (
     <div className="relative">
-      <div className="relative h-96">
+      <div className="relative h-[28rem]">
         {order.map((postIdx, slotIdx) => {
           if (slotIdx >= SLOTS.length) return null
           const slot = SLOTS[slotIdx]
@@ -135,7 +135,7 @@ export default function HeroBlogStack({ posts }: { posts: StackPost[] }) {
                   src={post.coverImage}
                   alt={post.title}
                   draggable={false}
-                  className="w-full h-36 object-cover pointer-events-none"
+                  className="w-full aspect-square object-cover pointer-events-none"
                   style={{ objectPosition: `${post.coverFocalX ?? 50}% ${post.coverFocalY ?? 50}%` }}
                 />
               )}

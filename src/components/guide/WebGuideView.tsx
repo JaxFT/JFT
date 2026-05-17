@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Crown, Lock, Map, ListOrdered } from 'lucide-react'
 import GuideMarkdown from './GuideMarkdown'
 import type { GuideRow, GuideContentBlock } from '@/lib/guide-types'
+import { truncateMarkdownToPercent, extractMarkdownToc } from '@/lib/guide-types'
 import type { AutoLinkPhrase } from '@/lib/blog-links'
 
 type Props = {
@@ -21,8 +22,6 @@ function formatPrice(pence: number): string {
   return `£${(pence / 100).toFixed(2)}`
 }
 
-// Block id is unique within a guide — safe anchor even if two blocks
-// share a heading.
 function blockAnchor(b: GuideContentBlock): string {
   const h = anchor(b.heading) || 'section'
   return `block-${h}-${b.id.slice(0, 6)}`
@@ -31,31 +30,8 @@ function blockAnchor(b: GuideContentBlock): string {
 export default function WebGuideView({
   guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, isPremium,
 }: Props) {
-  const blocks = (guide.sections.blocks ?? []).slice().sort((a, b) => a.order - b.order)
   const hideAbout = !!guide.sections.hideAbout
-
-  // Split blocks into visible vs hidden for non-buyers.
-  // Rule: all freePreview blocks are shown to everyone. As soon as we hit
-  // a non-free block, anything from that point on is paywalled.
-  let firstPaywalledIdx = -1
-  if (!canViewFull) {
-    for (let i = 0; i < blocks.length; i++) {
-      if (!blocks[i].freePreview) { firstPaywalledIdx = i; break }
-    }
-  }
-  const visibleBlocks = !canViewFull && firstPaywalledIdx !== -1
-    ? blocks.slice(0, firstPaywalledIdx)
-    : blocks
-  const hiddenCount = blocks.length - visibleBlocks.length
-
-  // TOC: only sections actually rendered.
-  const toc: Array<{ id: string; label: string }> = []
-  if (aboutUsMarkdown.trim() && !hideAbout) toc.push({ id: 'about-us', label: 'About us' })
-  for (const b of visibleBlocks) {
-    if ((b.body ?? '').trim() || b.heading.trim()) {
-      toc.push({ id: blockAnchor(b), label: b.heading || 'Section' })
-    }
-  }
+  const useSingleDoc = guide.body_markdown.trim().length > 0
 
   return (
     <div className="min-h-screen bg-sand-50 pb-20">
@@ -97,16 +73,65 @@ export default function WebGuideView({
                 <><Crown className="w-3.5 h-3.5 text-brand-300" /> Full guide</>
               )
             ) : (
-              <><Lock className="w-3.5 h-3.5 text-amber-200" /> Preview — {hiddenCount} section{hiddenCount === 1 ? '' : 's'} hidden</>
+              <><Lock className="w-3.5 h-3.5 text-amber-200" /> Preview — first {guide.preview_percent}% shown</>
             )}
           </div>
         </div>
       </div>
 
-      {/* TOC */}
+      {useSingleDoc
+        ? (
+          <SingleDocBody
+            guide={guide}
+            aboutUsMarkdown={aboutUsMarkdown}
+            autoLinkPhrases={autoLinkPhrases}
+            canViewFull={canViewFull}
+            isLoggedIn={isLoggedIn}
+            hideAbout={hideAbout}
+          />
+        )
+        : (
+          <BlocksBody
+            guide={guide}
+            aboutUsMarkdown={aboutUsMarkdown}
+            autoLinkPhrases={autoLinkPhrases}
+            canViewFull={canViewFull}
+            isLoggedIn={isLoggedIn}
+            hideAbout={hideAbout}
+          />
+        )}
+    </div>
+  )
+}
+
+// ─── SINGLE-DOC RENDER ────────────────────────────────────────────
+// New default: render guide.body_markdown as one continuous doc with
+// an auto-built TOC from H2 headings and a percentage-based paywall.
+function SingleDocBody({
+  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, hideAbout,
+}: {
+  guide: GuideRow
+  aboutUsMarkdown: string
+  autoLinkPhrases: AutoLinkPhrase[]
+  canViewFull: boolean
+  isLoggedIn: boolean
+  hideAbout: boolean
+}) {
+  const fullMd = guide.body_markdown
+  const visibleMd = canViewFull
+    ? fullMd
+    : truncateMarkdownToPercent(fullMd, Math.max(5, guide.preview_percent))
+  const gated = !canViewFull && visibleMd.length < fullMd.length
+
+  // TOC from H2 headings actually present in the VISIBLE markdown.
+  const toc = extractMarkdownToc(visibleMd)
+  if (aboutUsMarkdown.trim() && !hideAbout) toc.unshift({ id: 'about-us', label: 'About us' })
+
+  return (
+    <>
       {toc.length > 0 && (
         <div className="max-w-3xl mx-auto px-4 sm:px-6 mt-10">
-          <details className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden group">
+          <details className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <summary className="cursor-pointer px-5 py-4 flex items-center justify-between gap-3 hover:bg-gray-50">
               <span className="inline-flex items-center gap-2 text-sm font-bold tracking-widest uppercase text-brand-700">
                 <ListOrdered className="w-4 h-4" /> Table of contents
@@ -130,7 +155,97 @@ export default function WebGuideView({
         </div>
       )}
 
-      {/* CONTENT */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 mt-12">
+        {aboutUsMarkdown.trim() && !hideAbout && (
+          <section id="about-us" className="scroll-mt-24 mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-5 pb-3 border-b border-gray-200">About us</h2>
+            <GuideMarkdown markdown={aboutUsMarkdown} autoLinkPhrases={autoLinkPhrases} />
+          </section>
+        )}
+
+        <div className="relative">
+          <GuideMarkdown markdown={visibleMd} autoLinkPhrases={autoLinkPhrases} />
+          {gated && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-sand-50/0 to-sand-50" />
+          )}
+        </div>
+
+        {gated && (
+          <Paywall
+            isLoggedIn={isLoggedIn}
+            slug={guide.slug}
+            hiddenLabel={`${100 - guide.preview_percent}% more`}
+            hasOneOff={guide.price_pence > 0}
+            priceLabel={formatPrice(guide.price_pence)}
+          />
+        )}
+      </div>
+    </>
+  )
+}
+
+// ─── LEGACY BLOCKS RENDER ─────────────────────────────────────────
+// Kept so existing block-based guides (Sri Lanka) keep rendering
+// unchanged. Identical to the previous WebGuideView body.
+function BlocksBody({
+  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, hideAbout,
+}: {
+  guide: GuideRow
+  aboutUsMarkdown: string
+  autoLinkPhrases: AutoLinkPhrase[]
+  canViewFull: boolean
+  isLoggedIn: boolean
+  hideAbout: boolean
+}) {
+  const blocks = (guide.sections.blocks ?? []).slice().sort((a, b) => a.order - b.order)
+
+  let firstPaywalledIdx = -1
+  if (!canViewFull) {
+    for (let i = 0; i < blocks.length; i++) {
+      if (!blocks[i].freePreview) { firstPaywalledIdx = i; break }
+    }
+  }
+  const visibleBlocks = !canViewFull && firstPaywalledIdx !== -1
+    ? blocks.slice(0, firstPaywalledIdx)
+    : blocks
+  const hiddenCount = blocks.length - visibleBlocks.length
+
+  const toc: Array<{ id: string; label: string }> = []
+  if (aboutUsMarkdown.trim() && !hideAbout) toc.push({ id: 'about-us', label: 'About us' })
+  for (const b of visibleBlocks) {
+    if ((b.body ?? '').trim() || b.heading.trim()) {
+      toc.push({ id: blockAnchor(b), label: b.heading || 'Section' })
+    }
+  }
+
+  return (
+    <>
+      {toc.length > 0 && (
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 mt-10">
+          <details className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <summary className="cursor-pointer px-5 py-4 flex items-center justify-between gap-3 hover:bg-gray-50">
+              <span className="inline-flex items-center gap-2 text-sm font-bold tracking-widest uppercase text-brand-700">
+                <ListOrdered className="w-4 h-4" /> Table of contents
+              </span>
+              <span className="text-xs text-gray-400 font-medium">{toc.length} sections</span>
+            </summary>
+            <ol className="border-t border-gray-100 divide-y divide-gray-100">
+              {toc.map((entry, i) => (
+                <li key={entry.id}>
+                  <a href={`#${entry.id}`} className="flex items-center justify-between gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-brand-50 hover:text-brand-900">
+                    <span className="font-medium truncate">
+                      <span className="text-gray-400 font-mono text-xs mr-2 tabular-nums">{(i + 1).toString().padStart(2, '0')}</span>
+                      {entry.label}
+                    </span>
+                    <ArrowRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </details>
+        </div>
+      )}
+
       <div className="max-w-3xl mx-auto px-4 sm:px-6 mt-12 space-y-12">
         {aboutUsMarkdown.trim() && !hideAbout && (
           <GuideSection id="about-us" title="About us">
@@ -153,13 +268,13 @@ export default function WebGuideView({
           <Paywall
             isLoggedIn={isLoggedIn}
             slug={guide.slug}
-            hiddenCount={hiddenCount}
+            hiddenLabel={`${hiddenCount} more section${hiddenCount === 1 ? '' : 's'}`}
             hasOneOff={guide.price_pence > 0}
             priceLabel={formatPrice(guide.price_pence)}
           />
         )}
       </div>
-    </div>
+    </>
   )
 }
 
@@ -183,21 +298,19 @@ function GuideSection({
 }
 
 function Paywall({
-  isLoggedIn, slug, hiddenCount, hasOneOff, priceLabel,
+  isLoggedIn, slug, hiddenLabel, hasOneOff, priceLabel,
 }: {
   isLoggedIn: boolean
   slug: string
-  hiddenCount: number
+  hiddenLabel: string
   hasOneOff: boolean
   priceLabel: string
 }) {
   return (
-    <div className="relative">
-      <div className="pointer-events-none absolute -top-16 inset-x-0 h-16 bg-gradient-to-b from-sand-50/0 to-sand-50" />
-
+    <div className="relative mt-2">
       <div className="bg-brand-950 text-white rounded-2xl p-6 sm:p-8 text-center">
         <span className="inline-flex items-center gap-1.5 text-xs font-bold tracking-widest uppercase text-brand-300 mb-3">
-          <Lock className="w-3.5 h-3.5" /> {hiddenCount} more section{hiddenCount === 1 ? '' : 's'}
+          <Lock className="w-3.5 h-3.5" /> {hiddenLabel} hidden
         </span>
         <h3 className="text-2xl sm:text-3xl font-bold mb-3">Keep reading with Premium</h3>
         <p className="text-white/70 leading-relaxed max-w-md mx-auto mb-6">

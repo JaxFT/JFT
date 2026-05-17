@@ -3,17 +3,9 @@
 import { useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  ArrowRight, Loader2, Upload, FileText, Sparkles, Check,
+  ArrowRight, Loader2, Upload, FileText, Check, Eye, FileEdit,
 } from 'lucide-react'
-import { parseGuideMarkdown } from '@/lib/guide-import'
-
-const KIND_LABEL: Record<string, string> = {
-  intro:       'Intro',
-  destination: 'Destination',
-  themed:      'Themed',
-  list:        'List',
-  closing:     'Closing',
-}
+import GuideMarkdown from '@/components/guide/GuideMarkdown'
 
 export default function ImportForm() {
   const router = useRouter()
@@ -24,6 +16,7 @@ export default function ImportForm() {
   const [tagsText, setTagsText] = useState('')
   const [coverImage, setCoverImage] = useState('')
   const [markdown, setMarkdown] = useState('')
+  const [view, setView] = useState<'write' | 'preview'>('write')
 
   const [uploadingCover, setUploadingCover] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
@@ -32,9 +25,11 @@ export default function ImportForm() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
-  // Live parse for the inline preview as the writer pastes.
-  const preview = useMemo(() => parseGuideMarkdown(markdown), [markdown])
-  const canSubmit = title.trim().length > 0 && preview.blocks.length > 0 && !submitting
+  const wordCount = useMemo(
+    () => markdown.trim().split(/\s+/).filter(Boolean).length,
+    [markdown],
+  )
+  const canSubmit = title.trim().length > 0 && markdown.trim().length > 0 && !submitting
 
   const uploadCover = async (file: File) => {
     setUploadError(null)
@@ -73,9 +68,7 @@ export default function ImportForm() {
       })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`)
-      // Drop the writer into the editable preview — see the guide rendered,
-      // tweak text in place, slot images into the AI's placeholders,
-      // then publish.
+      // Land on the editable preview where the writer can tweak and publish.
       router.push(`/admin/guides/${body.id}/preview`)
     } catch (e) {
       setSubmitError(e instanceof Error ? e.message : 'Import failed')
@@ -96,10 +89,7 @@ export default function ImportForm() {
           />
         </Field>
 
-        <Field
-          label="Scope"
-          hint="Country / region / theme. Leave blank for a global guide."
-        >
+        <Field label="Scope" hint="Country / region / theme. Leave blank for a global guide.">
           <input
             value={scope}
             onChange={e => setScope(e.target.value)}
@@ -126,7 +116,6 @@ export default function ImportForm() {
           />
         </Field>
 
-        {/* Cover */}
         <Field label="Cover image" hint="Portrait orientation works best (3:4 or 2:3).">
           <input
             ref={coverFileInputRef}
@@ -185,82 +174,63 @@ export default function ImportForm() {
         </Field>
       </div>
 
-      {/* Markdown paste card */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <FileText className="w-4 h-4 text-brand-600" /> Paste the guide markdown
-          </h2>
-          <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-            Use <code className="bg-gray-100 px-1 rounded">##</code> for each section heading. Anything before the first <code className="bg-gray-100 px-1 rounded">##</code> becomes an Intro section. <code className="bg-gray-100 px-1 rounded">#</code> lines (your title) are stripped — the title comes from the form above.
-          </p>
-        </div>
-        <textarea
-          value={markdown}
-          onChange={e => setMarkdown(e.target.value)}
-          rows={18}
-          spellCheck={false}
-          placeholder={'## Why Vietnam\n\nIt sounded chaotic on paper. Then we arrived…\n\n## Hoi An\n\nWe based ourselves there for two weeks…'}
-          className="w-full text-sm font-mono text-gray-800 px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 leading-relaxed"
-        />
-      </div>
-
-      {/* Live preview of detected blocks */}
-      {markdown.trim() && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-5 py-3 border-b border-gray-100 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-brand-600" />
-            <h2 className="text-sm font-bold tracking-widest uppercase text-gray-600">
-              Detected sections ({preview.blocks.length})
+      {/* Markdown paste + live preview */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-6 pt-5 pb-3 flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <FileText className="w-4 h-4 text-brand-600" /> Paste the guide
             </h2>
+            <p className="text-xs text-gray-500 mt-1">
+              The whole guide as one markdown doc — headings, paragraphs, lists, images. Use <code className="bg-gray-100 px-1 rounded">##</code> for chapter headings (they become the table-of-contents links on the published page). Flip to Preview to see it rendered as readers will.
+            </p>
           </div>
-
-          {preview.warnings.length > 0 && (
-            <div className="px-5 pt-4 space-y-1">
-              {preview.warnings.map((w, i) => (
-                <p key={i} className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">{w}</p>
-              ))}
-            </div>
-          )}
-
-          {preview.blocks.length > 0 ? (
-            <ul className="divide-y divide-gray-100">
-              {preview.blocks.map((b, i) => {
-                const wordCount = b.body.trim().split(/\s+/).filter(Boolean).length
-                return (
-                  <li key={b.id} className="px-5 py-3 flex items-center gap-3 flex-wrap">
-                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-brand-50 text-brand-700 text-xs font-bold shrink-0">
-                      {i + 1}
-                    </span>
-                    <span className="flex-1 min-w-0 font-semibold text-gray-800 truncate">{b.heading}</span>
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                      b.kind === 'intro'       ? 'bg-blue-50 text-blue-800'
-                      : b.kind === 'destination' ? 'bg-emerald-50 text-emerald-800'
-                      : b.kind === 'list'      ? 'bg-purple-50 text-purple-800'
-                      : b.kind === 'closing'   ? 'bg-amber-50 text-amber-800'
-                      :                          'bg-gray-100 text-gray-700'
-                    }`}>
-                      {KIND_LABEL[b.kind] ?? b.kind}
-                    </span>
-                    {b.freePreview && (
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-50 text-brand-800">
-                        Free
-                      </span>
-                    )}
-                    <span className="text-xs text-gray-400 font-mono tabular-nums shrink-0">{wordCount}w</span>
-                  </li>
-                )
-              })}
-            </ul>
-          ) : (
-            <p className="px-5 py-6 text-sm text-gray-500 text-center">No sections detected yet.</p>
-          )}
-
-          <p className="px-5 py-3 text-xs text-gray-400 leading-relaxed border-t border-gray-100">
-            You can change any heading, kind, or free-preview toggle on the next screen.
-          </p>
+          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 shrink-0">
+            <button
+              type="button"
+              onClick={() => setView('write')}
+              className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md ${
+                view === 'write' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <FileEdit className="w-3.5 h-3.5" /> Write
+            </button>
+            <button
+              type="button"
+              onClick={() => setView('preview')}
+              disabled={!markdown.trim()}
+              className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md disabled:opacity-40 ${
+                view === 'preview' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Eye className="w-3.5 h-3.5" /> Preview
+            </button>
+          </div>
         </div>
-      )}
+
+        {view === 'write' ? (
+          <textarea
+            value={markdown}
+            onChange={e => setMarkdown(e.target.value)}
+            rows={22}
+            spellCheck={false}
+            placeholder={'# (your title — will be stripped, comes from the form above)\n\nIntro paragraph or two…\n\n## Why Vietnam\n\nThe first chapter…\n\n## Hoi An\n\nThe next chapter…\n\n…and so on.'}
+            className="w-full text-sm font-mono text-gray-800 px-6 py-4 border-0 border-t border-gray-100 focus:outline-none focus:ring-0 leading-relaxed"
+          />
+        ) : (
+          <div className="border-t border-gray-100 px-6 py-6 max-h-[70vh] overflow-y-auto bg-sand-50/30">
+            {markdown.trim()
+              ? <GuideMarkdown markdown={markdown} />
+              : <p className="text-sm text-gray-500 italic">Nothing pasted yet.</p>}
+          </div>
+        )}
+
+        <div className="px-6 py-2.5 border-t border-gray-100 bg-gray-50 text-xs text-gray-500 flex items-center gap-3 flex-wrap">
+          <span className="font-mono tabular-nums">{wordCount.toLocaleString()} words</span>
+          <span>·</span>
+          <span>~{Math.max(1, Math.ceil(wordCount / 200))} min read</span>
+        </div>
+      </div>
 
       {/* Submit */}
       {submitError && (
@@ -273,14 +243,12 @@ export default function ImportForm() {
           disabled={!canSubmit}
           className="btn-primary !py-3 !px-6 !text-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {submitting ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /> Creating draft…</>
-          ) : (
-            <><Check className="w-4 h-4" /> Create draft &amp; open editor <ArrowRight className="w-4 h-4" /></>
-          )}
+          {submitting
+            ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating draft…</>
+            : <><Check className="w-4 h-4" /> Create draft &amp; open preview <ArrowRight className="w-4 h-4" /></>}
         </button>
         {!title.trim() && <span className="text-xs text-amber-700">Title is required</span>}
-        {preview.blocks.length === 0 && markdown.trim() && (
+        {!markdown.trim() && title.trim() && (
           <span className="text-xs text-amber-700">Paste some markdown first</span>
         )}
       </div>

@@ -85,6 +85,10 @@ function normaliseRow(row: unknown): GuideRow {
     is_premium: Boolean(r.is_premium),
     price_pence: Number(r.price_pence ?? 0),
     tags: (r.tags as string[]) ?? [],
+    body_markdown: typeof r.body_markdown === 'string' ? r.body_markdown : '',
+    preview_percent: typeof r.preview_percent === 'number'
+      ? Math.max(0, Math.min(100, Math.round(r.preview_percent)))
+      : 25,
     sections: { blocks, hideAbout: !!rawSections.hideAbout },
     preview_destinations: previewDestinations,
     published_at: (r.published_at as string | null) ?? null,

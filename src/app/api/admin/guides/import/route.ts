@@ -3,14 +3,14 @@ import { createClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/admin'
 import { slugifyForGuide } from '@/lib/guide-types'
 import type { GuideSections } from '@/lib/guide-types'
-import { parseGuideMarkdown } from '@/lib/guide-import'
 
 export const dynamic = 'force-dynamic'
 
-// One-shot import endpoint: accepts the metadata plus a markdown body,
-// parses the body into blocks (H2-split, kind auto-classified) and
-// creates a draft guide row. Returns the new id so the client can
-// redirect into the wizard for review and publish.
+// Single-doc import. Takes the whole markdown and stores it as the
+// guide's body_markdown — no section parsing, no kind classification.
+// The published view renders this with auto-TOC from H2 headings and
+// the preview-percent paywall for non-buyers. Returns the new id so
+// the client can redirect into the preview editor.
 async function requireAdmin() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -30,6 +30,7 @@ export async function POST(request: Request) {
         tags?: string[]
         cover_image?: string | null
         markdown?: string
+        preview_percent?: number
       }
     | null
   if (!body) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
@@ -41,14 +42,13 @@ export async function POST(request: Request) {
   const tags = Array.isArray(body.tags)
     ? body.tags.map(t => String(t).trim()).filter(Boolean)
     : []
+  const markdown = (body.markdown ?? '').toString()
+  const previewPercent = typeof body.preview_percent === 'number'
+    ? Math.max(0, Math.min(100, Math.floor(body.preview_percent)))
+    : 25
 
-  const { blocks, warnings } = parseGuideMarkdown(body.markdown ?? '')
-
-  if (blocks.length === 0) {
-    return NextResponse.json(
-      { error: warnings[0] ?? 'No content could be parsed from the markdown.' },
-      { status: 400 },
-    )
+  if (markdown.trim().length === 0) {
+    return NextResponse.json({ error: 'No markdown content supplied' }, { status: 400 })
   }
 
   // Unique slug from the title
@@ -60,7 +60,8 @@ export async function POST(request: Request) {
     slug = `${baseSlug}-${i}`
   }
 
-  const sections: GuideSections = { blocks, hideAbout: false }
+  // Single-doc mode: blocks stays empty. Reader uses body_markdown when set.
+  const sections: GuideSections = { blocks: [], hideAbout: false }
 
   const insert = {
     slug,
@@ -68,6 +69,8 @@ export async function POST(request: Request) {
     subtitle,
     country,
     cover_image: coverImage,
+    body_markdown: markdown,
+    preview_percent: previewPercent,
     sections,
     status: 'draft' as const,
     is_premium: true,
@@ -83,10 +86,5 @@ export async function POST(request: Request) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({
-    id: data!.id,
-    slug: data!.slug,
-    blockCount: blocks.length,
-    warnings,
-  })
+  return NextResponse.json({ id: data!.id, slug: data!.slug })
 }

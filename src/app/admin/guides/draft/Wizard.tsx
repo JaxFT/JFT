@@ -335,43 +335,66 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
           </div>
         )}
 
-        {/* STEP 3: Sections (single page) */}
+        {/* STEP 3: Sections OR single-doc body redirect */}
         {step === 3 && (
           <div className="space-y-6">
             <Header step={3} icon={<ListTree className="w-3.5 h-3.5" />}>
-              Sections
+              {guide.body_markdown.trim() ? 'Guide body' : 'Sections'}
             </Header>
-            <p className="text-gray-500 text-base">
-              Add as many sections as you want, in any order. Each one suggests an AI prompt tailored to its kind — but the heading is yours to set however you like.
-            </p>
 
-            {blocks.length === 0 && (
-              <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-8 text-center space-y-3">
-                <p className="text-sm text-gray-500">No sections yet. Add your first.</p>
-                <AddBlockBar onAdd={addBlock} />
+            {guide.body_markdown.trim() ? (
+              // Single-doc guide: the wizard isn't the right place to edit
+              // the body. Send the writer to the preview where the in-place
+              // editor lives.
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  This guide uses the new single-document format. Edit the body and slot images into AI placeholders on the preview page — it shows the guide rendered exactly as readers will see it, with click-to-edit.
+                </p>
+                <Link
+                  href={`/admin/guides/${guide.id}/preview`}
+                  className="inline-flex items-center gap-1.5 btn-primary !py-2 !px-4 !text-sm"
+                >
+                  Open editable preview <ArrowRight className="w-4 h-4" />
+                </Link>
+                <p className="text-xs text-gray-400 leading-relaxed">
+                  Use this wizard for cover image, title, scope, tags, pricing, and publish. The body lives on the preview.
+                </p>
               </div>
-            )}
+            ) : (
+              <>
+                <p className="text-gray-500 text-base">
+                  Add as many sections as you want, in any order. Each one suggests an AI prompt tailored to its kind — but the heading is yours to set however you like.
+                </p>
 
-            {blocks.map((b, idx) => (
-              <BlockCard
-                key={b.id}
-                index={idx}
-                total={blocks.length}
-                guideTitle={title}
-                scope={country}
-                block={b}
-                onPatch={patch => patchBlock(b.id, patch)}
-                onRemove={() => removeBlock(b.id)}
-                onMoveUp={() => moveBlock(b.id, -1)}
-                onMoveDown={() => moveBlock(b.id, 1)}
-                onSave={() => saveAll()}
-              />
-            ))}
+                {blocks.length === 0 && (
+                  <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-8 text-center space-y-3">
+                    <p className="text-sm text-gray-500">No sections yet. Add your first.</p>
+                    <AddBlockBar onAdd={addBlock} />
+                  </div>
+                )}
 
-            {blocks.length > 0 && (
-              <div className="bg-white rounded-2xl border-2 border-dashed border-brand-200 p-5">
-                <AddBlockBar onAdd={addBlock} />
-              </div>
+                {blocks.map((b, idx) => (
+                  <BlockCard
+                    key={b.id}
+                    index={idx}
+                    total={blocks.length}
+                    guideTitle={title}
+                    scope={country}
+                    block={b}
+                    onPatch={patch => patchBlock(b.id, patch)}
+                    onRemove={() => removeBlock(b.id)}
+                    onMoveUp={() => moveBlock(b.id, -1)}
+                    onMoveDown={() => moveBlock(b.id, 1)}
+                    onSave={() => saveAll()}
+                  />
+                ))}
+
+                {blocks.length > 0 && (
+                  <div className="bg-white rounded-2xl border-2 border-dashed border-brand-200 p-5">
+                    <AddBlockBar onAdd={addBlock} />
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}

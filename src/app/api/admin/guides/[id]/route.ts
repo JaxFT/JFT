@@ -24,6 +24,9 @@ type UpdateBody = {
   is_premium?: boolean
   price_pence?: number
   preview_destinations?: number
+  // NEW single-doc model
+  body_markdown?: string
+  preview_percent?: number
   // Either full section blob, or a single-key patch. We accept both.
   sections?: GuideSections
   // Convenience: patch a single named section without sending the rest.
@@ -54,6 +57,10 @@ export async function PATCH(
   if (typeof body.price_pence === 'number')  update.price_pence = Math.max(0, Math.floor(body.price_pence))
   if (typeof body.preview_destinations === 'number') {
     update.preview_destinations = Math.max(0, Math.min(20, Math.floor(body.preview_destinations)))
+  }
+  if (typeof body.body_markdown === 'string') update.body_markdown = body.body_markdown
+  if (typeof body.preview_percent === 'number') {
+    update.preview_percent = Math.max(0, Math.min(100, Math.floor(body.preview_percent)))
   }
   if (body.status === 'draft' || body.status === 'published') {
     update.status = body.status

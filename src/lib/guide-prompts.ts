@@ -1,31 +1,19 @@
 // Per-section prompt builders for the guide wizard. Each function
 // returns a single string that the admin copies into Claude/ChatGPT.
 // The AI response is pasted back into the wizard and saved as the
-// section's body markdown. Output instructions match the voice and
-// callout patterns observed in the Sri Lanka guide.
+// section's body markdown. Voice profile is the same one used by the
+// blog wizard so everything on the site sounds like one writer.
 
-const VOICE_AND_RULES = `You are writing a section of a destination guide for JaxFamilyTravels.com, by Bec, Oli and their son Jax — a UK family travelling full-time. The guide should feel like advice from a smart, honest friend who has actually been there with kids. Warm but real. Practical, not preachy.
+import { VOICE_PROFILE } from '@/lib/voice-profile'
 
-VOICE RULES:
-- Write as "we" (Bec and Oli together). Mention Jax when relevant — what he ate, what he loved, what he found hard.
-- Honest above all. Praise what's good. Be open about what was disappointing, overpriced, unethical, or just not worth it.
-- Specific over generic. Always prefer concrete details: prices in local currency AND GBP, drive times, exact addresses, what we paid.
-- Family-relevant. Always note what worked or didn't with kids.
-- Short, punchy paragraphs. Vary length. Plain prose, no marketing copy.
-
-DO NOT WRITE LIKE AN AI — avoid all of these:
-- NO em-dashes (—). Use commas, regular hyphens, or just start a new sentence.
-- NO "It's not just X, it's Y" / "X isn't just about Y, it's about Z" constructions.
-- NO buzzwords: nestled, vibrant, bustling, stunning, breathtaking, picturesque, charming, quaint, idyllic, hidden gem, off the beaten path, life-changing, bucket list, must-see, rich tapestry, sprawling.
-- NO transitions like delve, ultimately, moreover, furthermore, in essence, that said.
-- NO formulaic openers ("Have you ever wondered…", "Picture this…").
-- NO summary at the end like "In conclusion" or "All in all" — just stop or sign off naturally.
-- NO grand claims. Small, specific, observable details only ("RM 4 for a bowl" beats "incredibly affordable").
+// Guide-specific additions on top of the shared voice profile:
+// formatting rules and callout tokens that the renderer styles.
+const GUIDE_FORMATTING_RULES = `TASK: Write one section of a long-form destination guide using the voice profile above. The guide is for JaxFamilyTravels.com — Bec, Oli, and their son Jax — and should feel like advice from a friend who actually did the trip with a kid.
 
 FORMATTING RULES — important:
 - Use markdown headings: ## for major sub-sections, ### for smaller ones.
 - Use **bold** for emphasis sparingly.
-- For practical callouts, use a single line starting with one of these tokens at the start (we'll style them):
+- For practical callouts, use a single line starting with one of these tokens at the start (we style them on the site):
    "**PRO TIP:** ..." for tips you wish you'd known
    "**DISCOUNT:** ..." for affiliate codes / discounts
    "**AVOID:** ..." for warnings / things not to do
@@ -35,8 +23,16 @@ FORMATTING RULES — important:
 
 OUTPUT FORMAT: Return ONLY the markdown section body. NO frontmatter. NO outer code fences. NO preamble like "Here is the section". Start with the first heading or paragraph of the section.`
 
-const WORD_TARGET = (min: number, max: number) =>
-  `Length: roughly ${min}–${max} words. Quality beats length — only as long as it needs to be.`
+const VOICE_AND_RULES = `${VOICE_PROFILE}
+
+${GUIDE_FORMATTING_RULES}`
+
+const WORD_TARGET = (min: number, max: number) => {
+  const cap = Math.round(max * 1.1)
+  return `LENGTH — STRICT CAP, not a goal:
+Target: roughly ${min}–${max} words. HARD CEILING: ${cap} words. Going under is fine — padding to hit a length is a failure.
+Specifically forbidden waffle: generic atmospheric openers, "what we learned" reflections, re-stating points in different words, "and speaking of…" linker sentences.`
+}
 
 function joinNotes(notes: string, fallback = '(no notes provided — write a brief, honest version using common knowledge of the country)') {
   return notes.trim() ? notes.trim() : fallback

@@ -8,6 +8,7 @@ import {
   Loader2, ShieldCheck, Star, Trash2, X, ChevronUp, ChevronDown, Sparkles,
 } from 'lucide-react'
 import { BLOG_CATEGORIES, type BlogCategory } from '@/lib/blog-categories'
+import { VOICE_PROFILE } from '@/lib/voice-profile'
 
 type Photo = {
   id: string
@@ -28,12 +29,22 @@ const VIBES = [
   'logistical',
 ]
 
-type LengthKey = 'short' | 'medium' | 'long'
+const TIME_PRESETS = [1, 2, 3, 5] as const
+const WORDS_PER_MIN = 200
 
-const LENGTHS: Record<LengthKey, { label: string; words: string; readTime: string; structureHint: string }> = {
-  short:  { label: 'Short',  words: '250 to 400 words',   readTime: '~1–2 min read', structureHint: 'No sub-headings. Just flowing paragraphs. Stop when the story is told — do not pad.' },
-  medium: { label: 'Medium', words: '450 to 700 words',   readTime: '~2–3 min read', structureHint: 'One or two ## sub-headings only if they earn their place. Otherwise paragraphs.' },
-  long:   { label: 'Long',   words: '750 to 1100 words',  readTime: '~4–5 min read', structureHint: 'Two to four ## sub-headings, each opening with a clear point. Practical tips list at the end is fine.' },
+// Convert a minute target to a comfortable word range + a hard cap.
+// The cap is what we tell the AI never to exceed — slightly above the
+// upper target so a 3 min post becomes "~600 words, hard cap 720".
+function wordTargetForMinutes(min: number): { lo: number; hi: number; cap: number; structureHint: string } {
+  const safeMin = Math.max(1, Math.min(15, Math.round(min)))
+  const hi = safeMin * WORDS_PER_MIN
+  const lo = Math.max(120, hi - Math.round(WORDS_PER_MIN * 0.4))
+  const cap = Math.round(hi * 1.15)
+  const structureHint =
+    safeMin <= 2 ? 'No sub-headings. Flowing paragraphs only. Stop the moment the story is told.'
+    : safeMin <= 4 ? 'One or two ## sub-headings if they earn their place. Otherwise paragraphs.'
+    : 'Two to four ## sub-headings, each opening with a clear point. A short bullet list of practical tips at the end is fine.'
+  return { lo, hi, cap, structureHint }
 }
 
 const TOTAL_STEPS = 6
@@ -62,7 +73,7 @@ export default function Wizard() {
   const [about, setAbout] = useState('')
   const [detail, setDetail] = useState('')
   const [vibes, setVibes] = useState<string[]>([])
-  const [length, setLength] = useState<LengthKey>('medium')
+  const [targetMinutes, setTargetMinutes] = useState<number>(3)
   const [photos, setPhotos] = useState<Photo[]>([])
   const [aiResponse, setAiResponse] = useState('')
   const [copied, setCopied] = useState(false)
@@ -146,40 +157,11 @@ export default function Wizard() {
   const coverPhoto = donePhotos.find(p => p.isCover)
 
   const bodyPhotos = donePhotos.filter(p => !p.isCover)
-  const lengthConfig = LENGTHS[length]
+  const lengthCfg = wordTargetForMinutes(targetMinutes)
 
-  const builtPrompt = `You are writing a blog post for JaxFamilyTravels.com. The blog is by Bec (Mama) and Oli (Papa), a UK family travelling full-time with their 8-year-old son Jax. The voice is theirs — warm, specific, observant, honest. Write the post as if Bec or Oli wrote it themselves over a coffee.
+  const builtPrompt = `${VOICE_PROFILE}
 
-WHO WE ARE — get this right:
-- Bec = Mama. Oli = Papa. We use Mama and Papa. NEVER "Mum" / "Mom" / "Dad" / "Daddy" / "the kids' mum".
-- Jax is 8. He is a curious, articulate, capable kid with real opinions and interests. He is NOT a toddler, NOT a chaos agent, NOT a snack-obsessed prop for parent humour. Do not patronise him.
-- We write as "we" (Mama and Papa together) — the voice of a couple recounting a real moment.
-
-HOW WE TALK ABOUT JAX:
-- Quote things he actually said only if they are in the notes below. Do not invent quotes.
-- Describe what he genuinely did and noticed — those details ARE the post.
-- If Jax found something interesting (manhole covers, knots in trees, weird food), that's just interesting. Do NOT frame it as "weirdly" or "of all things" or any other put-down framing. An 8-year-old paying attention to detail is a strength, not a punchline.
-- NEVER use the "covered in chocolate / face full of jam / chaos child" trope. We are not writing for parenting magazines. Jax is allowed dignity.
-- NEVER use the "our kid does X every five minutes ha ha" parent-joke construction.
-
-VOICE — what good sounds like:
-- Specific over generic. "RM 4 for a bowl" beats "very affordable". "Jax counted six geckos on the wall before bed" beats "Jax loved the wildlife".
-- Honest about what was disappointing, awkward, overpriced, or just not for us. Praise the good stuff because it earned it, not because it's the polite thing.
-- Short, punchy paragraphs. Vary sentence length: three short ones, then one longer, then a fragment. Sometimes.
-- Confident about our opinions. We have done this. We are not asking permission.
-- Warmth without sentimentality. No life-coach voice. No "this trip taught us…" closers.
-
-THINGS TO NEVER WRITE:
-- NO em-dashes (—). Use a comma, a regular hyphen, or a new sentence.
-- NO "It's not just X, it's Y" or "X isn't just about Y, it's about Z" constructions.
-- NO "weirdly", "of all things", "oddly enough" used to flag an ordinary interest as strange.
-- NO anachronisms: no paper maps, no asking strangers for directions in a way that implies no smartphones, no "in the old days", no fax-machine / VHS / 90s references unless directly relevant. We have phones. It is the present.
-- NO cliché phrases: nestled, vibrant, bustling, stunning, breathtaking, picturesque, charming, quaint, idyllic, hidden gem, off the beaten path, life-changing, bucket list, must-see, rich tapestry, sprawling.
-- NO transitions: delve, ultimately, moreover, furthermore, in essence, that said.
-- NO formulaic openers: "Have you ever wondered…", "Picture this…", "There's something about…".
-- NO summary endings: "In conclusion", "All in all", "Overall". Just stop, or sign off naturally.
-- NO bullet lists unless the post is a genuine list of practical tips at the end.
-- NO grand claims. Specific observable detail only.
+TASK: Write one blog post for JaxFamilyTravels.com using the voice profile above. Everything below is the brief.
 
 POST DETAILS:
 Type of post: ${category ? CATEGORY_LABEL[category] : 'not specified'}
@@ -190,14 +172,24 @@ ${placeName.trim()
   : 'Name to feature: none — write generally about the location.'}
 ${placeLink.trim()
   ? `Link for that place: ${placeLink.trim()}
-LINK STYLE — IMPORTANT: do NOT show the URL as raw text, and do NOT use the place name as the link text. Instead, embed the URL in a short, natural call-to-action phrase that flows in a sentence. Use markdown link syntax \`[phrase](URL)\`. Pick whichever phrasing reads most naturally${category ? ` (good options for a ${CATEGORY_LABEL[category].toLowerCase()} post: ${LINK_CTA_HINTS[category]})` : ''}. Examples: "We stayed three nights and you can [book here](URL) if you fancy it." / "Worth a stop, [see the menu](URL) before you go." Place this link ONCE, naturally, where it fits in the story.`
+LINK STYLE — IMPORTANT: do NOT show the URL as raw text, and do NOT use the place name as the link text. Embed the URL in a short, natural call-to-action phrase that flows in a sentence. Use markdown link syntax \`[phrase](URL)\`. Pick whichever phrasing reads most naturally${category ? ` (good options for a ${CATEGORY_LABEL[category].toLowerCase()} post: ${LINK_CTA_HINTS[category]})` : ''}. Examples: "We stayed three nights and you can [book here](URL) if you fancy it." / "Worth a stop, [see the menu](URL) before you go." Place this link ONCE, naturally, where it fits in the story.`
   : ''}
 What actually happened (raw notes from Bec/Oli): ${detail || 'none'}
-Tone/vibe: ${vibes.length ? vibes.join(', ') : 'warm and honest'}
+Tone/vibe modifiers (use sparingly, voice profile wins): ${vibes.length ? vibes.join(', ') : 'warm and honest'}
 
-LENGTH — IMPORTANT, do not exceed this:
-Target: ${lengthConfig.words} (${lengthConfig.readTime}). ${lengthConfig.structureHint}
-If the story does not need the full word count, write less. Padding to hit a number is worse than a tight post.
+LENGTH — STRICT CAP, NOT A GOAL:
+Target: about ${targetMinutes} minute read (~${lengthCfg.lo}–${lengthCfg.hi} words at normal reading speed).
+HARD CEILING: ${lengthCfg.cap} words. Going over is a failure. Going under is fine.
+${lengthCfg.structureHint}
+
+If you find yourself writing more, STOP. Don't pad. Specifically forbidden waffle:
+- Generic atmospheric scene-setting at the start (start with the actual moment).
+- "What we learned" / "this taught us" / "if there's one thing we'd say…" reflections at the end.
+- Re-explaining what just happened in different words.
+- Adding context the reader didn't ask for.
+- "And speaking of…" or "On a similar note…" linker sentences.
+- Sentences whose job is to introduce the next sentence.
+A tight ${lengthCfg.lo}-word post beats a padded ${lengthCfg.cap}-word post every time.
 
 ${coverPhoto
   ? `COVER PHOTO (put this URL in the coverImage frontmatter field; do NOT also place it in the body):
@@ -216,7 +208,7 @@ OUTPUT FORMAT — IMPORTANT: Return the entire blog post WRAPPED IN A SINGLE TRI
 
 \`\`\`
 ---
-title: "<compelling, specific title, not generic>"
+title: "<specific title, not a generic one>"
 excerpt: "<one sentence hook for the blog listing, ~25 words>"
 date: "${today}"
 author: "Jax Family Travels"
@@ -224,7 +216,7 @@ coverImage: "${coverPhoto?.url ?? ''}"
 tags: ["<3 to 5 short tags, e.g. Country, Region, Theme>"]
 ---
 
-<Body in markdown at the length specified above. Short punchy paragraphs. No em-dashes. Mama and Papa, never Mum or Dad. Jax has real opinions, not toddler tropes.>
+<Body in markdown, within the word cap above. Mama and Papa, never Mum or Dad. Jax is 8 and has real opinions, not toddler tropes.>
 \`\`\`
 
 Do NOT add any text before or after the code block. The code block IS the entire response.`
@@ -435,29 +427,41 @@ Do NOT add any text before or after the code block. The code block IS the entire
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">How long should it be?</label>
-              <div className="grid grid-cols-3 gap-2">
-                {(Object.keys(LENGTHS) as LengthKey[]).map(k => {
-                  const cfg = LENGTHS[k]
-                  const active = length === k
-                  return (
-                    <button
-                      key={k}
-                      type="button"
-                      onClick={() => setLength(k)}
-                      className={`text-left px-3 py-2.5 rounded-xl border transition-colors ${
-                        active
-                          ? 'bg-brand-600 text-white border-brand-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
-                      }`}
-                    >
-                      <span className="block font-semibold text-sm">{cfg.label}</span>
-                      <span className={`block text-xs mt-0.5 ${active ? 'text-white/80' : 'text-gray-500'}`}>{cfg.readTime}</span>
-                    </button>
-                  )
-                })}
+              <label className="block text-sm font-medium text-gray-700 mb-2">Target read time</label>
+              <div className="flex items-center gap-2 flex-wrap">
+                {TIME_PRESETS.map(m => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setTargetMinutes(m)}
+                    className={`text-sm font-semibold px-3.5 py-2 rounded-full border transition-colors ${
+                      targetMinutes === m
+                        ? 'bg-brand-600 text-white border-brand-600'
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
+                    }`}
+                  >
+                    {m} min
+                  </button>
+                ))}
+                <div className="inline-flex items-center gap-1.5 ml-1">
+                  <span className="text-xs text-gray-500">or</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={15}
+                    value={targetMinutes}
+                    onChange={e => {
+                      const n = Math.max(1, Math.min(15, Number(e.target.value) || 1))
+                      setTargetMinutes(n)
+                    }}
+                    className="w-16 text-sm px-2.5 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  />
+                  <span className="text-xs text-gray-500">min</span>
+                </div>
               </div>
-              <p className="text-xs text-gray-400 mt-2">{lengthConfig.structureHint}</p>
+              <p className="text-xs text-gray-400 mt-2">
+                ≈ {lengthCfg.lo}–{lengthCfg.hi} words (hard cap {lengthCfg.cap}). The prompt tells the AI to stop at the cap, not pad to hit it.
+              </p>
             </div>
           </div>
         )}

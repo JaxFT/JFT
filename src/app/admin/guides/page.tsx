@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Map, ExternalLink, ShieldCheck, Users, BookOpen, FileText } from 'lucide-react'
+import { Map, ExternalLink, ShieldCheck, Users, BookOpen, FileText, Upload } from 'lucide-react'
 import type { Metadata } from 'next'
 import { listAllWebGuidesForAdmin } from '@/lib/guides-content-db'
 import { listAllLegacyGuidesForAdmin } from '@/lib/guides-db'
@@ -39,6 +39,9 @@ export default async function AdminGuidesListPage() {
           <div className="flex gap-2 shrink-0 flex-wrap">
             <Link href="/admin/settings/about-us" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg">
               <Users className="w-4 h-4" /> About Us
+            </Link>
+            <Link href="/admin/guides/import" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg">
+              <Upload className="w-4 h-4" /> Import guide
             </Link>
             <NewGuideButton />
           </div>

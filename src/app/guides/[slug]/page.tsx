@@ -25,10 +25,19 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function GuidePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
 
+  // Fire ALL the read-side fetches in parallel up front. About-us and
+  // auto-link phrases are only used for the web-guide path, but firing
+  // them eagerly is cheaper than serialising — the web path is the
+  // hot path now that the PDF flow is being retired.
+  const [webGuide, supabase, aboutUs, autoLinkPhrases] = await Promise.all([
+    getPublishedWebGuideBySlug(slug),
+    createClient(),
+    getAboutUs(),
+    getAutoLinkPhrases(),
+  ])
+
   // ─── New web-rendered guides win if a row exists. ───
-  const webGuide = await getPublishedWebGuideBySlug(slug)
   if (webGuide) {
-    const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     let isPremium = false
     if (user) {
@@ -40,10 +49,6 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
       isPremium = profile?.subscription_tier === 'premium'
     }
     const canViewFull = isPremium || !webGuide.is_premium
-    const [aboutUs, autoLinkPhrases] = await Promise.all([
-      getAboutUs(),
-      getAutoLinkPhrases(),
-    ])
     return (
       <WebGuideView
         guide={webGuide}
@@ -60,19 +65,23 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
   const guide = await getGuideBySlug(slug)
   if (!guide || !guide.active) notFound()
 
-  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   let isPremium = false
   let hasPurchased = false
   if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('subscription_tier')
-      .eq('id', user.id)
-      .single()
+    // Profile lookup and purchase check both need user.id but are
+    // independent — fire them together.
+    const [{ data: profile }, hp] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('subscription_tier')
+        .eq('id', user.id)
+        .single(),
+      userHasPurchased(user.id, guide.id),
+    ])
     isPremium = profile?.subscription_tier === 'premium'
-    hasPurchased = await userHasPurchased(user.id, guide.id)
+    hasPurchased = hp
   }
 
   const canViewFull = isPremium || hasPurchased

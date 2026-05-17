@@ -18,9 +18,11 @@ type GuideCardModel = {
 }
 
 export default async function GuidesPage() {
-  const [pdfGuides, webGuides] = await Promise.all([
+  // Fire all the data fetches in parallel — none depend on user state.
+  const [pdfGuides, webGuides, supabase] = await Promise.all([
     listActiveGuides(),
     listPublishedWebGuides(),
+    createClient(),
   ])
 
   // Merge into one list. Web guides first (newest published_at on top).
@@ -48,7 +50,6 @@ export default async function GuidesPage() {
       })),
   ]
 
-  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   let isPremium = false
   if (user) {

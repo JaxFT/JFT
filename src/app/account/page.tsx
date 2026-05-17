@@ -20,17 +20,19 @@ export default async function AccountPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login?next=/account')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name, subscription_tier, created_at')
-    .eq('id', user.id)
-    .single()
-
-  const { data: purchasesData } = await supabase
-    .from('purchases')
-    .select('id, purchased_at, amount_pence, products(name, slug, type)')
-    .eq('user_id', user.id)
-    .order('purchased_at', { ascending: false })
+  // Profile + purchases are independent — fetch in parallel.
+  const [{ data: profile }, { data: purchasesData }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('full_name, subscription_tier, created_at')
+      .eq('id', user.id)
+      .single(),
+    supabase
+      .from('purchases')
+      .select('id, purchased_at, amount_pence, products(name, slug, type)')
+      .eq('user_id', user.id)
+      .order('purchased_at', { ascending: false }),
+  ])
 
   const purchases = (purchasesData ?? []) as unknown as PurchaseRow[]
   const isPremium = profile?.subscription_tier === 'premium'

@@ -8,10 +8,14 @@ import { ArrowRight, Map, BookOpen, Compass, Crown, Sparkles } from 'lucide-reac
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-  const rows = await listPublishedPosts()
+  // Kick off the public data fetch and the cookie-aware client construction
+  // in parallel — they're independent.
+  const [rows, supabase] = await Promise.all([
+    listPublishedPosts(),
+    createClient(),
+  ])
   const posts = rows.slice(0, 3).map(rowToView)
 
-  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   let isPremium = false
   if (user) {

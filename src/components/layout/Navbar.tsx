@@ -1,12 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { isAdminEmail } from '@/lib/admin'
 import { Plane, Menu, X, User, LogOut, ShieldCheck } from 'lucide-react'
-import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 const navLinks = [
   { label: 'Home',              href: '/' },
@@ -17,23 +16,39 @@ const navLinks = [
   { label: 'Learning',         href: '/learning' },
 ]
 
-export default function Navbar() {
-  const [user, setUser] = useState<SupabaseUser | null>(null)
+// Tiny shape — id + email is everything Navbar needs.
+type NavUser = { id: string; email: string | null } | null
+
+type Props = {
+  initialUserId: string | null
+  initialUserEmail: string | null
+}
+
+export default function Navbar({ initialUserId, initialUserEmail }: Props) {
+  // Seed with the user resolved server-side so the first paint already
+  // shows the correct logged-in state (no post-mount flicker).
+  const [user, setUser] = useState<NavUser>(
+    initialUserId ? { id: initialUserId, email: initialUserEmail } : null,
+  )
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
-  const supabase = createClient()
+  // Memoise so the client isn't reconstructed on every render.
+  const supabase = useMemo(() => createClient(), [])
 
   const isHome = pathname === '/'
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user))
+    // Subscribe to auth changes so the Navbar updates when the user signs
+    // in / out without a full page refresh. We do NOT re-fetch the user
+    // here — it's already in state from the server render above.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null)
+      const u = session?.user
+      setUser(u ? { id: u.id, email: u.email ?? null } : null)
     })
     return () => subscription.unsubscribe()
-  }, [])
+  }, [supabase])
 
   useEffect(() => {
     if (!isHome) return

@@ -31,11 +31,17 @@ function truncateMarkdownToPercent(md: string, percent: number): string {
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const row = await getPublishedPostBySlug(slug)
+
+  // Fan out the independent fetches at once — post lookup, cookie client,
+  // and the auto-link phrase table all run in parallel.
+  const [row, supabase, autoLinkPhrases] = await Promise.all([
+    getPublishedPostBySlug(slug),
+    createClient(),
+    getAutoLinkPhrases(),
+  ])
   if (!row) notFound()
   const post = rowToView(row)
 
-  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   let userIsPremium = false
   if (user) {
@@ -49,8 +55,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   const gated = post.isPremium && !userIsPremium
   const visibleContent = gated ? truncateMarkdownToPercent(post.content, 20) : post.content
-
-  const autoLinkPhrases = await getAutoLinkPhrases()
 
   return (
     <div className="min-h-screen bg-white pt-20">

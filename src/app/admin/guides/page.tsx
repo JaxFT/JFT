@@ -5,6 +5,7 @@ import { listAllWebGuidesForAdmin } from '@/lib/guides-content-db'
 import { listAllLegacyGuidesForAdmin } from '@/lib/guides-db'
 import NewGuideButton from './NewGuideButton'
 import LegacyGuideRow from './LegacyGuideRow'
+import DeleteGuideButton from './DeleteGuideButton'
 
 export const metadata: Metadata = {
   title: 'Admin · Guides',
@@ -110,6 +111,7 @@ export default async function AdminGuidesListPage() {
                       >
                         Edit
                       </Link>
+                      <DeleteGuideButton id={g.id} title={g.title} status={g.status} />
                     </div>
                   </li>
                 )

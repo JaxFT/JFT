@@ -76,9 +76,8 @@ export default async function HomePage() {
       {/* ── WHAT WE OFFER ── */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-3">What we offer</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Built for families who want to, or love to travel</h2>
+          <div className="text-center mb-10">
+            <p className="text-xs font-bold tracking-widest uppercase text-brand-600">What we offer</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
@@ -109,6 +108,11 @@ export default async function HomePage() {
                 </Link>
               )
             })}
+          </div>
+          <div className="text-center mt-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 max-w-3xl mx-auto leading-tight">
+              Helping families travel longer, smarter and more confidently
+            </h2>
           </div>
         </div>
       </section>

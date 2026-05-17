@@ -11,7 +11,7 @@ export default function Footer() {
               <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
                 <Plane className="w-4 h-4 text-white" strokeWidth={2} />
               </div>
-              <span className="font-bold text-white text-sm tracking-wide uppercase">Jax Family Travels</span>
+              <span className="font-bold text-white text-sm tracking-wide uppercase">Jax <span className="opacity-50 font-light mx-0.5">|</span> Family Travels</span>
             </Link>
             <p className="text-sm leading-relaxed max-w-xs">
               Real travel for real families. Honest guides, practical tools, and a community that gets it.
@@ -39,7 +39,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs">
-          <p>© {new Date().getFullYear()} Jax Family Travels. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Jax | Family Travels. All rights reserved.</p>
           <div className="flex gap-4">
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>

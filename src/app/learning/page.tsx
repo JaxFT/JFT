@@ -33,8 +33,8 @@ const RECOMMENDED: RecommendedSite[] = [
   {
     name: 'Future Explorers Club',
     url: 'https://futureexplorersclub.com?sca_ref=8670249.cDmoZ599P3lpdNMI',
-    eyebrow: 'Worldschooling & community',
-    blurb: 'Project-based learning and a global community of travelling families. Curriculum that meets kids where they are and gives them real challenges to work on alongside other worldschoolers.',
+    eyebrow: 'Monthly travel letters by post',
+    blurb: 'No screens, just the simple joy of having something special delivered by Snail Mail!\n\nA monthly travel subscription letter for children to ignite your child\'s passion to learn about our beautiful world, letter by letter, each packed with exciting adventures from new destinations and fun family activities.\n\nYou can choose monthly, 3 month, 6 month or 12 month subscriptions.',
     cta: 'Visit Future Explorers Club',
     icon: GraduationCap,
     image: '/images/learning/future-explorers-club.png',
@@ -113,7 +113,11 @@ export default async function LearningPage() {
                 <div className="p-5 flex flex-col flex-1">
                   <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">{item.eyebrow}</p>
                   <h2 className="text-xl font-bold text-gray-900 mb-2">{item.name}</h2>
-                  <p className="text-sm text-gray-500 leading-relaxed flex-1">{item.blurb}</p>
+                  <div className="text-sm text-gray-500 leading-relaxed flex-1 space-y-2">
+                    {item.blurb.split('\n\n').map((para, i) => (
+                      <p key={i}>{para}</p>
+                    ))}
+                  </div>
                   <span className="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 group-hover:gap-2 transition-all mt-5">
                     {item.cta} <ExternalLink className="w-3.5 h-3.5" />
                   </span>

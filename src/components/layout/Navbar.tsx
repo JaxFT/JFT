@@ -64,7 +64,7 @@ export default function Navbar() {
               <Plane className="w-4 h-4 text-white" strokeWidth={2} />
             </div>
             <span className={`font-bold text-sm tracking-wide uppercase ${transparent ? 'text-white' : 'text-gray-900'}`}>
-              Jax Family Travels
+              Jax <span className="opacity-50 font-light mx-0.5">|</span> Family Travels
             </span>
           </Link>
 

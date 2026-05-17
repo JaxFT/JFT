@@ -31,7 +31,6 @@ const VIBES = [
   'logistical',
 ]
 
-const TIME_PRESETS = [1, 2, 3, 5, 8, 12, 20] as const
 const WORDS_PER_MIN = 200
 const MAX_MINUTES = 20
 
@@ -542,37 +541,26 @@ Do NOT add any text before or after the code block. The code block IS the entire
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Target read time</label>
-              <div className="flex items-center gap-2 flex-wrap">
-                {TIME_PRESETS.map(m => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setTargetMinutes(m)}
-                    className={`text-sm font-semibold px-3.5 py-2 rounded-full border transition-colors ${
-                      targetMinutes === m
-                        ? 'bg-brand-600 text-white border-brand-600'
-                        : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
-                    }`}
-                  >
-                    {m} min
-                  </button>
-                ))}
-                <div className="inline-flex items-center gap-1.5 ml-1">
-                  <span className="text-xs text-gray-500">or</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={MAX_MINUTES}
-                    value={targetMinutes}
-                    onChange={e => {
-                      const n = Math.max(1, Math.min(MAX_MINUTES, Number(e.target.value) || 1))
-                      setTargetMinutes(n)
-                    }}
-                    className="w-16 text-sm px-2.5 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  />
-                  <span className="text-xs text-gray-500">min (max {MAX_MINUTES})</span>
-                </div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">Target read time</label>
+                <span className="text-sm font-mono font-semibold text-brand-700 tabular-nums">{targetMinutes} min</span>
+              </div>
+              <input
+                type="range"
+                min={1}
+                max={MAX_MINUTES}
+                step={1}
+                value={targetMinutes}
+                onChange={e => setTargetMinutes(Number(e.target.value))}
+                className="w-full accent-brand-600 cursor-pointer"
+                aria-label="Target read time in minutes"
+              />
+              <div className="flex justify-between text-[10px] font-mono text-gray-400 mt-1 px-0.5">
+                <span>1</span>
+                <span>5</span>
+                <span>10</span>
+                <span>15</span>
+                <span>{MAX_MINUTES}</span>
               </div>
               <p className="text-xs text-gray-400 mt-2">
                 ≈ {lengthCfg.lo}–{lengthCfg.hi} words (hard cap {lengthCfg.cap}). The prompt tells the AI to stop at the cap, not pad to hit it.

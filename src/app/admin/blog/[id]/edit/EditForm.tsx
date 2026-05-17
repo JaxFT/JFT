@@ -444,20 +444,30 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
 
           {/* Read-time intelligence panel */}
           <div>
-            <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">
-              <Clock className="w-3.5 h-3.5 inline mr-1 -mt-0.5" /> Target read time
-            </label>
-            <div className="flex items-center gap-3 flex-wrap">
-              <input
-                type="number"
-                min={1}
-                max={MAX_MINUTES}
-                value={targetMinutes}
-                onChange={e => setTargetMinutes(Math.max(1, Math.min(MAX_MINUTES, Number(e.target.value) || 1)))}
-                className="w-20 text-sm font-mono px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-              />
-              <span className="text-sm text-gray-500">min (target {targetWordsLo}–{targetWordsHi} words)</span>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold tracking-widest uppercase text-gray-500">
+                <Clock className="w-3.5 h-3.5 inline mr-1 -mt-0.5" /> Target read time
+              </label>
+              <span className="text-sm font-mono font-semibold text-brand-700 tabular-nums">{targetMinutes} min</span>
             </div>
+            <input
+              type="range"
+              min={1}
+              max={MAX_MINUTES}
+              step={1}
+              value={targetMinutes}
+              onChange={e => setTargetMinutes(Number(e.target.value))}
+              className="w-full accent-brand-600 cursor-pointer"
+              aria-label="Target read time in minutes"
+            />
+            <div className="flex justify-between text-[10px] font-mono text-gray-400 mt-1 px-0.5">
+              <span>1</span>
+              <span>5</span>
+              <span>10</span>
+              <span>15</span>
+              <span>{MAX_MINUTES}</span>
+            </div>
+            <p className="text-xs text-gray-400 mt-2">Target {targetWordsLo}–{targetWordsHi} words.</p>
             <div className={`mt-3 rounded-lg px-3 py-2.5 text-sm border flex items-start justify-between gap-3 flex-wrap ${
               lengthSignal.tone === 'ok'           ? 'bg-brand-50 border-brand-200 text-brand-900'
               : lengthSignal.tone === 'short'      ? 'bg-amber-50 border-amber-200 text-amber-900'
@@ -505,17 +515,30 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
 
               {rewriteOpen && (
                 <div className="px-4 pb-4 pt-1 space-y-4">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <label className="text-sm font-medium text-gray-700">Rewrite to</label>
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-sm font-medium text-gray-700">Rewrite to</label>
+                      <span className="text-sm font-mono font-semibold text-brand-700 tabular-nums">
+                        {rewriteMinutes} min <span className="text-gray-400 font-normal">(currently ~{actualMinutes} min)</span>
+                      </span>
+                    </div>
                     <input
-                      type="number"
+                      type="range"
                       min={1}
                       max={MAX_MINUTES}
+                      step={1}
                       value={rewriteMinutes}
-                      onChange={e => setRewriteMinutes(Math.max(1, Math.min(MAX_MINUTES, Number(e.target.value) || 1)))}
-                      className="w-20 text-sm font-mono px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                      onChange={e => setRewriteMinutes(Number(e.target.value))}
+                      className="w-full accent-brand-600 cursor-pointer"
+                      aria-label="Rewrite target in minutes"
                     />
-                    <span className="text-sm text-gray-500">min (currently ~{actualMinutes} min)</span>
+                    <div className="flex justify-between text-[10px] font-mono text-gray-400 mt-1 px-0.5">
+                      <span>1</span>
+                      <span>5</span>
+                      <span>10</span>
+                      <span>15</span>
+                      <span>{MAX_MINUTES}</span>
+                    </div>
                   </div>
 
                   <div>

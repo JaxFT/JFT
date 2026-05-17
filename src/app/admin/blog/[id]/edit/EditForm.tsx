@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { ArrowLeft, Save, Trash2, ExternalLink, Eye, FileEdit, Check, Upload, Loader2 } from 'lucide-react'
+import { ArrowLeft, Save, Trash2, ExternalLink, Eye, FileEdit, Check, Upload, Loader2, Crown } from 'lucide-react'
 import type { BlogPostRow } from '@/lib/blog-db'
 
 export default function EditForm({ post, justCreated }: { post: BlogPostRow; justCreated: boolean }) {
@@ -18,6 +18,7 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
   const [tagsText, setTagsText] = useState(post.tags.join(', '))
   const [body, setBody] = useState(post.body_markdown)
   const [status, setStatus] = useState<'draft' | 'published'>(post.status)
+  const [isPremium, setIsPremium] = useState<boolean>(post.is_premium)
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -71,6 +72,7 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
           tags,
           body_markdown: body,
           status: finalStatus,
+          is_premium: isPremium,
         }),
       })
       if (!res.ok) {
@@ -206,6 +208,27 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
               className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-y"
               placeholder="One-sentence hook for the blog listing"
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Access</label>
+            <label className="flex items-start gap-3 cursor-pointer select-none rounded-lg border border-gray-200 px-4 py-3 hover:bg-gray-50">
+              <input
+                type="checkbox"
+                checked={isPremium}
+                onChange={e => setIsPremium(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+              />
+              <span className="flex-1">
+                <span className="flex items-center gap-1.5 text-sm font-semibold text-gray-900">
+                  <Crown className={`w-4 h-4 ${isPremium ? 'text-brand-600' : 'text-gray-400'}`} />
+                  Premium content
+                </span>
+                <span className="block text-xs text-gray-500 mt-0.5">
+                  Card still shows on the homepage and blog list. Only Premium members can open the full post — everyone else hits a paywall.
+                </span>
+              </span>
+            </label>
           </div>
 
           <div>

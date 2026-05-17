@@ -2,10 +2,11 @@ import { notFound } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { format } from 'date-fns'
-import { Clock, ArrowLeft } from 'lucide-react'
+import { Clock, ArrowLeft, Crown, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getPublishedPostBySlug, rowToView } from '@/lib/blog-db'
+import { createClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,11 +19,35 @@ export async function generateMetadata(
   return { title: row.title, description: row.excerpt ?? undefined }
 }
 
+function truncateMarkdownToPercent(md: string, percent: number): string {
+  if (!md) return md
+  const target = Math.max(80, Math.floor((md.length * percent) / 100))
+  if (md.length <= target) return md
+  // Snap to the next paragraph break after `target` so we don't cut mid-sentence.
+  const after = md.indexOf('\n\n', target)
+  return after === -1 ? md.slice(0, target) : md.slice(0, after)
+}
+
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const row = await getPublishedPostBySlug(slug)
   if (!row) notFound()
   const post = rowToView(row)
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  let userIsPremium = false
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('subscription_tier')
+      .eq('id', user.id)
+      .single()
+    userIsPremium = profile?.subscription_tier === 'premium'
+  }
+
+  const gated = post.isPremium && !userIsPremium
+  const visibleContent = gated ? truncateMarkdownToPercent(post.content, 20) : post.content
 
   return (
     <div className="min-h-screen bg-white pt-20">
@@ -37,7 +62,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <ArrowLeft className="w-4 h-4" /> Back to blog
         </Link>
 
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          {post.isPremium && (
+            <span className="inline-flex items-center gap-1 text-xs font-bold tracking-widest uppercase text-brand-700 bg-brand-50 px-2.5 py-1 rounded-full">
+              <Crown className="w-3.5 h-3.5" /> Premium
+            </span>
+          )}
           {post.tags.map(tag => (
             <span key={tag} className="text-xs font-semibold text-brand-600 bg-brand-50 px-2.5 py-1 rounded-full">{tag}</span>
           ))}
@@ -53,9 +83,46 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {post.readTime} min read</span>
         </div>
 
-        <div className="prose-jft">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
+        <div className="relative">
+          <div className="prose-jft">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{visibleContent}</ReactMarkdown>
+          </div>
+
+          {gated && (
+            <>
+              {/* Fade overlay sitting just above the paywall CTA */}
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-white/0 to-white" />
+            </>
+          )}
         </div>
+
+        {gated && (
+          <div className="mt-2 bg-brand-950 text-white rounded-2xl p-6 sm:p-8 text-center">
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold tracking-widest uppercase text-brand-300 mb-3">
+              <Crown className="w-3.5 h-3.5" /> Premium post
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3">Keep reading with Premium</h2>
+            <p className="text-white/70 leading-relaxed max-w-md mx-auto mb-6">
+              Premium members get every premium post, every guide, every learning pack, and the I Want To Travel tool for £25 a year. Cancel any time.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+              {user ? (
+                <Link href="/account" className="btn-primary text-base px-7 py-3">
+                  Upgrade to Premium <ArrowRight className="w-4 h-4" />
+                </Link>
+              ) : (
+                <>
+                  <Link href={`/signup?next=/blog/${slug}`} className="btn-primary text-base px-7 py-3">
+                    Sign up to read <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  <Link href={`/login?next=/blog/${slug}`} className="text-sm font-medium text-white/70 hover:text-white underline underline-offset-4 decoration-white/30">
+                    Already a member? Log in
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

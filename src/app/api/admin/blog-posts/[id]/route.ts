@@ -20,6 +20,7 @@ type UpdateBody = {
   cover_image?: string | null
   tags?: string[]
   status?: 'draft' | 'published'
+  is_premium?: boolean
 }
 
 export async function PATCH(
@@ -39,6 +40,7 @@ export async function PATCH(
   if (typeof body.body_markdown === 'string') update.body_markdown = body.body_markdown
   if (body.cover_image !== undefined) update.cover_image = body.cover_image ?? null
   if (Array.isArray(body.tags)) update.tags = body.tags
+  if (typeof body.is_premium === 'boolean') update.is_premium = body.is_premium
   if (body.status === 'draft' || body.status === 'published') {
     update.status = body.status
     if (body.status === 'published') update.published_at = new Date().toISOString()

@@ -44,4 +44,5 @@ export interface BlogPost {
   tags: string[]
   content: string
   readTime: number
+  isPremium: boolean
 }

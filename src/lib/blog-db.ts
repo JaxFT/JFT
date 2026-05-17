@@ -12,6 +12,7 @@ export type BlogPostRow = {
   tags: string[]
   author: string
   status: BlogPostStatus
+  is_premium: boolean
   published_at: string | null
   created_at: string
   updated_at: string
@@ -72,6 +73,7 @@ export type BlogPostView = {
   tags: string[]
   content: string
   readTime: number
+  isPremium: boolean
 }
 
 export function rowToView(row: BlogPostRow): BlogPostView {
@@ -85,6 +87,7 @@ export function rowToView(row: BlogPostRow): BlogPostView {
     tags: row.tags,
     content: row.body_markdown,
     readTime: readingTime(row.body_markdown),
+    isPremium: row.is_premium,
   }
 }
 

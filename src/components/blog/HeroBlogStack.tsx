@@ -2,13 +2,14 @@
 
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight, Crown } from 'lucide-react'
 
 type StackPost = {
   slug: string
   title: string
   excerpt: string
   coverImage?: string | null
+  isPremium: boolean
 }
 
 const SLOTS = [
@@ -138,9 +139,16 @@ export default function HeroBlogStack({ posts }: { posts: StackPost[] }) {
               <div className="p-3">
                 <p className="font-bold text-gray-900 text-sm leading-snug line-clamp-2">{post.title}</p>
                 <p className="text-xs text-gray-500 mt-1 line-clamp-2">{post.excerpt}</p>
-                <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand-600">
-                  Read More <ArrowRight className="w-3 h-3" />
-                </span>
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600">
+                    Read More <ArrowRight className="w-3 h-3" />
+                  </span>
+                  {post.isPremium && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold tracking-wide uppercase text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">
+                      <Crown className="w-3 h-3" /> Premium
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           )

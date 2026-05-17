@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Plus, FileText, ExternalLink, ShieldCheck, Upload } from 'lucide-react'
+import { Plus, FileText, ExternalLink, ShieldCheck, Upload, Crown } from 'lucide-react'
 import type { Metadata } from 'next'
 import { listAllPostsForAdmin } from '@/lib/blog-db'
 
@@ -63,6 +63,11 @@ export default async function AdminBlogListPage() {
                         }`}>
                           {post.status}
                         </span>
+                        {post.is_premium && (
+                          <span className="inline-flex items-center gap-1 text-xs font-bold tracking-widest uppercase text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">
+                            <Crown className="w-3 h-3" /> Premium
+                          </span>
+                        )}
                         {post.tags.slice(0, 3).map(tag => (
                           <span key={tag} className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{tag}</span>
                         ))}

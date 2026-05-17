@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, Clock } from 'lucide-react'
+import { ArrowRight, Clock, Crown } from 'lucide-react'
 import { format } from 'date-fns'
 import type { BlogPost } from '@/types'
 
@@ -34,7 +34,14 @@ export default function BlogCard({ post }: { post: BlogPost }) {
             <span className="mx-1.5">·</span>
             <span>{format(new Date(post.date), 'MMM d, yyyy')}</span>
           </div>
-          <ArrowRight className="w-4 h-4 text-brand-500 group-hover:translate-x-0.5 transition-transform" />
+          <div className="flex items-center gap-2">
+            {post.isPremium && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold tracking-wide uppercase text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">
+                <Crown className="w-3 h-3" /> Premium
+              </span>
+            )}
+            <ArrowRight className="w-4 h-4 text-brand-500 group-hover:translate-x-0.5 transition-transform" />
+          </div>
         </div>
       </div>
     </Link>

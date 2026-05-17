@@ -28,6 +28,7 @@ export function getAllPosts(): BlogPost[] {
         tags: data.tags ?? [],
         content,
         readTime: readingTime(content),
+        isPremium: data.isPremium === true,
       } as BlogPost
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -48,5 +49,6 @@ export function getPostBySlug(slug: string): BlogPost | null {
     tags: data.tags ?? [],
     content,
     readTime: readingTime(content),
+    isPremium: data.isPremium === true,
   }
 }

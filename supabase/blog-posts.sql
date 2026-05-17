@@ -13,11 +13,15 @@ create table if not exists public.blog_posts (
   tags            text[] not null default '{}',
   author          text not null default 'Jax Family Travels',
   status          text not null default 'draft' check (status in ('draft','published')),
+  is_premium      boolean not null default false,
   published_at    timestamptz,
   created_by      uuid references auth.users(id) on delete set null,
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()
 );
+
+-- Backfill column on existing installs (no-op when the column already exists).
+alter table public.blog_posts add column if not exists is_premium boolean not null default false;
 
 -- Keep updated_at fresh
 drop trigger if exists blog_posts_updated_at on public.blog_posts;

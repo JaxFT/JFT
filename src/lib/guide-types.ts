@@ -8,7 +8,7 @@ export type GuideStatus = 'draft' | 'published'
 // add as many of these as they want, in any order, with editable headings.
 // `kind` only affects (a) which AI prompt template the wizard suggests
 // and (b) the default value of `freePreview` for new blocks.
-export type GuideBlockKind = 'intro' | 'destination' | 'themed' | 'closing'
+export type GuideBlockKind = 'intro' | 'destination' | 'themed' | 'list' | 'closing'
 
 export type GuideContentBlock = {
   id: string
@@ -87,6 +87,7 @@ export function defaultHeadingFor(kind: GuideBlockKind, scope: string | null): s
     case 'intro':       return `Why ${where}`
     case 'destination': return 'New destination'
     case 'themed':      return 'New section'
+    case 'list':        return `Things to do in ${where}`
     case 'closing':     return 'Final thoughts'
   }
 }

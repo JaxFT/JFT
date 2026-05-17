@@ -36,6 +36,7 @@ const KIND_LABELS: Record<GuideBlockKind, { label: string; hint: string }> = {
   intro:       { label: 'Intro / framing',  hint: 'Why-this, who-we-are, what-to-expect' },
   destination: { label: 'Destination',      hint: 'A place chapter — where, eat, do, stay' },
   themed:      { label: 'Themed section',   hint: 'A cross-cutting topic, not tied to one place' },
+  list:        { label: 'List / 25 things', hint: 'Numbered list — e.g. "25 free things in Bangkok"' },
   closing:     { label: 'Closing / final',  hint: 'The wrap-up at the end of the guide' },
 }
 
@@ -548,11 +549,11 @@ function CopyableBlock({ prompt, label }: { prompt: string; label: string }) {
 }
 
 function AddBlockBar({ onAdd }: { onAdd: (kind: GuideBlockKind) => void }) {
-  const kinds: GuideBlockKind[] = ['intro', 'destination', 'themed', 'closing']
+  const kinds: GuideBlockKind[] = ['intro', 'destination', 'themed', 'list', 'closing']
   return (
     <div>
       <p className="text-xs font-bold tracking-widest uppercase text-gray-500 mb-2.5 text-center">Add a section</p>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
         {kinds.map(k => (
           <button
             key={k}
@@ -615,7 +616,7 @@ function BlockCard({
           className="text-xs font-semibold text-gray-700 bg-gray-50 border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500"
           title="Changes which AI prompt template is suggested"
         >
-          {(['intro','destination','themed','closing'] as GuideBlockKind[]).map(k => (
+          {(['intro','destination','themed','list','closing'] as GuideBlockKind[]).map(k => (
             <option key={k} value={k}>{KIND_LABELS[k].label}</option>
           ))}
         </select>

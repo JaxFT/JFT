@@ -67,6 +67,7 @@ export function buildBlockPrompt(opts: BlockPromptOpts): string {
     case 'intro':       return buildIntroPrompt(opts)
     case 'destination': return buildDestinationPrompt(opts)
     case 'themed':      return buildThemedPrompt(opts)
+    case 'list':        return buildListPrompt(opts)
     case 'closing':     return buildClosingPrompt(opts)
   }
 }
@@ -146,6 +147,42 @@ STRUCTURE:
 - End with a short **HONEST TAKE:** if you have a clear opinion.
 
 ${WORD_TARGET(500, 1200)}`
+}
+
+function buildListPrompt(opts: BlockPromptOpts): string {
+  // The heading often tells us how many items: "25 free things to do in
+  // Bangkok with kids". Pull a leading number if there is one so the AI
+  // hits it; otherwise let it pick a sensible count.
+  const headingNum = opts.heading.match(/\b(\d{1,3})\b/)?.[1]
+  const targetCountLine = headingNum
+    ? `TARGET COUNT: exactly ${headingNum} items (the heading says so).`
+    : `TARGET COUNT: pick a number that fits the notes — usually 10–25. Do not pad.`
+
+  return `${VOICE_AND_RULES}
+
+SECTION HEADING (set by the writer, do NOT repeat it): "${opts.heading}"
+KIND: A numbered list / listicle section. Could be "25 free things to do in Bangkok with kids", "Top family-friendly cafés in Hoi An", "Best playgrounds in Lisbon".
+
+${targetCountLine}
+
+CONTEXT:
+${scopeLine(opts.guideTitle, opts.scope)}
+Bec and Oli's raw notes: ${joinNotes(opts.notes)}
+
+STRUCTURE:
+- Open with ONE short paragraph (max 3 sentences) framing the list — why this list exists, who it's for, what makes it different from a generic Google search. No clichés, no "without further ado".
+- Then numbered items using markdown ordered list ("1.", "2.", …). Each item structured as:
+
+   1. **Place / activity name** — one-line hook saying what it is or why it's good.
+      Practical details on a new line, plain prose or short bullets: location / neighbourhood, opening hours if known, cost (free / £X / etc), age-suitability, how to get there.
+      **PRO TIP:** optional one-liner with the small useful thing you'd whisper to a friend.
+
+- Keep each item tight: 2–5 short lines per item. Specific over generic. Real numbers and place names from the notes.
+- If items naturally cluster (parks / markets / museums), you MAY split them under ### sub-headings before the numbered list resumes — but only if it actually helps the reader. Default is one flat numbered list.
+- No closing summary paragraph. The list IS the section.
+- If notes are sparse, write fewer items honestly rather than padding with vague entries.
+
+${WORD_TARGET(600, 1600)}`
 }
 
 function buildClosingPrompt(opts: BlockPromptOpts): string {

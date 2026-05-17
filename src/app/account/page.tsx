@@ -75,8 +75,8 @@ export default async function AccountPage() {
               </h2>
               <p className={`mt-2 text-sm leading-relaxed max-w-md ${isPremium ? 'text-white/70' : 'text-gray-500'}`}>
                 {isPremium
-                  ? 'All guides, learning packs, and the I Want To Travel tool are included.'
-                  : 'Get every guide, every learning pack, and the I Want To Travel tool for £25/year.'}
+                  ? 'Every premium blog post, every guide, and every learning pack are included.'
+                  : 'A year of access to every premium blog post, every guide, and every learning pack — £25/year.'}
               </p>
             </div>
             {!isPremium && (

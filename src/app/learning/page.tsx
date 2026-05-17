@@ -148,7 +148,7 @@ export default async function LearningPage() {
                 <div className="p-8 sm:col-span-2">
                   <h3 className="font-bold text-gray-900 mb-2">JFT Learning Packs</h3>
                   <p className="text-sm text-gray-500 leading-relaxed mb-5">
-                    Practical resources for families on the road — written by Bec from years of doing it for real. Schooling rhythm, money on the move, packing for the long haul, and more. Included in Premium membership (&pound;25/year).
+                    Practical resources for families on the road — written by Bec from years of doing it for real. Schooling rhythm, money on the move, packing for the long haul, and more. Included in Premium: a year of access to every premium blog post, every guide, and every learning pack for &pound;25.
                   </p>
                   <div className="flex gap-3 flex-wrap">
                     {user ? (

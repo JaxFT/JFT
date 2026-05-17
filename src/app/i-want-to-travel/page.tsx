@@ -13,18 +13,8 @@ export default async function IWantToTravelPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  let isPremium = false
+  // Any signed-in user gets the questionnaire — free, no Premium required.
   if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('subscription_tier')
-      .eq('id', user.id)
-      .single()
-    isPremium = profile?.subscription_tier === 'premium'
-  }
-
-  // Premium user — embed the Family Way questionnaire (HTML bundled at build time)
-  if (isPremium) {
     return (
       <div className="pt-16 bg-sand-50">
         <iframe
@@ -37,13 +27,9 @@ export default async function IWantToTravelPage() {
     )
   }
 
-  // Not premium (signed-out OR free tier) — show the marketing page
-  const primaryCta = user
-    ? { href: '/account', label: 'Upgrade to Premium' }
-    : { href: '/signup?next=/i-want-to-travel', label: 'Sign up to get started' }
-  const secondaryCta = user
-    ? null
-    : { href: '/login?next=/i-want-to-travel', label: 'Already a member? Log in' }
+  // Signed-out visitor — show the marketing page with a sign-up CTA.
+  const primaryCta = { href: '/signup?next=/i-want-to-travel', label: 'Sign up — it\'s free' }
+  const secondaryCta = { href: '/login?next=/i-want-to-travel', label: 'Already a member? Log in' }
 
   return (
     <div className="min-h-screen bg-sand-50">
@@ -62,11 +48,9 @@ export default async function IWantToTravelPage() {
             <Link href={primaryCta.href} className="btn-primary">
               {primaryCta.label} <ArrowRight className="w-4 h-4" />
             </Link>
-            {secondaryCta && (
-              <Link href={secondaryCta.href} className="text-sm font-medium text-gray-500 hover:text-gray-800 underline underline-offset-4 decoration-gray-300">
-                {secondaryCta.label}
-              </Link>
-            )}
+            <Link href={secondaryCta.href} className="text-sm font-medium text-gray-500 hover:text-gray-800 underline underline-offset-4 decoration-gray-300">
+              {secondaryCta.label}
+            </Link>
           </div>
         </div>
       </section>
@@ -167,29 +151,22 @@ export default async function IWantToTravelPage() {
         </div>
       </section>
 
-      {/* PRICING / CTA */}
+      {/* SIGN-UP CTA */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-brand-950 text-white">
         <div className="max-w-2xl mx-auto text-center">
-          <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-4">Premium membership</p>
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-            Included with Premium — <span className="text-brand-300">£25 a year</span>
-          </h2>
+          <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-4">Free for members</p>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4">Create a free account to use the tool</h2>
           <p className="text-white/70 text-lg leading-relaxed mb-10 max-w-lg mx-auto">
-            I Want To Travel is part of the Premium membership, which also includes every guide and every learning pack. Cancel any time.
+            I Want To Travel is free — you just need to sign in. Takes a minute, no card required.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             <Link href={primaryCta.href} className="btn-primary text-base px-8 py-3.5">
               {primaryCta.label} <ArrowRight className="w-4 h-4" />
             </Link>
-            {secondaryCta && (
-              <Link href={secondaryCta.href} className="text-sm font-medium text-white/60 hover:text-white underline underline-offset-4 decoration-white/30">
-                {secondaryCta.label}
-              </Link>
-            )}
+            <Link href={secondaryCta.href} className="text-sm font-medium text-white/60 hover:text-white underline underline-offset-4 decoration-white/30">
+              {secondaryCta.label}
+            </Link>
           </div>
-          <p className="mt-6 text-xs text-white/40">
-            {user ? 'Logged in as a free member. Upgrade to unlock.' : 'Sign up is free. Premium upgrade is optional.'}
-          </p>
         </div>
       </section>
     </div>

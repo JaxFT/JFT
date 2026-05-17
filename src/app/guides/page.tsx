@@ -44,9 +44,9 @@ export default async function GuidesPage() {
         ) : (
           <div className="bg-brand-950 text-white rounded-2xl p-6 mb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
-              <p className="font-bold text-lg">Get every guide for £25/year</p>
+              <p className="font-bold text-lg">Premium — £25/year</p>
               <p className="text-white/60 text-sm">
-                Premium membership includes on-site access to every guide, the travel tool, and learning packs. View on the site (no downloads).
+                A year of access to every premium blog post, every guide, and every learning pack. View on the site, no downloads.
               </p>
             </div>
             <Link href="/signup?next=/account" className="btn-primary shrink-0">

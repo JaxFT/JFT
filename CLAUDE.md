@@ -60,6 +60,13 @@ Supabase Auth handles users. Profile is auto-created via trigger on signup.
 - `BlogCard` — used on homepage (latest 3) and /blog listing
 - `GatedContent` pattern — server component checks `profiles.subscription_tier` before rendering
 
+## Family Way questionnaire
+The questionnaire on `/i-want-to-travel` is a self-contained HTML page rendered inside an iframe via `srcDoc`. Source of truth is `src/app/i-want-to-travel/family-way.html`. The TypeScript file `family-way.ts` is generated from it. After editing the HTML, regenerate the TS file:
+```
+node -e "const fs=require('fs');const h=fs.readFileSync('src/app/i-want-to-travel/family-way.html','utf8');fs.writeFileSync('src/app/i-want-to-travel/family-way.ts','// Generated from family-way.html — edit the HTML and re-run the conversion in CLAUDE.md\nexport const FAMILY_WAY_HTML = '+JSON.stringify(h)+'\n');"
+```
+In-iframe links to parent-window routes need `target="_top"` (e.g. the call CTA on the results screen links to `/work-with-us`).
+
 ## Not Yet Built
 - Stripe checkout + webhook (`/api/stripe/`)
 - Account page (`/account`)

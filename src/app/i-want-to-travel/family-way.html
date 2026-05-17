@@ -410,6 +410,31 @@
     .next-step-card h3 { font-size: 20px; font-weight: 500; margin-bottom: 12px; color: var(--white); }
     .next-step-card p { font-size: 15px; line-height: 1.7; opacity: 0.88; }
 
+    .call-cta {
+      background: var(--white);
+      border: 1.5px solid var(--accent);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      margin-bottom: 16px;
+    }
+    .call-cta .r-section-label { color: var(--accent); margin-bottom: 10px; }
+    .call-cta h3 { font-size: 19px; font-weight: 500; margin-bottom: 10px; color: var(--text); }
+    .call-cta p { font-size: 14px; color: var(--text-2); line-height: 1.7; margin-bottom: 18px; }
+    .call-cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: var(--white);
+      padding: 11px 22px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .call-cta-btn:hover { background: var(--accent-dark); }
+
     .coming-soon {
       background: var(--surface);
       border-radius: var(--radius-lg);
@@ -731,6 +756,14 @@
       <div class="r-section-label">Recommended Next Step</div>
       <h3 id="nextStepTitle"></h3>
       <p id="nextStepDesc"></p>
+    </div>
+
+    <!-- 1:1 call CTA -->
+    <div class="call-cta">
+      <div class="r-section-label">Still have questions?</div>
+      <h3>Talk it through with Bec &amp; Oli</h3>
+      <p>A 60-minute video call with the family who's actually doing it. We follow your questions and you'll leave with concrete next steps for your family.</p>
+      <a href="/work-with-us" target="_top" class="call-cta-btn">Book a 1:1 call &rarr;</a>
     </div>
 
     <!-- Coming soon -->

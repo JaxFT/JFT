@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
-import { ArrowRight, Check, MessageCircle, Calendar, Mail } from 'lucide-react'
+import Link from 'next/link'
+import { ArrowRight, Check, MessageCircle, Calendar, Mail, Compass } from 'lucide-react'
 import CallRequestForm from './CallRequestForm'
 
 export const metadata: Metadata = {
@@ -84,6 +85,29 @@ export default function WorkWithUsPage() {
               </li>
             ))}
           </ul>
+        </div>
+      </section>
+
+      {/* QUESTIONNAIRE NUDGE */}
+      <section className="pb-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-brand-50 border border-brand-200 rounded-2xl p-5 sm:p-6 flex items-start gap-4 flex-wrap">
+            <div className="w-10 h-10 bg-brand-100 rounded-xl flex items-center justify-center shrink-0">
+              <Compass className="w-5 h-5 text-brand-700" />
+            </div>
+            <div className="flex-1 min-w-[14rem]">
+              <p className="text-sm font-semibold text-brand-900 mb-1">Have you completed the I Want To Travel questionnaire?</p>
+              <p className="text-sm text-brand-900/80 leading-relaxed">
+                We recommend doing it first — it takes 5 minutes and gives us (and you) a clearer picture going into the call, so we can spend the time on what matters. Totally optional though, you can skip straight to booking below.
+              </p>
+            </div>
+            <Link
+              href="/i-want-to-travel"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 bg-white hover:bg-brand-100 border border-brand-200 px-4 py-2.5 rounded-md shrink-0 w-full sm:w-auto justify-center"
+            >
+              Take the questionnaire <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
       </section>
 

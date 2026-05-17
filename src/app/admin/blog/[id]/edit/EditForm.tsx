@@ -345,6 +345,20 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
                   x={focalX}
                   y={focalY}
                   onChange={({ x, y }) => { setFocalX(x); setFocalY(y) }}
+                  onSave={async ({ x, y }) => {
+                    // Focal-only PATCH so the user gets immediate feedback
+                    // without needing to scroll to the bottom Save button.
+                    const res = await fetch(`/api/admin/blog-posts/${post.id}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ cover_focal_x: x, cover_focal_y: y }),
+                    })
+                    if (!res.ok) {
+                      const body = await res.json().catch(() => ({}))
+                      throw new Error(body.error || `HTTP ${res.status}`)
+                    }
+                    router.refresh()
+                  }}
                 />
               </div>
             )}

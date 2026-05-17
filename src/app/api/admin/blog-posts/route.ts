@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import matter from 'gray-matter'
 import { createClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/admin'
-import { slugify, type BlogCategory } from '@/lib/blog-db'
+import { slugify, type BlogCategory, type BlogLink } from '@/lib/blog-db'
 
 const VALID_CATEGORIES: BlogCategory[] = ['accommodation', 'restaurant', 'bar', 'activity', 'general']
 
@@ -15,9 +15,34 @@ async function requireAdmin() {
   return { ok: true as const, supabase, user }
 }
 
-// POST: create a new draft from either raw markdown or structured fields.
-// Used by the blog writer iframe (sends `markdown`) and by a future
-// "blank draft" button (sends `title`).
+// Coerce / validate raw incoming `links` into a clean BlogLink[] array.
+// Drops entries without a usable URL. Defaults missing labels to "Website".
+function cleanLinks(raw: unknown): BlogLink[] {
+  if (!Array.isArray(raw)) return []
+  return raw
+    .map(x => (typeof x === 'object' && x !== null ? x as Record<string, unknown> : null))
+    .filter((x): x is Record<string, unknown> => !!x)
+    .map(x => ({
+      url: typeof x.url === 'string' ? x.url.trim() : '',
+      label: typeof x.label === 'string' && x.label.trim() ? x.label.trim() : 'Website',
+    }))
+    .filter(x => x.url.length > 0)
+}
+
+// Validate trip_date: must be ISO yyyy-mm-dd or null.
+function cleanTripDate(raw: unknown): string | null {
+  if (raw === null || raw === '') return null
+  if (typeof raw !== 'string') return null
+  return /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : null
+}
+
+function cleanTargetMinutes(raw: unknown): number | null {
+  if (raw === null || raw === undefined || raw === '') return null
+  const n = typeof raw === 'number' ? raw : Number(raw)
+  if (Number.isNaN(n)) return null
+  return Math.max(1, Math.min(20, Math.round(n)))
+}
+
 export async function POST(request: Request) {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ error: 'Not authorized' }, { status: 404 })
@@ -28,7 +53,10 @@ export async function POST(request: Request) {
         title?: string
         category?: string | null
         place_name?: string | null
-        place_link?: string | null
+        place_link?: string | null     // legacy single-link
+        links?: unknown                 // new multi-link
+        trip_date?: string | null
+        target_minutes?: number | null
       }
     | null
   if (!body) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
@@ -39,6 +67,9 @@ export async function POST(request: Request) {
       : null
   const placeName = typeof body.place_name === 'string' && body.place_name.trim() ? body.place_name.trim() : null
   const placeLink = typeof body.place_link === 'string' && body.place_link.trim() ? body.place_link.trim() : null
+  const links = cleanLinks(body.links)
+  const tripDate = cleanTripDate(body.trip_date)
+  const targetMinutes = cleanTargetMinutes(body.target_minutes)
 
   let title = (body.title ?? '').trim()
   let excerpt: string | null = null
@@ -47,8 +78,6 @@ export async function POST(request: Request) {
   let bodyMd = ''
 
   if (typeof body.markdown === 'string' && body.markdown.trim().length > 0) {
-    // Strip outer code fences if the AI wrapped its response (we ask
-    // it to, so the user can copy the raw text from ChatGPT/Claude).
     const stripped = body.markdown
       .trim()
       .replace(/^```(?:markdown|md)?\s*\n?/i, '')
@@ -65,9 +94,8 @@ export async function POST(request: Request) {
 
   if (!title) title = 'Untitled draft'
 
-  let baseSlug = slugify(title)
+  const baseSlug = slugify(title)
   let slug = baseSlug
-  // Ensure unique slug
   for (let i = 2; i < 30; i++) {
     const { data } = await auth.supabase.from('blog_posts').select('id').eq('slug', slug).maybeSingle()
     if (!data) break
@@ -84,6 +112,9 @@ export async function POST(request: Request) {
     category,
     place_name: placeName,
     place_link: placeLink,
+    links,
+    trip_date: tripDate,
+    target_minutes: targetMinutes,
     status: 'draft',
     created_by: auth.user.id,
   }

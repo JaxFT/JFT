@@ -85,13 +85,19 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-4">{post.title}</h1>
 
-        <div className="flex items-center gap-3 text-sm text-gray-400 mb-10 pb-8 border-b border-gray-100">
+        <div className="flex items-center gap-3 text-sm text-gray-400 mb-2 flex-wrap">
           <span>{post.author}</span>
           <span>·</span>
           <span>{format(new Date(post.date), 'MMMM d, yyyy')}</span>
           <span>·</span>
           <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {post.readTime} min read</span>
         </div>
+        {post.tripDate && (
+          <p className="text-sm text-gray-500 italic mb-10 pb-8 border-b border-gray-100">
+            We visited {format(new Date(post.tripDate), 'MMMM yyyy')}
+          </p>
+        )}
+        {!post.tripDate && <div className="mb-10 pb-8 border-b border-gray-100" />}
 
         <div className="relative">
           <div className="prose-jft">

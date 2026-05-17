@@ -4,8 +4,8 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-  ArrowLeft, ArrowRight, Camera, Check, Copy, Image as ImageIcon,
-  Loader2, ShieldCheck, Star, Trash2, X, ChevronUp, ChevronDown, Sparkles,
+  ArrowLeft, ArrowRight, Camera, Check, Copy, Loader2, ShieldCheck, Star,
+  Trash2, X, ChevronUp, ChevronDown, Sparkles, Plus, Link as LinkIcon,
 } from 'lucide-react'
 import { BLOG_CATEGORIES, type BlogCategory } from '@/lib/blog-categories'
 import { VOICE_PROFILE } from '@/lib/voice-profile'
@@ -19,6 +19,8 @@ type Photo = {
   error?: string
 }
 
+type WizardLink = { id: string; url: string; label: string }
+
 const VIBES = [
   'warm and honest',
   'funny',
@@ -29,21 +31,20 @@ const VIBES = [
   'logistical',
 ]
 
-const TIME_PRESETS = [1, 2, 3, 5] as const
+const TIME_PRESETS = [1, 2, 3, 5, 8, 12, 20] as const
 const WORDS_PER_MIN = 200
+const MAX_MINUTES = 20
 
-// Convert a minute target to a comfortable word range + a hard cap.
-// The cap is what we tell the AI never to exceed — slightly above the
-// upper target so a 3 min post becomes "~600 words, hard cap 720".
 function wordTargetForMinutes(min: number): { lo: number; hi: number; cap: number; structureHint: string } {
-  const safeMin = Math.max(1, Math.min(15, Math.round(min)))
+  const safeMin = Math.max(1, Math.min(MAX_MINUTES, Math.round(min)))
   const hi = safeMin * WORDS_PER_MIN
   const lo = Math.max(120, hi - Math.round(WORDS_PER_MIN * 0.4))
   const cap = Math.round(hi * 1.15)
   const structureHint =
     safeMin <= 2 ? 'No sub-headings. Flowing paragraphs only. Stop the moment the story is told.'
     : safeMin <= 4 ? 'One or two ## sub-headings if they earn their place. Otherwise paragraphs.'
-    : 'Two to four ## sub-headings, each opening with a clear point. A short bullet list of practical tips at the end is fine.'
+    : safeMin <= 8 ? 'Two to four ## sub-headings, each opening with a clear point. A short bullet list of practical tips at the end is fine.'
+    : 'Three to six ## sub-headings. Use ### inside them if needed. A practical-tips bullet block at the end is welcome.'
   return { lo, hi, cap, structureHint }
 }
 
@@ -52,9 +53,6 @@ const TOTAL_STEPS = 6
 const CATEGORY_LABEL: Record<BlogCategory, string> =
   Object.fromEntries(BLOG_CATEGORIES.map(c => [c.value, c.label])) as Record<BlogCategory, string>
 
-// Suggested CTA phrases the AI can use as the link text when wrapping the
-// place link. Choose phrasing that reads naturally inside a sentence; the AI
-// picks the one that fits best (or coins something similar).
 const LINK_CTA_HINTS: Record<BlogCategory, string> = {
   accommodation: '"book here", "see availability", "check rates", "their website"',
   restaurant:    '"see the menu", "book a table", "find them here", "their website"',
@@ -63,14 +61,30 @@ const LINK_CTA_HINTS: Record<BlogCategory, string> = {
   general:       '"more here", "their website", "see the full details"',
 }
 
+// Friendly label suggestions for the link "label" field, by category.
+function suggestedLabelsFor(category: BlogCategory | ''): string[] {
+  switch (category) {
+    case 'accommodation': return ['Booking', 'Their website', 'Airbnb listing']
+    case 'restaurant':    return ['Menu', 'Booking', 'Instagram', 'Their website']
+    case 'bar':           return ['Their website', 'Instagram', 'Menu']
+    case 'activity':      return ['Booking', 'Tickets', 'Opening times', 'Their website']
+    default:              return ['Website', 'Menu', 'Booking', 'Instagram']
+  }
+}
+
+function newLink(label = ''): WizardLink {
+  return { id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, url: '', label }
+}
+
 export default function Wizard() {
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [category, setCategory] = useState<BlogCategory | ''>('')
   const [placeName, setPlaceName] = useState('')
-  const [placeLink, setPlaceLink] = useState('')
+  const [links, setLinks] = useState<WizardLink[]>([])
   const [location, setLocation] = useState('')
   const [about, setAbout] = useState('')
+  const [tripDate, setTripDate] = useState<string>('')   // yyyy-mm
   const [detail, setDetail] = useState('')
   const [vibes, setVibes] = useState<string[]>([])
   const [targetMinutes, setTargetMinutes] = useState<number>(3)
@@ -88,6 +102,12 @@ export default function Wizard() {
   const toggleVibe = (v: string) => {
     setVibes(prev => prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v])
   }
+
+  // ── Link CRUD ──
+  const addLink = (label?: string) => setLinks(prev => [...prev, newLink(label ?? '')])
+  const patchLink = (id: string, patch: Partial<WizardLink>) =>
+    setLinks(prev => prev.map(l => (l.id === id ? { ...l, ...patch } : l)))
+  const removeLink = (id: string) => setLinks(prev => prev.filter(l => l.id !== id))
 
   const addPhotos = async (files: FileList | null) => {
     if (!files || files.length === 0) return
@@ -121,21 +141,11 @@ export default function Wizard() {
     }
   }
 
-  const removePhoto = (id: string) => {
-    setPhotos(prev => prev.filter(p => p.id !== id))
-  }
-
-  const setCaption = (id: string, caption: string) => {
+  const removePhoto = (id: string) => setPhotos(prev => prev.filter(p => p.id !== id))
+  const setCaption = (id: string, caption: string) =>
     setPhotos(prev => prev.map(p => p.id === id ? { ...p, caption } : p))
-  }
-
-  const toggleCover = (id: string) => {
-    setPhotos(prev => prev.map(p => ({
-      ...p,
-      isCover: p.id === id ? !p.isCover : false,
-    })))
-  }
-
+  const toggleCover = (id: string) =>
+    setPhotos(prev => prev.map(p => ({ ...p, isCover: p.id === id ? !p.isCover : false })))
   const movePhoto = (id: string, dir: -1 | 1) => {
     setPhotos(prev => {
       const idx = prev.findIndex(p => p.id === id)
@@ -155,9 +165,35 @@ export default function Wizard() {
   const today = new Date().toISOString().slice(0, 10)
   const donePhotos = photos.filter(p => p.status === 'done')
   const coverPhoto = donePhotos.find(p => p.isCover)
-
   const bodyPhotos = donePhotos.filter(p => !p.isCover)
   const lengthCfg = wordTargetForMinutes(targetMinutes)
+  const cleanLinks = links.filter(l => l.url.trim().length > 0)
+
+  // Format trip date for the prompt — accept either yyyy-mm-dd or yyyy-mm.
+  const tripDateHuman = (() => {
+    if (!tripDate) return ''
+    if (/^\d{4}-\d{2}$/.test(tripDate)) {
+      const [y, m] = tripDate.split('-')
+      const date = new Date(Number(y), Number(m) - 1, 1)
+      return date.toLocaleString('en-GB', { month: 'long', year: 'numeric' })
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(tripDate)) {
+      return new Date(tripDate).toLocaleString('en-GB', { month: 'long', year: 'numeric' })
+    }
+    return tripDate
+  })()
+
+  // Build the links block for the AI prompt.
+  const linksPromptBlock = (() => {
+    if (cleanLinks.length === 0) return 'LINKS: none — do not invent any URLs.'
+    const cta = category ? LINK_CTA_HINTS[category] : LINK_CTA_HINTS.general
+    const lines = cleanLinks
+      .map((l, i) => `  ${i + 1}. URL: ${l.url}\n     Purpose: ${l.label || 'Website'}`)
+      .join('\n')
+    return `LINKS — IMPORTANT: weave each of these links into the post body ONCE, where it fits naturally. Embed each one inside a short call-to-action phrase using markdown \`[phrase](URL)\` syntax. DO NOT show URLs as raw text. DO NOT use the place name as the link text. Pick CTA phrasing that matches the link's "Purpose" (good options for this post type: ${cta}). For example, a link with Purpose "Menu" should read like "[see the menu](URL)"; "Booking" → "[book here](URL)"; "Instagram" → "[their Instagram](URL)". Place each link in a different spot in the post — don't bunch them together.
+
+${lines}`
+  })()
 
   const builtPrompt = `${VOICE_PROFILE}
 
@@ -167,15 +203,14 @@ POST DETAILS:
 Type of post: ${category ? CATEGORY_LABEL[category] : 'not specified'}
 Location: ${location || 'not specified'}
 What this post is about: ${about || 'not specified'}
+${tripDateHuman ? `When we visited: ${tripDateHuman}` : 'When we visited: not specified'}
 ${placeName.trim()
   ? `Name to feature in the post (mention this by name early in the body): ${placeName.trim()}`
   : 'Name to feature: none — write generally about the location.'}
-${placeLink.trim()
-  ? `Link for that place: ${placeLink.trim()}
-LINK STYLE — IMPORTANT: do NOT show the URL as raw text, and do NOT use the place name as the link text. Embed the URL in a short, natural call-to-action phrase that flows in a sentence. Use markdown link syntax \`[phrase](URL)\`. Pick whichever phrasing reads most naturally${category ? ` (good options for a ${CATEGORY_LABEL[category].toLowerCase()} post: ${LINK_CTA_HINTS[category]})` : ''}. Examples: "We stayed three nights and you can [book here](URL) if you fancy it." / "Worth a stop, [see the menu](URL) before you go." Place this link ONCE, naturally, where it fits in the story.`
-  : ''}
 What actually happened (raw notes from Bec/Oli): ${detail || 'none'}
 Tone/vibe modifiers (use sparingly, voice profile wins): ${vibes.length ? vibes.join(', ') : 'warm and honest'}
+
+${linksPromptBlock}
 
 LENGTH — STRICT CAP, NOT A GOAL:
 Target: about ${targetMinutes} minute read (~${lengthCfg.lo}–${lengthCfg.hi} words at normal reading speed).
@@ -246,6 +281,10 @@ Do NOT add any text before or after the code block. The code block IS the entire
     setSaving(true)
     setSaveError(null)
     try {
+      // Convert trip date to yyyy-mm-dd if it's yyyy-mm (use first of month).
+      const tripDateIso = /^\d{4}-\d{2}$/.test(tripDate) ? `${tripDate}-01`
+        : /^\d{4}-\d{2}-\d{2}$/.test(tripDate) ? tripDate : null
+
       const res = await fetch('/api/admin/blog-posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -253,7 +292,11 @@ Do NOT add any text before or after the code block. The code block IS the entire
           markdown: aiResponse.trim(),
           category: category || null,
           place_name: placeName.trim() || null,
-          place_link: placeLink.trim() || null,
+          // Keep place_link for back-compat: first link if any.
+          place_link: cleanLinks[0]?.url ?? null,
+          links: cleanLinks.map(l => ({ url: l.url, label: l.label || 'Website' })),
+          trip_date: tripDateIso,
+          target_minutes: targetMinutes,
         }),
       })
       const body = await res.json().catch(() => ({}))
@@ -264,6 +307,8 @@ Do NOT add any text before or after the code block. The code block IS the entire
       setSaving(false)
     }
   }
+
+  const suggestedLabels = suggestedLabelsFor(category)
 
   return (
     <div className="min-h-screen bg-sand-50">
@@ -289,15 +334,15 @@ Do NOT add any text before or after the code block. The code block IS the entire
 
       <div className="max-w-2xl mx-auto px-4 py-8 pb-32">
 
-        {/* STEP 1: What kind of post + place + link */}
+        {/* STEP 1: What kind of post + place + links */}
         {step === 1 && (
           <div className="space-y-6">
             <div>
               <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2 flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5" /> Step 1 of 6
+                <ShieldCheck className="w-3.5 h-3.5" /> Step 1 of {TOTAL_STEPS}
               </p>
               <h1 className="text-3xl font-bold text-gray-900 leading-tight">What kind of post is this?</h1>
-              <p className="text-gray-500 mt-2 text-base">Pick the type, then name the place (and a link if you've got one). The AI will weave both into the post.</p>
+              <p className="text-gray-500 mt-2 text-base">Pick the type, name the place, and add any links (booking, menu, etc).</p>
             </div>
 
             <div>
@@ -338,30 +383,89 @@ Do NOT add any text before or after the code block. The code block IS the entire
                 autoComplete="off"
                 className="w-full text-lg px-4 py-3.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
-              <p className="text-xs text-gray-400 mt-1.5">The AI is told to mention this name in the post.</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Website or link (optional)</label>
-              <input
-                value={placeLink}
-                onChange={e => setPlaceLink(e.target.value)}
-                placeholder="https://…"
-                inputMode="url"
-                autoComplete="off"
-                className="w-full text-base px-4 py-3.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
-              />
-              <p className="text-xs text-gray-400 mt-1.5">If you add a link, the first mention of the name will be turned into a clickable link to this URL.</p>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">Links (optional)</label>
+                <button
+                  type="button"
+                  onClick={() => addLink()}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-2.5 py-1.5 rounded-md"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add link
+                </button>
+              </div>
+              {links.length === 0 && (
+                <div className="bg-white border-2 border-dashed border-gray-200 rounded-xl p-4 text-center">
+                  <p className="text-sm text-gray-500 mb-3">No links yet. Each link gets a short label so the AI knows how to phrase it in the post.</p>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {suggestedLabels.map(lbl => (
+                      <button
+                        key={lbl}
+                        type="button"
+                        onClick={() => addLink(lbl)}
+                        className="text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-brand-100 hover:text-brand-800 px-3 py-1.5 rounded-full"
+                      >
+                        + {lbl}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="space-y-3">
+                {links.map((l, i) => (
+                  <div key={l.id} className="bg-white border border-gray-200 rounded-xl p-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-brand-50 text-brand-700 text-xs font-bold shrink-0">
+                        {i + 1}
+                      </span>
+                      <input
+                        value={l.label}
+                        onChange={e => patchLink(l.id, { label: e.target.value })}
+                        placeholder="Label (Booking, Menu, Instagram…)"
+                        list={`labels-${l.id}`}
+                        className="flex-1 text-sm font-semibold text-gray-800 border-0 focus:outline-none bg-transparent min-w-0"
+                      />
+                      <datalist id={`labels-${l.id}`}>
+                        {suggestedLabels.map(lbl => <option key={lbl} value={lbl} />)}
+                      </datalist>
+                      <button
+                        type="button"
+                        onClick={() => removeLink(l.id)}
+                        className="p-1 text-gray-400 hover:text-red-600 shrink-0"
+                        aria-label="Remove link"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <LinkIcon className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                      <input
+                        value={l.url}
+                        onChange={e => patchLink(l.id, { url: e.target.value })}
+                        placeholder="https://…"
+                        inputMode="url"
+                        autoComplete="off"
+                        className="flex-1 text-sm font-mono text-gray-700 border-0 focus:outline-none bg-transparent min-w-0"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {links.length > 0 && (
+                <p className="text-xs text-gray-400 mt-2">The label tells the AI how to phrase the link in the post (e.g. "Booking" becomes "book here", "Menu" becomes "see the menu").</p>
+              )}
             </div>
           </div>
         )}
 
-        {/* STEP 2: Trip basics */}
+        {/* STEP 2: Trip basics + when we went */}
         {step === 2 && (
           <div className="space-y-6">
             <div>
-              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 2 of 6</p>
-              <h1 className="text-3xl font-bold text-gray-900 leading-tight">Where, and what's this post about?</h1>
+              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 2 of {TOTAL_STEPS}</p>
+              <h1 className="text-3xl font-bold text-gray-900 leading-tight">Where, when, and what's this post about?</h1>
               <p className="text-gray-500 mt-2 text-base">Keep it short — single line is fine.</p>
             </div>
 
@@ -374,6 +478,17 @@ Do NOT add any text before or after the code block. The code block IS the entire
                 autoComplete="off"
                 className="w-full text-lg px-4 py-3.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">When did you go?</label>
+              <input
+                type="month"
+                value={tripDate}
+                onChange={e => setTripDate(e.target.value)}
+                className="w-full text-base px-4 py-3.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+              <p className="text-xs text-gray-400 mt-1.5">Helps the AI write seasonally (weather, prices, what was open). Shown to readers near the byline so they can calibrate.</p>
             </div>
 
             <div>
@@ -393,7 +508,7 @@ Do NOT add any text before or after the code block. The code block IS the entire
         {step === 3 && (
           <div className="space-y-6">
             <div>
-              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 3 of 6</p>
+              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 3 of {TOTAL_STEPS}</p>
               <h1 className="text-3xl font-bold text-gray-900 leading-tight">What actually happened?</h1>
               <p className="text-gray-500 mt-2 text-base">Raw notes are fine. Anything you remember — quotes, prices, what surprised you, what was hard, what Jax said. The AI will turn it into the post.</p>
             </div>
@@ -448,15 +563,15 @@ Do NOT add any text before or after the code block. The code block IS the entire
                   <input
                     type="number"
                     min={1}
-                    max={15}
+                    max={MAX_MINUTES}
                     value={targetMinutes}
                     onChange={e => {
-                      const n = Math.max(1, Math.min(15, Number(e.target.value) || 1))
+                      const n = Math.max(1, Math.min(MAX_MINUTES, Number(e.target.value) || 1))
                       setTargetMinutes(n)
                     }}
                     className="w-16 text-sm px-2.5 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
-                  <span className="text-xs text-gray-500">min</span>
+                  <span className="text-xs text-gray-500">min (max {MAX_MINUTES})</span>
                 </div>
               </div>
               <p className="text-xs text-gray-400 mt-2">
@@ -470,7 +585,7 @@ Do NOT add any text before or after the code block. The code block IS the entire
         {step === 4 && (
           <div className="space-y-6">
             <div>
-              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 4 of 6</p>
+              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 4 of {TOTAL_STEPS}</p>
               <h1 className="text-3xl font-bold text-gray-900 leading-tight">Photos</h1>
               <p className="text-gray-500 mt-2 text-base">Tap to add photos from your camera roll. Caption each one so the AI puts it in the right spot.</p>
             </div>
@@ -599,14 +714,14 @@ Do NOT add any text before or after the code block. The code block IS the entire
         {step === 5 && (
           <div className="space-y-6">
             <div>
-              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 5 of 6</p>
+              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 5 of {TOTAL_STEPS}</p>
               <h1 className="text-3xl font-bold text-gray-900 leading-tight">Copy this into Claude or ChatGPT</h1>
               <p className="text-gray-500 mt-2 text-base">Tap Copy, switch to Claude.ai or ChatGPT in your phone, paste, send. When you get the response back, paste it on the next screen.</p>
             </div>
 
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-900">
               <p className="text-sm leading-relaxed">
-                <strong className="inline-flex items-center gap-1.5"><Sparkles className="w-4 h-4" /> For the most natural voice:</strong> if you've got a custom GPT trained on your writing, open <em>that</em> GPT first and paste this prompt there. Pasting into a fresh Claude / ChatGPT session works too, but you'll lose the trained voice.
+                <strong className="inline-flex items-center gap-1.5"><Sparkles className="w-4 h-4" /> For the most natural voice:</strong> if you've got a Claude Project trained on your writing, open <em>that</em> project first and paste this prompt there.
               </p>
             </div>
 
@@ -624,12 +739,6 @@ Do NOT add any text before or after the code block. The code block IS the entire
               </summary>
               <pre className="text-xs text-gray-600 px-5 pb-5 whitespace-pre-wrap font-mono leading-relaxed overflow-x-auto max-h-72 overflow-y-auto">{builtPrompt}</pre>
             </details>
-
-            <div className="bg-brand-50 border border-brand-200 rounded-2xl p-4">
-              <p className="text-sm text-brand-900 leading-relaxed">
-                <strong>Tip:</strong> Open Claude.ai or ChatGPT in another tab/app. Paste the prompt. Wait for the markdown response. Copy ALL of it (starts with <code>---</code>). Come back here and continue.
-              </p>
-            </div>
           </div>
         )}
 
@@ -637,7 +746,7 @@ Do NOT add any text before or after the code block. The code block IS the entire
         {step === 6 && (
           <div className="space-y-6">
             <div>
-              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 6 of 6</p>
+              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 6 of {TOTAL_STEPS}</p>
               <h1 className="text-3xl font-bold text-gray-900 leading-tight">Paste the AI's response</h1>
               <p className="text-gray-500 mt-2 text-base">Paste everything from the AI — the bit that starts with <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">---</code> and ends with the post body.</p>
             </div>

@@ -1,14 +1,45 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { ArrowLeft, Save, Trash2, ExternalLink, Eye, FileEdit, Check, Upload, Loader2, Crown } from 'lucide-react'
-import type { BlogPostRow } from '@/lib/blog-db'
+import {
+  ArrowLeft, Save, Trash2, ExternalLink, Eye, FileEdit, Check, Upload,
+  Loader2, Crown, Plus, Link as LinkIcon, Clock, CalendarDays,
+} from 'lucide-react'
+import type { BlogPostRow, BlogLink } from '@/lib/blog-db'
 import { BLOG_CATEGORIES, type BlogCategory } from '@/lib/blog-categories'
 import CoverFocalPicker from '@/components/blog/CoverFocalPicker'
+
+const MAX_MINUTES = 20
+const WORDS_PER_MIN = 200
+
+type EditLink = BlogLink & { _key: string }
+
+function countWords(s: string): number {
+  return s.trim().split(/\s+/).filter(Boolean).length
+}
+
+function suggestedLabelsFor(category: BlogCategory | ''): string[] {
+  switch (category) {
+    case 'accommodation': return ['Booking', 'Their website', 'Airbnb listing']
+    case 'restaurant':    return ['Menu', 'Booking', 'Instagram', 'Their website']
+    case 'bar':           return ['Their website', 'Instagram', 'Menu']
+    case 'activity':      return ['Booking', 'Tickets', 'Opening times', 'Their website']
+    default:              return ['Website', 'Menu', 'Booking', 'Instagram']
+  }
+}
+
+// Trim a Supabase timestamptz to the yyyy-mm-dd that an <input type="date">
+// expects. Returns '' for null/invalid.
+function isoToDateInput(iso: string | null): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toISOString().slice(0, 10)
+}
 
 export default function EditForm({ post, justCreated }: { post: BlogPostRow; justCreated: boolean }) {
   const router = useRouter()
@@ -23,9 +54,15 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
   const [isPremium, setIsPremium] = useState<boolean>(post.is_premium)
   const [category, setCategory] = useState<BlogCategory | ''>(post.category ?? '')
   const [placeName, setPlaceName] = useState(post.place_name ?? '')
-  const [placeLink, setPlaceLink] = useState(post.place_link ?? '')
   const [focalX, setFocalX] = useState<number>(post.cover_focal_x ?? 50)
   const [focalY, setFocalY] = useState<number>(post.cover_focal_y ?? 50)
+
+  const [tripDate, setTripDate] = useState<string>(post.trip_date ?? '')
+  const [targetMinutes, setTargetMinutes] = useState<number>(post.target_minutes ?? 3)
+  const [publishedDate, setPublishedDate] = useState<string>(isoToDateInput(post.published_at))
+  const [links, setLinks] = useState<EditLink[]>(
+    post.links.map((l, i) => ({ ...l, _key: `seed-${i}` })),
+  )
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -35,6 +72,56 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
   const [uploadingCover, setUploadingCover] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const coverFileInputRef = useRef<HTMLInputElement>(null)
+
+  const suggestedLabels = suggestedLabelsFor(category)
+
+  // ── Read-time analysis ──
+  const actualWords = useMemo(() => countWords(body), [body])
+  const actualMinutes = Math.max(1, Math.ceil(actualWords / WORDS_PER_MIN))
+  const targetWordsLo = Math.max(120, targetMinutes * WORDS_PER_MIN - Math.round(WORDS_PER_MIN * 0.4))
+  const targetWordsHi = targetMinutes * WORDS_PER_MIN
+  // Severity bands
+  const lengthSignal: { tone: 'ok' | 'short' | 'long' | 'wildly-short' | 'wildly-long'; message: string; suggestion: number | null } = (() => {
+    if (actualWords === 0) return { tone: 'ok', message: 'Nothing written yet.', suggestion: null }
+    const ratio = actualMinutes / targetMinutes
+    if (ratio < 0.5) {
+      const suggestion = Math.max(1, actualMinutes)
+      return {
+        tone: 'wildly-short',
+        message: `Way under target. You aimed for ${targetMinutes} min but this is more like a ${suggestion} min read. Add more, or drop the target.`,
+        suggestion,
+      }
+    }
+    if (ratio < 0.75) {
+      const suggestion = Math.max(1, actualMinutes)
+      return {
+        tone: 'short',
+        message: `A bit short for ${targetMinutes} min. Reads as ${suggestion} min. Consider adding a section, or drop the target.`,
+        suggestion,
+      }
+    }
+    if (ratio > 1.6) {
+      const suggestion = Math.min(MAX_MINUTES, actualMinutes)
+      return {
+        tone: 'wildly-long',
+        message: `Way over target. You aimed for ${targetMinutes} min but this is a ${suggestion} min read. Trim it, or bump the target.`,
+        suggestion,
+      }
+    }
+    if (ratio > 1.3) {
+      const suggestion = Math.min(MAX_MINUTES, actualMinutes)
+      return {
+        tone: 'long',
+        message: `A bit long for ${targetMinutes} min. Reads as ${suggestion} min. Consider trimming, or bump the target.`,
+        suggestion,
+      }
+    }
+    return {
+      tone: 'ok',
+      message: `On target — ${actualMinutes} min read, ~${actualWords} words.`,
+      suggestion: null,
+    }
+  })()
 
   const uploadCover = async (file: File) => {
     setUploadError(null)
@@ -53,13 +140,20 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
     }
   }
 
-  // Hide the "just created" banner after a moment
   const [showJustCreated, setShowJustCreated] = useState(justCreated)
   useEffect(() => {
     if (!showJustCreated) return
     const t = setTimeout(() => setShowJustCreated(false), 6000)
     return () => clearTimeout(t)
   }, [showJustCreated])
+
+  // ── Link CRUD ──
+  const addLink = (label = '') =>
+    setLinks(prev => [...prev, { url: '', label, _key: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}` }])
+  const patchLink = (key: string, patch: Partial<EditLink>) =>
+    setLinks(prev => prev.map(l => (l._key === key ? { ...l, ...patch } : l)))
+  const removeLink = (key: string) =>
+    setLinks(prev => prev.filter(l => l._key !== key))
 
   const save = async (override?: { status?: 'draft' | 'published' }) => {
     setSaving(true)
@@ -68,6 +162,11 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
       const tags = tagsText.split(',').map(t => t.trim()).filter(Boolean)
       const finalStatus = override?.status ?? status
       const previousStatus = status
+
+      const cleanLinks: BlogLink[] = links
+        .map(l => ({ url: l.url.trim(), label: l.label.trim() || 'Website' }))
+        .filter(l => l.url.length > 0)
+
       const res = await fetch(`/api/admin/blog-posts/${post.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -82,7 +181,12 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
           is_premium: isPremium,
           category: category || null,
           place_name: placeName.trim() || null,
-          place_link: placeLink.trim() || null,
+          // place_link kept in sync with the first link for back-compat.
+          place_link: cleanLinks[0]?.url ?? null,
+          links: cleanLinks,
+          trip_date: tripDate || null,
+          target_minutes: targetMinutes,
+          published_at: publishedDate || null,
           cover_focal_x: focalX,
           cover_focal_y: focalY,
         }),
@@ -94,10 +198,10 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
       const updated = await res.json()
       if (override?.status) setStatus(override.status)
       if (updated.slug && updated.slug !== slug) setSlug(updated.slug)
+      if (updated.published_at) setPublishedDate(isoToDateInput(updated.published_at))
       setSavedAt(new Date())
       router.refresh()
 
-      // Friendly feedback + redirect on publish
       const justPublished = finalStatus === 'published' && previousStatus !== 'published'
       const justUnpublished = finalStatus === 'draft' && previousStatus === 'published'
       let message = 'Draft saved.'
@@ -222,6 +326,77 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
             />
           </div>
 
+          {/* Dates row: trip date + publish date */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">
+                <CalendarDays className="w-3.5 h-3.5 inline mr-1 -mt-0.5" /> Trip date (when we went)
+              </label>
+              <input
+                type="date"
+                value={tripDate}
+                onChange={e => setTripDate(e.target.value)}
+                className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+              <p className="text-xs text-gray-400 mt-1.5">Shown near the byline so readers can calibrate. Day is fine if you remember it; pick the 1st if you only know the month.</p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">
+                <CalendarDays className="w-3.5 h-3.5 inline mr-1 -mt-0.5" /> Publish date
+              </label>
+              <input
+                type="date"
+                value={publishedDate}
+                onChange={e => setPublishedDate(e.target.value)}
+                className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+              <p className="text-xs text-gray-400 mt-1.5">
+                {status === 'published'
+                  ? 'The date shown on the live post. Backdate or fast-forward as you like.'
+                  : 'Leave blank to auto-stamp at publish, or pick a date to backdate.'}
+              </p>
+            </div>
+          </div>
+
+          {/* Read-time intelligence panel */}
+          <div>
+            <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">
+              <Clock className="w-3.5 h-3.5 inline mr-1 -mt-0.5" /> Target read time
+            </label>
+            <div className="flex items-center gap-3 flex-wrap">
+              <input
+                type="number"
+                min={1}
+                max={MAX_MINUTES}
+                value={targetMinutes}
+                onChange={e => setTargetMinutes(Math.max(1, Math.min(MAX_MINUTES, Number(e.target.value) || 1)))}
+                className="w-20 text-sm font-mono px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+              <span className="text-sm text-gray-500">min (target {targetWordsLo}–{targetWordsHi} words)</span>
+            </div>
+            <div className={`mt-3 rounded-lg px-3 py-2.5 text-sm border flex items-start justify-between gap-3 flex-wrap ${
+              lengthSignal.tone === 'ok'           ? 'bg-brand-50 border-brand-200 text-brand-900'
+              : lengthSignal.tone === 'short'      ? 'bg-amber-50 border-amber-200 text-amber-900'
+              : lengthSignal.tone === 'long'       ? 'bg-amber-50 border-amber-200 text-amber-900'
+              : lengthSignal.tone === 'wildly-short' ? 'bg-red-50 border-red-200 text-red-900'
+              :                                       'bg-red-50 border-red-200 text-red-900'
+            }`}>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium leading-snug">{lengthSignal.message}</p>
+                <p className="text-xs opacity-70 mt-0.5">Currently ~{actualWords} words.</p>
+              </div>
+              {lengthSignal.suggestion !== null && lengthSignal.suggestion !== targetMinutes && (
+                <button
+                  type="button"
+                  onClick={() => setTargetMinutes(lengthSignal.suggestion!)}
+                  className="shrink-0 text-xs font-semibold bg-white/80 hover:bg-white border border-current/30 px-3 py-1.5 rounded-md"
+                >
+                  Set target to {lengthSignal.suggestion} min
+                </button>
+              )}
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Access</label>
             <label className="flex items-start gap-3 cursor-pointer select-none rounded-lg border border-gray-200 px-4 py-3 hover:bg-gray-50">
@@ -266,17 +441,80 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
                 placeholder="e.g. Casa Fuzetta"
               />
             </div>
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Place link</label>
-              <input
-                value={placeLink}
-                onChange={e => setPlaceLink(e.target.value)}
-                className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono"
-                placeholder="https://…"
-                inputMode="url"
-              />
-              <p className="text-xs text-gray-400 mt-1.5">Used by the wizard prompt only — does not change the post body after save. To add the link into an existing post, edit the markdown directly.</p>
+          </div>
+
+          {/* Multi-link editor */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold tracking-widest uppercase text-gray-500">
+                Links
+              </label>
+              <button
+                type="button"
+                onClick={() => addLink()}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-2.5 py-1.5 rounded-md"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add link
+              </button>
             </div>
+            {links.length === 0 && (
+              <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-4 text-center">
+                <p className="text-xs text-gray-500 mb-2">No links yet. Add any URLs the AI should weave into the body — each gets a label so it knows the CTA phrasing.</p>
+                <div className="flex flex-wrap gap-1.5 justify-center">
+                  {suggestedLabels.map(lbl => (
+                    <button
+                      key={lbl}
+                      type="button"
+                      onClick={() => addLink(lbl)}
+                      className="text-xs font-semibold text-gray-700 bg-white hover:bg-brand-100 hover:text-brand-800 border border-gray-200 px-2.5 py-1 rounded-full"
+                    >
+                      + {lbl}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="space-y-2">
+              {links.map((l, i) => (
+                <div key={l._key} className="bg-white border border-gray-200 rounded-lg p-2.5 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-brand-50 text-brand-700 text-xs font-bold shrink-0">
+                      {i + 1}
+                    </span>
+                    <input
+                      value={l.label}
+                      onChange={e => patchLink(l._key, { label: e.target.value })}
+                      placeholder="Label (Booking, Menu…)"
+                      list={`edit-labels-${l._key}`}
+                      className="flex-1 text-sm font-semibold text-gray-800 border-0 focus:outline-none bg-transparent min-w-0"
+                    />
+                    <datalist id={`edit-labels-${l._key}`}>
+                      {suggestedLabels.map(lbl => <option key={lbl} value={lbl} />)}
+                    </datalist>
+                    <button
+                      type="button"
+                      onClick={() => removeLink(l._key)}
+                      className="p-1 text-gray-400 hover:text-red-600 shrink-0"
+                      aria-label="Remove link"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <LinkIcon className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <input
+                      value={l.url}
+                      onChange={e => patchLink(l._key, { url: e.target.value })}
+                      placeholder="https://…"
+                      inputMode="url"
+                      autoComplete="off"
+                      className="flex-1 text-xs font-mono text-gray-700 border-0 focus:outline-none bg-transparent min-w-0"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-400 mt-1.5">These are saved with the post but editing them here does not retroactively change the post body. To embed a link into existing text, edit the markdown below.</p>
           </div>
 
           <div>
@@ -346,8 +584,6 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
                   y={focalY}
                   onChange={({ x, y }) => { setFocalX(x); setFocalY(y) }}
                   onSave={async ({ x, y }) => {
-                    // Focal-only PATCH so the user gets immediate feedback
-                    // without needing to scroll to the bottom Save button.
                     const res = await fetch(`/api/admin/blog-posts/${post.id}`, {
                       method: 'PATCH',
                       headers: { 'Content-Type': 'application/json' },

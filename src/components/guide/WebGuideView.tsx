@@ -1,0 +1,253 @@
+import Link from 'next/link'
+import { ArrowLeft, ArrowRight, Crown, Lock, Map, ListOrdered } from 'lucide-react'
+import GuideMarkdown from './GuideMarkdown'
+import type { GuideRow } from '@/lib/guide-types'
+import type { AutoLinkPhrase } from '@/lib/blog-links'
+
+type Props = {
+  guide: GuideRow
+  aboutUsMarkdown: string
+  autoLinkPhrases: AutoLinkPhrase[]
+  canViewFull: boolean
+  isLoggedIn: boolean
+  isPremium: boolean
+}
+
+// Anchor-friendly id from arbitrary text.
+function anchor(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 60)
+}
+
+function formatPrice(pence: number): string {
+  return `£${(pence / 100).toFixed(2)}`
+}
+
+export default function WebGuideView({
+  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, isPremium,
+}: Props) {
+  const s = guide.sections
+  const destinations = (s.destinations ?? []).slice().sort((a, b) => a.order - b.order)
+  const themed = (s.themedSections ?? []).slice().sort((a, b) => a.order - b.order)
+
+  // For non-buyers: show About + Why + Highlights + first N destinations, then paywall.
+  const previewCount = Math.max(0, guide.preview_destinations)
+  const visibleDestinations = canViewFull ? destinations : destinations.slice(0, previewCount)
+  const hiddenDestinationCount = destinations.length - visibleDestinations.length
+
+  // Build TOC entries for everything that has a body.
+  const toc: Array<{ id: string; label: string }> = []
+  if (aboutUsMarkdown.trim() && !s.hideAbout) toc.push({ id: 'about-us', label: 'About us' })
+  if ((s.why?.body ?? '').trim())          toc.push({ id: 'why', label: `Why ${guide.country ?? 'this country'}` })
+  if ((s.highlights?.body ?? '').trim())   toc.push({ id: 'highlights', label: 'Destination highlights' })
+  if ((s.needToKnows?.body ?? '').trim())  toc.push({ id: 'need-to-knows', label: 'Need to knows' })
+  for (const d of destinations) {
+    if ((d.body ?? '').trim() || d.name.trim()) {
+      toc.push({ id: `dest-${anchor(d.name)}`, label: d.name || 'Destination' })
+    }
+  }
+  for (const t of themed) {
+    if ((t.body ?? '').trim() || t.title.trim()) {
+      toc.push({ id: `themed-${anchor(t.title)}`, label: t.title || 'Section' })
+    }
+  }
+  if ((s.finalThoughts?.body ?? '').trim()) toc.push({ id: 'final-thoughts', label: 'Final thoughts' })
+
+  return (
+    <div className="min-h-screen bg-sand-50 pb-20">
+      {/* COVER HERO */}
+      <div className="relative bg-brand-950 text-white">
+        {guide.cover_image ? (
+          <div className="relative w-full max-w-3xl mx-auto pt-20">
+            <img
+              src={guide.cover_image}
+              alt={guide.title}
+              className="block w-full max-h-[80vh] object-contain bg-brand-900"
+            />
+          </div>
+        ) : (
+          <div className="w-full max-w-3xl mx-auto pt-20 aspect-[3/4] flex items-center justify-center bg-gradient-to-br from-brand-700 to-brand-900">
+            <Map className="w-20 h-20 text-white/40" />
+          </div>
+        )}
+
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+          <Link href="/guides" className="inline-flex items-center gap-1.5 text-sm text-white/70 hover:text-white mb-5">
+            <ArrowLeft className="w-4 h-4" /> All guides
+          </Link>
+          {guide.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {guide.tags.map(tag => (
+                <span key={tag} className="text-xs font-semibold text-white bg-white/15 backdrop-blur-sm px-2.5 py-1 rounded-full">{tag}</span>
+              ))}
+            </div>
+          )}
+          <h1 className="text-3xl sm:text-4xl font-bold leading-tight">{guide.title}</h1>
+          {guide.subtitle && <p className="text-lg text-white/80 mt-3 leading-relaxed">{guide.subtitle}</p>}
+
+          <div className="mt-5 inline-flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm">
+            {canViewFull ? (
+              isPremium ? (
+                <><Crown className="w-3.5 h-3.5 text-brand-300" /> Premium access</>
+              ) : (
+                <><Crown className="w-3.5 h-3.5 text-brand-300" /> Full guide</>
+              )
+            ) : (
+              <><Lock className="w-3.5 h-3.5 text-amber-200" /> Preview — first {previewCount} destination{previewCount === 1 ? '' : 's'} shown</>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* TOC */}
+      {toc.length > 0 && (
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 mt-10">
+          <details className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden group">
+            <summary className="cursor-pointer px-5 py-4 flex items-center justify-between gap-3 hover:bg-gray-50">
+              <span className="inline-flex items-center gap-2 text-sm font-bold tracking-widest uppercase text-brand-700">
+                <ListOrdered className="w-4 h-4" /> Table of contents
+              </span>
+              <span className="text-xs text-gray-400 font-medium">{toc.length} sections</span>
+            </summary>
+            <ol className="border-t border-gray-100 divide-y divide-gray-100">
+              {toc.map((entry, i) => (
+                <li key={entry.id}>
+                  <a href={`#${entry.id}`} className="flex items-center justify-between gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-brand-50 hover:text-brand-900">
+                    <span className="font-medium truncate">
+                      <span className="text-gray-400 font-mono text-xs mr-2 tabular-nums">{(i + 1).toString().padStart(2, '0')}</span>
+                      {entry.label}
+                    </span>
+                    <ArrowRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </details>
+        </div>
+      )}
+
+      {/* CONTENT */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 mt-12 space-y-12">
+        {aboutUsMarkdown.trim() && !s.hideAbout && (
+          <GuideSection id="about-us" title="About us">
+            <GuideMarkdown markdown={aboutUsMarkdown} autoLinkPhrases={autoLinkPhrases} />
+          </GuideSection>
+        )}
+
+        {(s.why?.body ?? '').trim() && (
+          <GuideSection id="why" title={`Why ${guide.country ?? 'this country'}`}>
+            <GuideMarkdown markdown={s.why!.body} autoLinkPhrases={autoLinkPhrases} />
+          </GuideSection>
+        )}
+
+        {(s.highlights?.body ?? '').trim() && (
+          <GuideSection id="highlights" title="Destination highlights">
+            <GuideMarkdown markdown={s.highlights!.body} autoLinkPhrases={autoLinkPhrases} />
+          </GuideSection>
+        )}
+
+        {(s.needToKnows?.body ?? '').trim() && (
+          <GuideSection id="need-to-knows" title="Need to knows">
+            <GuideMarkdown markdown={s.needToKnows!.body} autoLinkPhrases={autoLinkPhrases} />
+          </GuideSection>
+        )}
+
+        {visibleDestinations.map(d => (
+          <GuideSection key={d.id} id={`dest-${anchor(d.name)}`} title={d.name || 'Destination'} eyebrow="Destination">
+            <GuideMarkdown markdown={d.body} autoLinkPhrases={autoLinkPhrases} />
+          </GuideSection>
+        ))}
+
+        {/* PAYWALL */}
+        {!canViewFull && hiddenDestinationCount > 0 && (
+          <Paywall
+            isLoggedIn={isLoggedIn}
+            slug={guide.slug}
+            hiddenCount={hiddenDestinationCount}
+            hasOneOff={guide.price_pence > 0}
+            priceLabel={formatPrice(guide.price_pence)}
+          />
+        )}
+
+        {/* Themed + final only shown to full-access users. */}
+        {canViewFull && themed.map(t => (
+          <GuideSection key={t.id} id={`themed-${anchor(t.title)}`} title={t.title || 'Section'}>
+            <GuideMarkdown markdown={t.body} autoLinkPhrases={autoLinkPhrases} />
+          </GuideSection>
+        ))}
+
+        {canViewFull && (s.finalThoughts?.body ?? '').trim() && (
+          <GuideSection id="final-thoughts" title="Final thoughts">
+            <GuideMarkdown markdown={s.finalThoughts!.body} autoLinkPhrases={autoLinkPhrases} />
+          </GuideSection>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function GuideSection({
+  id, title, eyebrow, children,
+}: {
+  id: string
+  title: string
+  eyebrow?: string
+  children: React.ReactNode
+}) {
+  return (
+    <section id={id} className="scroll-mt-24">
+      {eyebrow && (
+        <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">{eyebrow}</p>
+      )}
+      <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-5 pb-3 border-b border-gray-200">{title}</h2>
+      {children}
+    </section>
+  )
+}
+
+function Paywall({
+  isLoggedIn, slug, hiddenCount, hasOneOff, priceLabel,
+}: {
+  isLoggedIn: boolean
+  slug: string
+  hiddenCount: number
+  hasOneOff: boolean
+  priceLabel: string
+}) {
+  return (
+    <div className="relative">
+      {/* Fade hint */}
+      <div className="pointer-events-none absolute -top-16 inset-x-0 h-16 bg-gradient-to-b from-sand-50/0 to-sand-50" />
+
+      <div className="bg-brand-950 text-white rounded-2xl p-6 sm:p-8 text-center">
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold tracking-widest uppercase text-brand-300 mb-3">
+          <Lock className="w-3.5 h-3.5" /> {hiddenCount} more destination{hiddenCount === 1 ? '' : 's'} + themed sections
+        </span>
+        <h3 className="text-2xl sm:text-3xl font-bold mb-3">Keep reading with Premium</h3>
+        <p className="text-white/70 leading-relaxed max-w-md mx-auto mb-6">
+          A year of access to every premium blog post, every guide, and every learning pack. £25, cancel any time.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+          {isLoggedIn ? (
+            <Link href="/account" className="btn-primary text-base px-7 py-3">
+              Upgrade to Premium <ArrowRight className="w-4 h-4" />
+            </Link>
+          ) : (
+            <>
+              <Link href={`/signup?next=/guides/${slug}`} className="btn-primary text-base px-7 py-3">
+                Sign up to read <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link href={`/login?next=/guides/${slug}`} className="text-sm font-medium text-white/70 hover:text-white underline underline-offset-4 decoration-white/30">
+                Already a member? Log in
+              </Link>
+            </>
+          )}
+        </div>
+        {hasOneOff && (
+          <p className="text-xs text-white/50 mt-5">
+            Or buy just this guide as a one-off — {priceLabel} (coming soon).
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}

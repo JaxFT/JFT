@@ -3,12 +3,45 @@ import Link from 'next/link'
 import { Map, ArrowRight, Crown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { listActiveGuides, formatPrice } from '@/lib/guides-db'
+import { listPublishedWebGuides } from '@/lib/guides-content-db'
 
 export const metadata: Metadata = { title: 'Guides' }
 export const dynamic = 'force-dynamic'
 
+type GuideCardModel = {
+  slug: string
+  name: string
+  subtitle: string | null
+  cover_image: string | null
+  tags: string[]
+  price_pence: number
+}
+
 export default async function GuidesPage() {
-  const guides = await listActiveGuides()
+  const [pdfGuides, webGuides] = await Promise.all([
+    listActiveGuides(),
+    listPublishedWebGuides(),
+  ])
+
+  // Merge into one list. Web guides first (newest published_at on top).
+  const guides: GuideCardModel[] = [
+    ...webGuides.map(g => ({
+      slug: g.slug,
+      name: g.title,
+      subtitle: g.subtitle,
+      cover_image: g.cover_image,
+      tags: g.tags,
+      price_pence: g.price_pence,
+    })),
+    ...pdfGuides.map(g => ({
+      slug: g.slug,
+      name: g.name,
+      subtitle: g.subtitle,
+      cover_image: g.cover_image,
+      tags: g.tags,
+      price_pence: g.price_pence,
+    })),
+  ]
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

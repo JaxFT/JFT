@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { PenLine, ArrowRight, ShieldCheck, FileText, Upload, MessageCircle } from 'lucide-react'
+import { PenLine, ArrowRight, ShieldCheck, FileText, Upload, MessageCircle, BookOpen, Users } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -25,6 +25,18 @@ const TOOLS = [
     title: 'Paste markdown directly',
     desc: 'Already have markdown ready (from anywhere)? Paste it here to create a draft in one step.',
     icon: Upload,
+  },
+  {
+    href: '/admin/guides',
+    title: 'Web Guides',
+    desc: 'Long-form destination guides rendered as web pages. Multi-step wizard with one prompt per section, save as you go.',
+    icon: BookOpen,
+  },
+  {
+    href: '/admin/settings/about-us',
+    title: 'About Us text',
+    desc: 'The shared About Us text that appears on every web guide. Update once, changes everywhere.',
+    icon: Users,
   },
   {
     href: '/admin/call-requests',

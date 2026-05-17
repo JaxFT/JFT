@@ -4,6 +4,10 @@ import { ArrowLeft, ArrowRight, Lock, Crown, Download, Check } from 'lucide-reac
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { getGuideBySlug, userHasPurchased, formatPrice } from '@/lib/guides-db'
+import { getPublishedWebGuideBySlug } from '@/lib/guides-content-db'
+import { getAboutUs } from '@/lib/app-settings'
+import { getAutoLinkPhrases } from '@/lib/blog-links'
+import WebGuideView from '@/components/guide/WebGuideView'
 import GuideViewer from './GuideViewer'
 import BuyButton from './BuyButton'
 
@@ -11,6 +15,8 @@ export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
+  const webGuide = await getPublishedWebGuideBySlug(slug)
+  if (webGuide) return { title: webGuide.title, description: webGuide.subtitle ?? undefined }
   const guide = await getGuideBySlug(slug)
   if (!guide) return {}
   return { title: guide.name, description: guide.subtitle ?? undefined }
@@ -18,6 +24,39 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function GuidePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
+
+  // ─── New web-rendered guides win if a row exists. ───
+  const webGuide = await getPublishedWebGuideBySlug(slug)
+  if (webGuide) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    let isPremium = false
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_tier')
+        .eq('id', user.id)
+        .single()
+      isPremium = profile?.subscription_tier === 'premium'
+    }
+    const canViewFull = isPremium || !webGuide.is_premium
+    const [aboutUs, autoLinkPhrases] = await Promise.all([
+      getAboutUs(),
+      getAutoLinkPhrases(),
+    ])
+    return (
+      <WebGuideView
+        guide={webGuide}
+        aboutUsMarkdown={aboutUs}
+        autoLinkPhrases={autoLinkPhrases}
+        canViewFull={canViewFull}
+        isLoggedIn={!!user}
+        isPremium={isPremium}
+      />
+    )
+  }
+
+  // ─── Existing PDF guides fall back to the original flow. ───
   const guide = await getGuideBySlug(slug)
   if (!guide || !guide.active) notFound()
 

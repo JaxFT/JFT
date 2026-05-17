@@ -76,7 +76,10 @@ export default async function HomePage() {
       {/* ── WHAT WE OFFER ── */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 max-w-3xl mx-auto leading-tight mb-6">
+              Helping families travel longer, smarter and more confidently
+            </h2>
             <p className="text-xs font-bold tracking-widest uppercase text-brand-600">What we offer</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -108,11 +111,6 @@ export default async function HomePage() {
                 </Link>
               )
             })}
-          </div>
-          <div className="text-center mt-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 max-w-3xl mx-auto leading-tight">
-              Helping families travel longer, smarter and more confidently
-            </h2>
           </div>
         </div>
       </section>

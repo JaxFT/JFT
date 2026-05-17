@@ -73,8 +73,10 @@ export default function ImportForm() {
       })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`)
-      // Drop the writer into the wizard for review + price + publish.
-      router.push(`/admin/guides/draft?id=${body.id}`)
+      // Drop the writer into the editable preview — see the guide rendered,
+      // tweak text in place, slot images into the AI's placeholders,
+      // then publish.
+      router.push(`/admin/guides/${body.id}/preview`)
     } catch (e) {
       setSubmitError(e instanceof Error ? e.message : 'Import failed')
       setSubmitting(false)

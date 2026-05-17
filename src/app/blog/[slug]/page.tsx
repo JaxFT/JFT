@@ -7,7 +7,8 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getPublishedPostBySlug, rowToView } from '@/lib/blog-db'
 import { createClient } from '@/lib/supabase/server'
-import { getAutoLinkPhrases, remarkAutoLink } from '@/lib/blog-links'
+import { remarkAutoLink } from '@/lib/blog-links'
+import { getAutoLinkPhrases } from '@/lib/blog-links-server'
 
 export const dynamic = 'force-dynamic'
 

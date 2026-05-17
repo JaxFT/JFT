@@ -8,6 +8,7 @@ import remarkGfm from 'remark-gfm'
 import { ArrowLeft, Save, Trash2, ExternalLink, Eye, FileEdit, Check, Upload, Loader2, Crown } from 'lucide-react'
 import type { BlogPostRow } from '@/lib/blog-db'
 import { BLOG_CATEGORIES, type BlogCategory } from '@/lib/blog-categories'
+import CoverFocalPicker from '@/components/blog/CoverFocalPicker'
 
 export default function EditForm({ post, justCreated }: { post: BlogPostRow; justCreated: boolean }) {
   const router = useRouter()
@@ -23,6 +24,8 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
   const [category, setCategory] = useState<BlogCategory | ''>(post.category ?? '')
   const [placeName, setPlaceName] = useState(post.place_name ?? '')
   const [placeLink, setPlaceLink] = useState(post.place_link ?? '')
+  const [focalX, setFocalX] = useState<number>(post.cover_focal_x ?? 50)
+  const [focalY, setFocalY] = useState<number>(post.cover_focal_y ?? 50)
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -80,6 +83,8 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
           category: category || null,
           place_name: placeName.trim() || null,
           place_link: placeLink.trim() || null,
+          cover_focal_x: focalX,
+          cover_focal_y: focalY,
         }),
       })
       if (!res.ok) {
@@ -332,6 +337,17 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
                 )}
               </div>
             </div>
+
+            {coverImage && (
+              <div className="mt-5">
+                <CoverFocalPicker
+                  src={coverImage}
+                  x={focalX}
+                  y={focalY}
+                  onChange={({ x, y }) => { setFocalX(x); setFocalY(y) }}
+                />
+              </div>
+            )}
           </div>
         </div>
 

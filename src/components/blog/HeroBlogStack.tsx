@@ -9,6 +9,8 @@ type StackPost = {
   title: string
   excerpt: string
   coverImage?: string | null
+  coverFocalX?: number
+  coverFocalY?: number
   isPremium: boolean
 }
 
@@ -134,6 +136,7 @@ export default function HeroBlogStack({ posts }: { posts: StackPost[] }) {
                   alt={post.title}
                   draggable={false}
                   className="w-full h-36 object-cover pointer-events-none"
+                  style={{ objectPosition: `${post.coverFocalX ?? 50}% ${post.coverFocalY ?? 50}%` }}
                 />
               )}
               <div className="p-3">

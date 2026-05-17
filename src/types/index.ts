@@ -41,6 +41,8 @@ export interface BlogPost {
   date: string
   author: string
   coverImage: string
+  coverFocalX?: number
+  coverFocalY?: number
   tags: string[]
   content: string
   readTime: number

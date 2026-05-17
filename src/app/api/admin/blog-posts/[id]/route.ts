@@ -20,12 +20,19 @@ type UpdateBody = {
   excerpt?: string | null
   body_markdown?: string
   cover_image?: string | null
+  cover_focal_x?: number
+  cover_focal_y?: number
   tags?: string[]
   status?: 'draft' | 'published'
   is_premium?: boolean
   category?: string | null
   place_name?: string | null
   place_link?: string | null
+}
+
+function clampPct(n: number): number {
+  if (Number.isNaN(n)) return 50
+  return Math.max(0, Math.min(100, Math.round(n)))
 }
 
 export async function PATCH(
@@ -44,6 +51,8 @@ export async function PATCH(
   if (body.excerpt !== undefined) update.excerpt = body.excerpt ?? null
   if (typeof body.body_markdown === 'string') update.body_markdown = body.body_markdown
   if (body.cover_image !== undefined) update.cover_image = body.cover_image ?? null
+  if (typeof body.cover_focal_x === 'number') update.cover_focal_x = clampPct(body.cover_focal_x)
+  if (typeof body.cover_focal_y === 'number') update.cover_focal_y = clampPct(body.cover_focal_y)
   if (Array.isArray(body.tags)) update.tags = body.tags
   if (typeof body.is_premium === 'boolean') update.is_premium = body.is_premium
   if (body.category !== undefined) {

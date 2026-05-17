@@ -13,6 +13,8 @@ export type BlogPostRow = {
   excerpt: string | null
   body_markdown: string
   cover_image: string | null
+  cover_focal_x: number
+  cover_focal_y: number
   tags: string[]
   author: string
   status: BlogPostStatus
@@ -77,6 +79,8 @@ export type BlogPostView = {
   date: string
   author: string
   coverImage: string
+  coverFocalX: number
+  coverFocalY: number
   tags: string[]
   content: string
   readTime: number
@@ -91,6 +95,8 @@ export function rowToView(row: BlogPostRow): BlogPostView {
     date: row.published_at ?? row.created_at,
     author: row.author,
     coverImage: row.cover_image ?? '',
+    coverFocalX: row.cover_focal_x ?? 50,
+    coverFocalY: row.cover_focal_y ?? 50,
     tags: row.tags,
     content: row.body_markdown,
     readTime: readingTime(row.body_markdown),

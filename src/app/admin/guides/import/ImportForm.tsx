@@ -184,7 +184,7 @@ export default function ImportForm() {
               <FileText className="w-4 h-4 text-brand-600" /> Paste the guide
             </h2>
             <p className="text-xs text-gray-500 mt-1">
-              The whole guide as one markdown doc — headings, paragraphs, lists, images. Use <code className="bg-gray-100 px-1 rounded">##</code> for chapter headings (they become the table-of-contents links on the published page). Flip to Preview to see it rendered as readers will.
+              The whole guide as one markdown doc, headings, paragraphs, lists, images. Use <code className="bg-gray-100 px-1 rounded">##</code> for chapter headings (they become the table-of-contents links on the published page). Flip to Preview to see it rendered as readers will.
             </p>
           </div>
           <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 shrink-0">
@@ -216,7 +216,7 @@ export default function ImportForm() {
             onChange={e => setMarkdown(e.target.value)}
             rows={22}
             spellCheck={false}
-            placeholder={'# (your title — will be stripped, comes from the form above)\n\nIntro paragraph or two…\n\n## Why Vietnam\n\nThe first chapter…\n\n## Hoi An\n\nThe next chapter…\n\n…and so on.'}
+            placeholder={'# (your title, will be stripped, comes from the form above)\n\nIntro paragraph or two…\n\n## Why Vietnam\n\nThe first chapter…\n\n## Hoi An\n\nThe next chapter…\n\n…and so on.'}
             className="w-full text-sm font-mono text-gray-800 px-6 py-4 border-0 border-t border-gray-100 focus:outline-none focus:ring-0 leading-relaxed"
           />
         ) : (

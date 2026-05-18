@@ -30,7 +30,7 @@ export type BlogPostRow = {
   is_premium: boolean
   category: BlogCategory | null
   place_name: string | null
-  place_link: string | null    // legacy — migrated into `links` on read
+  place_link: string | null    // legacy, migrated into `links` on read
   links: BlogLink[]
   trip_date: string | null     // ISO yyyy-mm-dd, when the family went
   target_minutes: number | null // intended read-time, 1..20

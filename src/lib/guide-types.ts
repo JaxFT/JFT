@@ -21,7 +21,7 @@ export type GuideContentBlock = {
 
 // Sections JSONB shape. New guides only use `blocks` + `hideAbout`.
 // The legacy fields stay typed because old rows in Supabase still have
-// them — `normaliseRow` migrates them into `blocks` on read.
+// them, `normaliseRow` migrates them into `blocks` on read.
 export type GuideSimpleSection = { body: string }
 export type GuideDestination   = { id: string; name: string; body: string; order: number }
 export type GuideThemedSection = { id: string; title: string; body: string; order: number }
@@ -30,7 +30,7 @@ export type GuideSections = {
   blocks?: GuideContentBlock[]
   hideAbout?: boolean
 
-  // Legacy — kept for read-side back-compat. Never written by the new wizard.
+  // Legacy, kept for read-side back-compat. Never written by the new wizard.
   why?: GuideSimpleSection
   highlights?: GuideSimpleSection
   needToKnows?: GuideSimpleSection
@@ -44,7 +44,7 @@ export type GuideRow = {
   slug: string
   title: string
   subtitle: string | null
-  country: string | null    // now optional "scope" — may be empty for world-schooling / global guides
+  country: string | null    // now optional "scope", may be empty for world-schooling / global guides
   cover_image: string | null
   status: GuideStatus
   is_premium: boolean
@@ -55,7 +55,7 @@ export type GuideRow = {
   // Lives separately from body_markdown so it can be updated without
   // re-importing the whole doc.
   intro_markdown: string
-  // NEW model — the whole guide as one markdown doc. When non-empty,
+  // NEW model, the whole guide as one markdown doc. When non-empty,
   // takes precedence over `sections.blocks`.
   body_markdown: string
   preview_percent: number   // 0-100, how much of body_markdown shows to non-buyers
@@ -133,7 +133,7 @@ export function genLocalId(): string {
   )
 }
 
-// Default heading suggestions per kind — used when a new block is added.
+// Default heading suggestions per kind, used when a new block is added.
 // Scope is the country / theme name from the basics step, or null.
 export function defaultHeadingFor(kind: GuideBlockKind, scope: string | null): string {
   const where = scope?.trim() || 'this'

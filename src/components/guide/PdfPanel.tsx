@@ -2,13 +2,13 @@
 
 // PDF management strip shown on the admin preview, just below the
 // cover hero. Three things:
-//   1. "Download PDF" — opens /admin/guides/[id]/print in a new tab.
+//   1. "Download PDF", opens /admin/guides/[id]/print in a new tab.
 //      That route auto-fires window.print() so the writer just hits
 //      Save as PDF and gets the file.
-//   2. "Upload PDF" — drops the saved PDF back to the server. Lands in
+//   2. "Upload PDF", drops the saved PDF back to the server. Lands in
 //      the guide-files bucket at web/<slug>.pdf and the guides row's
 //      pdf_path is updated.
-//   3. Current status — shows whether a PDF is uploaded, with a
+//   3. Current status, shows whether a PDF is uploaded, with a
 //      Remove button.
 
 import { useRef, useState } from 'react'
@@ -145,7 +145,7 @@ export default function PdfPanel({ guideId, hasPdf }: Props) {
         )}
 
         <p className="text-xs text-gray-400 mt-3 leading-relaxed">
-          <strong className="text-gray-600">How:</strong> click <em>Download PDF</em>, the print dialog opens. Pick <em>Save as PDF</em>, save the file, then come back here and click <em>Upload PDF</em>. Desktop Chrome gives the cleanest result. We don&apos;t do this automatically — browser print-to-PDF quality varies too much.
+          <strong className="text-gray-600">How:</strong> click <em>Download PDF</em>, the print dialog opens. Pick <em>Save as PDF</em>, save the file, then come back here and click <em>Upload PDF</em>. Desktop Chrome gives the cleanest result. We don&apos;t do this automatically, browser print-to-PDF quality varies too much.
         </p>
       </div>
     </div>

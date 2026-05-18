@@ -95,7 +95,7 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
   const suggestedLabels = suggestedLabelsFor(category)
 
   // Upload a fresh image and drop ![](URL) at the textarea's caret. Used
-  // by the "Insert image at cursor" button above the body editor — lets
+  // by the "Insert image at cursor" button above the body editor, lets
   // the writer add or re-add as many photos as they want post-AI without
   // hand-editing markdown.
   const insertBodyImageAtCursor = async (file: File) => {
@@ -175,7 +175,7 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
     }
     return {
       tone: 'ok',
-      message: `On target — ${actualMinutes} min read, ~${actualWords} words.`,
+      message: `On target, ${actualMinutes} min read, ~${actualWords} words.`,
       suggestion: null,
     }
   })()
@@ -597,7 +597,7 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
                       onChange={e => setRewriteNotes(e.target.value)}
                       rows={4}
                       placeholder={rewriteMinutes > actualMinutes
-                        ? "New things to include if expanding — extra moments, prices, what Jax said, anything you forgot first time. Also paste answers here if the AI came back with QUESTIONS."
+                        ? "New things to include if expanding, extra moments, prices, what Jax said, anything you forgot first time. Also paste answers here if the AI came back with QUESTIONS."
                         : "Anything to emphasise or de-emphasise when trimming."}
                       className="w-full text-sm px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 leading-relaxed"
                     />
@@ -687,7 +687,7 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
                   Premium content
                 </span>
                 <span className="block text-xs text-gray-500 mt-0.5">
-                  Card still shows on the homepage and blog list. Only Premium members can open the full post — everyone else hits a paywall.
+                  Card still shows on the homepage and blog list. Only Premium members can open the full post, everyone else hits a paywall.
                 </span>
               </span>
             </label>
@@ -701,7 +701,7 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
                 onChange={e => setCategory(e.target.value as BlogCategory | '')}
                 className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
               >
-                <option value="">— Not set —</option>
+                <option value="">Not set</option>
                 {BLOG_CATEGORIES.map(c => (
                   <option key={c.value} value={c.value}>{c.label}</option>
                 ))}
@@ -734,7 +734,7 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
             </div>
             {links.length === 0 && (
               <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-4 text-center">
-                <p className="text-xs text-gray-500 mb-2">No links yet. Add any URLs the AI should weave into the body — each gets a label so it knows the CTA phrasing.</p>
+                <p className="text-xs text-gray-500 mb-2">No links yet. Add any URLs the AI should weave into the body, each gets a label so it knows the CTA phrasing.</p>
                 <div className="flex flex-wrap gap-1.5 justify-center">
                   {suggestedLabels.map(lbl => (
                     <button
@@ -895,7 +895,7 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
               <Eye className="w-4 h-4" /> Preview
             </button>
             <div className="flex-1" />
-            {/* Insert image at cursor — only meaningful when editing markdown */}
+            {/* Insert image at cursor, only meaningful when editing markdown */}
             <input
               ref={bodyFileInputRef}
               type="file"
@@ -924,7 +924,7 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
             <p className="text-xs text-red-700 bg-red-50 border-b border-red-100 px-5 py-2">{bodyInsertError}</p>
           )}
 
-          {/* Photos already in the body — Replace / Delete here. Reuses
+          {/* Photos already in the body, Replace / Delete here. Reuses
               the same panel built for the guide editor. */}
           <div className="px-5 pt-4">
             <ImageSlotsPanel body={body} setBody={setBody} />

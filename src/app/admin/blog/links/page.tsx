@@ -39,7 +39,7 @@ export default async function AdminBlogLinksPage() {
           <h1 className="text-3xl font-bold text-gray-900">Auto-links</h1>
         </div>
         <p className="text-gray-500 mb-8 leading-relaxed">
-          When a published post mentions one of these phrases, the FIRST occurrence in the body becomes a clickable link to the URL you set. Tags from existing posts are already auto-linked to their <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">/blog?tag=…</code> filter — entries here override or add to that.
+          When a published post mentions one of these phrases, the FIRST occurrence in the body becomes a clickable link to the URL you set. Tags from existing posts are already auto-linked to their <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">/blog?tag=…</code> filter, entries here override or add to that.
         </p>
 
         <LinksForm initialLinks={links} />

@@ -28,7 +28,7 @@ export default async function AccountPage() {
   // every UPDATE silently no-ops and the user thinks the form is broken.
   await ensureProfile(user)
 
-  // Profile + purchases are independent — fetch in parallel.
+  // Profile + purchases are independent, fetch in parallel.
   const [{ data: profile }, { data: purchasesData }] = await Promise.all([
     supabase
       .from('profiles')
@@ -46,7 +46,7 @@ export default async function AccountPage() {
   const isPremium = isPremiumTier(profile?.subscription_tier)
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
-    : '—'
+    : 'recently'
 
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
@@ -87,7 +87,7 @@ export default async function AccountPage() {
               <p className={`mt-2 text-sm leading-relaxed max-w-md ${isPremium ? 'text-white/70' : 'text-gray-500'}`}>
                 {isPremium
                   ? 'Every premium blog post, every guide, and every adventure pack are included.'
-                  : 'A year of access to every premium blog post, every guide, and every adventure pack — £25/year.'}
+                  : 'A year of access to every premium blog post, every guide, and every adventure pack, £25/year.'}
               </p>
               {isPremium && profile?.cancellation_requested_at && (
                 <p className="mt-3 text-xs text-amber-200 bg-amber-950/30 border border-amber-700/40 rounded-md px-3 py-2 inline-block">
@@ -102,7 +102,7 @@ export default async function AccountPage() {
                 className="btn-primary !py-2.5 !px-5 !text-sm shrink-0 opacity-60 cursor-not-allowed"
                 title="Stripe checkout not yet wired up"
               >
-                Upgrade — coming soon <ArrowRight className="w-4 h-4" />
+                Upgrade, coming soon <ArrowRight className="w-4 h-4" />
               </button>
             )}
             {isPremium && !profile?.cancellation_requested_at && (

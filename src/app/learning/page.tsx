@@ -6,7 +6,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Learning Resources',
-  description: 'Learning resources for families travelling long-term — sites we use and trust.',
+  description: 'Learning resources for families travelling long-term, sites we use and trust.',
 }
 
 export const dynamic = 'force-dynamic'
@@ -26,7 +26,7 @@ const RECOMMENDED: RecommendedSite[] = [
     name: 'Doodle Learning',
     url: 'https://doodlelearning.com',
     eyebrow: 'Maths & English app',
-    blurb: 'Adaptive maths and English for kids 4–14, on phone or tablet. Used in UK schools and brilliant on the road — short daily sessions, works offline, and the levelling keeps it appropriate without a parent hovering.',
+    blurb: 'Adaptive maths and English for kids 4–14, on phone or tablet. Used in UK schools and brilliant on the road, short daily sessions, works offline, and the levelling keeps it appropriate without a parent hovering.',
     cta: 'Visit Doodle Learning',
     icon: GraduationCap,
     image: '/images/learning/doodle-learning.png',
@@ -44,7 +44,7 @@ const RECOMMENDED: RecommendedSite[] = [
     name: 'Tuition-Up',
     url: 'https://tuition-up.com',
     eyebrow: 'Online tutoring',
-    blurb: 'Live, one-to-one online tuition that works around your family\'s schedule — handy whether you\'re full worldschooling, supplementing local school, or keeping skills sharp during a gap.',
+    blurb: 'Live, one-to-one online tuition that works around your family\'s schedule, handy whether you\'re full worldschooling, supplementing local school, or keeping skills sharp during a gap.',
     cta: 'Visit Tuition-Up',
     icon: GraduationCap,
     image: '/images/learning/tuition-up.png',
@@ -53,7 +53,7 @@ const RECOMMENDED: RecommendedSite[] = [
     name: 'Worldschooling Club',
     url: 'https://docs.google.com/forms/d/e/1FAIpQLSfdrRajDbHY1migV1-kfe0BXj81s4101Yp3u6IwHun2zmv_AA/viewform',
     eyebrow: 'Community (from @thebackpackingfamily)',
-    blurb: 'A community of families travelling and worldschooling together — meet-ups, advice, and shared experience. Apply via the form to join.',
+    blurb: 'A community of families travelling and worldschooling together, meet-ups, advice, and shared experience. Apply via the form to join.',
     cta: 'Apply to join',
     icon: Users,
     image: '/images/learning/Worldschooling-club.png',
@@ -94,7 +94,7 @@ export default async function LearningPage() {
             <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-2">Adventure Packs</p>
             <h2 className="text-2xl sm:text-3xl font-bold mb-2">Country-specific missions for your family</h2>
             <p className="text-white/80 text-sm sm:text-base leading-relaxed max-w-2xl">
-              Interactive packs covering language, food, geography, history, scavenger hunts and family chat cards — to do on the ground as you travel.
+              Interactive packs covering language, food, geography, history, scavenger hunts and family chat cards, to do on the ground as you travel.
               France is free for every member. <span className="text-white font-semibold">Browse all packs <ArrowRight className="w-4 h-4 inline -mt-0.5" /></span>
             </p>
           </Link>
@@ -144,11 +144,11 @@ export default async function LearningPage() {
             ))}
           </div>
           <p className="text-xs text-gray-400 mt-4">
-            We only recommend services we use ourselves. Some links may be affiliate or referral links — they never change what we recommend.
+            We only recommend services we use ourselves. Some links may be affiliate or referral links, they never change what we recommend.
           </p>
         </section>
 
-        {/* (Premium Learning Packs section removed — superseded by Adventure Packs,
+        {/* (Premium Learning Packs section removed, superseded by Adventure Packs,
             which have their own top-level page and promo card above.) */}
       </div>
     </div>

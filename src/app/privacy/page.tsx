@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 }
 
 // Last meaningful change to the policy itself. Update when the substance
-// of the policy changes — not on every routine code edit.
+// of the policy changes, not on every routine code edit.
 const LAST_UPDATED = '18 May 2026'
 
 export default function PrivacyPage() {
@@ -34,10 +34,10 @@ export default function PrivacyPage() {
           <h3>When you create an account</h3>
           <p>We collect:</p>
           <ul>
-            <li><strong>Your name</strong> — so we can address you correctly on the site and in emails.</li>
-            <li><strong>Your email address</strong> — to log you in, send account-related emails (signup confirmation, password reset), and, if you opted in, send marketing updates.</li>
-            <li><strong>A password</strong> — stored in encrypted form by our authentication provider. We never see your plain-text password.</li>
-            <li><strong>Account metadata</strong> — when you signed up, your subscription tier (free or premium), and your marketing preference.</li>
+            <li><strong>Your name</strong>, so we can address you correctly on the site and in emails.</li>
+            <li><strong>Your email address</strong>, to log you in, send account-related emails (signup confirmation, password reset), and, if you opted in, send marketing updates.</li>
+            <li><strong>A password</strong>, stored in encrypted form by our authentication provider. We never see your plain-text password.</li>
+            <li><strong>Account metadata</strong>, when you signed up, your subscription tier (free or premium), and your marketing preference.</li>
           </ul>
 
           <h3>When you fill in the &quot;Work With Us&quot; form</h3>
@@ -50,37 +50,37 @@ export default function PrivacyPage() {
           <p>Our hosting provider, Cloudflare, processes basic technical information (IP address, browser type, pages visited) for security and performance. We do not currently use analytics cookies, behavioural tracking, or advertising trackers.</p>
 
           <h2>Cookies</h2>
-          <p>We use a small number of strictly-necessary cookies — set by our authentication provider — to keep you signed in. Under UK PECR these don&apos;t require a consent banner. We do not use marketing or analytics cookies. If we add any in future, we&apos;ll update this policy and request your consent first.</p>
+          <p>We use a small number of strictly-necessary cookies, set by our authentication provider, to keep you signed in. Under UK PECR these don&apos;t require a consent banner. We do not use marketing or analytics cookies. If we add any in future, we&apos;ll update this policy and request your consent first.</p>
 
           <h2>Who we share your data with</h2>
           <p>We rely on a small number of third-party services to run the site. Each one has its own privacy policy and is contractually obliged to protect your data.</p>
 
           <ul>
-            <li><strong>Supabase</strong> — stores your account, profile, and any content you create on the site. Hosted in the EU.</li>
-            <li><strong>Cloudflare</strong> — serves the website itself and routes email forwarding for our addresses.</li>
-            <li><strong>Resend</strong> — sends transactional and (if you opted in) marketing emails on our behalf.</li>
-            <li><strong>Stripe</strong> — processes payments. Only used when you buy something.</li>
+            <li><strong>Supabase</strong>, stores your account, profile, and any content you create on the site. Hosted in the EU.</li>
+            <li><strong>Cloudflare</strong>, serves the website itself and routes email forwarding for our addresses.</li>
+            <li><strong>Resend</strong>, sends transactional and (if you opted in) marketing emails on our behalf.</li>
+            <li><strong>Stripe</strong>, processes payments. Only used when you buy something.</li>
           </ul>
 
           <p>We do not sell your data. We do not share it with marketers, advertisers, or any third party for purposes other than running this service.</p>
 
           <h2>How long we keep your data</h2>
-          <p>We keep your account data for as long as your account is active. If you ask us to delete your account, we&apos;ll remove your profile and personal data within 30 days, except where we&apos;re legally required to keep records (for example, tax records for purchases — kept for 7 years under UK law).</p>
+          <p>We keep your account data for as long as your account is active. If you ask us to delete your account, we&apos;ll remove your profile and personal data within 30 days, except where we&apos;re legally required to keep records (for example, tax records for purchases, kept for 7 years under UK law).</p>
           <p>Call request submissions are kept until the conversation is complete and for a reasonable follow-up period (typically 12 months) after that.</p>
 
           <h2>Marketing emails</h2>
           <p>We only send marketing emails to people who explicitly opted in at signup or via their account settings. Every marketing email contains a one-click unsubscribe link that works without logging in. You can also opt out any time at <Link href="/account">/account</Link>.</p>
-          <p>Transactional emails (account confirmations, password resets, purchase receipts, replies to your enquiries) are not marketing — we&apos;ll send those whenever they&apos;re needed.</p>
+          <p>Transactional emails (account confirmations, password resets, purchase receipts, replies to your enquiries) are not marketing, we&apos;ll send those whenever they&apos;re needed.</p>
 
           <h2>Your rights under UK GDPR</h2>
           <p>You have the right to:</p>
           <ul>
-            <li><strong>Access</strong> — request a copy of the personal data we hold about you.</li>
-            <li><strong>Rectification</strong> — ask us to correct anything that&apos;s wrong.</li>
-            <li><strong>Erasure</strong> — ask us to delete your data (subject to legal retention requirements).</li>
-            <li><strong>Portability</strong> — receive your data in a machine-readable format.</li>
-            <li><strong>Objection</strong> — object to processing for marketing purposes (just opt out — no need to email us).</li>
-            <li><strong>Withdraw consent</strong> — for anything we process on the basis of consent, you can withdraw consent at any time.</li>
+            <li><strong>Access</strong>, request a copy of the personal data we hold about you.</li>
+            <li><strong>Rectification</strong>, ask us to correct anything that&apos;s wrong.</li>
+            <li><strong>Erasure</strong>, ask us to delete your data (subject to legal retention requirements).</li>
+            <li><strong>Portability</strong>, receive your data in a machine-readable format.</li>
+            <li><strong>Objection</strong>, object to processing for marketing purposes (just opt out, no need to email us).</li>
+            <li><strong>Withdraw consent</strong>, for anything we process on the basis of consent, you can withdraw consent at any time.</li>
           </ul>
           <p>To exercise any of these rights, email <a href="mailto:hello@jaxfamilytravels.com">hello@jaxfamilytravels.com</a>. We aim to respond within one calendar month.</p>
 
@@ -88,7 +88,7 @@ export default function PrivacyPage() {
           <p>If you&apos;re unhappy with how we handle your data, please tell us first so we can put it right. If you&apos;re still not satisfied you have the right to complain to the UK Information Commissioner&apos;s Office at <a href="https://ico.org.uk" target="_blank" rel="noopener noreferrer">ico.org.uk</a>.</p>
 
           <h2>Changes to this policy</h2>
-          <p>We may update this policy from time to time — typically when we add a new service or change how we use data. Material changes will be communicated to you by email. The &quot;last updated&quot; date at the top of this page reflects the most recent revision.</p>
+          <p>We may update this policy from time to time, typically when we add a new service or change how we use data. Material changes will be communicated to you by email. The &quot;last updated&quot; date at the top of this page reflects the most recent revision.</p>
 
           <h2>Contact</h2>
           <p>Email: <a href="mailto:hello@jaxfamilytravels.com">hello@jaxfamilytravels.com</a></p>

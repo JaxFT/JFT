@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════
---  JFT — CALL REQUESTS (Supabase)
+--  JFT, CALL REQUESTS (Supabase)
 --  Run this in: Supabase Dashboard > SQL Editor
 -- ═══════════════════════════════════════
 

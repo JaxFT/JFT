@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════
---  JFT — PROFILES: welcome email flag
+--  JFT, PROFILES: welcome email flag
 --  Run in: Supabase Dashboard > SQL Editor
 --  Safe to re-run.
 --

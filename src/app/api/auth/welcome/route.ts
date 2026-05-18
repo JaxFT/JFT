@@ -49,7 +49,7 @@ export async function POST() {
 
   // Sync the marketing opt-in flag from auth metadata to the profiles
   // row. Runs every call (cheap) so the preference set at signup is
-  // captured the first time the user verifies their email — and any
+  // captured the first time the user verifies their email, and any
   // later metadata change is also reflected. Profile column wins if
   // it's already set true (user opted in later via /account).
   const metaOptIn = user.user_metadata?.marketing_opt_in === true

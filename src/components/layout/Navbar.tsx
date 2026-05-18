@@ -18,7 +18,7 @@ const navLinks = [
   { label: 'Learning Resources', href: '/learning' },
 ]
 
-// Tiny shape — id + email is everything Navbar needs.
+// Tiny shape, id + email is everything Navbar needs.
 type NavUser = { id: string; email: string | null } | null
 
 type Props = {
@@ -44,7 +44,7 @@ export default function Navbar({ initialUserId, initialUserEmail }: Props) {
   useEffect(() => {
     // Subscribe to auth changes so the Navbar updates when the user signs
     // in / out without a full page refresh. We do NOT re-fetch the user
-    // here — it's already in state from the server render above.
+    // here, it's already in state from the server render above.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       const u = session?.user
       setUser(u ? { id: u.id, email: u.email ?? null } : null)
@@ -80,7 +80,7 @@ export default function Navbar({ initialUserId, initialUserEmail }: Props) {
             <Logo
               height={36}
               variant={transparent ? 'onDark' : 'gradient'}
-              ariaLabel="Jax | Family Travels — home"
+              ariaLabel="Jax | Family Travels, home"
             />
             <span className={`hidden sm:inline font-bold text-sm tracking-wide uppercase ${transparent ? 'text-white' : 'text-gray-900'}`}>
               Jax <span className="opacity-50 font-light mx-0.5">|</span> Family Travels

@@ -42,7 +42,7 @@ export async function GET() {
     result._key_payload = { error: e instanceof Error ? e.message : 'decode failed' }
   }
 
-  // SDK calls — what we've been seeing
+  // SDK calls, what we've been seeing
   for (const bucket of ['guide-files', 'guide-previews']) {
     const { data, error } = await admin.storage.from(bucket).list('', { limit: 100 })
     result[`${bucket}_sdk`] = error
@@ -54,7 +54,7 @@ export async function GET() {
     ? { error: bucketsSdkErr.message }
     : (bucketsSdk ?? []).map(b => ({ name: b.name, public: b.public }))
 
-  // Raw HTTP call — bypasses the SDK entirely
+  // Raw HTTP call, bypasses the SDK entirely
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   try {
     const r = await fetch(`${supabaseUrl}/storage/v1/bucket`, {

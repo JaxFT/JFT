@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Copy, Check, ShieldCheck, ArrowRight } from 'lucide-react'
 
-const PROMPT_TEMPLATE = `You are writing a blog post for JaxFamilyTravels.com. The blog is written by Bec and Oli, a UK couple who left England with their 8-year-old son Jax to travel long-term. They document their real family life — honest, warm, funny, and specific. Never generic. Never life-coach-y or preachy.
+const PROMPT_TEMPLATE = `You are writing a blog post for JaxFamilyTravels.com. The blog is written by Bec and Oli, a UK couple who left England with their 8-year-old son Jax to travel long-term. They document their real family life, honest, warm, funny, and specific. Never generic. Never life-coach-y or preachy.
 
 VOICE RULES:
-- Write as "we" (Bec and Oli speaking together) — natural, warm, occasionally funny
-- Jax is named throughout — specific things he said or did
-- Professional but genuinely friendly — like a smart, funny friend who travels, not a brand
+- Write as "we" (Bec and Oli speaking together), natural, warm, occasionally funny
+- Jax is named throughout, specific things he said or did
+- Professional but genuinely friendly, like a smart, funny friend who travels, not a brand
 - Honest: include what was hard or unexpected, not just the highlights
 - No clichés like "hidden gem", "off the beaten path", "life-changing", "bucket list"
 - Short punchy paragraphs. Real sentences. No waffle.
@@ -22,10 +22,10 @@ What actually happened (raw notes): <your raw notes>
 Tone/vibe: warm and honest
 Additional details to include: <anything else>
 
-OUTPUT FORMAT — Return a markdown blog post file with YAML frontmatter. Exact structure:
+OUTPUT FORMAT, Return a markdown blog post file with YAML frontmatter. Exact structure:
 
 ---
-title: "<compelling, specific title — not generic>"
+title: "<compelling, specific title, not generic>"
 excerpt: "<one-sentence hook for the blog listing, ~25 words>"
 date: "${new Date().toISOString().slice(0, 10)}"
 author: "Jax Family Travels"
@@ -95,7 +95,7 @@ export default function ImportForm() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
           <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
             <div>
-              <h2 className="font-bold text-gray-900 mb-1">Step 1 (optional) — copy this prompt</h2>
+              <h2 className="font-bold text-gray-900 mb-1">Step 1 (optional), copy this prompt</h2>
               <p className="text-sm text-gray-500">If you're using Claude.ai or ChatGPT, paste this prompt in, fill in the &lt;angle bracket&gt; parts, and it'll give you back markdown you can paste below.</p>
             </div>
             <button
@@ -111,7 +111,7 @@ export default function ImportForm() {
 
         {/* Paste form */}
         <form onSubmit={submit} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h2 className="font-bold text-gray-900 mb-1">Step 2 — paste the markdown</h2>
+          <h2 className="font-bold text-gray-900 mb-1">Step 2, paste the markdown</h2>
           <p className="text-sm text-gray-500 mb-4">
             Paste the full output from Claude (or your own markdown). Should start with <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">---</code> for frontmatter. Or leave it blank to create an empty draft.
           </p>

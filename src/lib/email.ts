@@ -1,15 +1,15 @@
 // Outgoing-email helper backed by Resend.
 //
 // Two sender identities are configured against the verified domain:
-//   - hello@jaxfamilytravels.com  — generic site sender (welcome, notifs)
-//   - bec@jaxfamilytravels.com    — personal sender for replies / confirms
+//   - hello@jaxfamilytravels.com: generic site sender (welcome, notifs)
+//   - bec@jaxfamilytravels.com:   personal sender for replies / confirms
 //
 // All incoming mail to either address forwards to jaxfamilytravels7@gmail.com
 // via Cloudflare Email Routing (configured in the Cloudflare dashboard,
 // nothing in this codebase touches incoming mail).
 //
-// If RESEND_API_KEY is not set, sendEmail returns ok: false silently —
-// the caller decides whether that's a hard failure. For non-critical
+// If RESEND_API_KEY is not set, sendEmail returns ok: false silently.
+// The caller decides whether that's a hard failure. For non-critical
 // notifications we don't want to break the user flow if email fails.
 
 import { Resend } from 'resend'
@@ -53,7 +53,7 @@ export async function sendEmail({
 }
 
 // ─── Template helpers ────────────────────────────────────────────────
-// Plain HTML templates — no React, no framework. Resend accepts raw HTML.
+// Plain HTML templates, no React, no framework. Resend accepts raw HTML.
 // Brand colours match the site (brand-600 = #2d6b4f).
 
 const BASE_STYLES = `
@@ -112,7 +112,7 @@ export type CallRequestPayload = {
 
 // Notification TO us (forwards to gmail) when someone fills the form.
 export function buildCallRequestNotificationEmail(p: CallRequestPayload): { subject: string; html: string; text: string } {
-  const subject = `New call request — ${p.name}`
+  const subject = `New call request, ${p.name}`
   const stageLabel = p.journeyStage
     ? ({
         dreaming: 'Dreaming about it',
@@ -140,11 +140,11 @@ export function buildCallRequestNotificationEmail(p: CallRequestPayload): { subj
     <div class="kv">${kvHtml}</div>
     <p style="margin-top:18px"><strong>What they want to discuss</strong></p>
     <p style="white-space:pre-wrap; background:#f5f4f1; padding:14px 18px; border-radius:8px;">${escapeHtml(p.whatToDiscuss)}</p>
-    <p style="margin-top:22px">Reply directly to this email to get back to them — the reply-to is set to their address.</p>
+    <p style="margin-top:22px">Reply directly to this email to get back to them, the reply-to is set to their address.</p>
   `
 
   const text = [
-    `New call request — ${p.name}`,
+    `New call request, ${p.name}`,
     '',
     ...rows.filter(([, v]) => !!v).map(([k, v]) => `${k}: ${v}`),
     '',
@@ -161,7 +161,7 @@ export function buildCallRequestConfirmationEmail(p: { name: string; whatToDiscu
   const firstName = p.name.split(' ')[0] || p.name
   const bodyHtml = `
     <p>Hi ${escapeHtml(firstName)},</p>
-    <p>Thanks for getting in touch — we've got your request and one of us (probably Bec) will be back within 48 hours with proposed times and pricing.</p>
+    <p>Thanks for getting in touch, we've got your request and one of us (probably Bec) will be back within 48 hours with proposed times and pricing.</p>
     <p>Just so you have it on record, here's what you sent:</p>
     <p style="white-space:pre-wrap; background:#f5f4f1; padding:14px 18px; border-radius:8px; font-size:14px;">${escapeHtml(p.whatToDiscuss)}</p>
     <p>If anything else comes to mind before we reply, just hit reply to this email.</p>
@@ -170,7 +170,7 @@ export function buildCallRequestConfirmationEmail(p: { name: string; whatToDiscu
 
   const text = `Hi ${firstName},
 
-Thanks for getting in touch — we've got your request and one of us (probably Bec) will be back within 48 hours with proposed times and pricing.
+Thanks for getting in touch, we've got your request and one of us (probably Bec) will be back within 48 hours with proposed times and pricing.
 
 What you sent:
 ${p.whatToDiscuss}
@@ -185,7 +185,7 @@ Bec & Oli`
 
 // Build a small "Unsubscribe" footer block for any marketing email.
 // Returns empty strings if the signing secret isn't configured so the
-// email can still go out — but you should NOT send marketing emails
+// email can still go out, but you should NOT send marketing emails
 // without an unsubscribe link, so check the result before sending.
 export async function buildUnsubscribeFooter(userId: string): Promise<{ html: string; text: string }> {
   const url = await buildUnsubscribeUrl(userId)
@@ -205,21 +205,21 @@ export function buildWelcomeEmail(p: { name: string | null; siteUrl: string }): 
 
   const bodyHtml = `
     <p>${greeting}</p>
-    <p>Glad to have you. We built this site for families who are actually trying to do long-term travel — honest guides, real numbers, what worked with our 8-year-old and what didn't.</p>
+    <p>Glad to have you. We built this site for families who are actually trying to do long-term travel, honest guides, real numbers, what worked with our 8-year-old and what didn't.</p>
     <p>A few places to start:</p>
     <ul>
-      <li><a href="${p.siteUrl}/i-want-to-travel">The I Want To Travel tool</a> — a quick assessment of whether long-term travel is realistic for your family right now</li>
-      <li><a href="${p.siteUrl}/blog">The blog</a> — what we're actually doing on the road</li>
+      <li><a href="${p.siteUrl}/i-want-to-travel">The I Want To Travel tool</a>, a quick assessment of whether long-term travel is realistic for your family right now</li>
+      <li><a href="${p.siteUrl}/blog">The blog</a>, what we're actually doing on the road</li>
       <li><a href="${p.siteUrl}/guides">Destination guides</a></li>
     </ul>
-    <p>If you want to talk one-to-one, <a href="${p.siteUrl}/work-with-us">book a call</a> — we&apos;ll talk through your specific plans.</p>
+    <p>If you want to talk one-to-one, <a href="${p.siteUrl}/work-with-us">book a call</a>, we&apos;ll talk through your specific plans.</p>
     <p>Reply to this email any time. It comes through to us.</p>
     <p style="margin-top:22px">Bec &amp; Oli</p>
   `
 
   const text = `${greeting.replace(/&[a-z#0-9]+;/g, '')}
 
-Glad to have you. We built this site for families who are actually trying to do long-term travel — honest guides, real numbers, what worked with our 8-year-old and what didn't.
+Glad to have you. We built this site for families who are actually trying to do long-term travel, honest guides, real numbers, what worked with our 8-year-old and what didn't.
 
 A few places to start:
 - The I Want To Travel tool: ${p.siteUrl}/i-want-to-travel

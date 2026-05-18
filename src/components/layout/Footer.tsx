@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div className="md:col-span-2">
             <Link href="/" className="inline-flex items-center mb-4">
-              <Logo height={36} variant="onDark" ariaLabel="Jax | Family Travels — home" />
+              <Logo height={36} variant="onDark" ariaLabel="Jax | Family Travels, home" />
             </Link>
             <p className="text-sm leading-relaxed max-w-xs">
               Real travel for real families. Honest guides, practical tools, and a community that gets it.

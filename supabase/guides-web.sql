@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════
---  JFT — WEB GUIDES + APP SETTINGS
+--  JFT, WEB GUIDES + APP SETTINGS
 --  Run in: Supabase Dashboard > SQL Editor
 --
 --  Adds:

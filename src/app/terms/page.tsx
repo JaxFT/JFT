@@ -51,12 +51,12 @@ export default function TermsPage() {
           <p>Guides are for your personal use. Please don&apos;t share, republish, or sell our content. We put real time into writing it.</p>
 
           <h2>6. Refunds</h2>
-          <p>Under UK consumer law (Consumer Contracts Regulations 2013), you normally have a 14-day right to cancel digital purchases. By starting to read or download a guide, you waive that right — the law allows us to require this for digital content delivered immediately, and we&apos;ll make this clear at checkout.</p>
-          <p>If you&apos;re unhappy with a purchase, please tell us. We&apos;d much rather sort it out than have you feel ripped off — we&apos;ll consider refund requests case by case.</p>
+          <p>Under UK consumer law (Consumer Contracts Regulations 2013), you normally have a 14-day right to cancel digital purchases. By starting to read or download a guide, you waive that right, the law allows us to require this for digital content delivered immediately, and we&apos;ll make this clear at checkout.</p>
+          <p>If you&apos;re unhappy with a purchase, please tell us. We&apos;d much rather sort it out than have you feel ripped off, we&apos;ll consider refund requests case by case.</p>
 
           <h2>7. One-to-one calls</h2>
           <p>If you book a call with us, we&apos;ll send you proposed times and pricing by email. Payment is taken before the call. If you need to reschedule, please give us at least 48 hours&apos; notice. No-shows or last-minute cancellations may forfeit the fee at our discretion.</p>
-          <p>Calls are informational. We share our personal experience of family travel. We&apos;re not licensed financial advisers, immigration lawyers, or medical professionals — any decisions you make based on our chat are your own.</p>
+          <p>Calls are informational. We share our personal experience of family travel. We&apos;re not licensed financial advisers, immigration lawyers, or medical professionals, any decisions you make based on our chat are your own.</p>
 
           <h2>8. Content accuracy</h2>
           <p>We write from real lived experience. Prices, opening hours, visa rules, and local conditions change all the time. We do our best to keep guides current, but you should verify time-critical details before you travel.</p>
@@ -72,9 +72,9 @@ export default function TermsPage() {
           <p>We may suspend or terminate accounts that breach these rules.</p>
 
           <h2>10. Our liability</h2>
-          <p>Nothing in these Terms limits our liability where it would be illegal to do so — for example, for death or personal injury caused by our negligence, or for fraud.</p>
+          <p>Nothing in these Terms limits our liability where it would be illegal to do so, for example, for death or personal injury caused by our negligence, or for fraud.</p>
           <p>Subject to that, our total liability to you for any claim arising from your use of the Site is limited to the amount you&apos;ve paid us in the 12 months before the claim arose (or £100 if you haven&apos;t paid us anything).</p>
-          <p>We&apos;re not liable for indirect or consequential losses — for example, missed flights, ruined holidays, or business losses you might suffer as a result of acting on something you read here.</p>
+          <p>We&apos;re not liable for indirect or consequential losses, for example, missed flights, ruined holidays, or business losses you might suffer as a result of acting on something you read here.</p>
 
           <h2>11. Changes to these Terms</h2>
           <p>We may update these Terms occasionally. We&apos;ll email registered users about material changes. The &quot;last updated&quot; date above will always reflect the current version. Continued use of the Site after a change means you accept the updated Terms.</p>
@@ -88,7 +88,7 @@ export default function TermsPage() {
           <hr />
 
           <p className="text-sm text-gray-500 italic">
-            This is starter terms text. If you&apos;re a visitor to the site reading this, these terms describe the basis on which we provide the service. If you&apos;re the site owner, please have a UK solicitor review this before relying on it — particularly the refund and liability clauses, which need to match the specific products you&apos;re actually selling.
+            This is starter terms text. If you&apos;re a visitor to the site reading this, these terms describe the basis on which we provide the service. If you&apos;re the site owner, please have a UK solicitor review this before relying on it, particularly the refund and liability clauses, which need to match the specific products you&apos;re actually selling.
           </p>
         </div>
       </article>

@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     { auth: { persistSession: false, autoRefreshToken: false } },
   )
 
-  // Path: <date>/<random>.<ext> — date prefix keeps the bucket browsable in
+  // Path: <date>/<random>.<ext>, date prefix keeps the bucket browsable in
   // the Supabase UI; random suffix prevents collisions across uploads.
   const ext = (file.name.match(/\.([a-zA-Z0-9]+)$/)?.[1] || 'jpg').toLowerCase()
   const datePrefix = new Date().toISOString().slice(0, 10)

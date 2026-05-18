@@ -488,7 +488,7 @@
     <div class="hero">
       <div class="eyebrow">Family Travel Assessment</div>
       <h1>Could your family<br><strong>actually do this?</strong></h1>
-      <p>Families don't need more travel ideas. They need clarity. Family Way helps you understand if long-term travel is realistic — for your family, right now.</p>
+      <p>Families don't need more travel ideas. They need clarity. Family Way helps you understand if long-term travel is realistic, for your family, right now.</p>
       <div class="hero-ctas">
         <button class="btn-primary" onclick="showScreen('questions')">Start Check</button>
         <button class="btn-text" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">How it works</button>
@@ -512,7 +512,7 @@
           <div class="how-item">
             <div class="how-num">03</div>
             <h3>Know your next step</h3>
-            <p>A clear recommendation — not inspiration. What to actually do next.</p>
+            <p>A clear recommendation, not inspiration. What to actually do next.</p>
           </div>
         </div>
       </div>
@@ -582,9 +582,9 @@
         <div class="q-field">
           <label>Long-term travel experience?</label>
           <div class="btn-group" data-field="experience">
-            <button class="btn-option" data-value="yes">Yes — we've done this</button>
-            <button class="btn-option" data-value="some">Some — short trips abroad</button>
-            <button class="btn-option" data-value="no">None — this would be new</button>
+            <button class="btn-option" data-value="yes">Yes, we've done this</button>
+            <button class="btn-option" data-value="some">Some, short trips abroad</button>
+            <button class="btn-option" data-value="no">None, this would be new</button>
           </div>
         </div>
       </div>
@@ -633,13 +633,13 @@
         </div>
 
         <div class="q-field">
-          <label>Comfort with uncertainty — <span id="uncValue" style="color:var(--accent);font-weight:600">5</span> / 10</label>
+          <label>Comfort with uncertainty, <span id="uncValue" style="color:var(--accent);font-weight:600">5</span> / 10</label>
           <div class="slider-wrap">
             <div class="slider-readout" id="uncReadout">5</div>
             <input type="range" min="1" max="10" value="5" id="uncertaintySlider" oninput="updateSlider(this)">
             <div class="slider-labels">
-              <span>Low — I need a plan</span>
-              <span>High — I adapt well</span>
+              <span>Low, I need a plan</span>
+              <span>High, I adapt well</span>
             </div>
           </div>
         </div>
@@ -647,9 +647,9 @@
         <div class="q-field">
           <label>How important is daily routine to your family?</label>
           <div class="btn-group" data-field="routine">
-            <button class="btn-option" data-value="low">Low — we're flexible</button>
-            <button class="btn-option" data-value="medium">Medium — some structure helps</button>
-            <button class="btn-option" data-value="high">High — routine is essential</button>
+            <button class="btn-option" data-value="low">Low, we're flexible</button>
+            <button class="btn-option" data-value="medium">Medium, some structure helps</button>
+            <button class="btn-option" data-value="high">High, routine is essential</button>
           </div>
         </div>
       </div>
@@ -663,9 +663,9 @@
         <div class="q-field">
           <label>Preferred pace</label>
           <div class="btn-group" data-field="pace">
-            <button class="btn-option" data-value="slow">Slow — weeks or months per place</button>
-            <button class="btn-option" data-value="medium">Medium — 1–3 weeks per place</button>
-            <button class="btn-option" data-value="fast">Fast — a few days per place</button>
+            <button class="btn-option" data-value="slow">Slow, weeks or months per place</button>
+            <button class="btn-option" data-value="medium">Medium, 1–3 weeks per place</button>
+            <button class="btn-option" data-value="fast">Fast, a few days per place</button>
           </div>
         </div>
 
@@ -682,7 +682,7 @@
 
       <!-- S5: DESTINATIONS -->
       <div class="q-section" id="section-5">
-        <div class="q-section-label">Section 5 — Optional</div>
+        <div class="q-section-label">Section 5, Optional</div>
         <div class="q-section-title">Destinations</div>
         <div class="q-section-desc">Any regions or countries you're drawn to? This helps personalise your profile output.</div>
 
@@ -893,21 +893,21 @@
     const workPts = { remote: 20, partial: 10, planning: 5, none: -20 };
     score += workPts[answers.work] || 0;
     if (answers.work === 'remote')   strengths.push('Fully remote work removes the single biggest logistical barrier to long-term travel');
-    if (answers.work === 'partial')  strengths.push('Partial remote flexibility gives you real options — many families make this work successfully');
-    if (answers.work === 'planning') challenges.push('Income continuity must be secured before departure — building toward remote work is not the same as having it');
-    if (answers.work === 'none')     challenges.push('No work flexibility is the primary barrier — a concrete income plan is essential before travel is viable');
+    if (answers.work === 'partial')  strengths.push('Partial remote flexibility gives you real options, many families make this work successfully');
+    if (answers.work === 'planning') challenges.push('Income continuity must be secured before departure, building toward remote work is not the same as having it');
+    if (answers.work === 'none')     challenges.push('No work flexibility is the primary barrier, a concrete income plan is essential before travel is viable');
 
     // Uncertainty (1–10 → 2–20 pts)
     score += answers.uncertainty * 2;
     if (answers.uncertainty >= 7) strengths.push('High comfort with uncertainty is one of the most important traits for sustaining long-term family travel');
-    else if (answers.uncertainty >= 5) strengths.push('Moderate uncertainty tolerance — manageable with good planning and a slower pace');
+    else if (answers.uncertainty >= 5) strengths.push('Moderate uncertainty tolerance, manageable with good planning and a slower pace');
     else challenges.push('Low comfort with uncertainty will be tested frequently on the road; this is a muscle worth building before you go');
 
     // Routine
     const routinePts = { low: 10, medium: 0, high: -15 };
     score += routinePts[answers.routine] || 0;
     if (answers.routine === 'low')  strengths.push('Low routine dependency means adapting to new environments won\'t drain the family');
-    if (answers.routine === 'high') challenges.push('High routine needs require extra structure — commit to very slow travel and stable base locations');
+    if (answers.routine === 'high') challenges.push('High routine needs require extra structure, commit to very slow travel and stable base locations');
 
     // Combined penalty
     if (answers.routine === 'high' && answers.pace === 'fast') score -= 10;
@@ -917,13 +917,13 @@
     score += expPts[answers.experience] || 0;
     if (answers.experience === 'yes')  strengths.push('Existing long-term travel experience means you know what you\'re actually signing up for');
     if (answers.experience === 'some') strengths.push('Previous travel experience gives you a realistic baseline to build from');
-    if (answers.experience === 'no')   challenges.push('No prior long-term travel experience means a steep learning curve — a pilot trip before committing is non-negotiable');
+    if (answers.experience === 'no')   challenges.push('No prior long-term travel experience means a steep learning curve, a pilot trip before committing is non-negotiable');
 
     // Pace
     const pacePts = { slow: 15, medium: 5, fast: -5 };
     score += pacePts[answers.pace] || 0;
     if (answers.pace === 'slow')   strengths.push('Slow travel preference is the most sustainable and enriching approach for families with children');
-    if (answers.pace === 'fast')   challenges.push('Fast-paced travel is difficult to sustain with children — consider whether this preference will hold on the road');
+    if (answers.pace === 'fast')   challenges.push('Fast-paced travel is difficult to sustain with children, consider whether this preference will hold on the road');
 
     // Duration
     if (['1-3m', '3-6m'].includes(answers.duration)) score += 5;
@@ -932,7 +932,7 @@
     // Goal
     if (answers.goal === 'test') {
       score += 10;
-      strengths.push('Framing this as a test rather than a commitment is exactly the right approach — it leads to better decisions');
+      strengths.push('Framing this as a test rather than a commitment is exactly the right approach, it leads to better decisions');
     } else {
       score += 5;
       if (answers.goal === 'lifestyle') strengths.push('Clear lifestyle change intention drives better preparation and deeper commitment to making it work');
@@ -952,7 +952,7 @@
         challenges.push('Very young children require careful planning around healthcare access, daily rhythm, and logistics');
       } else if (answers.childAges === 'mixed') {
         score -= 5;
-        challenges.push('Mixed-age children require balancing different needs — schooling, pace, and activities vary significantly by age');
+        challenges.push('Mixed-age children require balancing different needs, schooling, pace, and activities vary significantly by age');
       } else {
         strengths.push('School-age-and-over children are generally adaptable and can engage meaningfully and independently with new places');
       }
@@ -972,14 +972,14 @@
     if (pace === 'slow') {
       if (env === 'city')   return { title: 'Slow urban immersion', desc: 'Base your family in mid-sized, liveable cities for 6–8 weeks at a time. Prioritise cities with solid infrastructure, international school options, and a genuine local neighbourhood feel. Depth over breadth.' };
       if (env === 'beach')  return { title: 'Coastal slow travel', desc: 'Anchor in coastal towns or island communities for 4–8 weeks each. Favour places with good local amenities and medical access. Southeast Asia, the Mediterranean, and Central America all have strong options for this approach.' };
-      if (env === 'nature') return { title: 'Rural immersion', desc: 'Extended stays in nature-adjacent bases — 4–10 weeks each. Prioritise proximity to a larger town for healthcare and supplies. New Zealand, Costa Rica, the Azores, and Portugal\'s interior work well.' };
-      return { title: 'Slow nomadic — varied bases', desc: 'Rotate between different environments every 6–10 weeks, letting the family rhythm settle before moving. Build a "home base" mindset — familiar routines in unfamiliar places.' };
+      if (env === 'nature') return { title: 'Rural immersion', desc: 'Extended stays in nature-adjacent bases, 4–10 weeks each. Prioritise proximity to a larger town for healthcare and supplies. New Zealand, Costa Rica, the Azores, and Portugal\'s interior work well.' };
+      return { title: 'Slow nomadic, varied bases', desc: 'Rotate between different environments every 6–10 weeks, letting the family rhythm settle before moving. Build a "home base" mindset, familiar routines in unfamiliar places.' };
     }
     if (pace === 'medium') {
       if (env === 'city') return { title: 'City-focused nomadic', desc: 'Move between cities every 3–5 weeks. Focus on urban areas with good infrastructure and family amenities. Europe, Southeast Asia, and South America all have strong city-to-city routes suited to this approach.' };
       return { title: 'Balanced nomadic', desc: 'Rotate between urban and nature bases every 3–5 weeks. A city month followed by a quieter coastal or rural base. Keeps variety without sacrificing stability.' };
     }
-    return { title: 'Consider slowing down', desc: 'Fast-paced travel is appealing in theory but rarely sustainable for families over time. Test this pace on a short trip first — most families naturally slow down once children\'s needs become apparent on the road.' };
+    return { title: 'Consider slowing down', desc: 'Fast-paced travel is appealing in theory but rarely sustainable for families over time. Test this pace on a short trip first, most families naturally slow down once children\'s needs become apparent on the road.' };
   }
 
   function getRegions(pace, env) {
@@ -1014,15 +1014,15 @@
   function getNextStep(score, answers, challenges) {
     if (score >= 70) return {
       title: 'Plan a pilot trip',
-      desc: 'Your readiness profile is strong. The next step isn\'t more research — it\'s a 4–8 week pilot in a single location. Keep it simple. Use it to stress-test family dynamics, work routines, and schooling arrangements before committing to a longer trip.'
+      desc: 'Your readiness profile is strong. The next step isn\'t more research, it\'s a 4–8 week pilot in a single location. Keep it simple. Use it to stress-test family dynamics, work routines, and schooling arrangements before committing to a longer trip.'
     };
     if (score >= 40) return {
       title: 'Structured trial trip',
-      desc: 'You\'re closer than you think, but specific gaps remain. Address work flexibility and logistics first. Then plan a structured 1–3 month trial in a stable, family-friendly base — somewhere with good infrastructure and low daily complexity. Treat it as research, not a commitment.'
+      desc: 'You\'re closer than you think, but specific gaps remain. Address work flexibility and logistics first. Then plan a structured 1–3 month trial in a stable, family-friendly base, somewhere with good infrastructure and low daily complexity. Treat it as research, not a commitment.'
     };
     return {
       title: 'Prepare before you plan',
-      desc: 'Long-term travel is possible, but the timing isn\'t right yet. Focus on the primary barriers first — particularly work flexibility and uncertainty tolerance. A 6–12 month preparation window followed by a short pilot trip is a more reliable path than trying to make a long trip work before these are resolved.'
+      desc: 'Long-term travel is possible, but the timing isn\'t right yet. Focus on the primary barriers first, particularly work flexibility and uncertainty tolerance. A 6–12 month preparation window followed by a short pilot trip is a more reliable path than trying to make a long trip work before these are resolved.'
     };
   }
 

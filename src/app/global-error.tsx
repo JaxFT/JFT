@@ -4,7 +4,7 @@
 // root layout itself (where app/error.tsx wouldn't even render). Must
 // render its own <html>/<body> because the layout never mounted.
 //
-// Same chunk-reload behaviour as app/error.tsx — if the user has stale
+// Same chunk-reload behaviour as app/error.tsx, if the user has stale
 // HTML after a deploy, silently grab the fresh bundle.
 
 import { useEffect } from 'react'

@@ -26,7 +26,7 @@ function ResetPasswordForm() {
     setLoading(true)
     setError(null)
     try {
-      // Send users straight to /update-password — that page handles the
+      // Send users straight to /update-password, that page handles the
       // PASSWORD_RECOVERY auth event itself, which is the canonical
       // Supabase pattern and sidesteps query-param mangling on redirectTo.
       const redirectTo = `${window.location.origin}/update-password`
@@ -44,7 +44,7 @@ function ResetPasswordForm() {
     <div className="min-h-screen bg-sand-50 flex items-center justify-center px-4 py-20">
       <div className="w-full max-w-sm">
         <div className="flex justify-center mb-8">
-          <Link href="/" aria-label="Jax | Family Travels — home">
+          <Link href="/" aria-label="Jax | Family Travels, home">
             <Logo height={40} />
           </Link>
         </div>

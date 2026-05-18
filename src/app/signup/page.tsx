@@ -11,7 +11,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
-  // Unticked by default — UK GDPR/PECR requires affirmative consent.
+  // Unticked by default, UK GDPR/PECR requires affirmative consent.
   const [marketingOptIn, setMarketingOptIn] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -54,14 +54,14 @@ export default function SignupPage() {
     <div className="min-h-screen bg-sand-50 flex items-center justify-center px-4 py-20">
       <div className="w-full max-w-sm">
         <div className="flex justify-center mb-8">
-          <Link href="/" aria-label="Jax | Family Travels — home">
+          <Link href="/" aria-label="Jax | Family Travels, home">
             <Logo height={40} />
           </Link>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Create your account</h1>
-          <p className="text-sm text-gray-500 mb-6">Free to join — premium access from £25/year</p>
+          <p className="text-sm text-gray-500 mb-6">Free to join, premium access from £25/year</p>
 
           <form onSubmit={handleSignup} className="space-y-4">
             <div>
@@ -97,7 +97,7 @@ export default function SignupPage() {
                 className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 shrink-0"
               />
               <span className="text-xs text-gray-600 leading-relaxed">
-                Yes, I&apos;d be happy to hear from Jax | Family Travels — occasional emails when we release new guides, post on the blog, or have updates worth sharing. No spam, ever, and you can unsubscribe in one click any time.
+                Yes, I&apos;d be happy to hear from Jax | Family Travels, occasional emails when we release new guides, post on the blog, or have updates worth sharing. No spam, ever, and you can unsubscribe in one click any time.
               </span>
             </label>
 

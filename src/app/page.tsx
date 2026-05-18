@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
   // Kick off the public data fetch and the cookie-aware client construction
-  // in parallel — they're independent.
+  // in parallel, they're independent.
   const [rows, supabase] = await Promise.all([
     listPublishedPosts(),
     createClient(),
@@ -41,7 +41,7 @@ export default async function HomePage() {
             fetchPriority="high"
             className="w-full h-full object-cover object-center"
           />
-          {/* Lighter overlay than before — let the photo speak, just enough dark to keep the white headline readable */}
+          {/* Lighter overlay than before, let the photo speak, just enough dark to keep the white headline readable */}
           <div className="absolute inset-0 bg-brand-950/40" />
           <div className="absolute inset-0 bg-gradient-to-r from-brand-950/70 via-brand-950/30 to-transparent" />
         </div>
@@ -70,7 +70,7 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* Right: featured posts stack — draggable on desktop, swipe to flip between latest 3 posts */}
+            {/* Right: featured posts stack, draggable on desktop, swipe to flip between latest 3 posts */}
             {posts.length > 0 && (
               <div className="hidden lg:block">
                 <HeroBlogStack posts={posts.slice(0, 3)} />
@@ -92,8 +92,8 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { icon: Compass, title: 'I Want To Travel', desc: 'Our decision tool that tells you honestly if long-term family travel is realistic for you right now.', href: '/i-want-to-travel', premiumFeature: false },
-              { icon: Map, title: 'Guides', desc: 'Destination guides written from real family experience — what actually worked, what didn\'t.', href: '/guides', premiumFeature: false },
-              { icon: BookOpen, title: 'Adventure Packs', desc: 'Country-specific missions for your family — language, food, geography, scavenger hunts and family chat cards.', href: '/adventure-packs', premiumFeature: true },
+              { icon: Map, title: 'Guides', desc: 'Destination guides written from real family experience, what actually worked, what didn\'t.', href: '/guides', premiumFeature: false },
+              { icon: BookOpen, title: 'Adventure Packs', desc: 'Country-specific missions for your family, language, food, geography, scavenger hunts and family chat cards.', href: '/adventure-packs', premiumFeature: true },
             ].map(item => {
               const showBadge = item.premiumFeature
               const badgeText = isPremium ? 'Included' : 'Premium'
@@ -147,7 +147,7 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ── PREMIUM CTA — varies by auth/tier ── */}
+      {/* ── PREMIUM CTA, varies by auth/tier ── */}
       <section className="py-20 bg-brand-950 text-white">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
           {isPremium ? (

@@ -75,7 +75,7 @@ export default function WebGuideView({
                 <><Crown className="w-3.5 h-3.5 text-brand-300" /> Full guide</>
               )
             ) : (
-              <><Lock className="w-3.5 h-3.5 text-amber-200" /> Preview — first {guide.preview_percent}% shown</>
+              <><Lock className="w-3.5 h-3.5 text-amber-200" /> Preview, first {guide.preview_percent}% shown</>
             )}
           </div>
         </div>
@@ -353,7 +353,7 @@ function Paywall({
         </div>
         {hasOneOff && (
           <p className="text-xs text-white/50 mt-5">
-            Or buy just this guide as a one-off — {priceLabel} (coming soon).
+            Or buy just this guide as a one-off, {priceLabel} (coming soon).
           </p>
         )}
       </div>

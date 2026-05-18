@@ -78,7 +78,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
 
   // Fire ALL the read-side fetches in parallel up front. About-us and
   // auto-link phrases are only used for the web-guide path, but firing
-  // them eagerly is cheaper than serialising — the web path is the
+  // them eagerly is cheaper than serialising, the web path is the
   // hot path now that the PDF flow is being retired.
   const [webGuide, supabase, aboutUs, autoLinkPhrases] = await Promise.all([
     getPublishedWebGuideBySlug(slug),
@@ -134,7 +134,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
   let hasPurchased = false
   if (user) {
     // Profile lookup and purchase check both need user.id but are
-    // independent — fire them together.
+    // independent, fire them together.
     const [{ data: profile }, hp] = await Promise.all([
       supabase
         .from('profiles')
@@ -173,12 +173,12 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
         <div className="mb-6">
           {canViewFull ? (
             <div className="inline-flex items-center gap-2 bg-brand-50 border border-brand-200 text-brand-800 text-sm font-medium px-3 py-1.5 rounded-full">
-              {isPremium && !hasPurchased && <><Crown className="w-3.5 h-3.5" /> Premium access — full guide</>}
-              {hasPurchased && <><Check className="w-3.5 h-3.5" /> Purchased — full access</>}
+              {isPremium && !hasPurchased && <><Crown className="w-3.5 h-3.5" /> Premium access, full guide</>}
+              {hasPurchased && <><Check className="w-3.5 h-3.5" /> Purchased, full access</>}
             </div>
           ) : (
             <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-3 py-1.5 rounded-full">
-              <Lock className="w-3.5 h-3.5" /> Preview — first {guide.preview_page_count} pages
+              <Lock className="w-3.5 h-3.5" /> Preview, first {guide.preview_page_count} pages
             </div>
           )}
         </div>
@@ -225,20 +225,20 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
                 </Link>
               ) : (
                 <Link href={`/signup?next=/guides/${guide.slug}`} className="btn-primary w-full justify-center !text-sm">
-                  Sign up — get Premium <ArrowRight className="w-4 h-4" />
+                  Sign up, get Premium <ArrowRight className="w-4 h-4" />
                 </Link>
               )}
             </div>
           </div>
         )}
 
-        {/* DOWNLOAD CTA — only for one-off purchasers */}
+        {/* DOWNLOAD CTA, only for one-off purchasers */}
         {canDownload && (
           <div className="mt-8 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between gap-4 flex-wrap">
             <div>
               <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-1">Your purchase</p>
               <h3 className="font-bold text-gray-900">Download the full PDF</h3>
-              <p className="text-sm text-gray-500 mt-1">You bought this guide — yours to keep.</p>
+              <p className="text-sm text-gray-500 mt-1">You bought this guide, yours to keep.</p>
             </div>
             <a
               href={`/api/guides/${guide.slug}/url?kind=download`}

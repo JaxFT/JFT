@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════
---  JFT — ADVENTURE PACKS
+--  JFT, ADVENTURE PACKS
 --  Run in: Supabase Dashboard > SQL Editor
 --  Safe to re-run.
 --

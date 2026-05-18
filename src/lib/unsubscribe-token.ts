@@ -3,7 +3,7 @@
 // logging in (UK PECR requires the link to actually work, no friction).
 //
 // Format: `<base64url(payload)>.<base64url(hmac)>`
-// Payload: JSON { uid: <user_id>, exp: <ms epoch> } — 1 year expiry.
+// Payload: JSON { uid: <user_id>, exp: <ms epoch> }, 1 year expiry.
 //
 // The signing secret is UNSUBSCRIBE_SIGNING_SECRET, set as a Worker
 // secret. If absent, signing/verifying returns null and the caller
@@ -74,7 +74,7 @@ export async function verifyUnsubscribeToken(token: string): Promise<{ ok: true;
   const [data, sig] = token.split('.')
   if (!data || !sig) return { ok: false, error: 'Bad link' }
   const expected = await hmac(secret, data)
-  if (!timingSafeEqual(sig, expected)) return { ok: false, error: 'Bad signature — link may have been altered' }
+  if (!timingSafeEqual(sig, expected)) return { ok: false, error: 'Bad signature, link may have been altered' }
 
   let payload: { uid?: string; exp?: number }
   try {
@@ -83,7 +83,7 @@ export async function verifyUnsubscribeToken(token: string): Promise<{ ok: true;
     return { ok: false, error: 'Bad link payload' }
   }
   if (!payload.uid || typeof payload.uid !== 'string') return { ok: false, error: 'No user in token' }
-  if (typeof payload.exp === 'number' && Date.now() > payload.exp) return { ok: false, error: 'This link has expired — please update your preferences from your account page instead' }
+  if (typeof payload.exp === 'number' && Date.now() > payload.exp) return { ok: false, error: 'This link has expired, please update your preferences from your account page instead' }
   return { ok: true, uid: payload.uid }
 }
 

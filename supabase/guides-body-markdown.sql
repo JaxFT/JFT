@@ -1,14 +1,14 @@
 -- ═══════════════════════════════════════
---  JFT — GUIDES: single-document body
+--  JFT, GUIDES: single-document body
 --  Run in: Supabase Dashboard > SQL Editor
 --  Safe to re-run.
 --
 --  Adds two columns to public.guides:
 --   - body_markdown   the whole guide as one markdown doc (new model)
 --   - preview_percent how much of body_markdown is shown to non-buyers
---                     (default 25% — same approach as blog posts)
+--                     (default 25%, same approach as blog posts)
 --
---  Existing block-based guides (e.g. Sri Lanka) keep working — the
+--  Existing block-based guides (e.g. Sri Lanka) keep working, the
 --  reader prefers body_markdown when present and falls back to
 --  sections.blocks when it's empty.
 -- ═══════════════════════════════════════

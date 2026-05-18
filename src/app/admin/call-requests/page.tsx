@@ -27,7 +27,7 @@ type CallRequest = {
 
 export default async function CallRequestsAdminPage() {
   // The /admin layout already gates this. We use service-role here only
-  // because RLS for call_requests admin-reads needs a JWT — but the layout
+  // because RLS for call_requests admin-reads needs a JWT, but the layout
   // already verified the email, so we can trust the request and fetch.
   const admin = createSbClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

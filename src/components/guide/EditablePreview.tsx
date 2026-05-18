@@ -53,7 +53,7 @@ export default function EditablePreview({ guide, aboutUsMarkdown, autoLinkPhrase
 }
 
 // ─────────────────────────────────────────────────────────────
-// SINGLE-DOC MODE — the new default
+// SINGLE-DOC MODE, the new default
 // ─────────────────────────────────────────────────────────────
 
 function SingleDocPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
@@ -197,7 +197,7 @@ function SingleDocPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
           autoLinkPhrases={autoLinkPhrases}
         />
 
-        {/* VIEW MODE — render the whole doc with TOC, same as readers see */}
+        {/* VIEW MODE, render the whole doc with TOC, same as readers see */}
         {!editMode && (
           <>
             {toc.length > 0 && <TocBlock toc={toc} />}
@@ -213,7 +213,7 @@ function SingleDocPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
           </>
         )}
 
-        {/* EDIT MODE — one big editor */}
+        {/* EDIT MODE, one big editor */}
         {editMode && (
           <div className="max-w-4xl mx-auto px-4 sm:px-6 mt-10">
             <div className="bg-white rounded-2xl border-2 border-brand-400 shadow-md p-5 sm:p-6">
@@ -235,7 +235,7 @@ function SingleDocPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
                 </div>
               </div>
 
-              {/* Image placeholder slots — persistent: each slot stays
+              {/* Image placeholder slots, persistent: each slot stays
                   visible after upload so you can swap / remove. */}
               <ImageSlotsPanel body={body} setBody={setBody} />
 
@@ -314,7 +314,7 @@ function SingleDocPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// LEGACY BLOCKS MODE — kept verbatim for Sri Lanka
+// LEGACY BLOCKS MODE, kept verbatim for Sri Lanka
 // ─────────────────────────────────────────────────────────────
 
 function BlocksPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {

@@ -9,7 +9,7 @@ export const runtime = 'nodejs'
 // Stripe → /api/stripe/webhook
 // Verifies the signature header, then records purchases on
 // checkout.session.completed. NEVER skip signature verification, even
-// for "obvious" events — an unsigned POST could be from anywhere.
+// for "obvious" events, an unsigned POST could be from anywhere.
 export async function POST(request: Request) {
   const sig = request.headers.get('stripe-signature')
   if (!sig) {
@@ -47,14 +47,14 @@ export async function POST(request: Request) {
       : session.payment_intent?.id
 
     if (!userId || !productId || amount == null) {
-      // Log the request_id for tracing — Stripe will retry on non-2xx
+      // Log the request_id for tracing, Stripe will retry on non-2xx
       return NextResponse.json(
         { error: 'Missing metadata on checkout session', session: session.id },
         { status: 400 },
       )
     }
 
-    // Service role bypasses RLS. Plain @supabase/supabase-js client —
+    // Service role bypasses RLS. Plain @supabase/supabase-js client.
     // @supabase/ssr's createServerClient folds in cookies and downgrades
     // auth to user-level, which means the INSERT would fail RLS.
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
         amount_pence: amount,
       })
 
-    // 23505 = unique_violation — Stripe is retrying a previously-recorded purchase
+    // 23505 = unique_violation, Stripe is retrying a previously-recorded purchase
     if (error && error.code !== '23505') {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }

@@ -45,7 +45,7 @@ function AuthCallbackHandler() {
     }
 
     // Fire the welcome-email endpoint. The server checks
-    // profiles.welcome_sent_at so this is safely idempotent — only the
+    // profiles.welcome_sent_at so this is safely idempotent, only the
     // first successful call per user actually sends.
     const fireWelcome = () => {
       fetch('/api/auth/welcome', { method: 'POST' }).catch(() => null)
@@ -56,7 +56,7 @@ function AuthCallbackHandler() {
     // established it fires SIGNED_IN or PASSWORD_RECOVERY.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED' || event === 'PASSWORD_RECOVERY')) {
-        // Only fire welcome on the actual sign-in event — not on token
+        // Only fire welcome on the actual sign-in event, not on token
         // refresh / password recovery flows.
         if (event === 'SIGNED_IN') fireWelcome()
         goToNext()
@@ -86,7 +86,7 @@ function AuthCallbackHandler() {
     <div className="min-h-screen bg-sand-50 flex items-center justify-center px-4 py-20">
       <div className="w-full max-w-sm">
         <div className="flex justify-center mb-8">
-          <Link href="/" aria-label="Jax | Family Travels — home">
+          <Link href="/" aria-label="Jax | Family Travels, home">
             <Logo height={40} />
           </Link>
         </div>

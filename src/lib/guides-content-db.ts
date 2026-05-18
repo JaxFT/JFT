@@ -9,7 +9,7 @@ import type {
 } from '@/lib/guide-types'
 
 // Migrate the legacy fixed-section shape into the new `blocks` array.
-// Runs on every read — old rows in Supabase still have the old shape and
+// Runs on every read, old rows in Supabase still have the old shape and
 // we want them to render through the new code path unchanged.
 function migrateLegacyToBlocks(
   raw: GuideSections,

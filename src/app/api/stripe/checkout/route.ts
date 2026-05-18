@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Guide not found' }, { status: 404 })
   }
 
-  // Lookup stripe_price_id directly — guides-db doesn't return it
+  // Lookup stripe_price_id directly, guides-db doesn't return it
   const { data: priceRow } = await supabase
     .from('products')
     .select('stripe_price_id')
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   const priceId = priceRow?.stripe_price_id as string | undefined
   if (!priceId) {
     return NextResponse.json(
-      { error: 'This guide is not yet wired up for checkout — missing price.' },
+      { error: 'This guide is not yet wired up for checkout, missing price.' },
       { status: 500 },
     )
   }
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       success_url: `${origin}/guides/${slug}?purchase=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${origin}/guides/${slug}?purchase=cancelled`,
       customer_email: user.email ?? undefined,
-      // Metadata flows through to the webhook — never trust client-supplied user IDs
+      // Metadata flows through to the webhook, never trust client-supplied user IDs
       metadata: {
         user_id: user.id,
         product_id: guide.id,

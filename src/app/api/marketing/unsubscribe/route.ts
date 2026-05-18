@@ -11,12 +11,12 @@ export const runtime = 'nodejs'
 // can trust which account to update without asking.
 //
 // On success: marketing_opt_in is set to false. Account, premium
-// subscription, and any other state are NOT touched — this strictly
+// subscription, and any other state are NOT touched, this strictly
 // affects marketing emails.
 //
 // Responds with JSON so the /unsubscribe page can render a result.
 // (We also support direct browser navigation here returning the JSON
-// — the friendly UI is at /unsubscribe.)
+//, the friendly UI is at /unsubscribe.)
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)

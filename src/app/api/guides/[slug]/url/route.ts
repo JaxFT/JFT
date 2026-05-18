@@ -33,7 +33,7 @@ export async function GET(
     return NextResponse.json({ error: 'Unknown kind' }, { status: 400 })
   }
 
-  // Full-PDF access — premium subscribers can view, one-off purchasers can view + download
+  // Full-PDF access, premium subscribers can view, one-off purchasers can view + download
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
@@ -76,7 +76,7 @@ export async function GET(
 type SignedUrlResult = { url: string | null; error?: string }
 
 async function signedUrlForBucket(bucket: string, path: string, expiresSeconds: number): Promise<SignedUrlResult> {
-  // Service role bypasses RLS. Use plain @supabase/supabase-js client —
+  // Service role bypasses RLS. Use plain @supabase/supabase-js client.
   // NOT @supabase/ssr's createServerClient, which folds in the caller's
   // session cookie and overrides the service-role JWT, silently
   // downgrading auth to user-level and breaking private-bucket access.

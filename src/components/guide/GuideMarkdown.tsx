@@ -32,7 +32,7 @@ function stripLeadingToken(children: ReactNode): ReactNode {
       }
       if (c.trim().length > 0) return arr
     } else if (c != null && c !== false) {
-      // First non-string non-empty child without a token — stop.
+      // First non-string non-empty child without a token, stop.
       return arr
     }
   }

@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════
---  JFT — BLOG COVER FOCAL POINT
+--  JFT, BLOG COVER FOCAL POINT
 --  Run in: Supabase Dashboard > SQL Editor
 --
 --  Adds tunable focal-point coordinates for the cover image so it

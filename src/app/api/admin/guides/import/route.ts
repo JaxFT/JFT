@@ -7,7 +7,7 @@ import type { GuideSections } from '@/lib/guide-types'
 export const dynamic = 'force-dynamic'
 
 // Single-doc import. Takes the whole markdown and stores it as the
-// guide's body_markdown — no section parsing, no kind classification.
+// guide's body_markdown, no section parsing, no kind classification.
 // The published view renders this with auto-TOC from H2 headings and
 // the preview-percent paywall for non-buyers. Returns the new id so
 // the client can redirect into the preview editor.

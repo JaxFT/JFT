@@ -21,16 +21,16 @@ type Props = {
   // Visual treatment:
   //   gradient → blue→green ombre (default, for light backgrounds)
   //   onDark   → solid white (for dark navbar / footer)
-  //   mono     → solid dark brand green (rare — for print etc.)
+  //   mono     → solid dark brand green (rare, for print etc.)
   variant?: LogoVariant
-  // For SR / accessibility — defaults to "Jax | Family Travels".
+  // For SR / accessibility, defaults to "Jax | Family Travels".
   ariaLabel?: string
 }
 
 const VIEWBOX_W = 656.22
 const VIEWBOX_H = 333.53
 
-// Gradient stops — blue (left) to brand green (right). Adjust the
+// Gradient stops, blue (left) to brand green (right). Adjust the
 // numbers here if you want a different angle / colour balance.
 const STOP_START = '#1e40af'   // Tailwind blue-800
 const STOP_END   = '#2d8163'   // Tailwind brand-600

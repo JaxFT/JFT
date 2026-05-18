@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════
---  JFT — BLOG: trip date, target read time, multi-links
+--  JFT, BLOG: trip date, target read time, multi-links
 --  Run in: Supabase Dashboard > SQL Editor
 --  Safe to re-run.
 --

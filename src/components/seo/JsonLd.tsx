@@ -33,7 +33,7 @@ export function ArticleJsonLd(props: ArticleSchema) {
     },
     author: {
       '@type': 'Person',
-      name: props.authorName ?? 'Bec & Oli — Jax | Family Travels',
+      name: props.authorName ?? 'Bec & Oli, Jax | Family Travels',
     },
   }
   if (props.description) data.description = props.description

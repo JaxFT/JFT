@@ -1,6 +1,6 @@
 import Stripe from 'stripe'
 
-// Lazy singleton — only constructed when first used so missing env vars
+// Lazy singleton, only constructed when first used so missing env vars
 // surface as a clean 500 from the route, not a crash on import.
 let _stripe: Stripe | null = null
 

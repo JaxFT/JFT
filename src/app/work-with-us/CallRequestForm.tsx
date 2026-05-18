@@ -56,7 +56,7 @@ export default function CallRequestForm() {
         <div className="w-14 h-14 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Check className="w-7 h-7 text-brand-700" />
         </div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Thanks — we'll be in touch</h3>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">Thanks, we'll be in touch</h3>
         <p className="text-sm text-gray-500 max-w-sm mx-auto">
           We've got your details. Expect an email from Bec or Oli within 48 hours with availability and pricing.
         </p>
@@ -148,7 +148,7 @@ export default function CallRequestForm() {
           onChange={e => setWhatToDiscuss(e.target.value)}
           required
           rows={5}
-          placeholder="A few sentences about what's on your mind — questions, blockers, decisions you're trying to make."
+          placeholder="A few sentences about what's on your mind, questions, blockers, decisions you're trying to make."
           className={`${inputCls} resize-y`}
         />
       </div>

@@ -6,7 +6,7 @@ import { getCurrentUser } from '@/lib/auth'
 
 export const metadata: Metadata = {
   title: { default: 'Jax Family Travels', template: '%s | Jax Family Travels' },
-  description: 'Real family travel — honest guides, resources, and tools for families exploring the world.',
+  description: 'Real family travel, honest guides, resources, and tools for families exploring the world.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'),
   openGraph: {
     siteName: 'Jax Family Travels',

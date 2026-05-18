@@ -18,7 +18,7 @@ export type ParsedImport = {
 export function parseGuideMarkdown(markdown: string): ParsedImport {
   const warnings: string[] = []
   const raw = (markdown ?? '').replace(/\r\n/g, '\n').trim()
-  if (!raw) return { blocks: [], warnings: ['Nothing to parse — the markdown was empty.'] }
+  if (!raw) return { blocks: [], warnings: ['Nothing to parse, the markdown was empty.'] }
 
   // Drop H1 lines entirely. The title lives on the guide row, not in the body.
   const noH1 = raw
@@ -50,7 +50,7 @@ export function parseGuideMarkdown(markdown: string): ParsedImport {
 
   // If the only section is the pre-H2 chunk, warn but still emit it.
   if (sections.length === 1 && sections[0].heading === null) {
-    warnings.push('No ## headings found in the doc — the whole text was imported as a single intro block. Add ## headings to split it into separate sections.')
+    warnings.push('No ## headings found in the doc, the whole text was imported as a single intro block. Add ## headings to split it into separate sections.')
   }
 
   const blocks: GuideContentBlock[] = sections.map((s, i) => {
@@ -71,7 +71,7 @@ export function parseGuideMarkdown(markdown: string): ParsedImport {
 
 // Heading-keyword classifier. Patterns are British-English-flavoured
 // and match the headings the existing JFT guides actually use. Order
-// matters — more specific patterns first.
+// matters, more specific patterns first.
 export function classifyKind(
   heading: string,
   index: number,
@@ -79,17 +79,17 @@ export function classifyKind(
 ): GuideBlockKind {
   const h = heading.toLowerCase().trim()
 
-  // Closing — very specific phrases the last block usually uses.
+  // Closing, very specific phrases the last block usually uses.
   if (/(final thoughts?|wrap[- ]?up|conclusion|in closing|sign[- ]?off|until next time|farewell|goodbye)/.test(h)) {
     return 'closing'
   }
 
-  // List — "25 things to do…", "Top 10…", "Best places…"
+  // List, "25 things to do…", "Top 10…", "Best places…"
   if (/^\d+\s+(things|reasons|ways|places|tips|spots|reasons)\b/.test(h)) return 'list'
   if (/^(top|best)\s+\d+/.test(h)) return 'list'
   if (/(things to do|places to (eat|visit|stay)|top spots|best spots)/.test(h)) return 'list'
 
-  // Intro — framing chapters that come early.
+  // Intro, framing chapters that come early.
   if (/^(why|about|what to expect|introduction|intro|overview|before you go)/.test(h)) return 'intro'
   if (/(need to know|destination highlights|highlights|getting started)/.test(h)) return 'intro'
 
@@ -97,7 +97,7 @@ export function classifyKind(
   if (index === 0) return 'intro'
   if (index === total - 1) return 'closing'
 
-  // Everything else — themed is the safe default.
+  // Everything else, themed is the safe default.
   // Could try to detect destination names (capital-cased, short) but
   // it's fuzzy; the writer can flip kind on the wizard's sections step.
   return 'themed'

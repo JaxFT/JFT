@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     ? body.journey_stage
     : null
 
-  // Insert via service role — RLS denies anon writes by default
+  // Insert via service role, RLS denies anon writes by default
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!serviceKey) {
     return NextResponse.json({ error: 'Server not configured' }, { status: 500 })
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // Fire-and-forget both emails — don't block the response or fail
+  // Fire-and-forget both emails, don't block the response or fail
   // the form if Resend has an off day. Logged for debugging via the
   // return value of sendEmail but not surfaced to the user.
   const payload = {

@@ -64,6 +64,6 @@ export function formatPrice(pence: number): string {
   return `£${(pence / 100).toFixed(2)}`
 }
 
-// Bucket names — must match what's set up in Supabase Storage.
+// Bucket names, must match what's set up in Supabase Storage.
 export const PREVIEWS_BUCKET = 'guide-previews'
 export const FULL_BUCKET = 'guide-files'

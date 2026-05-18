@@ -8,7 +8,7 @@
 //
 // View mode renders the markdown in a subtle card matching the public
 // IntroSection look. Click "Edit intro" → expands an inline markdown
-// editor with Write/Preview tabs. Save PATCHes intro_markdown only —
+// editor with Write/Preview tabs. Save PATCHes intro_markdown only.
 // doesn't touch body_markdown or anything else.
 
 import { useState } from 'react'
@@ -147,7 +147,7 @@ export default function IntroEditor({ guideId, initialMarkdown, autoLinkPhrases 
           <GuideMarkdown markdown={saved} autoLinkPhrases={autoLinkPhrases} />
         </div>
       ) : (
-        // No intro yet — surface a clear add button.
+        // No intro yet, surface a clear add button.
         <button
           type="button"
           onClick={startEdit}
@@ -155,7 +155,7 @@ export default function IntroEditor({ guideId, initialMarkdown, autoLinkPhrases 
         >
           <Plus className="w-4 h-4" /> Add an intro
           <span className="text-xs font-normal text-gray-400 hidden sm:inline">
-            — short note that appears between the cover and the table of contents
+            A short note that appears between the cover and the table of contents
           </span>
         </button>
       )}

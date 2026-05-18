@@ -42,7 +42,7 @@ function LoginForm() {
     <div className="min-h-screen bg-sand-50 flex items-center justify-center px-4 py-20">
       <div className="w-full max-w-sm">
         <div className="flex justify-center mb-8">
-          <Link href="/" aria-label="Jax | Family Travels — home">
+          <Link href="/" aria-label="Jax | Family Travels, home">
             <Logo height={40} />
           </Link>
         </div>

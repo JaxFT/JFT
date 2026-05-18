@@ -4,7 +4,7 @@ import { ArrowRight, Check, MessageCircle, Calendar, Mail, Compass } from 'lucid
 import CallRequestForm from './CallRequestForm'
 
 export const metadata: Metadata = {
-  title: 'Work With Us — 1:1 family travel call',
+  title: 'Work With Us, 1:1 family travel call',
   description: 'Book a one-to-one call with Bec and Oli to talk through your long-term family travel plans.',
 }
 
@@ -35,7 +35,7 @@ export default function WorkWithUsPage() {
                 {
                   icon: MessageCircle,
                   title: 'Tell us a bit about you',
-                  body: 'Fill in the short form below — where you\'re at, what you\'d like to discuss, when works for you. Takes 2 minutes.',
+                  body: 'Fill in the short form below, where you\'re at, what you\'d like to discuss, when works for you. Takes 2 minutes.',
                 },
                 {
                   icon: Mail,
@@ -45,7 +45,7 @@ export default function WorkWithUsPage() {
                 {
                   icon: Calendar,
                   title: 'We meet on a video call',
-                  body: '60 minutes, video call. No fixed agenda — we follow your questions. You\'ll leave with concrete next steps for your family.',
+                  body: '60 minutes, video call. No fixed agenda, we follow your questions. You\'ll leave with concrete next steps for your family.',
                 },
               ].map((s, i) => (
                 <li key={s.title} className="flex gap-4">
@@ -71,9 +71,9 @@ export default function WorkWithUsPage() {
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
               'Honest take on whether long-term travel is realistic for your family right now',
-              'Specific costs for the destinations you\'re considering — not generic averages',
+              'Specific costs for the destinations you\'re considering, not generic averages',
               'Schooling options on the road, what worked and didn\'t for Jax',
-              'How we saved and structured the move — practical, not theoretical',
+              'How we saved and structured the move, practical, not theoretical',
               'Visa, insurance, and logistical questions answered',
               'A clear next step you can act on this week',
             ].map(line => (
@@ -98,7 +98,7 @@ export default function WorkWithUsPage() {
             <div className="flex-1 min-w-[14rem]">
               <p className="text-sm font-semibold text-brand-900 mb-1">Have you completed the I Want To Travel questionnaire?</p>
               <p className="text-sm text-brand-900/80 leading-relaxed">
-                We recommend doing it first — it takes 5 minutes and gives us (and you) a clearer picture going into the call, so we can spend the time on what matters. Totally optional though, you can skip straight to booking below.
+                We recommend doing it first, it takes 5 minutes and gives us (and you) a clearer picture going into the call, so we can spend the time on what matters. Totally optional though, you can skip straight to booking below.
               </p>
             </div>
             <Link
@@ -116,7 +116,7 @@ export default function WorkWithUsPage() {
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-1">Tell us about you</h2>
-            <p className="text-sm text-gray-500 mb-6">No commitment yet — we'll reply with availability and pricing.</p>
+            <p className="text-sm text-gray-500 mb-6">No commitment yet, we'll reply with availability and pricing.</p>
             <CallRequestForm />
           </div>
         </div>

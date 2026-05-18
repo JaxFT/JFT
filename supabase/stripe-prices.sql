@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════
---  JFT — Stripe Price IDs (one-time)
+--  JFT, Stripe Price IDs (one-time)
 --  Run this in: Supabase Dashboard > SQL Editor
 -- ═══════════════════════════════════════
 

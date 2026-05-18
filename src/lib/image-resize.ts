@@ -29,15 +29,15 @@ export type ResizeResult = {
 export async function resizeImageIfLarge(file: File): Promise<ResizeResult> {
   const originalBytes = file.size
 
-  // Non-images (e.g. PDFs) — skip entirely.
+  // Non-images (e.g. PDFs), skip entirely.
   if (!file.type.startsWith('image/')) {
     return { file, resized: false, originalBytes, newBytes: originalBytes }
   }
-  // SVGs aren't pixel data — don't touch.
+  // SVGs aren't pixel data, don't touch.
   if (file.type === 'image/svg+xml') {
     return { file, resized: false, originalBytes, newBytes: originalBytes }
   }
-  // Already small — pass through. Avoids re-encoding small icons /
+  // Already small, pass through. Avoids re-encoding small icons /
   // already-optimised images.
   if (originalBytes <= MAX_BYTES_BYPASS) {
     return { file, resized: false, originalBytes, newBytes: originalBytes }
@@ -54,8 +54,8 @@ export async function resizeImageIfLarge(file: File): Promise<ResizeResult> {
       MAX_HEIGHT / img.naturalHeight,
     )
     if (scale >= 1 && originalBytes <= MAX_BYTES_BYPASS * 4) {
-      // Image is already within the dimensional cap and isn't enormous —
-      // pass through.
+      // Image is already within the dimensional cap and isn't enormous.
+      // Pass through.
       return { file, resized: false, originalBytes, newBytes: originalBytes }
     }
     const targetW = Math.round(img.naturalWidth * scale)

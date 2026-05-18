@@ -11,7 +11,7 @@ import { Crosshair, Check, Loader2, Save } from 'lucide-react'
 //
 // If `onSave` is provided, an inline "Save focal point" button appears
 // below the previews so the user doesn't need to scroll to the form's
-// main Save button — useful in long forms.
+// main Save button, useful in long forms.
 export default function CoverFocalPicker({
   src,
   x,

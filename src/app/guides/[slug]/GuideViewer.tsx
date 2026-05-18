@@ -9,7 +9,7 @@ type Props = {
   previewPageCount: number
 }
 
-// iOS Safari refuses to render PDFs inside iframes inline — you get a
+// iOS Safari refuses to render PDFs inside iframes inline, you get a
 // blank box and the user thinks the page is broken. PDFs DO open
 // natively in a fresh tab on iOS, so we always surface an "Open in
 // new tab" button alongside the iframe. The iframe path stays for
@@ -76,10 +76,10 @@ export default function GuideViewer({ slug, mode, previewPageCount }: Props) {
     return () => { cancelled = true; clearTimeout(timer); ac.abort() }
   }, [slug, mode])
 
-  const heading = mode === 'full' ? 'Full guide' : `Preview — first ${previewPageCount} pages`
+  const heading = mode === 'full' ? 'Full guide' : `Preview, first ${previewPageCount} pages`
 
   const retry = () => {
-    // Re-fire the effect by toggling a key — simplest: just force the
+    // Re-fire the effect by toggling a key, simplest: just force the
     // browser to refresh state by clearing then setting `loading`.
     setError(null)
     setLoading(true)

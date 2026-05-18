@@ -88,7 +88,7 @@ export async function DELETE(
   if (!guide.pdf_path) return NextResponse.json({ ok: true })
 
   const sb = serviceClient()
-  // Best effort — even if storage delete fails we still clear the column
+  // Best effort, even if storage delete fails we still clear the column
   // so the row doesn't keep pointing at a phantom file.
   await sb.storage.from(FULL_BUCKET).remove([guide.pdf_path]).catch(() => null)
 

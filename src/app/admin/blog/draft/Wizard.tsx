@@ -170,7 +170,7 @@ export default function Wizard() {
   const lengthCfg = wordTargetForMinutes(targetMinutes)
   const cleanLinks = links.filter(l => l.url.trim().length > 0)
 
-  // Format trip date for the prompt — accept either yyyy-mm-dd or yyyy-mm.
+  // Format trip date for the prompt, accept either yyyy-mm-dd or yyyy-mm.
   const tripDateHuman = (() => {
     if (!tripDate) return ''
     if (/^\d{4}-\d{2}$/.test(tripDate)) {
@@ -186,12 +186,12 @@ export default function Wizard() {
 
   // Build the links block for the AI prompt.
   const linksPromptBlock = (() => {
-    if (cleanLinks.length === 0) return 'LINKS: none — do not invent any URLs.'
+    if (cleanLinks.length === 0) return 'LINKS: none, do not invent any URLs.'
     const cta = category ? LINK_CTA_HINTS[category] : LINK_CTA_HINTS.general
     const lines = cleanLinks
       .map((l, i) => `  ${i + 1}. URL: ${l.url}\n     Purpose: ${l.label || 'Website'}`)
       .join('\n')
-    return `LINKS — IMPORTANT: weave each of these links into the post body ONCE, where it fits naturally. Embed each one inside a short call-to-action phrase using markdown \`[phrase](URL)\` syntax. DO NOT show URLs as raw text. DO NOT use the place name as the link text. Pick CTA phrasing that matches the link's "Purpose" (good options for this post type: ${cta}). For example, a link with Purpose "Menu" should read like "[see the menu](URL)"; "Booking" → "[book here](URL)"; "Instagram" → "[their Instagram](URL)". Place each link in a different spot in the post — don't bunch them together.
+    return `LINKS, IMPORTANT: weave each of these links into the post body ONCE, where it fits naturally. Embed each one inside a short call-to-action phrase using markdown \`[phrase](URL)\` syntax. DO NOT show URLs as raw text. DO NOT use the place name as the link text. Pick CTA phrasing that matches the link's "Purpose" (good options for this post type: ${cta}). For example, a link with Purpose "Menu" should read like "[see the menu](URL)"; "Booking" → "[book here](URL)"; "Instagram" → "[their Instagram](URL)". Place each link in a different spot in the post, don't bunch them together.
 
 ${lines}`
   })()
@@ -207,13 +207,13 @@ What this post is about: ${about || 'not specified'}
 ${tripDateHuman ? `When we visited: ${tripDateHuman}` : 'When we visited: not specified'}
 ${placeName.trim()
   ? `Name to feature in the post (mention this by name early in the body): ${placeName.trim()}`
-  : 'Name to feature: none — write generally about the location.'}
+  : 'Name to feature: none, write generally about the location.'}
 What actually happened (raw notes from Bec/Oli): ${detail || 'none'}
 Tone/vibe modifiers (use sparingly, voice profile wins): ${vibes.length ? vibes.join(', ') : 'warm and honest'}
 
 ${linksPromptBlock}
 
-LENGTH — STRICT CAP, NOT A GOAL:
+LENGTH, STRICT CAP, NOT A GOAL:
 Target: about ${targetMinutes} minute read (~${lengthCfg.lo}–${lengthCfg.hi} words at normal reading speed).
 HARD CEILING: ${lengthCfg.cap} words. Going over is a failure. Going under is fine.
 ${lengthCfg.structureHint}
@@ -231,16 +231,16 @@ ${coverPhoto
   ? `COVER PHOTO (put this URL in the coverImage frontmatter field; do NOT also place it in the body):
 ${coverPhoto.url}
 Cover caption: ${coverPhoto.caption || '(no caption)'}`
-  : 'COVER PHOTO: none selected — leave the coverImage frontmatter field empty.'}
+  : 'COVER PHOTO: none selected, leave the coverImage frontmatter field empty.'}
 
 ${bodyPhotos.length === 0
   ? 'PHOTOS IN THE BODY: none beyond the cover.'
-  : `PHOTOS IN THE BODY — IMPORTANT, you MUST place them IN THE EXACT ORDER LISTED below. Do not reorder. Photo 1 appears before photo 2, which appears before photo 3, etc. Spread them through the body so they don't all sit at the top or bottom. Each photo gets its own line using markdown image syntax: \`![caption](URL)\`.
+  : `PHOTOS IN THE BODY, IMPORTANT, you MUST place them IN THE EXACT ORDER LISTED below. Do not reorder. Photo 1 appears before photo 2, which appears before photo 3, etc. Spread them through the body so they don't all sit at the top or bottom. Each photo gets its own line using markdown image syntax: \`![caption](URL)\`.
 
 ${bodyPhotos.map((p, i) => `  ${i + 1}. ${p.url}
-     Caption: ${p.caption || '(no caption — pick a natural moment that fits where this photo lands)'}`).join('\n')}`}
+     Caption: ${p.caption || '(no caption, pick a natural moment that fits where this photo lands)'}`).join('\n')}`}
 
-OUTPUT FORMAT — IMPORTANT: Return the entire blog post WRAPPED IN A SINGLE TRIPLE-BACKTICK CODE BLOCK so I can copy the raw text. Like this:
+OUTPUT FORMAT, IMPORTANT: Return the entire blog post WRAPPED IN A SINGLE TRIPLE-BACKTICK CODE BLOCK so I can copy the raw text. Like this:
 
 \`\`\`
 ---
@@ -467,7 +467,7 @@ Do NOT add any text before or after the code block. The code block IS the entire
             <div>
               <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 2 of {TOTAL_STEPS}</p>
               <h1 className="text-3xl font-bold text-gray-900 leading-tight">Where, when, and what's this post about?</h1>
-              <p className="text-gray-500 mt-2 text-base">Keep it short — single line is fine.</p>
+              <p className="text-gray-500 mt-2 text-base">Keep it short, single line is fine.</p>
             </div>
 
             <div>
@@ -511,7 +511,7 @@ Do NOT add any text before or after the code block. The code block IS the entire
             <div>
               <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 3 of {TOTAL_STEPS}</p>
               <h1 className="text-3xl font-bold text-gray-900 leading-tight">What actually happened?</h1>
-              <p className="text-gray-500 mt-2 text-base">Raw notes are fine. Anything you remember — quotes, prices, what surprised you, what was hard, what Jax said. The AI will turn it into the post.</p>
+              <p className="text-gray-500 mt-2 text-base">Raw notes are fine. Anything you remember, quotes, prices, what surprised you, what was hard, what Jax said. The AI will turn it into the post.</p>
             </div>
 
             <textarea
@@ -602,7 +602,7 @@ Do NOT add any text before or after the code block. The code block IS the entire
             {photos.length > 0 && (
               <>
                 <p className="text-xs text-gray-500 -mb-2">
-                  Order matters — photos will appear in the post in the order shown below. Use the arrows to rearrange.
+                  Order matters, photos will appear in the post in the order shown below. Use the arrows to rearrange.
                 </p>
                 <div className="space-y-4">
                   {photos.map((p, i) => (
@@ -694,7 +694,7 @@ Do NOT add any text before or after the code block. The code block IS the entire
 
             <p className="text-xs text-gray-400 text-center">
               {photos.length === 0
-                ? "Photos optional — you can skip this step"
+                ? "Photos optional, you can skip this step"
                 : `${doneCount} of ${photos.length} uploaded`}
             </p>
           </div>
@@ -738,7 +738,7 @@ Do NOT add any text before or after the code block. The code block IS the entire
             <div>
               <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Step 6 of {TOTAL_STEPS}</p>
               <h1 className="text-3xl font-bold text-gray-900 leading-tight">Paste the AI's response</h1>
-              <p className="text-gray-500 mt-2 text-base">Paste everything from the AI — the bit that starts with <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">---</code> and ends with the post body.</p>
+              <p className="text-gray-500 mt-2 text-base">Paste everything from the AI, the bit that starts with <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">---</code> and ends with the post body.</p>
             </div>
 
             <textarea
@@ -770,7 +770,7 @@ Do NOT add any text before or after the code block. The code block IS the entire
             </button>
 
             <p className="text-xs text-gray-400 text-center">
-              After saving you'll land on the edit screen — review, tweak, then Publish.
+              After saving you'll land on the edit screen, review, tweak, then Publish.
             </p>
           </div>
         )}

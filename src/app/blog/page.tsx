@@ -92,7 +92,7 @@ export default async function BlogPage({
           <p className="text-gray-400">
             {activeTag
               ? <>No posts tagged "{activeTag}" yet. <Link href="/blog" className="text-brand-600 hover:underline">See all</Link></>
-              : <>No posts yet — check back soon.</>}
+              : <>No posts yet, check back soon.</>}
           </p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

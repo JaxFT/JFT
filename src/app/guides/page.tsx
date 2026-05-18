@@ -19,7 +19,7 @@ type GuideCardModel = {
 }
 
 export default async function GuidesPage() {
-  // Fire all the data fetches in parallel — none depend on user state.
+  // Fire all the data fetches in parallel, none depend on user state.
   const [pdfGuides, webGuides, supabase] = await Promise.all([
     listActiveGuides(),
     listPublishedWebGuides(),
@@ -27,8 +27,8 @@ export default async function GuidesPage() {
   ])
 
   // Merge into one list. Web guides first (newest published_at on top).
-  // Hide any PDF guide whose slug is also present as a published web guide —
-  // the web version supersedes the PDF.
+  // Hide any PDF guide whose slug is also present as a published web guide.
+  // The web version supersedes the PDF.
   const webSlugs = new Set(webGuides.map(g => g.slug))
   const guides: GuideCardModel[] = [
     ...webGuides.map(g => ({
@@ -73,18 +73,18 @@ export default async function GuidesPage() {
           </p>
         </div>
 
-        {/* Premium banner — hidden for premium members */}
+        {/* Premium banner, hidden for premium members */}
         {isPremium ? (
           <div className="bg-brand-50 border border-brand-200 rounded-2xl p-4 mb-10 flex items-center gap-3 text-brand-900">
             <Crown className="w-5 h-5 text-brand-700 shrink-0" />
             <p className="text-sm">
-              <strong>Premium member.</strong> Every guide below is included — click any to read on the site.
+              <strong>Premium member.</strong> Every guide below is included, click any to read on the site.
             </p>
           </div>
         ) : (
           <div className="bg-brand-950 text-white rounded-2xl p-6 mb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
-              <p className="font-bold text-lg">Premium — £25/year</p>
+              <p className="font-bold text-lg">Premium, £25/year</p>
               <p className="text-white/60 text-sm">
                 A year of access to every premium blog post, every guide, and every adventure pack. View on the site, no downloads.
               </p>
@@ -98,7 +98,7 @@ export default async function GuidesPage() {
         {guides.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center text-gray-500">
             <Map className="w-10 h-10 mx-auto text-gray-300 mb-3" />
-            <p>No guides yet — check back soon.</p>
+            <p>No guides yet, check back soon.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -137,7 +137,7 @@ export default async function GuidesPage() {
                   </div>
                 )}
 
-                {/* Opaque bottom panel — sits over the image */}
+                {/* Opaque bottom panel, sits over the image */}
                 <div className="absolute inset-x-0 bottom-0 bg-brand-950/85 backdrop-blur-sm text-white p-5">
                   <h3 className="font-bold leading-snug mb-1 line-clamp-2">{guide.name}</h3>
                   {guide.subtitle && (

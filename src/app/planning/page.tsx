@@ -6,14 +6,14 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Planning & Tracking',
-  description: 'Waystaq — the trip planner and budget tracker we use every day on the road. Built for long-term family travel.',
+  description: 'Waystaq, the trip planner and budget tracker we use every day on the road. Built for long-term family travel.',
 }
 
 const FEATURES = [
   {
     icon: Map,
     title: 'Multi-country trip planner',
-    body: 'Every country, every city, every leg in one timeline. Accommodation, transport, dates — out of the spreadsheet, into one place.',
+    body: 'Every country, every city, every leg in one timeline. Accommodation, transport, dates, out of the spreadsheet, into one place.',
   },
   {
     icon: Wallet,
@@ -23,12 +23,12 @@ const FEATURES = [
   {
     icon: ListChecks,
     title: 'Travel task manager',
-    body: 'Visas, vaccinations, insurance, bookings, packing — pinned to the right country and the right week, never forgotten at the wrong border.',
+    body: 'Visas, vaccinations, insurance, bookings, packing, pinned to the right country and the right week, never forgotten at the wrong border.',
   },
   {
     icon: Users2,
     title: 'Shared with your family',
-    body: 'Travelling companions can add stops, log spend, and tick off tasks — all synced instantly. The whole family on the same plan.',
+    body: 'Travelling companions can add stops, log spend, and tick off tasks, all synced instantly. The whole family on the same plan.',
   },
 ]
 
@@ -40,14 +40,14 @@ export default function PlanningPage() {
   return (
     <div className="min-h-screen bg-sand-50">
 
-      {/* HERO — light style, matches /blog and /learning */}
+      {/* HERO, light style, matches /blog and /learning */}
       <section className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 bg-sand-50">
         <div className="max-w-7xl mx-auto">
           <div className="max-w-2xl mb-10">
             <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Planning &amp; Tracking</p>
             <h1 className="text-4xl font-bold text-gray-900">Your trip. Every country. Every penny.</h1>
             <p className="text-gray-500 mt-2 text-lg">
-              Waystaq is the trip planner and budget tracker we use every day on the road. Built by long-term travellers for long-term travellers — designed to replace the spreadsheet.
+              Waystaq is the trip planner and budget tracker we use every day on the road. Built by long-term travellers for long-term travellers, designed to replace the spreadsheet.
             </p>
             <div className="mt-6 flex flex-wrap gap-3 sm:gap-4 items-center">
               <a
@@ -77,7 +77,7 @@ export default function PlanningPage() {
           <div className="text-center mb-14 max-w-2xl mx-auto">
             <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-3">What's inside</p>
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight">Three apps' worth of work, in one place</h2>
-            <p className="text-gray-500 mt-3">A planner, a task manager, and a budget tool — synced, multi-currency, and built for trips that span months or years.</p>
+            <p className="text-gray-500 mt-3">A planner, a task manager, and a budget tool, synced, multi-currency, and built for trips that span months or years.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -101,7 +101,7 @@ export default function PlanningPage() {
             <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-3">The planner</p>
             <h3 className="text-2xl font-bold text-gray-900 mb-3">See the whole trip at a glance</h3>
             <p className="text-gray-500 leading-relaxed mb-5">
-              Country by country, week by week. Adjust as plans change — Waystaq keeps the dates, transport, and accommodation lined up so you always know where you're sleeping next.
+              Country by country, week by week. Adjust as plans change, Waystaq keeps the dates, transport, and accommodation lined up so you always know where you're sleeping next.
             </p>
             <ul className="space-y-2.5 text-sm text-gray-700">
               {[
@@ -119,7 +119,7 @@ export default function PlanningPage() {
             </ul>
           </div>
           <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-md bg-white">
-            <img src={SCREEN_PLANNER} alt="Waystaq trip planner — Asia adventure home screen" loading="lazy" decoding="async" className="w-full h-auto block" />
+            <img src={SCREEN_PLANNER} alt="Waystaq trip planner, Asia adventure home screen" loading="lazy" decoding="async" className="w-full h-auto block" />
           </div>
         </div>
       </section>
@@ -137,7 +137,7 @@ export default function PlanningPage() {
             </p>
             <ul className="space-y-2.5 text-sm text-gray-700">
               {[
-                'Log in any local currency — auto-converted to your home currency',
+                'Log in any local currency, auto-converted to your home currency',
                 'Daily averages by country and by category',
                 'See the whole trip burn rate, not just yesterday',
               ].map(line => (
@@ -191,7 +191,7 @@ export default function PlanningPage() {
             <Globe2 className="w-9 h-9 mx-auto text-gray-300 mb-3" />
             <p className="text-xs font-bold tracking-widest uppercase text-gray-500 mb-2">More planning tools coming</p>
             <p className="text-gray-500 text-sm max-w-md mx-auto">
-              Visa trackers, route optimisers, school-on-the-road planners — all built for families. In the meantime, try our family-readiness assessment.
+              Visa trackers, route optimisers, school-on-the-road planners, all built for families. In the meantime, try our family-readiness assessment.
             </p>
             <Link href="/i-want-to-travel" className="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 mt-4">
               I Want To Travel <ArrowRight className="w-3.5 h-3.5" />

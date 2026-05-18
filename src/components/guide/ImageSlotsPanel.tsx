@@ -3,17 +3,17 @@
 // Persistent image-slot panel for the guide editors.
 //
 // Shows EVERY image referenced in the body markdown as a manageable
-// slot — both unfilled placeholders ([IMAGE], ![](placeholder), etc.)
+// slot, both unfilled placeholders ([IMAGE], ![](placeholder), etc.)
 // AND already-completed images (![caption](https://...)). So a guide
 // that you already added photos to before this panel existed still
 // surfaces those photos with Replace + Delete controls.
 //
 // Slot state model:
-//   - originalRaw — the placeholder text we'd restore on Delete. Null
+//   - originalRaw, the placeholder text we'd restore on Delete. Null
 //     for slots discovered from an already-uploaded image (in that
 //     case Delete just removes the image markdown entirely).
-//   - upload     — { url, markdown } when the slot holds an image.
-//                  null when it's an unfilled placeholder waiting for
+//   - upload    is { url, markdown } when the slot holds an image,
+//                  or null when it's an unfilled placeholder waiting for
 //                  one.
 //
 // Reconciliation: on every body change we re-scan and try to keep
@@ -38,7 +38,7 @@ type ImageRef = {
 function detectImageRefs(md: string): ImageRef[] {
   const results: ImageRef[] = []
 
-  // Unfilled placeholders — bracketed tokens like [IMAGE: caption].
+  // Unfilled placeholders, bracketed tokens like [IMAGE: caption].
   const tag = /\[(?:IMAGE|PHOTO|IMG|PIC|INSERT IMAGE|INSERT PHOTO)(?:\s*:\s*([^\]]*))?\]/gi
   let m: RegExpExecArray | null
   while ((m = tag.exec(md))) {
@@ -52,7 +52,7 @@ function detectImageRefs(md: string): ImageRef[] {
   }
 
   // Empty / "placeholder URL" markdown like ![alt]() or ![alt](placeholder).
-  // Note: NOT matching ![alt](http…), which is a real image — that's the
+  // Note: NOT matching ![alt](http…), which is a real image, that's the
   // next pattern below.
   const empty = /!\[([^\]]*)\]\(\s*(?:placeholder|none|todo|tbd|insert\s+here|insert\s+image|#)?\s*\)/gi
   while ((m = empty.exec(md))) {
@@ -65,7 +65,7 @@ function detectImageRefs(md: string): ImageRef[] {
     })
   }
 
-  // Completed image markdown — has a real URL inside the parens. We
+  // Completed image markdown, has a real URL inside the parens. We
   // accept http/https and protocol-relative; anything else (including
   // the explicit placeholder words above) is skipped to avoid double
   // matching.
@@ -212,7 +212,7 @@ export default function ImageSlotsPanel({ body, setBody }: Props) {
         setBody(body.slice(0, idx) + slot.originalRaw + body.slice(idx + anchor.length))
         setSlots(prev => prev.map(s => (s.id === slot.id ? { ...s, upload: null } : s)))
       } else {
-        // Pre-existing image with no placeholder to restore — drop the
+        // Pre-existing image with no placeholder to restore, drop the
         // image markdown entirely AND remove the slot from the list.
         // Trim a surrounding blank line so we don't leave gaping
         // whitespace.
@@ -222,7 +222,7 @@ export default function ImageSlotsPanel({ body, setBody }: Props) {
         setSlots(prev => prev.filter(s => s.id !== slot.id))
       }
     } else {
-      // Anchor not in body — just drop the slot from state.
+      // Anchor not in body, just drop the slot from state.
       if (slot.originalRaw) {
         setSlots(prev => prev.map(s => (s.id === slot.id ? { ...s, upload: null } : s)))
       } else {

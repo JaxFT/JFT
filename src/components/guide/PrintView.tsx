@@ -44,7 +44,7 @@ export default function PrintView({ guide }: Props) {
 
   useEffect(() => {
     // Give the page a tick to render so the cover image has a chance
-    // to load before the dialog opens — otherwise some browsers omit
+    // to load before the dialog opens, otherwise some browsers omit
     // it from the printed PDF.
     const t = setTimeout(() => { window.print() }, 500)
     return () => clearTimeout(t)
@@ -69,7 +69,7 @@ export default function PrintView({ guide }: Props) {
             letter-spacing: 0.08em;
           }
           @bottom-center {
-            content: "— " counter(page) " —";
+            content: counter(page);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
             font-size: 9pt;
             color: #8a8a82;
@@ -157,7 +157,7 @@ export default function PrintView({ guide }: Props) {
           border-radius: 999px;
         }
 
-        /* Body content styling — overrides prose-jft for paper */
+        /* Body content styling, overrides prose-jft for paper */
         .print-body {
           font-family: Georgia, "Times New Roman", serif;
           color: #1a1a18;
@@ -210,7 +210,7 @@ export default function PrintView({ guide }: Props) {
           text-decoration: underline;
           text-decoration-color: rgba(45,82,64,0.3);
         }
-        /* Show full URL after links in print — readers can't click on paper. */
+        /* Show full URL after links in print, readers can't click on paper. */
         @media print {
           .print-body a[href^="http"]:after {
             content: " (" attr(href) ")";
@@ -244,7 +244,7 @@ export default function PrintView({ guide }: Props) {
           break-inside: avoid;
         }
 
-        /* Screen-only toolbar at the top — hidden when printing */
+        /* Screen-only toolbar at the top, hidden when printing */
         .print-toolbar {
           position: sticky;
           top: 0;

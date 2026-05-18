@@ -23,7 +23,7 @@ export default function UpdatePasswordPage() {
   useEffect(() => {
     // Two paths set hasSession=true:
     // 1. PASSWORD_RECOVERY event fires when the user arrives from the reset
-    //    email link — the supabase-js browser client picks up the auth params
+    //    email link, the supabase-js browser client picks up the auth params
     //    on load (whether in ?code= or in the URL fragment) and emits this.
     // 2. The user is already signed in (e.g. they navigated here from
     //    /account to set a new password while logged in).
@@ -77,7 +77,7 @@ export default function UpdatePasswordPage() {
     <div className="min-h-screen bg-sand-50 flex items-center justify-center px-4 py-20">
       <div className="w-full max-w-sm">
         <div className="flex justify-center mb-8">
-          <Link href="/" aria-label="Jax | Family Travels — home">
+          <Link href="/" aria-label="Jax | Family Travels, home">
             <Logo height={40} />
           </Link>
         </div>

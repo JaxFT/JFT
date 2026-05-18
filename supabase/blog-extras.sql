@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════
---  JFT — BLOG EXTRAS (Supabase)
+--  JFT, BLOG EXTRAS (Supabase)
 --  Run AFTER blog-posts.sql in:
 --  Supabase Dashboard > SQL Editor
 --

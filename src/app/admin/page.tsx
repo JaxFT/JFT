@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 const TOOLS = [
   {
     href: '/admin/blog/draft',
-    title: 'New Post — Phone Wizard',
+    title: 'New Post, Phone Wizard',
     desc: 'The mobile-first flow: answer a few questions, add photos, copy the prompt into Claude.ai or ChatGPT, paste the response back. No API credit needed.',
     icon: PenLine,
   },

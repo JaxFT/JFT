@@ -43,7 +43,7 @@ export default function AccountEditor({ initialFullName, email, initialMarketing
         .select('id')
       if (pErr) throw new Error(pErr.message)
       if (!rows || rows.length === 0) {
-        throw new Error('Profile row not found — please refresh the page and try again.')
+        throw new Error('Profile row not found, please refresh the page and try again.')
       }
 
       const { error: uErr } = await supabase.auth.updateUser({
@@ -140,7 +140,7 @@ export default function AccountEditor({ initialFullName, email, initialMarketing
           <div>
             <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Email</label>
             <p className="text-sm text-gray-700">{email}</p>
-            <p className="text-xs text-gray-400 mt-1">Email can't be changed yet — contact us if you need to update it.</p>
+            <p className="text-xs text-gray-400 mt-1">Email can't be changed yet, contact us if you need to update it.</p>
           </div>
           <div>
             <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Full name</label>

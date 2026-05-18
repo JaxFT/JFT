@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════
---  JAX FAMILY TRAVELS — SUPABASE SCHEMA
+--  JAX FAMILY TRAVELS, SUPABASE SCHEMA
 -- ═══════════════════════════════════════
 -- Run this in: Supabase Dashboard > SQL Editor
 
@@ -92,5 +92,5 @@ create trigger profiles_updated_at before update on public.profiles
 insert into public.products (name, slug, description, price_pence, type) values
   ('Family Travel in Penang',          'family-travel-penang',      'Everything you need for Penang with kids.',         499, 'guide'),
   ('Slow Travel Portugal with Kids',   'slow-travel-portugal',      'A month-by-month Portugal family guide.',           499, 'guide'),
-  ('I Want To Travel — Decision Tool', 'i-want-to-travel',          'Find out if long-term family travel is right for you.', 299, 'tool')
+  ('I Want To Travel, Decision Tool', 'i-want-to-travel',          'Find out if long-term family travel is right for you.', 299, 'tool')
 on conflict (slug) do nothing;

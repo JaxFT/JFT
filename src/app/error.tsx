@@ -11,8 +11,8 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, RefreshCw } from 'lucide-react'
 
-// Patterns that mean "the JS bundle the page expected is gone" —
-// almost always a stale-deployment problem rather than a real bug.
+// Patterns that mean "the JS bundle the page expected is gone".
+// Almost always a stale-deployment problem rather than a real bug.
 function isChunkLoadError(err: { name?: string; message?: string }): boolean {
   const s = `${err?.name ?? ''} ${err?.message ?? ''}`
   return /ChunkLoadError|Loading chunk \d+ failed|Loading CSS chunk|Failed to fetch dynamically imported module|error loading dynamically imported module/i.test(s)

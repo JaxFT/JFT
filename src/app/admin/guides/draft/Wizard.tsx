@@ -35,9 +35,9 @@ type WizardBlock = GuideContentBlock & { notes: string }
 
 const KIND_LABELS: Record<GuideBlockKind, { label: string; hint: string }> = {
   intro:       { label: 'Intro / framing',  hint: 'Why-this, who-we-are, what-to-expect' },
-  destination: { label: 'Destination',      hint: 'A place chapter — where, eat, do, stay' },
+  destination: { label: 'Destination',      hint: 'A place chapter, where, eat, do, stay' },
   themed:      { label: 'Themed section',   hint: 'A cross-cutting topic, not tied to one place' },
-  list:        { label: 'List / 25 things', hint: 'Numbered list — e.g. "25 free things in Bangkok"' },
+  list:        { label: 'List / 25 things', hint: 'Numbered list, e.g. "25 free things in Bangkok"' },
   closing:     { label: 'Closing / final',  hint: 'The wrap-up at the end of the guide' },
 }
 
@@ -350,7 +350,7 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
               // editor lives.
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  This guide uses the new single-document format. Edit the body and slot images into AI placeholders on the preview page — it shows the guide rendered exactly as readers will see it, with click-to-edit.
+                  This guide uses the new single-document format. Edit the body and slot images into AI placeholders on the preview page, it shows the guide rendered exactly as readers will see it, with click-to-edit.
                 </p>
                 <Link
                   href={`/admin/guides/${guide.id}/preview`}
@@ -365,7 +365,7 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
             ) : (
               <>
                 <p className="text-gray-500 text-base">
-                  Add as many sections as you want, in any order. Each one suggests an AI prompt tailored to its kind — but the heading is yours to set however you like.
+                  Add as many sections as you want, in any order. Each one suggests an AI prompt tailored to its kind, but the heading is yours to set however you like.
                 </p>
 
                 {blocks.length === 0 && (
@@ -538,7 +538,7 @@ function SaveIndicator({
   if (state === 'saved')  return <span className="text-brand-700 inline-flex items-center gap-1"><Check className="w-3 h-3" /> Saved</span>
   if (state === 'error')  return (
     <button onClick={onRetry} className="text-red-700 hover:underline inline-flex items-center gap-1" title={error ?? undefined}>
-      Save failed — retry
+      Save failed, retry
     </button>
   )
   return <span className="text-gray-400">All changes saved</span>
@@ -674,13 +674,13 @@ function BlockCard({
         <div className="p-5 space-y-5">
           <Field
             label="Your raw notes"
-            sub="Bullet points, quotes, prices, anything. The AI turns it into the section body. Empty is fine — the AI will write a brief version from common knowledge."
+            sub="Bullet points, quotes, prices, anything. The AI turns it into the section body. Empty is fine, the AI will write a brief version from common knowledge."
           >
             <textarea
               value={block.notes}
               onChange={e => onPatch({ notes: e.target.value })}
               rows={8}
-              placeholder="Stayed: Sujeewa Apartment, £17.66/night for 29 nights. Loved the location. Ate: Nilu — local curry £2. Mr Taco. Activities: turtle snorkelling at Dikwella…"
+              placeholder="Stayed: Sujeewa Apartment, £17.66/night for 29 nights. Loved the location. Ate: Nilu, local curry £2. Mr Taco. Activities: turtle snorkelling at Dikwella…"
               className="w-full text-sm px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 leading-relaxed"
             />
           </Field>

@@ -8,8 +8,9 @@ import remarkGfm from 'remark-gfm'
 import {
   ArrowLeft, Save, Trash2, ExternalLink, Eye, FileEdit, Check, Upload,
   Loader2, Crown, Plus, Link as LinkIcon, Clock, CalendarDays,
-  Sparkles, Copy, ChevronDown, ChevronUp, RefreshCw,
+  Sparkles, Copy, ChevronDown, ChevronUp, RefreshCw, Image as ImageIcon,
 } from 'lucide-react'
+import ImageSlotsPanel from '@/components/guide/ImageSlotsPanel'
 import type { BlogPostRow, BlogLink } from '@/lib/blog-db'
 import { BLOG_CATEGORIES, type BlogCategory } from '@/lib/blog-categories'
 import CoverFocalPicker from '@/components/blog/CoverFocalPicker'
@@ -76,6 +77,12 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
   const [uploadError, setUploadError] = useState<string | null>(null)
   const coverFileInputRef = useRef<HTMLInputElement>(null)
 
+  // Body-image insert state
+  const [insertingBodyImage, setInsertingBodyImage] = useState(false)
+  const [bodyInsertError, setBodyInsertError] = useState<string | null>(null)
+  const bodyTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const bodyFileInputRef = useRef<HTMLInputElement>(null)
+
   // Rewrite panel state
   const [rewriteOpen, setRewriteOpen] = useState(false)
   const [rewriteMinutes, setRewriteMinutes] = useState<number>(targetMinutes)
@@ -86,6 +93,44 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
   const [rewriteApplied, setRewriteApplied] = useState(false)
 
   const suggestedLabels = suggestedLabelsFor(category)
+
+  // Upload a fresh image and drop ![](URL) at the textarea's caret. Used
+  // by the "Insert image at cursor" button above the body editor — lets
+  // the writer add or re-add as many photos as they want post-AI without
+  // hand-editing markdown.
+  const insertBodyImageAtCursor = async (file: File) => {
+    setBodyInsertError(null)
+    setInsertingBodyImage(true)
+    try {
+      const { file: prepared } = await resizeImageIfLarge(file)
+      const form = new FormData()
+      form.append('file', prepared)
+      const res = await fetch('/api/admin/blog-photos/upload', { method: 'POST', body: form })
+      const j = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`)
+      const url = String(j.url)
+      const md = `![](${url})`
+
+      const ta = bodyTextareaRef.current
+      if (!ta) {
+        setBody(b => `${b}\n\n${md}\n`)
+        return
+      }
+      const start = ta.selectionStart
+      const end = ta.selectionEnd
+      const next = body.slice(0, start) + md + body.slice(end)
+      setBody(next)
+      requestAnimationFrame(() => {
+        ta.focus()
+        const pos = start + md.length
+        ta.setSelectionRange(pos, pos)
+      })
+    } catch (e) {
+      setBodyInsertError(e instanceof Error ? e.message : 'Upload failed')
+    } finally {
+      setInsertingBodyImage(false)
+    }
+  }
 
   // ── Read-time analysis ──
   const actualWords = useMemo(() => countWords(body), [body])
@@ -832,7 +877,7 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="flex border-b border-gray-100">
+          <div className="flex items-center border-b border-gray-100 gap-2">
             <button
               onClick={() => setView('edit')}
               className={`flex-1 sm:flex-none px-5 py-3 text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors ${
@@ -849,10 +894,45 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
             >
               <Eye className="w-4 h-4" /> Preview
             </button>
+            <div className="flex-1" />
+            {/* Insert image at cursor — only meaningful when editing markdown */}
+            <input
+              ref={bodyFileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={e => {
+                const f = e.target.files?.[0]
+                if (f) insertBodyImageAtCursor(f)
+                e.target.value = ''
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => bodyFileInputRef.current?.click()}
+              disabled={insertingBodyImage || view !== 'edit'}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 mr-3 rounded-md disabled:opacity-50"
+              title={view !== 'edit' ? 'Switch to Markdown to insert at cursor' : 'Upload a photo and drop it at your cursor position'}
+            >
+              {insertingBodyImage
+                ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading…</>
+                : <><ImageIcon className="w-3.5 h-3.5" /> Insert image</>}
+            </button>
+          </div>
+
+          {bodyInsertError && (
+            <p className="text-xs text-red-700 bg-red-50 border-b border-red-100 px-5 py-2">{bodyInsertError}</p>
+          )}
+
+          {/* Photos already in the body — Replace / Delete here. Reuses
+              the same panel built for the guide editor. */}
+          <div className="px-5 pt-4">
+            <ImageSlotsPanel body={body} setBody={setBody} />
           </div>
 
           {view === 'edit' ? (
             <textarea
+              ref={bodyTextareaRef}
               value={body}
               onChange={e => setBody(e.target.value)}
               rows={28}

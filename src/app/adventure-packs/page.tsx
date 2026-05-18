@@ -63,7 +63,7 @@ export default async function AdventurePacksListing() {
                 }`}
               >
                 <div className="relative">
-                  <FlagHalfBanner iso2={p.iso2} country={p.country} fallbackColour={p.heroColour} />
+                  <FlagHalfBanner iso2={p.iso2} country={p.country} />
                   <span className="absolute top-2 right-2">
                     {p.isFree ? (
                       <span className="inline-flex items-center gap-1 text-xs font-bold bg-white text-brand-700 px-2 py-1 rounded-full shadow-sm">

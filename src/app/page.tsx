@@ -4,6 +4,7 @@ import BlogCard from '@/components/blog/BlogCard'
 import HeroBlogStack from '@/components/blog/HeroBlogStack'
 import { createClient } from '@/lib/supabase/server'
 import { ArrowRight, Map, BookOpen, Compass, Crown, Sparkles } from 'lucide-react'
+import { isPremiumTier } from '@/lib/profile'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,7 +25,7 @@ export default async function HomePage() {
       .select('subscription_tier')
       .eq('id', user.id)
       .single()
-    isPremium = profile?.subscription_tier === 'premium'
+    isPremium = isPremiumTier(profile?.subscription_tier)
   }
 
   return (

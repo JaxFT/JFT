@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Map, ArrowRight, Crown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { isPremiumTier } from '@/lib/profile'
 import { listActiveGuides, formatPrice } from '@/lib/guides-db'
 import { listPublishedWebGuides } from '@/lib/guides-content-db'
 
@@ -58,7 +59,7 @@ export default async function GuidesPage() {
       .select('subscription_tier')
       .eq('id', user.id)
       .single()
-    isPremium = profile?.subscription_tier === 'premium'
+    isPremium = isPremiumTier(profile?.subscription_tier)
   }
 
   return (

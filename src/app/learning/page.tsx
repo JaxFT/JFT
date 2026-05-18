@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { isPremiumTier } from '@/lib/profile'
 import Link from 'next/link'
 import { BookOpen, Lock, ArrowRight, ExternalLink, GraduationCap, Users } from 'lucide-react'
 import type { Metadata } from 'next'
@@ -70,7 +71,7 @@ export default async function LearningPage() {
       .select('subscription_tier')
       .eq('id', user.id)
       .single()
-    isPremium = profile?.subscription_tier === 'premium'
+    isPremium = isPremiumTier(profile?.subscription_tier)
   }
 
   return (

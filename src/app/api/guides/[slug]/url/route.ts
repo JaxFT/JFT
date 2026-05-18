@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient as createSbClient } from '@supabase/supabase-js'
 import { getGuideBySlug, userHasPurchased, PREVIEWS_BUCKET, FULL_BUCKET } from '@/lib/guides-db'
 import { createClient } from '@/lib/supabase/server'
+import { isPremiumTier } from '@/lib/profile'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,7 +45,7 @@ export async function GET(
     .select('subscription_tier')
     .eq('id', user.id)
     .single()
-  const isPremium = profile?.subscription_tier === 'premium'
+  const isPremium = isPremiumTier(profile?.subscription_tier)
   const hasPurchased = await userHasPurchased(user.id, guide.id)
 
   if (kind === 'download' && !hasPurchased) {

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Lock, Crown, Download, Check } from 'lucide-react'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { isPremiumTier } from '@/lib/profile'
 import { getGuideBySlug, userHasPurchased, formatPrice } from '@/lib/guides-db'
 import { getPublishedWebGuideBySlug } from '@/lib/guides-content-db'
 import { getAboutUs } from '@/lib/app-settings'
@@ -46,7 +47,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
         .select('subscription_tier')
         .eq('id', user.id)
         .single()
-      isPremium = profile?.subscription_tier === 'premium'
+      isPremium = isPremiumTier(profile?.subscription_tier)
     }
     const canViewFull = isPremium || !webGuide.is_premium
     return (
@@ -80,7 +81,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
         .single(),
       userHasPurchased(user.id, guide.id),
     ])
-    isPremium = profile?.subscription_tier === 'premium'
+    isPremium = isPremiumTier(profile?.subscription_tier)
     hasPurchased = hp
   }
 

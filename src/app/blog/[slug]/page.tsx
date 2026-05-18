@@ -7,6 +7,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getPublishedPostBySlug, rowToView } from '@/lib/blog-db'
 import { createClient } from '@/lib/supabase/server'
+import { isPremiumTier } from '@/lib/profile'
 import { remarkAutoLink } from '@/lib/blog-links'
 import { getAutoLinkPhrases } from '@/lib/blog-links-server'
 
@@ -51,7 +52,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       .select('subscription_tier')
       .eq('id', user.id)
       .single()
-    userIsPremium = profile?.subscription_tier === 'premium'
+    userIsPremium = isPremiumTier(profile?.subscription_tier)
   }
 
   const gated = post.isPremium && !userIsPremium

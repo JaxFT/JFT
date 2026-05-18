@@ -6,6 +6,7 @@ import type { Metadata } from 'next'
 import SignOutButton from './SignOutButton'
 import AccountEditor from './AccountEditor'
 import PremiumCancelButton from './PremiumCancelButton'
+import { isPremiumTier } from '@/lib/profile'
 
 export const metadata: Metadata = { title: 'Account' }
 
@@ -36,7 +37,7 @@ export default async function AccountPage() {
   ])
 
   const purchases = (purchasesData ?? []) as unknown as PurchaseRow[]
-  const isPremium = profile?.subscription_tier === 'premium'
+  const isPremium = isPremiumTier(profile?.subscription_tier)
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
     : '—'

@@ -34,11 +34,17 @@ export default function AccountEditor({ initialFullName, email, initialMarketing
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not signed in')
 
-      const { error: pErr } = await supabase
+      // .select('id') so we can detect a 0-row update (would mean the
+      // profile row is somehow missing) instead of silently "succeeding".
+      const { data: rows, error: pErr } = await supabase
         .from('profiles')
         .update({ full_name: trimmed })
         .eq('id', user.id)
+        .select('id')
       if (pErr) throw new Error(pErr.message)
+      if (!rows || rows.length === 0) {
+        throw new Error('Profile row not found — please refresh the page and try again.')
+      }
 
       const { error: uErr } = await supabase.auth.updateUser({
         data: { full_name: trimmed },

@@ -7,6 +7,7 @@ import SignOutButton from './SignOutButton'
 import AccountEditor from './AccountEditor'
 import PremiumCancelButton from './PremiumCancelButton'
 import { isPremiumTier } from '@/lib/profile'
+import { ensureProfile } from '@/lib/ensure-profile'
 
 export const metadata: Metadata = { title: 'Account' }
 
@@ -21,6 +22,11 @@ export default async function AccountPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login?next=/account')
+
+  // Guarantee a profile row exists before we read from it. Handles the
+  // edge case where the auth.users → profiles trigger never fired so
+  // every UPDATE silently no-ops and the user thinks the form is broken.
+  await ensureProfile(user)
 
   // Profile + purchases are independent — fetch in parallel.
   const [{ data: profile }, { data: purchasesData }] = await Promise.all([

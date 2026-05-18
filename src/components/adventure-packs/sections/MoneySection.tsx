@@ -6,8 +6,11 @@ import type { PackHook } from '../PackShell'
 import PhotoPrompt from '../PhotoPrompt'
 
 // Younger mode: auto-totals spend and shows change-vs-budget in green/red.
-// Older mode: same fields but no auto-total. Child reads the numbers.
-//             Plus two extra tickboxes: compared prices + tried haggling.
+// Older mode: same category inputs, no auto-total. Two extra inputs ask
+//             the child to work out the total spent and the change
+//             themselves, with a quiet tick when their answers match
+//             the actual sums (so it's a self-check, not graded).
+//             Plus two checkboxes: compared prices + tried haggling.
 
 const SPEND_CATEGORIES = [
   { key: 'souvenir', emoji: '🛍️', label: 'Souvenir' },
@@ -45,6 +48,12 @@ export default function MoneySection({ data, pack }: { data: AdventurePackData; 
 
   const comparedPrices = pack.getAnswer<boolean>('money', 'comparedPrices', false)
   const triedHaggling = pack.getAnswer<boolean>('money', 'triedHaggling', false)
+
+  // Older-mode self-check inputs: the child works out the sums.
+  const enteredTotal  = pack.getAnswer<number | ''>('money', 'enteredTotal', '')
+  const enteredChange = pack.getAnswer<number | ''>('money', 'enteredChange', '')
+  const totalMatches  = typeof enteredTotal === 'number' && Math.abs(enteredTotal - total) < 0.01 && total > 0
+  const changeMatches = typeof enteredChange === 'number' && Math.abs(enteredChange - change) < 0.01 && budgetNum > 0
 
   return (
     <div className="space-y-4">
@@ -102,7 +111,47 @@ export default function MoneySection({ data, pack }: { data: AdventurePackData; 
         )}
 
         {isOlder && (
-          <div className="space-y-2 pt-1">
+          <div className="space-y-3 pt-2">
+            <div className="bg-white border border-gray-200 rounded-md p-3 space-y-2">
+              <p className="text-xs font-bold tracking-widest uppercase text-gray-500">Your maths</p>
+              <div className="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
+                <span className="text-sm text-gray-700">How much did you spend in total?</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={enteredTotal}
+                  onChange={e => {
+                    const v = e.target.value
+                    pack.updateAnswer('money', 'enteredTotal', v === '' ? '' : Number(v))
+                  }}
+                  placeholder="0"
+                  aria-label={`Total spent in ${cur.symbol}`}
+                  className="w-24 text-sm px-3 py-2 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono"
+                />
+                <span className={`text-xs font-semibold w-4 ${totalMatches ? 'text-brand-700' : 'text-transparent'}`} aria-hidden="true">
+                  ✓
+                </span>
+              </div>
+              <div className="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
+                <span className="text-sm text-gray-700">How much change should you have?</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={enteredChange}
+                  onChange={e => {
+                    const v = e.target.value
+                    pack.updateAnswer('money', 'enteredChange', v === '' ? '' : Number(v))
+                  }}
+                  placeholder="0"
+                  aria-label={`Change you should have in ${cur.symbol}`}
+                  className="w-24 text-sm px-3 py-2 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono"
+                />
+                <span className={`text-xs font-semibold w-4 ${changeMatches ? 'text-brand-700' : 'text-transparent'}`} aria-hidden="true">
+                  ✓
+                </span>
+              </div>
+            </div>
+
             <label className="flex items-center gap-2 text-sm text-gray-700">
               <input
                 type="checkbox"

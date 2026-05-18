@@ -4,6 +4,7 @@ import { Lock, Crown, ArrowRight, Compass } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
 import { PACK_META } from '@/lib/adventurePackData'
+import FlagBanner from '@/components/adventure-packs/FlagBanner'
 
 export const metadata: Metadata = {
   title: 'Adventure Packs',
@@ -61,24 +62,23 @@ export default async function AdventurePacksListing() {
                   isComingSoon ? 'border-gray-200 opacity-90' : 'border-gray-100'
                 }`}
               >
-                <div className={`${p.heroColour} text-white px-5 py-6 flex items-start justify-between gap-3`}>
-                  <div>
-                    <div className="text-4xl leading-none mb-1">{p.flag}</div>
-                    <h2 className="text-xl font-bold leading-tight">{p.country}</h2>
-                  </div>
-                  {p.isFree ? (
-                    <span className="inline-flex items-center gap-1 text-xs font-bold bg-white text-brand-700 px-2 py-1 rounded-full shrink-0">
-                      Free
-                    </span>
-                  ) : unlocked ? (
-                    <span className="inline-flex items-center gap-1 text-xs font-bold bg-white/15 text-white px-2 py-1 rounded-full shrink-0">
-                      <Crown className="w-3 h-3" /> Included
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-xs font-bold bg-white/15 text-white px-2 py-1 rounded-full shrink-0">
-                      <Lock className="w-3 h-3" /> Premium
-                    </span>
-                  )}
+                <div className="relative">
+                  <FlagBanner iso2={p.iso2} country={p.country} fallbackColour={p.heroColour} size="sm" />
+                  <span className="absolute top-3 right-3">
+                    {p.isFree ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold bg-white text-brand-700 px-2 py-1 rounded-full shadow-sm">
+                        Free
+                      </span>
+                    ) : unlocked ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold bg-black/55 text-white px-2 py-1 rounded-full backdrop-blur-sm">
+                        <Crown className="w-3 h-3" /> Included
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold bg-black/55 text-white px-2 py-1 rounded-full backdrop-blur-sm">
+                        <Lock className="w-3 h-3" /> Premium
+                      </span>
+                    )}
+                  </span>
                 </div>
 
                 <div className="p-5 flex-1 flex flex-col">

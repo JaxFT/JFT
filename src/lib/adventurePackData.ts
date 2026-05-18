@@ -14,6 +14,7 @@ export const FRANCE_DATA: AdventurePackData = {
   slug: 'france',
   country: 'France',
   flag: '🇫🇷',
+  iso2: 'fr',
   isFree: true,
   heroColour: 'bg-brand-900',
   currency: {
@@ -86,6 +87,7 @@ export const FRANCE_DATA: AdventurePackData = {
       location: '📍 Everywhere in France',
       question: 'Why do the French eat so much bread?',
       body: 'Bread has been at the centre of French life for over a thousand years. There used to be a law saying every village must have a bakery within walking distance of every house. The French still eat about half a baguette per person per day. Real French bread has only four ingredients (flour, water, salt, yeast) and it goes stale within a day, which is why people buy it fresh every single morning.',
+      thinkingQuestion: 'If every village had to have a bakery, what is one other thing you think every family should be able to walk to from home?',
     },
     {
       location: '📍 Versailles',
@@ -115,6 +117,7 @@ export const MOROCCO_DATA: AdventurePackData = {
   slug: 'morocco',
   country: 'Morocco',
   flag: '🇲🇦',
+  iso2: 'ma',
   isFree: false,
   heroColour: 'bg-amber-900',
   currency: {
@@ -201,6 +204,7 @@ export const MOROCCO_DATA: AdventurePackData = {
       location: '📍 Chefchaouen',
       question: 'Why is the whole town painted blue?',
       body: 'Chefchaouen sits high in the Rif Mountains, and almost every wall, door and step is painted some shade of blue. Nobody fully agrees on why. The most popular story is that Jewish refugees who came here in the 1930s brought a tradition of painting buildings blue to symbolise the sky and heaven. Other people say the blue keeps mosquitoes away, or that it keeps the houses cool in summer. Whatever the real answer, the town now has to repaint itself every few months to keep it looking right.',
+      thinkingQuestion: 'If you could paint your whole town one colour, which colour would you choose, and why?',
     },
     {
       location: '📍 The Sahara',
@@ -223,22 +227,22 @@ export const MOROCCO_DATA: AdventurePackData = {
 // One entry per country, including the 14 not-yet-populated ones so
 // the listing page shows them all (with a "Coming soon" badge).
 export const PACK_META: AdventurePackMeta[] = [
-  { slug: 'france',    country: 'France',    flag: '🇫🇷', isFree: true,  heroColour: 'bg-brand-900',  status: 'live' },
-  { slug: 'morocco',   country: 'Morocco',   flag: '🇲🇦', isFree: false, heroColour: 'bg-amber-900',  status: 'live' },
-  { slug: 'indonesia', country: 'Indonesia', flag: '🇮🇩', isFree: false, heroColour: 'bg-rose-700',   status: 'coming-soon' },
-  { slug: 'thailand',  country: 'Thailand',  flag: '🇹🇭', isFree: false, heroColour: 'bg-fuchsia-700',status: 'coming-soon' },
-  { slug: 'malaysia',  country: 'Malaysia',  flag: '🇲🇾', isFree: false, heroColour: 'bg-amber-700',  status: 'coming-soon' },
-  { slug: 'spain',     country: 'Spain',     flag: '🇪🇸', isFree: false, heroColour: 'bg-red-700',    status: 'coming-soon' },
-  { slug: 'portugal',  country: 'Portugal',  flag: '🇵🇹', isFree: false, heroColour: 'bg-emerald-800',status: 'coming-soon' },
-  { slug: 'japan',     country: 'Japan',     flag: '🇯🇵', isFree: false, heroColour: 'bg-rose-800',   status: 'coming-soon' },
-  { slug: 'vietnam',   country: 'Vietnam',   flag: '🇻🇳', isFree: false, heroColour: 'bg-red-800',    status: 'coming-soon' },
-  { slug: 'cambodia',  country: 'Cambodia',  flag: '🇰🇭', isFree: false, heroColour: 'bg-indigo-800', status: 'coming-soon' },
-  { slug: 'china',     country: 'China',     flag: '🇨🇳', isFree: false, heroColour: 'bg-red-900',    status: 'coming-soon' },
-  { slug: 'india',     country: 'India',     flag: '🇮🇳', isFree: false, heroColour: 'bg-orange-700', status: 'coming-soon' },
-  { slug: 'sri-lanka', country: 'Sri Lanka', flag: '🇱🇰', isFree: false, heroColour: 'bg-teal-800',   status: 'coming-soon' },
-  { slug: 'nepal',     country: 'Nepal',     flag: '🇳🇵', isFree: false, heroColour: 'bg-stone-700',  status: 'coming-soon' },
-  { slug: 'turkey',    country: 'Turkey',    flag: '🇹🇷', isFree: false, heroColour: 'bg-red-700',    status: 'coming-soon' },
-  { slug: 'egypt',     country: 'Egypt',     flag: '🇪🇬', isFree: false, heroColour: 'bg-yellow-700', status: 'coming-soon' },
+  { slug: 'france',    country: 'France',    flag: '🇫🇷', iso2: 'fr', isFree: true,  heroColour: 'bg-brand-900',  status: 'live' },
+  { slug: 'morocco',   country: 'Morocco',   flag: '🇲🇦', iso2: 'ma', isFree: false, heroColour: 'bg-amber-900',  status: 'live' },
+  { slug: 'indonesia', country: 'Indonesia', flag: '🇮🇩', iso2: 'id', isFree: false, heroColour: 'bg-rose-700',   status: 'coming-soon' },
+  { slug: 'thailand',  country: 'Thailand',  flag: '🇹🇭', iso2: 'th', isFree: false, heroColour: 'bg-fuchsia-700',status: 'coming-soon' },
+  { slug: 'malaysia',  country: 'Malaysia',  flag: '🇲🇾', iso2: 'my', isFree: false, heroColour: 'bg-amber-700',  status: 'coming-soon' },
+  { slug: 'spain',     country: 'Spain',     flag: '🇪🇸', iso2: 'es', isFree: false, heroColour: 'bg-red-700',    status: 'coming-soon' },
+  { slug: 'portugal',  country: 'Portugal',  flag: '🇵🇹', iso2: 'pt', isFree: false, heroColour: 'bg-emerald-800',status: 'coming-soon' },
+  { slug: 'japan',     country: 'Japan',     flag: '🇯🇵', iso2: 'jp', isFree: false, heroColour: 'bg-rose-800',   status: 'coming-soon' },
+  { slug: 'vietnam',   country: 'Vietnam',   flag: '🇻🇳', iso2: 'vn', isFree: false, heroColour: 'bg-red-800',    status: 'coming-soon' },
+  { slug: 'cambodia',  country: 'Cambodia',  flag: '🇰🇭', iso2: 'kh', isFree: false, heroColour: 'bg-indigo-800', status: 'coming-soon' },
+  { slug: 'china',     country: 'China',     flag: '🇨🇳', iso2: 'cn', isFree: false, heroColour: 'bg-red-900',    status: 'coming-soon' },
+  { slug: 'india',     country: 'India',     flag: '🇮🇳', iso2: 'in', isFree: false, heroColour: 'bg-orange-700', status: 'coming-soon' },
+  { slug: 'sri-lanka', country: 'Sri Lanka', flag: '🇱🇰', iso2: 'lk', isFree: false, heroColour: 'bg-teal-800',   status: 'coming-soon' },
+  { slug: 'nepal',     country: 'Nepal',     flag: '🇳🇵', iso2: 'np', isFree: false, heroColour: 'bg-stone-700',  status: 'coming-soon' },
+  { slug: 'turkey',    country: 'Turkey',    flag: '🇹🇷', iso2: 'tr', isFree: false, heroColour: 'bg-red-700',    status: 'coming-soon' },
+  { slug: 'egypt',     country: 'Egypt',     flag: '🇪🇬', iso2: 'eg', isFree: false, heroColour: 'bg-yellow-700', status: 'coming-soon' },
 ]
 
 // Lookup table for fully-built packs.

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { checkAdventurePackAccess } from '@/lib/adventure-pack-access'
 import { getPackData, getPackMeta } from '@/lib/adventurePackData'
 import PackShell from '@/components/adventure-packs/PackShell'
+import FlagBanner from '@/components/adventure-packs/FlagBanner'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,9 +41,15 @@ export default async function AdventurePackPage({
           <Link href="/adventure-packs" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-700 mb-6">
             <ArrowLeft className="w-4 h-4" /> All adventure packs
           </Link>
-          <div className="text-6xl mb-3">{meta.flag}</div>
-          <h1 className="text-3xl font-bold text-gray-900">{meta.country} Adventure Pack</h1>
-          <p className="text-gray-500 mt-3 leading-relaxed">
+          <FlagBanner
+            iso2={meta.iso2}
+            country={meta.country}
+            fallbackColour={meta.heroColour}
+            size="md"
+            rounded
+            as="h1"
+          />
+          <p className="text-gray-500 mt-6 leading-relaxed">
             We&apos;re still writing this one. We&apos;re shipping new country packs every few weeks. Check back soon, or start with the France pack which is free for every member.
           </p>
           <Link href="/adventure-packs" className="btn-primary mt-6 inline-flex justify-center !py-2 !px-5 !text-sm">
@@ -67,10 +74,15 @@ export default async function AdventurePackPage({
           <Link href="/adventure-packs" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-700 mb-6">
             <ArrowLeft className="w-4 h-4" /> All adventure packs
           </Link>
-          <div className={`${meta.heroColour} text-white rounded-2xl px-6 py-8 mb-6`}>
-            <div className="text-6xl mb-2 leading-none">{meta.flag}</div>
-            <h1 className="text-2xl font-bold">{meta.country} Adventure Pack</h1>
-          </div>
+          <FlagBanner
+            iso2={meta.iso2}
+            country={meta.country}
+            fallbackColour={meta.heroColour}
+            size="md"
+            rounded
+            className="mb-6"
+            as="h1"
+          />
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <Lock className="w-7 h-7 text-brand-600 mx-auto mb-3" />
             <h2 className="text-xl font-bold text-gray-900 mb-2">This pack is for Premium members</h2>

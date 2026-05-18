@@ -34,7 +34,7 @@ export default function StoriesSection({ data, pack }: { data: AdventurePackData
               {isOpen && (
                 <div className="px-4 pb-4 space-y-3">
                   <p className="text-sm text-gray-700 leading-relaxed">{s.body}</p>
-                  {s.thinkingQuestion && pack.ageMode === 'older' && (
+                  {s.thinkingQuestion && (
                     <div className="bg-amber-50 border border-amber-200 rounded-md px-3 py-2.5">
                       <p className="text-xs font-bold tracking-widest uppercase text-amber-800 inline-flex items-center gap-1.5 mb-1">
                         <Lightbulb className="w-3 h-3" /> Think about this…

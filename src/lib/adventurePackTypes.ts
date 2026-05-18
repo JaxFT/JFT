@@ -109,8 +109,9 @@ export interface AdventurePackData {
   slug: string
   country: string
   flag: string
+  iso2: string              // ISO 3166-1 alpha-2, drives the flag banner URL
   isFree: boolean
-  heroColour: string        // Tailwind bg class for the listing card hero
+  heroColour: string        // fallback bg while the flag image loads
   currency: CurrencyInfo
   mapQuestions: MapQuestion[]
   phrases: Phrase[]
@@ -128,8 +129,9 @@ export interface AdventurePackMeta {
   slug: string
   country: string
   flag: string
+  iso2: string              // ISO 3166-1 alpha-2, drives the flag banner URL
   isFree: boolean
-  heroColour: string
+  heroColour: string        // fallback bg while the flag image loads
   status: 'live' | 'coming-soon'
 }
 

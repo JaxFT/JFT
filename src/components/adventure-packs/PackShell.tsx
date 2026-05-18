@@ -17,6 +17,7 @@ import AgeToggle from './AgeToggle'
 import DataNotice from './DataNotice'
 import ClearDataModal from './ClearDataModal'
 import PackSection from './PackSection'
+import FlagBanner from './FlagBanner'
 
 type Props = {
   userId: string
@@ -83,13 +84,18 @@ export default function PackShell({ userId, data }: Props) {
         </Link>
 
         {/* HERO */}
-        <div className={`${data.heroColour} text-white rounded-2xl px-6 py-8 sm:px-8 sm:py-10 shadow-md`}>
-          <div className="text-6xl mb-2 leading-none">{data.flag}</div>
-          <h1 className="text-3xl sm:text-4xl font-bold leading-tight">{data.country} adventure pack</h1>
-          <p className="text-white/80 mt-2 text-base leading-relaxed">
-            Nine missions to do together while you&apos;re here. Save your answers as you go.
-          </p>
-        </div>
+        <FlagBanner
+          iso2={data.iso2}
+          country={data.country}
+          fallbackColour={data.heroColour}
+          size="lg"
+          rounded
+          className="shadow-md"
+          as="h1"
+        />
+        <p className="text-gray-600 mt-4 text-sm sm:text-base leading-relaxed">
+          Nine missions to do together while you&apos;re here. Save your answers as you go.
+        </p>
 
         {/* AGE TOGGLE + DATA NOTICES */}
         <div className="mt-6 space-y-3">

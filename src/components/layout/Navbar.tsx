@@ -1,7 +1,12 @@
 'use client'
 
+// Top navigation. Uses plain <a> tags (not next/link) so every click
+// triggers a full page reload. This eliminates a CSR-only FOUC bug
+// where the new page would render unstyled for a moment until the
+// stylesheet caught up, then a refresh fixed it. The ~300 ms extra
+// per navigation is worth a zero-flash transition.
+
 import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { isAdminEmail } from '@/lib/admin'
@@ -76,7 +81,7 @@ export default function Navbar({ initialUserId, initialUserEmail }: Props) {
         <div className="flex items-center justify-between h-16">
 
           {/* Logo + wordmark side by side */}
-          <Link href="/" className="flex items-center gap-2.5 shrink-0">
+          <a href="/" className="flex items-center gap-2.5 shrink-0">
             <Logo
               height={36}
               variant={transparent ? 'onDark' : 'gradient'}
@@ -85,12 +90,12 @@ export default function Navbar({ initialUserId, initialUserEmail }: Props) {
             <span className={`hidden sm:inline font-bold text-sm tracking-wide uppercase ${transparent ? 'text-white' : 'text-gray-900'}`}>
               Jax <span className="opacity-50 font-light mx-0.5">|</span> Family Travels
             </span>
-          </Link>
+          </a>
 
           {/* Desktop links */}
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map(link => (
-              <Link
+              <a
                 key={link.href}
                 href={link.href}
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -100,7 +105,7 @@ export default function Navbar({ initialUserId, initialUserEmail }: Props) {
                 }`}
               >
                 {link.label}
-              </Link>
+              </a>
             ))}
           </div>
 
@@ -109,19 +114,19 @@ export default function Navbar({ initialUserId, initialUserEmail }: Props) {
             {user ? (
               <div className="flex items-center gap-2">
                 {isAdmin && (
-                  <Link href="/admin" className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                  <a href="/admin" className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
                     transparent ? 'text-brand-200 hover:text-white' : 'text-brand-600 hover:text-brand-700'
                   }`}>
                     <ShieldCheck className="w-4 h-4" />
                     Admin
-                  </Link>
+                  </a>
                 )}
-                <Link href="/account" className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                <a href="/account" className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
                   transparent ? 'text-white/80 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                 }`}>
                   <User className="w-4 h-4" />
                   Account
-                </Link>
+                </a>
                 <button onClick={handleSignOut} className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
                   transparent ? 'text-white/60 hover:text-white' : 'text-gray-400 hover:text-gray-700'
                 }`}>
@@ -130,14 +135,14 @@ export default function Navbar({ initialUserId, initialUserEmail }: Props) {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Link href="/login" className={`text-sm font-medium transition-colors ${
+                <a href="/login" className={`text-sm font-medium transition-colors ${
                   transparent ? 'text-white/80 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                 }`}>
                   Log in
-                </Link>
-                <Link href="/signup" className="btn-primary !py-2 !px-4 !text-sm">
+                </a>
+                <a href="/signup" className="btn-primary !py-2 !px-4 !text-sm">
                   Sign up
-                </Link>
+                </a>
               </div>
             )}
           </div>
@@ -157,28 +162,27 @@ export default function Navbar({ initialUserId, initialUserEmail }: Props) {
         <div className="md:hidden bg-white border-t border-gray-100 shadow-lg">
           <div className="px-4 py-3 space-y-1">
             {navLinks.map(link => (
-              <Link
+              <a
                 key={link.href}
                 href={link.href}
-                onClick={() => setMenuOpen(false)}
                 className="block px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
                 {link.label}
-              </Link>
+              </a>
             ))}
             <div className="pt-3 border-t border-gray-100 mt-3">
               {user ? (
                 <div className="space-y-1">
                   {isAdmin && (
-                    <Link href="/admin" onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm font-semibold text-brand-600">Admin</Link>
+                    <a href="/admin" className="block px-3 py-2 text-sm font-semibold text-brand-600">Admin</a>
                   )}
-                  <Link href="/account" onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm text-gray-700">Account</Link>
+                  <a href="/account" className="block px-3 py-2 text-sm text-gray-700">Account</a>
                   <button onClick={handleSignOut} className="block w-full text-left px-3 py-2 text-sm text-gray-500">Sign out</button>
                 </div>
               ) : (
                 <div className="space-y-1">
-                  <Link href="/login" onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm text-gray-700">Log in</Link>
-                  <Link href="/signup" onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm font-semibold text-brand-600">Sign up free</Link>
+                  <a href="/login" className="block px-3 py-2 text-sm text-gray-700">Log in</a>
+                  <a href="/signup" className="block px-3 py-2 text-sm font-semibold text-brand-600">Sign up free</a>
                 </div>
               )}
             </div>

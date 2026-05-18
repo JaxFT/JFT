@@ -30,6 +30,19 @@ export const SECTION_LABELS: Record<SectionKey, string> = {
   convo:     'Family chat',
 }
 
+// Emoji shown on the mission picker buttons.
+export const SECTION_EMOJI: Record<SectionKey, string> = {
+  map:       '🗺️',
+  language:  '🗣️',
+  money:     '💰',
+  food:      '🍽️',
+  geography: '🌍',
+  scavenger: '🔎',
+  senses:    '✨',
+  stories:   '📖',
+  convo:     '☕',
+}
+
 export interface Phrase {
   english: string
   nativeScript: string

@@ -9,8 +9,12 @@ import PhotoPrompt from '../PhotoPrompt'
 // Older mode: same fields but no auto-total. Child reads the numbers.
 //             Plus two extra tickboxes: compared prices + tried haggling.
 
-const SPEND_KEYS = ['item1', 'item2', 'item3', 'item4'] as const
-type SpendKey = typeof SPEND_KEYS[number]
+const SPEND_CATEGORIES = [
+  { key: 'souvenir', emoji: '🛍️', label: 'Souvenir' },
+  { key: 'snack',    emoji: '🍪', label: 'Snack' },
+  { key: 'drink',    emoji: '🥤', label: 'Drink' },
+] as const
+type SpendKey = typeof SPEND_CATEGORIES[number]['key']
 
 export default function MoneySection({ data, pack }: { data: AdventurePackData; pack: PackHook }) {
   const cur = data.currency
@@ -22,20 +26,17 @@ export default function MoneySection({ data, pack }: { data: AdventurePackData; 
     pack.updateAnswer('money', 'budget', Number.isFinite(n as number) ? n : '')
   }
 
-  const spendValues: Record<SpendKey, { name: string; cost: number | '' }> = useMemo(() => {
-    const out = {} as Record<SpendKey, { name: string; cost: number | '' }>
-    for (const k of SPEND_KEYS) {
-      out[k] = {
-        name: pack.getAnswer<string>('money', `${k}-name`, ''),
-        cost: pack.getAnswer<number | ''>('money', `${k}-cost`, ''),
-      }
+  const spendValues: Record<SpendKey, number | ''> = useMemo(() => {
+    const out = {} as Record<SpendKey, number | ''>
+    for (const c of SPEND_CATEGORIES) {
+      out[c.key] = pack.getAnswer<number | ''>('money', `${c.key}-cost`, '')
     }
     return out
   }, [pack])
 
-  const total = SPEND_KEYS.reduce((sum, k) => {
-    const c = spendValues[k].cost
-    return sum + (typeof c === 'number' && Number.isFinite(c) ? c : 0)
+  const total = SPEND_CATEGORIES.reduce((sum, c) => {
+    const v = spendValues[c.key]
+    return sum + (typeof v === 'number' && Number.isFinite(v) ? v : 0)
   }, 0)
 
   const budgetNum = typeof budget === 'number' ? budget : 0
@@ -69,24 +70,21 @@ export default function MoneySection({ data, pack }: { data: AdventurePackData; 
 
         <div className="space-y-2">
           <span className="text-xs font-bold tracking-widest uppercase text-gray-500">What you spent</span>
-          {SPEND_KEYS.map((k, i) => (
-            <div key={k} className="grid grid-cols-[1fr_auto] gap-2">
-              <input
-                type="text"
-                value={spendValues[k].name}
-                onChange={e => pack.updateAnswer('money', `${k}-name`, e.target.value)}
-                placeholder={`Item ${i + 1}`}
-                className="text-sm px-3 py-2 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500"
-              />
+          {SPEND_CATEGORIES.map(c => (
+            <div key={c.key} className="grid grid-cols-[1fr_auto] gap-2 items-center">
+              <span className="text-sm text-gray-700 px-3 py-2 inline-flex items-center gap-2">
+                <span aria-hidden="true">{c.emoji}</span> {c.label}
+              </span>
               <input
                 type="number"
                 inputMode="decimal"
-                value={spendValues[k].cost}
+                value={spendValues[c.key]}
                 onChange={e => {
                   const v = e.target.value
-                  pack.updateAnswer('money', `${k}-cost`, v === '' ? '' : Number(v))
+                  pack.updateAnswer('money', `${c.key}-cost`, v === '' ? '' : Number(v))
                 }}
                 placeholder="0"
+                aria-label={`${c.label} cost in ${cur.symbol}`}
                 className="w-24 text-sm px-3 py-2 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono"
               />
             </div>

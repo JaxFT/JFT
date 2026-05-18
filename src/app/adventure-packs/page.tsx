@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { Lock, Crown, ArrowRight, Compass } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
@@ -27,6 +26,9 @@ export default async function AdventurePacksListing() {
     isPremium = isPremiumTier(profile?.subscription_tier)
   }
 
+  const livePacks   = PACK_META.filter(p => p.status === 'live')
+  const upcomingPacks = PACK_META.filter(p => p.status === 'coming-soon')
+
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -43,24 +45,22 @@ export default async function AdventurePacksListing() {
         {!user && (
           <div className="bg-brand-50 border border-brand-200 rounded-2xl px-5 py-4 mb-8 text-sm text-brand-900">
             <strong>Sign in to use Adventure Packs.</strong>{' '}
-            <Link href="/login?next=/adventure-packs" className="underline font-semibold">Log in</Link>{' '}
+            <a href="/login?next=/adventure-packs" className="underline font-semibold">Log in</a>{' '}
             or{' '}
-            <Link href="/signup?next=/adventure-packs" className="underline font-semibold">create a free account</Link>. France is free for every member.
+            <a href="/signup?next=/adventure-packs" className="underline font-semibold">create a free account</a>. France is free for every member.
           </div>
         )}
 
+        {/* ── LIVE PACKS ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {PACK_META.map(p => {
-            const isComingSoon = p.status === 'coming-soon'
+          {livePacks.map(p => {
             const unlocked = p.isFree || isPremium
             const showLock = !p.isFree && !isPremium
 
             return (
               <article
                 key={p.slug}
-                className={`rounded-2xl border overflow-hidden bg-white shadow-sm flex flex-col ${
-                  isComingSoon ? 'border-gray-200 opacity-90' : 'border-gray-100'
-                }`}
+                className="rounded-2xl border border-gray-100 overflow-hidden bg-white shadow-sm flex flex-col"
               >
                 <div className="relative">
                   <FlagHalfBanner iso2={p.iso2} country={p.country} />
@@ -82,37 +82,56 @@ export default async function AdventurePacksListing() {
                 </div>
 
                 <div className="p-5 flex-1 flex flex-col">
-                  <p className="text-xs text-gray-500 mb-3">9 missions &middot; Ages 5–11</p>
+                  <p className="text-xs text-gray-500 mb-3">9 missions &middot; Ages 5&ndash;11</p>
 
-                  {isComingSoon ? (
-                    <p className="text-sm text-gray-400 italic mt-auto">Coming soon</p>
-                  ) : !user ? (
-                    <Link
+                  {!user ? (
+                    <a
                       href={`/login?next=/adventure-packs/${p.slug}`}
                       className="mt-auto btn-primary justify-center !py-2 !px-4 !text-sm"
                     >
                       Sign in to open <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
+                    </a>
                   ) : showLock ? (
-                    <Link
+                    <a
                       href="/account"
                       className="mt-auto inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-4 py-2 rounded-md"
                     >
                       <Crown className="w-3.5 h-3.5" /> Unlock with Premium
-                    </Link>
+                    </a>
                   ) : (
-                    <Link
+                    <a
                       href={`/adventure-packs/${p.slug}`}
                       className="mt-auto btn-primary justify-center !py-2 !px-4 !text-sm"
                     >
                       Open pack <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
+                    </a>
                   )}
                 </div>
               </article>
             )
           })}
         </div>
+
+        {/* ── COMING SOON: compact secondary section so it's a roadmap hint, not the main visual ── */}
+        {upcomingPacks.length > 0 && (
+          <section className="mt-14 border-t border-gray-200 pt-8">
+            <p className="text-xs font-bold tracking-widest uppercase text-gray-500 mb-3">Coming soon</p>
+            <p className="text-sm text-gray-500 mb-5 max-w-2xl">
+              We&apos;re shipping new country packs every few weeks. Here&apos;s what&apos;s next.
+            </p>
+            <ul className="flex flex-wrap gap-2">
+              {upcomingPacks.map(p => (
+                <li
+                  key={p.slug}
+                  className="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-full px-3 py-1.5 text-sm text-gray-600"
+                >
+                  <span className="text-base leading-none" aria-hidden="true">{p.flag}</span>
+                  {p.country}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
     </div>
   )

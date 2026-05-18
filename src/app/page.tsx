@@ -8,6 +8,10 @@ import { isPremiumTier } from '@/lib/profile'
 
 export const dynamic = 'force-dynamic'
 
+export const metadata = {
+  description: 'Long-term family travel without the filters. Real guides, honest readiness tools, and missions to do with your kids on the road. From a British family doing it for real.',
+}
+
 export default async function HomePage() {
   // Kick off the public data fetch and the cookie-aware client construction
   // in parallel, they're independent.
@@ -98,7 +102,7 @@ export default async function HomePage() {
               const showBadge = item.premiumFeature
               const badgeText = isPremium ? 'Included' : 'Premium'
               return (
-                <Link key={item.href} href={item.href} className="group relative bg-sand-50 rounded-2xl p-7 hover:bg-brand-50 transition-colors border border-sand-200 hover:border-brand-200">
+                <a key={item.href} href={item.href} className="group relative bg-sand-50 rounded-2xl p-7 hover:bg-brand-50 transition-colors border border-sand-200 hover:border-brand-200">
                   {showBadge && (
                     <span className={`absolute top-4 right-4 inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
                       isPremium ? 'bg-brand-100 text-brand-800' : 'bg-brand-600 text-white'
@@ -115,7 +119,7 @@ export default async function HomePage() {
                   <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 group-hover:gap-2 transition-all">
                     Explore <ArrowRight className="w-3.5 h-3.5" />
                   </span>
-                </Link>
+                </a>
               )
             })}
           </div>

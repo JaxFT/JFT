@@ -1,11 +1,14 @@
-import Link from 'next/link'
 import { ArrowRight, Clock, Crown } from 'lucide-react'
 import { format } from 'date-fns'
 import type { BlogPost } from '@/types'
 
+// Plain <a> (not next/link) to avoid the brief unstyled-flash that
+// CSR navigation produced on this card. Tradeoff: ~300 ms slower per
+// click, worth it for a clean transition.
+
 export default function BlogCard({ post }: { post: BlogPost }) {
   return (
-    <Link href={`/blog/${post.slug}`} className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+    <a href={`/blog/${post.slug}`} className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100">
       {post.coverImage && (
         <div className="overflow-hidden h-48">
           <img
@@ -47,6 +50,6 @@ export default function BlogCard({ post }: { post: BlogPost }) {
           </div>
         </div>
       </div>
-    </Link>
+    </a>
   )
 }

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Crown, ShoppingBag, ArrowRight, Calendar } from 'lucide-react'
+import { Crown, ShoppingBag, ArrowRight, Calendar, ShieldCheck, FileText, Mail } from 'lucide-react'
 import type { Metadata } from 'next'
 import SignOutButton from './SignOutButton'
 import AccountEditor from './AccountEditor'
@@ -143,6 +143,36 @@ export default async function AccountPage() {
               ))}
             </ul>
           )}
+        </div>
+
+        {/* Help & legal */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mt-6">
+          <h2 className="text-sm font-bold tracking-widest uppercase text-gray-500 mb-4">Help &amp; legal</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <Link
+              href="/privacy"
+              target="_blank"
+              className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-brand-700 hover:bg-gray-50 px-3 py-2.5 rounded-lg border border-gray-200"
+            >
+              <ShieldCheck className="w-4 h-4 text-gray-400" /> Privacy policy
+            </Link>
+            <Link
+              href="/terms"
+              target="_blank"
+              className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-brand-700 hover:bg-gray-50 px-3 py-2.5 rounded-lg border border-gray-200"
+            >
+              <FileText className="w-4 h-4 text-gray-400" /> Terms of service
+            </Link>
+            <a
+              href="mailto:hello@jaxfamilytravels.com"
+              className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-brand-700 hover:bg-gray-50 px-3 py-2.5 rounded-lg border border-gray-200"
+            >
+              <Mail className="w-4 h-4 text-gray-400" /> Email us
+            </a>
+          </div>
+          <p className="text-xs text-gray-400 mt-3 leading-relaxed">
+            Need to update your email or request your data? Email us and we&apos;ll sort it within a few working days.
+          </p>
         </div>
       </div>
     </div>

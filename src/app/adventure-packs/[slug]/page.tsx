@@ -19,7 +19,7 @@ export async function generateMetadata({
   if (!meta) return {}
   return {
     title: `${meta.country} Adventure Pack`,
-    description: `Nine missions for families exploring ${meta.country} — language, food, geography, history, scavenger hunts and family chat.`,
+    description: `Nine missions for families exploring ${meta.country}: language, food, geography, history, scavenger hunts and family chat.`,
   }
 }
 
@@ -43,7 +43,7 @@ export default async function AdventurePackPage({
           <div className="text-6xl mb-3">{meta.flag}</div>
           <h1 className="text-3xl font-bold text-gray-900">{meta.country} Adventure Pack</h1>
           <p className="text-gray-500 mt-3 leading-relaxed">
-            We&apos;re still writing this one. We&apos;re shipping new country packs every few weeks — check back soon, or start with the France pack which is free for every member.
+            We&apos;re still writing this one. We&apos;re shipping new country packs every few weeks. Check back soon, or start with the France pack which is free for every member.
           </p>
           <Link href="/adventure-packs" className="btn-primary mt-6 inline-flex justify-center !py-2 !px-5 !text-sm">
             Browse all packs <ArrowRight className="w-3.5 h-3.5" />
@@ -75,7 +75,7 @@ export default async function AdventurePackPage({
             <Lock className="w-7 h-7 text-brand-600 mx-auto mb-3" />
             <h2 className="text-xl font-bold text-gray-900 mb-2">This pack is for Premium members</h2>
             <p className="text-sm text-gray-500 leading-relaxed mb-5">
-              France is free for every member. All other country packs are included with Premium — £25 a year for everything on the site.
+              France is free for every member. All other country packs are included with Premium: £25 a year for everything on the site.
             </p>
             <Link href="/account" className="btn-primary w-full justify-center !py-2.5 !text-sm">
               <Crown className="w-4 h-4" /> Upgrade to Premium <ArrowRight className="w-4 h-4" />

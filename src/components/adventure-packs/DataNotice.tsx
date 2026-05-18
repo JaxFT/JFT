@@ -1,5 +1,5 @@
 // Amber banner shown at the top of every section + once at the pack
-// shell on first load. Non-dismissable — kids on the road won't always
+// shell on first load. Non-dismissable, since kids on the road won't always
 // have WiFi and they need the screenshot prompt visible.
 
 import { WifiOff } from 'lucide-react'

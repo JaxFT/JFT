@@ -48,7 +48,7 @@ export interface Phrase {
   nativeScript: string
   nativeLatin: string
   phonetic: string
-  lang: string         // BCP-47 — used to pick speech-synth voice
+  lang: string         // BCP-47, used to pick speech-synth voice
   olderOnly?: boolean
 }
 
@@ -123,7 +123,7 @@ export interface AdventurePackData {
   convoQuestions: ConvoQuestion[]
 }
 
-// Metadata for the listing page — every country has a meta entry; only
+// Metadata for the listing page. Every country has a meta entry; only
 // fully-built ones have a full AdventurePackData export.
 export interface AdventurePackMeta {
   slug: string

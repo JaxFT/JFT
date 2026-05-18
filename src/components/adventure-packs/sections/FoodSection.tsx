@@ -52,7 +52,7 @@ export default function FoodSection({ data, pack }: { data: AdventurePackData; p
           )
         })}
       </ul>
-      <PhotoPrompt prompt={`A close-up of your favourite ${data.country} food today — bonus points if you're holding it up to the camera.`} />
+      <PhotoPrompt prompt={`A close-up of your favourite ${data.country} food today. Bonus points if you're holding it up to the camera.`} />
     </div>
   )
 }

@@ -9,7 +9,7 @@ export default function ScavengerSection({ data, pack }: { data: AdventurePackDa
   return (
     <div className="space-y-3">
       <p className="text-sm text-gray-600 leading-relaxed">
-        Spot any of these today and tick them off. {pack.ageMode === 'older' ? 'Some of these need a bit more hunting.' : 'No rush — collect them over a few days.'}
+        Spot any of these today and tick them off. {pack.ageMode === 'older' ? 'Some of these need a bit more hunting.' : 'No rush, collect them over a few days.'}
       </p>
       <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {visible.map((item, i) => {

@@ -1,6 +1,6 @@
 // Save / load / clear helpers for Adventure Pack state.
 // Uses the browser supabase client from src/lib/supabase/client (built
-// on @supabase/ssr — the spec's reference to @supabase/auth-helpers is
+// on @supabase/ssr (the spec's reference to @supabase/auth-helpers is
 // from a deprecated SDK).
 
 import { createClient } from '@/lib/supabase/client'
@@ -116,7 +116,7 @@ export async function clearPack(userId: string, countrySlug: string): Promise<vo
 // ── PURCHASE CHECK ──────────────────────────────────────────────
 // Returns true if the user has bought this pack one-off. Schema is in
 // place for when Stripe is wired; until then this always returns false
-// for any non-premium user, which is fine — premium users never need
+// for any non-premium user, which is fine, since premium users never need
 // to check and France is gated client-side.
 export async function checkPackPurchase(userId: string, countrySlug: string): Promise<boolean> {
   const sb = client()

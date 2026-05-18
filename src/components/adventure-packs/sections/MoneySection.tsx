@@ -6,7 +6,7 @@ import type { PackHook } from '../PackShell'
 import PhotoPrompt from '../PhotoPrompt'
 
 // Younger mode: auto-totals spend and shows change-vs-budget in green/red.
-// Older mode: same fields but no auto-total — child reads the numbers.
+// Older mode: same fields but no auto-total. Child reads the numbers.
 //             Plus two extra tickboxes: compared prices + tried haggling.
 
 const SPEND_KEYS = ['item1', 'item2', 'item3', 'item4'] as const

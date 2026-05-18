@@ -9,7 +9,7 @@ export default function ConvoSection({ data, pack }: { data: AdventurePackData; 
   return (
     <div className="space-y-3">
       <p className="text-sm text-gray-600 leading-relaxed">
-        Family conversation cards — pull one out over dinner or on a long walk. Jot answers below if you want to remember them.
+        Family conversation cards. Pull one out over dinner or on a long walk. Jot answers below if you want to remember them.
       </p>
       <div className="space-y-2">
         {visible.map((q, i) => (

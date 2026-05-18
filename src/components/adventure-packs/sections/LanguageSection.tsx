@@ -52,7 +52,7 @@ export default function LanguageSection({ data, pack }: { data: AdventurePackDat
   return (
     <div className="space-y-3">
       <p className="text-sm text-gray-600 leading-relaxed">
-        Try one with someone today — even just one is brave. Tap <em>Hear it</em> to listen, then mark <em>I used it</em> when you do.
+        Try one with someone today. Even just one is brave. Tap <em>Hear it</em> to listen, then mark <em>I used it</em> when you do.
       </p>
       <ul className="space-y-2">
         {visible.map(p => {
@@ -90,7 +90,7 @@ export default function LanguageSection({ data, pack }: { data: AdventurePackDat
           )
         })}
       </ul>
-      <PhotoPrompt prompt={`A photo of a sign, menu, or shop in ${data.country} written in the local script — see how much you can recognise.`} />
+      <PhotoPrompt prompt={`A photo of a sign, menu, or shop in ${data.country} written in the local script. See how much you can recognise.`} />
     </div>
   )
 }

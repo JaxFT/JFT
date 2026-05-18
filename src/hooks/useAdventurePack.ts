@@ -2,7 +2,7 @@
 //
 // - Loads session + per-section answers from Supabase on mount.
 // - Exposes updateAnswer(section, key, value) which debounces a save
-//   per section (1 s) — typing into a textarea doesn't hammer the DB.
+//   per section (1 s) so typing into a textarea doesn't hammer the DB.
 // - Exposes completeMission / changeAgeMode which save immediately.
 // - clearAll wipes the row server-side then resets local state.
 

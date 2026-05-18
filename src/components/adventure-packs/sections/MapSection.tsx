@@ -42,7 +42,7 @@ export default function MapSection({ data, pack }: { data: AdventurePackData; pa
           </li>
         ))}
       </ul>
-      <PhotoPrompt prompt={`A family photo with a paper or phone map of ${data.country} — pointing to where you are now.`} />
+      <PhotoPrompt prompt={`A family photo with a paper or phone map of ${data.country}, pointing to where you are now.`} />
     </div>
   )
 }

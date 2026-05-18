@@ -66,7 +66,7 @@ export default function PackShell({ userId, data }: Props) {
   const onAgeChange = (mode: typeof pack.ageMode) => {
     if (mode !== pack.ageMode) {
       pack.changeAgeMode(mode)
-      setShowAgeBanner(mode === 'older' ? 'Ages 8–11 mode — some sections have extra challenges' : 'Ages 5–7 mode — keeping it simple')
+      setShowAgeBanner(mode === 'older' ? 'Ages 8 to 11 mode. Some sections have extra challenges.' : 'Ages 5 to 7 mode. Keeping it simple.')
       setTimeout(() => setShowAgeBanner(null), 4000)
     }
   }
@@ -109,7 +109,7 @@ export default function PackShell({ userId, data }: Props) {
           <DataNotice />
         </div>
 
-        {/* MISSION PICKER — emoji buttons, one per section. Click to switch. */}
+        {/* MISSION PICKER. Emoji buttons, one per section. Click to switch. */}
         <div className="mt-6 bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-5">
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <p className="text-xs font-bold tracking-widest uppercase text-brand-600">Pick a mission</p>

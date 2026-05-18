@@ -7,7 +7,7 @@ import { PACK_META } from '@/lib/adventurePackData'
 
 export const metadata: Metadata = {
   title: 'Adventure Packs',
-  description: 'Interactive, country-specific missions for worldschooling families — language, food, geography, history, scavenger hunts and family conversation cards.',
+  description: 'Interactive, country-specific missions for worldschooling families. Language, food, geography, history, scavenger hunts and family conversation cards.',
 }
 
 export const dynamic = 'force-dynamic'
@@ -35,7 +35,7 @@ export default async function AdventurePacksListing() {
           </p>
           <h1 className="text-4xl font-bold text-gray-900">Missions for your family on the road</h1>
           <p className="text-gray-500 mt-2 text-lg leading-relaxed">
-            Interactive packs for worldschooling families — language, food, geography, history, scavenger hunts and family chat cards. Do them on the ground, in the moment.
+            Interactive packs for worldschooling families: language, food, geography, history, scavenger hunts and family chat cards. Do them on the ground, in the moment.
           </p>
         </div>
 
@@ -44,7 +44,7 @@ export default async function AdventurePacksListing() {
             <strong>Sign in to use Adventure Packs.</strong>{' '}
             <Link href="/login?next=/adventure-packs" className="underline font-semibold">Log in</Link>{' '}
             or{' '}
-            <Link href="/signup?next=/adventure-packs" className="underline font-semibold">create a free account</Link> — France is free for every member.
+            <Link href="/signup?next=/adventure-packs" className="underline font-semibold">create a free account</Link>. France is free for every member.
           </div>
         )}
 

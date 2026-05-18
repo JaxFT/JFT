@@ -5,10 +5,10 @@ import type { AdventurePackData } from '@/lib/adventurePackTypes'
 import type { PackHook } from '../PackShell'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 
-// Five sense cards (Smell / Hear / Taste / Feel / See) — each tappable
+// Five sense cards (Smell / Hear / Taste / Feel / See), each tappable
 // to expand into a textarea with a country-specific placeholder. Plus
 // a sixth always-visible "What surprised you most today?" textarea.
-// No age difference here — same content for everyone.
+// No age difference here. Same content for everyone.
 
 type SenseKey = 'smell' | 'hear' | 'taste' | 'feel' | 'see'
 const SENSE_META: Array<{ key: SenseKey; label: string; emoji: string }> = [
@@ -82,7 +82,7 @@ export default function SensesSection({ data, pack }: { data: AdventurePackData;
             value={pack.getAnswer<string>('senses', 'surprised', '')}
             onChange={e => pack.updateAnswer('senses', 'surprised', e.target.value)}
             rows={3}
-            placeholder="Something you didn't expect — funny, beautiful, weird, anything…"
+            placeholder="Something you didn't expect. Funny, beautiful, weird, anything…"
             className="mt-1 w-full text-sm px-3 py-2 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 leading-relaxed"
           />
         </label>

@@ -1,6 +1,6 @@
 // Adventure Pack content registry.
 //
-// FRANCE_DATA is fully populated — this is the free pack and acts as
+// FRANCE_DATA is fully populated. This is the free pack and acts as
 // the quality reference for every other country pack. Other countries
 // have meta entries only (so they show on the listing as "Coming soon")
 // until we write their content.
@@ -27,9 +27,9 @@ export const FRANCE_DATA: AdventurePackData = {
   mapQuestions: [
     { question: 'Which continent is France on?', answer: 'Europe 🌍' },
     { question: 'What sea and ocean touch France?', answer: 'The Mediterranean Sea and the Atlantic Ocean 🌊' },
-    { question: 'What is the capital of France?', answer: 'Paris — about 12 million people live in the wider Paris area.' },
-    { question: 'Name 3 countries that border France', answer: 'Spain, Italy, Belgium, Germany, Switzerland and Luxembourg — pick any 3.', olderOnly: true },
-    { question: 'What is the highest mountain in France (and Western Europe)?', answer: 'Mont Blanc — 4,808 metres, in the French Alps near Italy.', olderOnly: true },
+    { question: 'What is the capital of France?', answer: 'Paris. About 12 million people live in the wider Paris area.' },
+    { question: 'Name 3 countries that border France', answer: 'Spain, Italy, Belgium, Germany, Switzerland and Luxembourg. Pick any 3.', olderOnly: true },
+    { question: 'What is the highest mountain in France (and Western Europe)?', answer: 'Mont Blanc, 4,808 metres, in the French Alps near Italy.', olderOnly: true },
   ],
   phrases: [
     { english: 'Hello', nativeScript: 'Bonjour', nativeLatin: 'Bonjour', phonetic: 'bon-zhoor', lang: 'fr' },
@@ -42,12 +42,12 @@ export const FRANCE_DATA: AdventurePackData = {
     { english: 'I would like…', nativeScript: 'Je voudrais…', nativeLatin: 'Je voudrais…', phonetic: 'zhuh voo-dray', lang: 'fr', olderOnly: true },
   ],
   foods: [
-    { emoji: '🥐', name: 'Croissant', description: 'Flaky, buttery breakfast pastry — best fresh from a boulangerie before 10am.' },
+    { emoji: '🥐', name: 'Croissant', description: 'Flaky, buttery breakfast pastry, best fresh from a boulangerie before 10am.' },
     { emoji: '🥖', name: 'Baguette', description: 'Long crusty bread loaf. Carry it home under your arm like a local.' },
-    { emoji: '🧀', name: 'Cheese plate', description: 'France makes over 400 cheeses — try Brie, Comté, Roquefort, and one stinky one.' },
-    { emoji: '🥞', name: 'Crêpes', description: 'Thin pancakes — sweet with Nutella and banana, or savoury with ham and cheese.' },
+    { emoji: '🧀', name: 'Cheese plate', description: 'France makes over 400 cheeses. Try Brie, Comté, Roquefort, and one stinky one.' },
+    { emoji: '🥞', name: 'Crêpes', description: 'Thin pancakes, sweet with Nutella and banana, or savoury with ham and cheese.' },
     { emoji: '🍫', name: 'Pain au chocolat', description: 'A croissant with two strips of dark chocolate inside. The breakfast of champions.' },
-    { emoji: '🍲', name: 'Ratatouille', description: 'A slow-cooked vegetable stew from the south — courgettes, peppers, aubergine and tomatoes.' },
+    { emoji: '🍲', name: 'Ratatouille', description: 'A slow-cooked vegetable stew from the south, with courgettes, peppers, aubergine and tomatoes.' },
   ],
   scavengerItems: [
     { emoji: '🚲', label: 'Someone cycling with a baguette in the basket' },
@@ -61,14 +61,14 @@ export const FRANCE_DATA: AdventurePackData = {
     { emoji: '☕', label: 'A pavement café with people watching the world go by' },
     { emoji: '🏰', label: 'A château (castle) on a hill', olderOnly: true },
     { emoji: '⚜️', label: 'The fleur-de-lis symbol on a building or sign', olderOnly: true },
-    { emoji: '📜', label: 'A plaque on a wall in French — read what it says', olderOnly: true },
+    { emoji: '📜', label: 'A plaque on a wall in French, read what it says', olderOnly: true },
   ],
   geoMatches: [
-    { place: 'Paris',         emoji: '🗼', description: 'The capital — the Eiffel Tower, the Louvre, the Seine, and the best croissants you will ever eat.' },
-    { place: 'Provence',      emoji: '💜', description: 'Sunny south — lavender fields, olive trees, rosé wine, and pretty stone villages.' },
-    { place: 'The Alps',      emoji: '🏔️', description: 'Snow-capped mountains in the east — skiing in winter, hiking and lakes in summer.' },
-    { place: 'Brittany',      emoji: '🌊', description: 'Wild Atlantic coast in the west — crêpes, cider, and dramatic granite cliffs.' },
-    { place: 'Loire Valley',  emoji: '🏰', description: 'Hundreds of fairy-tale castles along a river — built by kings hundreds of years ago.' },
+    { place: 'Paris',         emoji: '🗼', description: 'The capital. The Eiffel Tower, the Louvre, the Seine, and the best croissants you will ever eat.' },
+    { place: 'Provence',      emoji: '💜', description: 'Sunny south, with lavender fields, olive trees, rosé wine, and pretty stone villages.' },
+    { place: 'The Alps',      emoji: '🏔️', description: 'Snow-capped mountains in the east. Skiing in winter, hiking and lakes in summer.' },
+    { place: 'Brittany',      emoji: '🌊', description: 'Wild Atlantic coast in the west, with crêpes, cider, and dramatic granite cliffs.' },
+    { place: 'Loire Valley',  emoji: '🏰', description: 'Hundreds of fairy-tale castles along a river, built by kings hundreds of years ago.' },
   ],
   senses: {
     smell: 'Fresh bread, coffee, cheese, river water at dawn, sometimes Gauloise cigarettes…',
@@ -86,17 +86,17 @@ export const FRANCE_DATA: AdventurePackData = {
     {
       location: '📍 Everywhere in France',
       question: 'Why do the French eat so much bread?',
-      body: 'Bread has been at the centre of French life for over a thousand years. There used to be a law saying every village must have a bakery within walking distance of every house. The French still eat about half a baguette per person per day. Real French bread has only four ingredients — flour, water, salt, yeast — and it goes stale within a day, which is why people buy it fresh every single morning.',
+      body: 'Bread has been at the centre of French life for over a thousand years. There used to be a law saying every village must have a bakery within walking distance of every house. The French still eat about half a baguette per person per day. Real French bread has only four ingredients (flour, water, salt, yeast) and it goes stale within a day, which is why people buy it fresh every single morning.',
     },
     {
       location: '📍 Versailles',
       question: 'Why is the Palace of Versailles so over-the-top?',
-      body: 'Versailles was built by King Louis XIV — the "Sun King" — in the 1600s. He turned a small hunting lodge into the most lavish palace in Europe, with 2,300 rooms, a hall of mirrors, and gardens so big you cannot walk them in a day. The whole point was to show off French power. He even made his nobles live there with him so he could keep an eye on them. The whole project nearly bankrupted France — and around 100 years later, that anger helped trigger the French Revolution.',
+      body: 'Versailles was built by King Louis XIV (the "Sun King") in the 1600s. He turned a small hunting lodge into the most lavish palace in Europe, with 2,300 rooms, a hall of mirrors, and gardens so big you cannot walk them in a day. The whole point was to show off French power. He even made his nobles live there with him so he could keep an eye on them. The whole project nearly bankrupted France, and around 100 years later, that anger helped trigger the French Revolution.',
     },
     {
       location: '📍 Paris, 1789',
       question: 'What was the French Revolution?',
-      body: 'In 1789, ordinary French people had had enough. The kings and nobles lived in palaces while everyone else starved. On 14 July, a Paris crowd stormed the Bastille — a prison that symbolised royal power. The revolution that followed eventually overthrew the monarchy, declared "Liberté, Égalité, Fraternité" (liberty, equality, brotherhood) and changed not just France but the whole world. That date — Bastille Day — is still France\'s biggest national holiday.',
+      body: 'In 1789, ordinary French people had had enough. The kings and nobles lived in palaces while everyone else starved. On 14 July, a Paris crowd stormed the Bastille, a prison that symbolised royal power. The revolution that followed eventually overthrew the monarchy, declared "Liberté, Égalité, Fraternité" (liberty, equality, brotherhood) and changed not just France but the whole world. That date, Bastille Day, is still France\'s biggest national holiday.',
       olderOnly: true,
       thinkingQuestion: 'The revolutionaries believed three things every person deserved: liberty, equality, and brotherhood. Which one do you think is the hardest to actually make happen?',
     },

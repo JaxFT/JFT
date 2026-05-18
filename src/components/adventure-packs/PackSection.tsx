@@ -1,6 +1,6 @@
 'use client'
 
-// Dispatcher — picks the right section component based on key, wraps
+// Dispatcher. Picks the right section component based on key, wraps
 // each one in a consistent shell (heading, mark-complete button).
 
 import { Check } from 'lucide-react'

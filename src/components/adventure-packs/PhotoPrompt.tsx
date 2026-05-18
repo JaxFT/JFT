@@ -1,4 +1,4 @@
-// Teal card at the bottom of relevant sections — a specific photo
+// Teal card at the bottom of relevant sections. A specific photo
 // suggestion for that pack, always ending with the Instagram tag.
 // Mostly content-driven by the parent; this component just provides
 // the visual treatment.

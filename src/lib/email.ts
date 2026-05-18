@@ -13,6 +13,7 @@
 // notifications we don't want to break the user flow if email fails.
 
 import { Resend } from 'resend'
+import { buildUnsubscribeUrl } from '@/lib/unsubscribe-token'
 
 export const HELLO_FROM = 'Jax | Family Travels <hello@jaxfamilytravels.com>'
 export const BEC_FROM   = 'Bec at Jax | Family Travels <bec@jaxfamilytravels.com>'
@@ -180,6 +181,19 @@ Speak soon,
 Bec & Oli`
 
   return { subject, html: emailShell(subject, bodyHtml), text }
+}
+
+// Build a small "Unsubscribe" footer block for any marketing email.
+// Returns empty strings if the signing secret isn't configured so the
+// email can still go out — but you should NOT send marketing emails
+// without an unsubscribe link, so check the result before sending.
+export async function buildUnsubscribeFooter(userId: string): Promise<{ html: string; text: string }> {
+  const url = await buildUnsubscribeUrl(userId)
+  if (!url) return { html: '', text: '' }
+  return {
+    html: `<p style="margin-top:24px; font-size:12px; color:#888;">Don't want these emails? <a href="${url}" style="color:#888;">Unsubscribe in one click</a>.</p>`,
+    text: `\n\nDon't want these emails? Unsubscribe: ${url}`,
+  }
 }
 
 // Welcome email when a new account first signs in.

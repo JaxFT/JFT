@@ -5,6 +5,7 @@ import { Crown, ShoppingBag, ArrowRight, Calendar } from 'lucide-react'
 import type { Metadata } from 'next'
 import SignOutButton from './SignOutButton'
 import AccountEditor from './AccountEditor'
+import PremiumCancelButton from './PremiumCancelButton'
 
 export const metadata: Metadata = { title: 'Account' }
 
@@ -24,7 +25,7 @@ export default async function AccountPage() {
   const [{ data: profile }, { data: purchasesData }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('full_name, subscription_tier, created_at, marketing_opt_in')
+      .select('full_name, subscription_tier, created_at, marketing_opt_in, cancellation_requested_at')
       .eq('id', user.id)
       .single(),
     supabase
@@ -81,6 +82,12 @@ export default async function AccountPage() {
                   ? 'Every premium blog post, every guide, and every learning pack are included.'
                   : 'A year of access to every premium blog post, every guide, and every learning pack — £25/year.'}
               </p>
+              {isPremium && profile?.cancellation_requested_at && (
+                <p className="mt-3 text-xs text-amber-200 bg-amber-950/30 border border-amber-700/40 rounded-md px-3 py-2 inline-block">
+                  Cancellation requested on {new Date(profile.cancellation_requested_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
+                  Your access continues to the end of your current paid period.
+                </p>
+              )}
             </div>
             {!isPremium && (
               <button
@@ -90,6 +97,9 @@ export default async function AccountPage() {
               >
                 Upgrade — coming soon <ArrowRight className="w-4 h-4" />
               </button>
+            )}
+            {isPremium && !profile?.cancellation_requested_at && (
+              <PremiumCancelButton />
             )}
           </div>
         </div>

@@ -17,10 +17,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft, ArrowRight, Crown, Map, ListOrdered, Eye, EyeOff,
-  Pencil, Loader2, Check, X, FileEdit, Sparkles, Image as ImageIcon, Upload,
+  Pencil, Loader2, Check, X, FileEdit, Sparkles, Upload,
 } from 'lucide-react'
 import GuideMarkdown from './GuideMarkdown'
 import PdfPanel from './PdfPanel'
+import ImageSlotsPanel from './ImageSlotsPanel'
 import type { GuideRow, GuideContentBlock } from '@/lib/guide-types'
 import { extractMarkdownToc } from '@/lib/guide-types'
 import type { AutoLinkPhrase } from '@/lib/blog-links'
@@ -71,7 +72,6 @@ function SingleDocPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
   const cursorFileInputRef = useRef<HTMLInputElement>(null)
 
   const dirty = body !== savedBody
-  const placeholders = useMemo(() => detectImagePlaceholders(body), [body])
   const toc = useMemo(() => {
     const t = extractMarkdownToc(body)
     if (aboutUsMarkdown.trim() && !hideAbout) t.unshift({ id: 'about-us', label: 'About us' })
@@ -166,17 +166,6 @@ function SingleDocPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
     if (url) insertAtCursor(`![](${url})`)
   }
 
-  const handlePlaceholderUpload = async (p: Placeholder, file: File) => {
-    const url = await uploadFile(file)
-    if (!url) return
-    const replacement = `![${p.caption}](${url})`
-    const idx = body.indexOf(p.raw)
-    const next = idx >= 0
-      ? body.slice(0, idx) + replacement + body.slice(idx + p.raw.length)
-      : body + '\n\n' + replacement
-    setBody(next)
-  }
-
   return (
     // pt-16 pushes everything below the fixed site Navbar (h-16) so the
     // sticky admin banner is actually visible. Without this, the banner
@@ -238,27 +227,9 @@ function SingleDocPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
                 </div>
               </div>
 
-              {/* Image placeholder slots */}
-              {placeholders.length > 0 && (
-                <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-2">
-                  <p className="text-xs font-bold tracking-widest uppercase text-amber-800 flex items-center gap-1.5">
-                    <ImageIcon className="w-3.5 h-3.5" /> {placeholders.length} image placeholder{placeholders.length === 1 ? '' : 's'} found
-                  </p>
-                  <p className="text-xs text-amber-900/80 leading-relaxed">
-                    Upload the right photo for each placeholder and it will replace the marker in your text.
-                  </p>
-                  <div className="space-y-1.5 pt-1">
-                    {placeholders.map((p, i) => (
-                      <PlaceholderSlot
-                        key={`${i}-${p.start}`}
-                        placeholder={p}
-                        onUpload={file => handlePlaceholderUpload(p, file)}
-                        uploading={uploading}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* Image placeholder slots — persistent: each slot stays
+                  visible after upload so you can swap / remove. */}
+              <ImageSlotsPanel body={body} setBody={setBody} />
 
               {/* Image-at-cursor toolbar */}
               <div className="mb-2 flex items-center gap-2 flex-wrap">
@@ -691,7 +662,6 @@ function BlockEditor({
   const cursorFileInputRef = useRef<HTMLInputElement>(null)
 
   const dirty = heading !== block.heading || body !== block.body
-  const placeholders = useMemo(() => detectImagePlaceholders(body), [body])
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === 'Escape' && !saving) onCancel() }
@@ -736,17 +706,6 @@ function BlockEditor({
     if (url) insertAtCursor(`![](${url})`)
   }
 
-  const handlePlaceholderUpload = async (p: Placeholder, file: File) => {
-    const url = await uploadFile(file)
-    if (!url) return
-    const replacement = `![${p.caption}](${url})`
-    const idx = body.indexOf(p.raw)
-    const next = idx >= 0
-      ? body.slice(0, idx) + replacement + body.slice(idx + p.raw.length)
-      : body + '\n\n' + replacement
-    setBody(next)
-  }
-
   return (
     <section className="scroll-mt-24 bg-white rounded-2xl border-2 border-brand-400 shadow-md p-5 sm:p-6">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
@@ -766,18 +725,7 @@ function BlockEditor({
         className="w-full text-2xl sm:text-3xl font-bold text-gray-900 border-0 border-b border-gray-200 focus:border-brand-500 focus:outline-none px-0 py-2 bg-transparent mb-4"
       />
 
-      {placeholders.length > 0 && (
-        <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-2">
-          <p className="text-xs font-bold tracking-widest uppercase text-amber-800 flex items-center gap-1.5">
-            <ImageIcon className="w-3.5 h-3.5" /> {placeholders.length} image placeholder{placeholders.length === 1 ? '' : 's'} found
-          </p>
-          <div className="space-y-1.5 pt-1">
-            {placeholders.map((p, i) => (
-              <PlaceholderSlot key={`${i}-${p.start}`} placeholder={p} onUpload={file => handlePlaceholderUpload(p, file)} uploading={uploading} />
-            ))}
-          </div>
-        </div>
-      )}
+      <ImageSlotsPanel body={body} setBody={setBody} />
 
       <div className="mb-2 flex items-center gap-2 flex-wrap">
         <input
@@ -836,72 +784,5 @@ function BlockEditor({
   )
 }
 
-// ─────────────────────────────────────────────────────────────
-// Image placeholder detection (shared)
-// ─────────────────────────────────────────────────────────────
-
-type Placeholder = { start: number; end: number; caption: string; raw: string }
-
-function detectImagePlaceholders(md: string): Placeholder[] {
-  const results: Placeholder[] = []
-
-  const tag = /\[(?:IMAGE|PHOTO|IMG|PIC|INSERT IMAGE|INSERT PHOTO)(?:\s*:\s*([^\]]*))?\]/gi
-  let m: RegExpExecArray | null
-  while ((m = tag.exec(md))) {
-    results.push({
-      start: m.index,
-      end: m.index + m[0].length,
-      caption: (m[1] ?? '').trim(),
-      raw: m[0],
-    })
-  }
-
-  const img = /!\[([^\]]*)\]\(\s*(?:placeholder|none|todo|tbd|insert\s+here|insert\s+image|#)?\s*\)/gi
-  while ((m = img.exec(md))) {
-    results.push({
-      start: m.index,
-      end: m.index + m[0].length,
-      caption: (m[1] ?? '').trim(),
-      raw: m[0],
-    })
-  }
-
-  return results.sort((a, b) => a.start - b.start)
-}
-
-function PlaceholderSlot({
-  placeholder, onUpload, uploading,
-}: {
-  placeholder: Placeholder
-  onUpload: (file: File) => void
-  uploading: boolean
-}) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  return (
-    <div className="flex items-center gap-2 bg-white border border-amber-200 rounded-md px-3 py-2">
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={e => {
-          const f = e.target.files?.[0]
-          if (f) onUpload(f)
-          e.target.value = ''
-        }}
-      />
-      <span className="font-mono text-xs text-gray-500 shrink-0">{placeholder.raw}</span>
-      <span className="flex-1 min-w-0 text-xs text-gray-700 truncate">
-        {placeholder.caption || <em className="text-gray-400">(no caption)</em>}
-      </span>
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        disabled={uploading}
-        className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:bg-brand-50 px-2 py-1 rounded shrink-0 disabled:opacity-50"
-      >
-        <Upload className="w-3 h-3" /> Upload
-      </button>
-    </div>
-  )
-}
+// Image placeholder slot UI is now in src/components/guide/ImageSlotsPanel.tsx
+// (used by both editor paths above). Detection + per-slot state lives there.

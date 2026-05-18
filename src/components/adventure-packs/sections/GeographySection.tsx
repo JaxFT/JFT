@@ -56,7 +56,7 @@ export default function GeographySection({ data, pack }: { data: AdventurePackDa
   return (
     <div className="space-y-3">
       <p className="text-sm text-gray-600 leading-relaxed">
-        Tap a place on the left, then tap its description on the right. Get all {data.geoMatches.length} for a clean sweep.
+        Tap a place, then tap its description to match them. Get all {data.geoMatches.length} for a clean sweep.
       </p>
       <p className="text-xs text-brand-700 font-semibold">
         {matched.length} of {data.geoMatches.length} matched

@@ -3,7 +3,8 @@
 import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { ArrowLeft, Check, Loader2, Plane } from 'lucide-react'
+import { ArrowLeft, Check, Loader2 } from 'lucide-react'
+import Logo from '@/components/branding/Logo'
 
 export default function ResetPasswordPage() {
   return (
@@ -43,11 +44,8 @@ function ResetPasswordForm() {
     <div className="min-h-screen bg-sand-50 flex items-center justify-center px-4 py-20">
       <div className="w-full max-w-sm">
         <div className="flex justify-center mb-8">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-brand-600 rounded-xl flex items-center justify-center">
-              <Plane className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-bold text-gray-900 tracking-wide text-sm uppercase">Jax Family Travels</span>
+          <Link href="/" aria-label="Jax | Family Travels — home">
+            <Logo height={40} />
           </Link>
         </div>
 

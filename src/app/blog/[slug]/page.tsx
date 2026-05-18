@@ -164,7 +164,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             </span>
             <h2 className="text-2xl sm:text-3xl font-bold mb-3">Keep reading with Premium</h2>
             <p className="text-white/70 leading-relaxed max-w-md mx-auto mb-6">
-              A year of access to every premium blog post, every guide, and every learning pack — £25, cancel any time.
+              A year of access to every premium blog post, every guide, and every adventure pack — £25, cancel any time.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
               {user ? (

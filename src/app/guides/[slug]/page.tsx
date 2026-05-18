@@ -218,7 +218,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
                 <p className="text-xs font-bold tracking-widest uppercase text-brand-300">Or unlock everything</p>
               </div>
               <h3 className="text-2xl font-bold mb-1">£25 / year</h3>
-              <p className="text-sm text-white/70 mb-5 flex-1">A year of access to every premium blog post, every guide, and every learning pack.</p>
+              <p className="text-sm text-white/70 mb-5 flex-1">A year of access to every premium blog post, every guide, and every adventure pack.</p>
               {user ? (
                 <Link href="/account" className="btn-primary w-full justify-center !text-sm">
                   Upgrade to Premium <ArrowRight className="w-4 h-4" />

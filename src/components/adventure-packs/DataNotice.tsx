@@ -9,7 +9,7 @@ export default function DataNotice() {
     <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3 text-sm text-amber-900">
       <WifiOff className="w-4 h-4 mt-0.5 shrink-0" />
       <p className="leading-relaxed">
-        <strong>No WiFi while you&apos;re out?</strong> Screenshot this page before you head out so you can mark things off later.
+        <strong>No data?</strong> Screenshot or screen record this page so you can mark things off later.
       </p>
     </div>
   )

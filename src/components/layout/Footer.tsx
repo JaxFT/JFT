@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Plane } from 'lucide-react'
+import Logo from '@/components/branding/Logo'
 
 export default function Footer() {
   return (
@@ -7,11 +7,8 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div className="md:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
-                <Plane className="w-4 h-4 text-white" strokeWidth={2} />
-              </div>
-              <span className="font-bold text-white text-sm tracking-wide uppercase">Jax <span className="opacity-50 font-light mx-0.5">|</span> Family Travels</span>
+            <Link href="/" className="inline-flex items-center mb-4">
+              <Logo height={36} variant="onDark" ariaLabel="Jax | Family Travels — home" />
             </Link>
             <p className="text-sm leading-relaxed max-w-xs">
               Real travel for real families. Honest guides, practical tools, and a community that gets it.

@@ -86,7 +86,7 @@ export default async function GuidesPage() {
             <div>
               <p className="font-bold text-lg">Premium — £25/year</p>
               <p className="text-white/60 text-sm">
-                A year of access to every premium blog post, every guide, and every learning pack. View on the site, no downloads.
+                A year of access to every premium blog post, every guide, and every adventure pack. View on the site, no downloads.
               </p>
             </div>
             <Link href="/signup?next=/account" className="btn-primary shrink-0">

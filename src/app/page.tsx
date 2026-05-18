@@ -93,7 +93,7 @@ export default async function HomePage() {
             {[
               { icon: Compass, title: 'I Want To Travel', desc: 'Our decision tool that tells you honestly if long-term family travel is realistic for you right now.', href: '/i-want-to-travel', premiumFeature: false },
               { icon: Map, title: 'Guides', desc: 'Destination guides written from real family experience — what actually worked, what didn\'t.', href: '/guides', premiumFeature: false },
-              { icon: BookOpen, title: 'Learning Packs', desc: 'Practical resources for travelling families — from schooling on the road to managing money abroad.', href: '/learning', premiumFeature: true },
+              { icon: BookOpen, title: 'Adventure Packs', desc: 'Country-specific missions for your family — language, food, geography, scavenger hunts and family chat cards.', href: '/adventure-packs', premiumFeature: true },
             ].map(item => {
               const showBadge = item.premiumFeature
               const badgeText = isPremium ? 'Included' : 'Premium'
@@ -157,7 +157,7 @@ export default async function HomePage() {
               </p>
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">You have access to everything</h2>
               <p className="text-white/70 text-lg mb-8 leading-relaxed">
-                Every premium blog post, every guide, and every learning pack are open to you. Here are a few places to start.
+                Every premium blog post, every guide, and every adventure pack are open to you. Here are a few places to start.
               </p>
               <div className="flex flex-wrap gap-3 justify-center">
                 <Link href="/guides" className="btn-primary text-base px-7 py-3.5">
@@ -173,7 +173,7 @@ export default async function HomePage() {
               <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-4">Premium membership</p>
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">Everything, for £25 a year</h2>
               <p className="text-white/70 text-lg mb-8 leading-relaxed">
-                A year of access to every premium blog post, every guide, and every learning pack. Cancel any time.
+                A year of access to every premium blog post, every guide, and every adventure pack. Cancel any time.
               </p>
               <Link href={user ? '/account' : '/signup'} className="btn-primary text-base px-8 py-3.5">
                 {user ? 'Upgrade to Premium' : 'Get started'} <ArrowRight className="w-4 h-4" />

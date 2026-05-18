@@ -6,7 +6,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Learning Resources',
-  description: 'Learning resources for families travelling long-term — sites we use and trust, plus our own learning packs.',
+  description: 'Learning resources for families travelling long-term — sites we use and trust.',
 }
 
 export const dynamic = 'force-dynamic'
@@ -82,7 +82,7 @@ export default async function LearningPage() {
         <div className="mb-12 max-w-2xl">
           <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Learning Resources</p>
           <h1 className="text-4xl font-bold text-gray-900">Resources for families on the road</h1>
-          <p className="text-gray-500 mt-2 text-lg">Sites we actually use and trust — plus our own learning packs for members.</p>
+          <p className="text-gray-500 mt-2 text-lg">Sites we actually use and trust for families on the road.</p>
         </div>
 
         {/* ADVENTURE PACKS PROMO */}
@@ -148,51 +148,8 @@ export default async function LearningPage() {
           </p>
         </section>
 
-        {/* PREMIUM LEARNING PACKS (gated) */}
-        <section>
-          <p className="text-xs font-bold tracking-widest uppercase text-gray-500 mb-5">Members-only</p>
-          {isPremium ? (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center">
-              <BookOpen className="w-10 h-10 mx-auto mb-3 text-brand-300" />
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Learning packs are on the way</h2>
-              <p className="text-gray-500 text-sm max-w-md mx-auto">
-                Bec is putting the finishing touches on the first pack. You'll be notified the moment it goes live — your premium membership already includes it.
-              </p>
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-0">
-                <div className="bg-brand-950 text-white p-8 sm:col-span-1 flex flex-col justify-center">
-                  <Lock className="w-6 h-6 text-brand-300 mb-3" />
-                  <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-1">Premium</p>
-                  <p className="text-2xl font-bold leading-tight">Learning Packs</p>
-                </div>
-                <div className="p-8 sm:col-span-2">
-                  <h3 className="font-bold text-gray-900 mb-2">JFT Learning Packs</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed mb-5">
-                    Practical resources for families on the road — written by Bec from years of doing it for real. Schooling rhythm, money on the move, packing for the long haul, and more. Included in Premium: a year of access to every premium blog post, every guide, and every learning pack for &pound;25.
-                  </p>
-                  <div className="flex gap-3 flex-wrap">
-                    {user ? (
-                      <Link href="/account" className="btn-primary !py-2 !px-5 !text-sm">
-                        Upgrade to Premium <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    ) : (
-                      <>
-                        <Link href="/signup?next=/learning" className="btn-primary !py-2 !px-5 !text-sm">
-                          Sign up to get started <ArrowRight className="w-4 h-4" />
-                        </Link>
-                        <Link href="/login?next=/learning" className="text-sm font-medium text-gray-500 hover:text-gray-800 underline underline-offset-4 decoration-gray-300 self-center">
-                          Already a member? Log in
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </section>
+        {/* (Premium Learning Packs section removed — superseded by Adventure Packs,
+            which have their own top-level page and promo card above.) */}
       </div>
     </div>
   )

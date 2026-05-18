@@ -67,7 +67,7 @@ export default function PremiumCancelButton() {
                 Your premium access will continue until the <strong>end of your current paid period</strong> — typically the end of the 12-month subscription you paid for. No refund is due for the remainder of that period.
               </p>
               <p>
-                After that, you&apos;ll lose access to premium blog posts, guides, and learning packs. Your account stays put — you can re-subscribe any time.
+                After that, you&apos;ll lose access to premium blog posts, guides, and adventure packs. Your account stays put — you can re-subscribe any time.
               </p>
               <p className="text-xs text-gray-500">
                 If you want a refund, please email <a href="mailto:hello@jaxfamilytravels.com" className="text-brand-600 underline">hello@jaxfamilytravels.com</a> with the reason. We consider requests case by case.

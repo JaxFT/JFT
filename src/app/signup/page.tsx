@@ -10,6 +10,8 @@ export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
+  // Unticked by default — UK GDPR/PECR requires affirmative consent.
+  const [marketingOptIn, setMarketingOptIn] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
@@ -23,7 +25,10 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signUp({
       email, password,
       options: {
-        data: { full_name: fullName },
+        // marketing_opt_in rides in user metadata until the user confirms
+        // their email. The welcome endpoint then syncs it across to the
+        // profiles row via service role.
+        data: { full_name: fullName, marketing_opt_in: marketingOptIn },
         emailRedirectTo: `${window.location.origin}/auth/callback?next=/account`,
       },
     })
@@ -85,6 +90,24 @@ export default function SignupPage() {
                 placeholder="Min. 8 characters"
               />
             </div>
+
+            <label className="flex items-start gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={marketingOptIn}
+                onChange={e => setMarketingOptIn(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 shrink-0"
+              />
+              <span className="text-xs text-gray-600 leading-relaxed">
+                Yes, I&apos;d be happy to hear from Jax | Family Travels — occasional emails when we release new guides, post on the blog, or have updates worth sharing. No spam, ever, and you can unsubscribe in one click any time.
+              </span>
+            </label>
+
+            <p className="text-xs text-gray-400 leading-relaxed">
+              By creating an account you agree to our{' '}
+              <Link href="/terms" target="_blank" className="text-brand-600 hover:underline">Terms</Link>{' '}and{' '}
+              <Link href="/privacy" target="_blank" className="text-brand-600 hover:underline">Privacy Policy</Link>.
+            </p>
 
             {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
 

@@ -24,7 +24,7 @@ export default async function AccountPage() {
   const [{ data: profile }, { data: purchasesData }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('full_name, subscription_tier, created_at')
+      .select('full_name, subscription_tier, created_at, marketing_opt_in')
       .eq('id', user.id)
       .single(),
     supabase
@@ -59,6 +59,7 @@ export default async function AccountPage() {
           <AccountEditor
             initialFullName={profile?.full_name ?? ''}
             email={user.email ?? ''}
+            initialMarketingOptIn={!!profile?.marketing_opt_in}
           />
         </div>
 

@@ -3,14 +3,15 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, Check, KeyRound, User as UserIcon } from 'lucide-react'
+import { Loader2, Check, KeyRound, User as UserIcon, Mail } from 'lucide-react'
 
 type Props = {
   initialFullName: string
   email: string
+  initialMarketingOptIn: boolean
 }
 
-export default function AccountEditor({ initialFullName, email }: Props) {
+export default function AccountEditor({ initialFullName, email, initialMarketingOptIn }: Props) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -51,6 +52,37 @@ export default function AccountEditor({ initialFullName, email }: Props) {
       setNameError(e instanceof Error ? e.message : 'Could not save')
     } finally {
       setSavingName(false)
+    }
+  }
+
+  // ── Marketing preference state ──────────────────
+  const [marketingOptIn, setMarketingOptIn] = useState(initialMarketingOptIn)
+  const [savingMarketing, setSavingMarketing] = useState(false)
+  const [marketingError, setMarketingError] = useState<string | null>(null)
+  const [marketingSavedAt, setMarketingSavedAt] = useState<number | null>(null)
+
+  const toggleMarketing = async (next: boolean) => {
+    // Optimistic: flip UI first, roll back on error.
+    const prev = marketingOptIn
+    setMarketingOptIn(next)
+    setSavingMarketing(true)
+    setMarketingError(null)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not signed in')
+      const { error } = await supabase
+        .from('profiles')
+        .update({ marketing_opt_in: next })
+        .eq('id', user.id)
+      if (error) throw new Error(error.message)
+      setMarketingSavedAt(Date.now())
+      setTimeout(() => setMarketingSavedAt(saved => (saved && Date.now() - saved >= 2500 ? null : saved)), 2600)
+      router.refresh()
+    } catch (e) {
+      setMarketingOptIn(prev)
+      setMarketingError(e instanceof Error ? e.message : 'Could not save')
+    } finally {
+      setSavingMarketing(false)
     }
   }
 
@@ -132,6 +164,42 @@ export default function AccountEditor({ initialFullName, email }: Props) {
           </div>
         </div>
       </form>
+
+      {/* MARKETING EMAILS */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Mail className="w-5 h-5 text-brand-600" />
+          <h2 className="font-bold text-gray-900">Email preferences</h2>
+        </div>
+        <label className="flex items-start gap-3 cursor-pointer select-none rounded-lg border border-gray-200 px-4 py-3 hover:bg-gray-50">
+          <input
+            type="checkbox"
+            checked={marketingOptIn}
+            onChange={e => toggleMarketing(e.target.checked)}
+            disabled={savingMarketing}
+            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 shrink-0"
+          />
+          <span className="flex-1">
+            <span className="block text-sm font-semibold text-gray-900">Occasional updates from Jax | Family Travels</span>
+            <span className="block text-xs text-gray-500 mt-0.5 leading-relaxed">
+              New guides, blog posts, and updates worth sharing. No spam. Unsubscribe any time.
+            </span>
+          </span>
+          <span className="shrink-0 text-xs font-medium text-gray-500 mt-0.5">
+            {savingMarketing
+              ? <Loader2 className="w-4 h-4 animate-spin" />
+              : marketingSavedAt
+                ? <span className="inline-flex items-center gap-1 text-brand-700"><Check className="w-3.5 h-3.5" /> Saved</span>
+                : null}
+          </span>
+        </label>
+        {marketingError && (
+          <p className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-md px-3 py-2 mt-2">{marketingError}</p>
+        )}
+        <p className="text-xs text-gray-400 mt-3 leading-relaxed">
+          This setting only controls marketing updates. We&apos;ll still send account-related emails (login confirmations, purchase receipts) when needed.
+        </p>
+      </div>
 
       {/* PASSWORD */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">

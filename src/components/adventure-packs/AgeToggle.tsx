@@ -21,7 +21,7 @@ export default function AgeToggle({
           value === 'younger' ? 'bg-white text-brand-700 shadow-sm' : 'text-gray-500 hover:text-gray-900'
         }`}
       >
-        <Baby className="w-3.5 h-3.5" /> Ages 5–7
+        <Baby className="w-3.5 h-3.5" /> Younger kids
       </button>
       <button
         type="button"
@@ -30,7 +30,7 @@ export default function AgeToggle({
           value === 'older' ? 'bg-white text-brand-700 shadow-sm' : 'text-gray-500 hover:text-gray-900'
         }`}
       >
-        <GraduationCap className="w-3.5 h-3.5" /> Ages 8–11
+        <GraduationCap className="w-3.5 h-3.5" /> Older kids
       </button>
     </div>
   )

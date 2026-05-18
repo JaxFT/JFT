@@ -67,7 +67,7 @@ export default function PackShell({ userId, data }: Props) {
   const onAgeChange = (mode: typeof pack.ageMode) => {
     if (mode !== pack.ageMode) {
       pack.changeAgeMode(mode)
-      setShowAgeBanner(mode === 'older' ? 'Ages 8 to 11 mode. Some sections have extra challenges.' : 'Ages 5 to 7 mode. Keeping it simple.')
+      setShowAgeBanner(mode === 'older' ? 'Older kids mode. Some sections have extra challenges.' : 'Younger kids mode. Keeping it simple.')
       setTimeout(() => setShowAgeBanner(null), 4000)
     }
   }

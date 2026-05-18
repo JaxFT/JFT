@@ -6,6 +6,7 @@ import {
   ArrowRight, Loader2, Upload, FileText, Check, Eye, FileEdit,
 } from 'lucide-react'
 import GuideMarkdown from '@/components/guide/GuideMarkdown'
+import { resizeImageIfLarge } from '@/lib/image-resize'
 
 export default function ImportForm() {
   const router = useRouter()
@@ -35,8 +36,9 @@ export default function ImportForm() {
     setUploadError(null)
     setUploadingCover(true)
     try {
+      const { file: prepared } = await resizeImageIfLarge(file)
       const form = new FormData()
-      form.append('file', file)
+      form.append('file', prepared)
       const res = await fetch('/api/admin/blog-photos/upload', { method: 'POST', body: form })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`)

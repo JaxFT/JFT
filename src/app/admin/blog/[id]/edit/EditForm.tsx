@@ -14,6 +14,7 @@ import type { BlogPostRow, BlogLink } from '@/lib/blog-db'
 import { BLOG_CATEGORIES, type BlogCategory } from '@/lib/blog-categories'
 import CoverFocalPicker from '@/components/blog/CoverFocalPicker'
 import { buildRewritePrompt } from '@/lib/blog-rewrite-prompt'
+import { resizeImageIfLarge } from '@/lib/image-resize'
 
 const MAX_MINUTES = 20
 const WORDS_PER_MIN = 200
@@ -138,8 +139,9 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
     setUploadError(null)
     setUploadingCover(true)
     try {
+      const { file: prepared } = await resizeImageIfLarge(file)
       const form = new FormData()
-      form.append('file', file)
+      form.append('file', prepared)
       const res = await fetch('/api/admin/blog-photos/upload', { method: 'POST', body: form })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`)

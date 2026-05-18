@@ -37,6 +37,8 @@ export default async function HomePage() {
           <img
             src="/images/homepage/homepage_header_jft.jpg"
             alt="The Jax Family Travels family on the road"
+            decoding="async"
+            fetchPriority="high"
             className="w-full h-full object-cover object-center"
           />
           {/* Lighter overlay than before — let the photo speak, just enough dark to keep the white headline readable */}

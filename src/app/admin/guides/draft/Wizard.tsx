@@ -15,6 +15,7 @@ import {
   genLocalId, defaultHeadingFor, defaultFreePreviewFor,
 } from '@/lib/guide-types'
 import { buildBlockPrompt } from '@/lib/guide-prompts'
+import { resizeImageIfLarge } from '@/lib/image-resize'
 
 const TOTAL_STEPS = 4
 
@@ -145,8 +146,9 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
     setUploadError(null)
     setUploadingCover(true)
     try {
+      const { file: prepared } = await resizeImageIfLarge(file)
       const form = new FormData()
-      form.append('file', file)
+      form.append('file', prepared)
       const res = await fetch('/api/admin/blog-photos/upload', { method: 'POST', body: form })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`)

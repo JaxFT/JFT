@@ -22,6 +22,7 @@ import {
 import GuideMarkdown from './GuideMarkdown'
 import PdfPanel from './PdfPanel'
 import ImageSlotsPanel from './ImageSlotsPanel'
+import { resizeImageIfLarge } from '@/lib/image-resize'
 import type { GuideRow, GuideContentBlock } from '@/lib/guide-types'
 import { extractMarkdownToc } from '@/lib/guide-types'
 import type { AutoLinkPhrase } from '@/lib/blog-links'
@@ -130,8 +131,9 @@ function SingleDocPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
     setUploading(true)
     setUploadError(null)
     try {
+      const { file: prepared } = await resizeImageIfLarge(file)
       const form = new FormData()
-      form.append('file', file)
+      form.append('file', prepared)
       const res = await fetch('/api/admin/blog-photos/upload', { method: 'POST', body: form })
       const j = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`)
@@ -673,8 +675,9 @@ function BlockEditor({
     setUploading(true)
     setUploadError(null)
     try {
+      const { file: prepared } = await resizeImageIfLarge(file)
       const form = new FormData()
-      form.append('file', file)
+      form.append('file', prepared)
       const res = await fetch('/api/admin/blog-photos/upload', { method: 'POST', body: form })
       const j = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`)

@@ -135,6 +135,8 @@ export default function HeroBlogStack({ posts }: { posts: StackPost[] }) {
                   src={post.coverImage}
                   alt={post.title}
                   draggable={false}
+                  decoding="async"
+                  loading="eager"
                   className="w-full aspect-square object-cover pointer-events-none"
                   style={{ objectPosition: `${post.coverFocalX ?? 50}% ${post.coverFocalY ?? 50}%` }}
                 />

@@ -11,6 +11,8 @@ export default function BlogCard({ post }: { post: BlogPost }) {
           <img
             src={post.coverImage}
             alt={post.title}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             style={{ objectPosition: `${post.coverFocalX ?? 50}% ${post.coverFocalY ?? 50}%` }}
           />

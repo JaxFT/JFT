@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
 import { getGuideBySlug, userHasPurchased, formatPrice } from '@/lib/guides-db'
+import { ArticleJsonLd } from '@/components/seo/JsonLd'
 import { getPublishedWebGuideBySlug } from '@/lib/guides-content-db'
 import { getAboutUs } from '@/lib/app-settings'
 import { getAutoLinkPhrases } from '@/lib/blog-links-server'
@@ -16,11 +17,60 @@ export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
+  const url = `${siteUrl}/guides/${slug}`
+
   const webGuide = await getPublishedWebGuideBySlug(slug)
-  if (webGuide) return { title: webGuide.title, description: webGuide.subtitle ?? undefined }
+  if (webGuide) {
+    const description = webGuide.subtitle ?? undefined
+    const cover = webGuide.cover_image ?? undefined
+    return {
+      title: webGuide.title,
+      description,
+      alternates: { canonical: url },
+      openGraph: {
+        type: 'article',
+        url,
+        title: webGuide.title,
+        description,
+        siteName: 'Jax | Family Travels',
+        ...(cover ? { images: [{ url: cover, alt: webGuide.title }] } : {}),
+        ...(webGuide.published_at ? { publishedTime: webGuide.published_at } : {}),
+        ...(webGuide.updated_at ? { modifiedTime: webGuide.updated_at } : {}),
+        tags: webGuide.tags,
+      },
+      twitter: {
+        card: cover ? 'summary_large_image' : 'summary',
+        title: webGuide.title,
+        description,
+        ...(cover ? { images: [cover] } : {}),
+      },
+    }
+  }
+
   const guide = await getGuideBySlug(slug)
   if (!guide) return {}
-  return { title: guide.name, description: guide.subtitle ?? undefined }
+  const description = guide.subtitle ?? undefined
+  const cover = guide.cover_image ?? undefined
+  return {
+    title: guide.name,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: 'article',
+      url,
+      title: guide.name,
+      description,
+      siteName: 'Jax | Family Travels',
+      ...(cover ? { images: [{ url: cover, alt: guide.name }] } : {}),
+    },
+    twitter: {
+      card: cover ? 'summary_large_image' : 'summary',
+      title: guide.name,
+      description,
+      ...(cover ? { images: [cover] } : {}),
+    },
+  }
 }
 
 export default async function GuidePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -50,15 +100,27 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
       isPremium = isPremiumTier(profile?.subscription_tier)
     }
     const canViewFull = isPremium || !webGuide.is_premium
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
     return (
-      <WebGuideView
-        guide={webGuide}
-        aboutUsMarkdown={aboutUs}
-        autoLinkPhrases={autoLinkPhrases}
-        canViewFull={canViewFull}
-        isLoggedIn={!!user}
-        isPremium={isPremium}
-      />
+      <>
+        <ArticleJsonLd
+          url={`${siteUrl}/guides/${webGuide.slug}`}
+          headline={webGuide.title}
+          description={webGuide.subtitle}
+          image={webGuide.cover_image}
+          datePublished={webGuide.published_at}
+          dateModified={webGuide.updated_at}
+          tags={webGuide.tags}
+        />
+        <WebGuideView
+          guide={webGuide}
+          aboutUsMarkdown={aboutUs}
+          autoLinkPhrases={autoLinkPhrases}
+          canViewFull={canViewFull}
+          isLoggedIn={!!user}
+          isPremium={isPremium}
+        />
+      </>
     )
   }
 

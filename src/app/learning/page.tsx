@@ -103,6 +103,8 @@ export default async function LearningPage() {
                     <img
                       src={item.image}
                       alt={item.name}
+                      loading="lazy"
+                      decoding="async"
                       className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (

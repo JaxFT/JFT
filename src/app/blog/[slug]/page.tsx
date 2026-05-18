@@ -8,6 +8,7 @@ import type { Metadata } from 'next'
 import { getPublishedPostBySlug, rowToView } from '@/lib/blog-db'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
+import { ArticleJsonLd } from '@/components/seo/JsonLd'
 import { remarkAutoLink } from '@/lib/blog-links'
 import { getAutoLinkPhrases } from '@/lib/blog-links-server'
 
@@ -19,7 +20,32 @@ export async function generateMetadata(
   const { slug } = await params
   const row = await getPublishedPostBySlug(slug)
   if (!row) return {}
-  return { title: row.title, description: row.excerpt ?? undefined }
+  const description = row.excerpt ?? undefined
+  const cover = row.cover_image ?? undefined
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
+  const url = `${siteUrl}/blog/${row.slug}`
+  return {
+    title: row.title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: 'article',
+      url,
+      title: row.title,
+      description,
+      siteName: 'Jax | Family Travels',
+      ...(cover ? { images: [{ url: cover, alt: row.title }] } : {}),
+      ...(row.published_at ? { publishedTime: row.published_at } : {}),
+      ...(row.updated_at ? { modifiedTime: row.updated_at } : {}),
+      tags: row.tags,
+    },
+    twitter: {
+      card: cover ? 'summary_large_image' : 'summary',
+      title: row.title,
+      description,
+      ...(cover ? { images: [cover] } : {}),
+    },
+  }
 }
 
 function truncateMarkdownToPercent(md: string, percent: number): string {
@@ -58,14 +84,27 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const gated = post.isPremium && !userIsPremium
   const visibleContent = gated ? truncateMarkdownToPercent(post.content, 20) : post.content
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
+
   return (
     <div className="min-h-screen bg-white pt-20">
+      <ArticleJsonLd
+        url={`${siteUrl}/blog/${row.slug}`}
+        headline={row.title}
+        description={row.excerpt}
+        image={row.cover_image}
+        datePublished={row.published_at}
+        dateModified={row.updated_at}
+        tags={row.tags}
+      />
       {post.coverImage && (
         <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-8">
           <div className="aspect-square w-full overflow-hidden rounded-2xl bg-gray-100">
             <img
               src={post.coverImage}
               alt={post.title}
+              decoding="async"
+              fetchPriority="high"
               className="w-full h-full object-cover"
               style={{ objectPosition: `${post.coverFocalX}% ${post.coverFocalY}%` }}
             />

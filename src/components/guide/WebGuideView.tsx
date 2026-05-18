@@ -42,6 +42,8 @@ export default function WebGuideView({
             <img
               src={guide.cover_image}
               alt={guide.title}
+              decoding="async"
+              fetchPriority="high"
               className="block w-full max-h-[80vh] object-contain bg-brand-900"
             />
           </div>

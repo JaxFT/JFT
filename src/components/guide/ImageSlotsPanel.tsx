@@ -24,6 +24,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   Image as ImageIcon, Upload, Loader2, Check, Trash2, RefreshCw,
 } from 'lucide-react'
+import { resizeImageIfLarge } from '@/lib/image-resize'
 
 type ImageRef = {
   start: number
@@ -167,8 +168,9 @@ export default function ImageSlotsPanel({ body, setBody }: Props) {
     setError(null)
     setUploadingId(slot.id)
     try {
+      const { file: prepared } = await resizeImageIfLarge(file)
       const form = new FormData()
-      form.append('file', file)
+      form.append('file', prepared)
       const res = await fetch('/api/admin/blog-photos/upload', { method: 'POST', body: form })
       const j = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`)

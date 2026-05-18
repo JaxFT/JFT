@@ -119,7 +119,7 @@ export default function PlanningPage() {
             </ul>
           </div>
           <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-md bg-white">
-            <img src={SCREEN_PLANNER} alt="Waystaq trip planner — Asia adventure home screen" className="w-full h-auto block" />
+            <img src={SCREEN_PLANNER} alt="Waystaq trip planner — Asia adventure home screen" loading="lazy" decoding="async" className="w-full h-auto block" />
           </div>
         </div>
       </section>
@@ -127,7 +127,7 @@ export default function PlanningPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white border-y border-gray-100">
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
           <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-md bg-white order-2 lg:order-1">
-            <img src={SCREEN_BUDGET} alt="Waystaq daily spend by country chart" className="w-full h-auto block" />
+            <img src={SCREEN_BUDGET} alt="Waystaq daily spend by country chart" loading="lazy" decoding="async" className="w-full h-auto block" />
           </div>
           <div className="order-1 lg:order-2">
             <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-3">The budget</p>

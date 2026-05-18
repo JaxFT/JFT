@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { BLOG_CATEGORIES, type BlogCategory } from '@/lib/blog-categories'
 import { VOICE_PROFILE } from '@/lib/voice-profile'
+import { resizeImageIfLarge } from '@/lib/image-resize'
 
 type Photo = {
   id: string
@@ -122,8 +123,9 @@ export default function Wizard() {
       const file = files[i]
       const photoId = newPhotos[i].id
       try {
+        const { file: prepared } = await resizeImageIfLarge(file)
         const form = new FormData()
-        form.append('file', file)
+        form.append('file', prepared)
         const res = await fetch('/api/admin/blog-photos/upload', { method: 'POST', body: form })
         const body = await res.json().catch(() => ({}))
         if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`)

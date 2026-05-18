@@ -2,28 +2,42 @@
 
 // Persistent image-slot panel for the guide editors.
 //
-// Replaces the old behaviour where uploading a photo to a placeholder
-// removed that slot from the list. Now each slot sticks around:
-//   - unuploaded → shows the original placeholder text + Upload button
-//   - uploaded   → shows the thumbnail in green with Replace + Delete
-//                  buttons. Delete restores the original placeholder
-//                  text in the body so the slot reverts to its
-//                  pre-upload state.
+// Shows EVERY image referenced in the body markdown as a manageable
+// slot — both unfilled placeholders ([IMAGE], ![](placeholder), etc.)
+// AND already-completed images (![caption](https://...)). So a guide
+// that you already added photos to before this panel existed still
+// surfaces those photos with Replace + Delete controls.
 //
-// Slot state is reconciled with the body markdown on every change:
-// new placeholders typed into the body show up as new slots; deleted
-// placeholders (where their text isn't in the body any more AND no
-// upload has happened against them) drop out.
+// Slot state model:
+//   - originalRaw — the placeholder text we'd restore on Delete. Null
+//     for slots discovered from an already-uploaded image (in that
+//     case Delete just removes the image markdown entirely).
+//   - upload     — { url, markdown } when the slot holds an image.
+//                  null when it's an unfilled placeholder waiting for
+//                  one.
+//
+// Reconciliation: on every body change we re-scan and try to keep
+// existing slots whose anchor (uploaded markdown OR placeholder text)
+// is still present. New refs in the body become new slots.
 
 import { useEffect, useRef, useState } from 'react'
 import {
   Image as ImageIcon, Upload, Loader2, Check, Trash2, RefreshCw,
 } from 'lucide-react'
 
-type Placeholder = { start: number; end: number; caption: string; raw: string }
+type ImageRef = {
+  start: number
+  end: number
+  caption: string
+  raw: string
+  kind: 'placeholder' | 'uploaded'
+  url?: string  // only present when kind === 'uploaded'
+}
 
-function detectImagePlaceholders(md: string): Placeholder[] {
-  const results: Placeholder[] = []
+function detectImageRefs(md: string): ImageRef[] {
+  const results: ImageRef[] = []
+
+  // Unfilled placeholders — bracketed tokens like [IMAGE: caption].
   const tag = /\[(?:IMAGE|PHOTO|IMG|PIC|INSERT IMAGE|INSERT PHOTO)(?:\s*:\s*([^\]]*))?\]/gi
   let m: RegExpExecArray | null
   while ((m = tag.exec(md))) {
@@ -32,25 +46,50 @@ function detectImagePlaceholders(md: string): Placeholder[] {
       end: m.index + m[0].length,
       caption: (m[1] ?? '').trim(),
       raw: m[0],
+      kind: 'placeholder',
     })
   }
-  const img = /!\[([^\]]*)\]\(\s*(?:placeholder|none|todo|tbd|insert\s+here|insert\s+image|#)?\s*\)/gi
-  while ((m = img.exec(md))) {
+
+  // Empty / "placeholder URL" markdown like ![alt]() or ![alt](placeholder).
+  // Note: NOT matching ![alt](http…), which is a real image — that's the
+  // next pattern below.
+  const empty = /!\[([^\]]*)\]\(\s*(?:placeholder|none|todo|tbd|insert\s+here|insert\s+image|#)?\s*\)/gi
+  while ((m = empty.exec(md))) {
     results.push({
       start: m.index,
       end: m.index + m[0].length,
       caption: (m[1] ?? '').trim(),
       raw: m[0],
+      kind: 'placeholder',
     })
   }
+
+  // Completed image markdown — has a real URL inside the parens. We
+  // accept http/https and protocol-relative; anything else (including
+  // the explicit placeholder words above) is skipped to avoid double
+  // matching.
+  const full = /!\[([^\]]*)\]\((https?:\/\/[^)\s]+|\/\/[^)\s]+)\)/g
+  while ((m = full.exec(md))) {
+    results.push({
+      start: m.index,
+      end: m.index + m[0].length,
+      caption: (m[1] ?? '').trim(),
+      raw: m[0],
+      kind: 'uploaded',
+      url: m[2],
+    })
+  }
+
   return results.sort((a, b) => a.start - b.start)
 }
 
 type Slot = {
   id: string
-  originalRaw: string
+  // Text to restore on Delete. Null when the slot was discovered as
+  // an already-uploaded image (Delete in that case removes the markdown).
+  originalRaw: string | null
   caption: string
-  upload?: { url: string; markdown: string }
+  upload: { url: string; markdown: string } | null
 }
 
 type Props = {
@@ -60,50 +99,65 @@ type Props = {
 
 let SLOT_SEQ = 0
 
+function refToInitialSlot(r: ImageRef): Slot {
+  return {
+    id: `slot-${++SLOT_SEQ}`,
+    caption: r.caption,
+    originalRaw: r.kind === 'placeholder' ? r.raw : null,
+    upload: r.kind === 'uploaded' && r.url
+      ? { url: r.url, markdown: r.raw }
+      : null,
+  }
+}
+
 export default function ImageSlotsPanel({ body, setBody }: Props) {
   const [slots, setSlots] = useState<Slot[]>(() =>
-    detectImagePlaceholders(body).map(p => ({
-      id: `slot-${++SLOT_SEQ}`,
-      originalRaw: p.raw,
-      caption: p.caption,
-    })),
+    detectImageRefs(body).map(refToInitialSlot),
   )
   const [uploadingId, setUploadingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // Reconcile slot list with whatever's currently in the body.
-  //  - Uploaded slots: keep regardless (the inserted markdown lives in
-  //    the body; if the user manually deleted it, replace will reinsert,
-  //    delete will silently no-op the body change.)
-  //  - Unuploaded slots: keep one per occurrence of their originalRaw
-  //    that's still in the body; drop the rest.
-  //  - Any placeholder in the body not matched above becomes a new slot.
+  // Reconcile slots with the current body markdown. We try to keep an
+  // existing slot whenever its anchor text is still present, then
+  // create new slots for any image refs in the body that weren't
+  // claimed by a kept slot.
   useEffect(() => {
-    const placeholders = detectImagePlaceholders(body)
-    const remainingRaws = placeholders.map(p => p.raw)
+    const refs = detectImageRefs(body)
 
     setSlots(prev => {
+      // Remaining refs we still need to claim.
+      const remaining = [...refs]
+
+      const claim = (predicate: (r: ImageRef) => boolean): ImageRef | null => {
+        const idx = remaining.findIndex(predicate)
+        if (idx === -1) return null
+        const [r] = remaining.splice(idx, 1)
+        return r
+      }
+
       const kept: Slot[] = []
       for (const s of prev) {
         if (s.upload) {
-          kept.push(s)
-          continue
-        }
-        const idx = remainingRaws.indexOf(s.originalRaw)
-        if (idx >= 0) {
-          kept.push(s)
-          remainingRaws.splice(idx, 1)
+          // Try to find a matching uploaded ref in body (same markdown).
+          const r = claim(r => r.kind === 'uploaded' && r.raw === s.upload!.markdown)
+          if (r) {
+            kept.push(s)
+            continue
+          }
+          // Markdown no longer present in the body. If we still know
+          // its originalRaw, we keep the slot in case the user wants
+          // to Replace (which would reinsert at end if needed).
+          // Otherwise drop it.
+          if (s.originalRaw) kept.push(s)
+        } else if (s.originalRaw) {
+          const r = claim(r => r.kind === 'placeholder' && r.raw === s.originalRaw)
+          if (r) kept.push(s)
         }
       }
-      const newSlots: Slot[] = remainingRaws.map(raw => {
-        const p = placeholders.find(p => p.raw === raw)!
-        return {
-          id: `slot-${++SLOT_SEQ}`,
-          originalRaw: raw,
-          caption: p.caption,
-        }
-      })
-      return [...kept, ...newSlots]
+
+      // Anything left in remaining → new slot.
+      const additions = remaining.map(refToInitialSlot)
+      return [...kept, ...additions]
     })
   }, [body])
 
@@ -121,15 +175,16 @@ export default function ImageSlotsPanel({ body, setBody }: Props) {
       const url = String(j.url)
       const newMarkdown = `![${slot.caption}](${url})`
 
-      // Mutate the body string: if this slot was previously uploaded,
-      // replace the prior inserted markdown; otherwise replace the
-      // original placeholder text. Fall back to appending if neither
-      // anchor is found (user edited the body manually).
-      let nextBody: string
+      // Mutate body: replace the slot's current anchor (uploaded markdown
+      // if it has one, otherwise its placeholder text). Append if neither
+      // is in body (user edited manually).
       const anchor = slot.upload?.markdown ?? slot.originalRaw
-      const idx = body.indexOf(anchor)
-      if (idx >= 0) {
-        nextBody = body.slice(0, idx) + newMarkdown + body.slice(idx + anchor.length)
+      let nextBody: string
+      if (anchor) {
+        const idx = body.indexOf(anchor)
+        nextBody = idx >= 0
+          ? body.slice(0, idx) + newMarkdown + body.slice(idx + anchor.length)
+          : `${body}\n\n${newMarkdown}`
       } else {
         nextBody = `${body}\n\n${newMarkdown}`
       }
@@ -145,15 +200,33 @@ export default function ImageSlotsPanel({ body, setBody }: Props) {
     }
   }
 
-  const deleteUpload = (slot: Slot) => {
+  const removeUpload = (slot: Slot) => {
     if (!slot.upload) return
-    // Restore the original placeholder text in the body if the inserted
-    // markdown is still there. If not (manual edit), just clear slot state.
-    const idx = body.indexOf(slot.upload.markdown)
+    const anchor = slot.upload.markdown
+    const idx = body.indexOf(anchor)
     if (idx >= 0) {
-      setBody(body.slice(0, idx) + slot.originalRaw + body.slice(idx + slot.upload.markdown.length))
+      if (slot.originalRaw) {
+        // Restore the placeholder so the slot can be re-uploaded into.
+        setBody(body.slice(0, idx) + slot.originalRaw + body.slice(idx + anchor.length))
+        setSlots(prev => prev.map(s => (s.id === slot.id ? { ...s, upload: null } : s)))
+      } else {
+        // Pre-existing image with no placeholder to restore — drop the
+        // image markdown entirely AND remove the slot from the list.
+        // Trim a surrounding blank line so we don't leave gaping
+        // whitespace.
+        let cleaned = body.slice(0, idx) + body.slice(idx + anchor.length)
+        cleaned = cleaned.replace(/\n{3,}/g, '\n\n').trimEnd() + (body.endsWith('\n') ? '\n' : '')
+        setBody(cleaned)
+        setSlots(prev => prev.filter(s => s.id !== slot.id))
+      }
+    } else {
+      // Anchor not in body — just drop the slot from state.
+      if (slot.originalRaw) {
+        setSlots(prev => prev.map(s => (s.id === slot.id ? { ...s, upload: null } : s)))
+      } else {
+        setSlots(prev => prev.filter(s => s.id !== slot.id))
+      }
     }
-    setSlots(prev => prev.map(s => (s.id === slot.id ? { ...s, upload: undefined } : s)))
   }
 
   const uploadedCount = slots.filter(s => s.upload).length
@@ -172,7 +245,7 @@ export default function ImageSlotsPanel({ body, setBody }: Props) {
         )}
       </div>
       <p className="text-xs text-amber-900/80 leading-relaxed">
-        Upload a photo for each slot — it replaces the placeholder in the text. Uploaded slots stay here so you can swap or remove later; removing restores the original placeholder.
+        Every image in this section, whether uploaded today or already in the doc. Replace swaps the photo, the trash icon removes it (and restores the placeholder if there was one).
       </p>
       <div className="space-y-1.5 pt-1">
         {slots.map(slot => (
@@ -180,7 +253,7 @@ export default function ImageSlotsPanel({ body, setBody }: Props) {
             key={slot.id}
             slot={slot}
             onUpload={file => upload(slot, file)}
-            onDelete={() => deleteUpload(slot)}
+            onDelete={() => removeUpload(slot)}
             uploading={uploadingId === slot.id}
           />
         ))}
@@ -227,6 +300,9 @@ function SlotRow({
         {isUploaded ? (
           <p className="text-xs font-semibold text-brand-800 inline-flex items-center gap-1">
             <Check className="w-3 h-3" /> Uploaded
+            {!slot.originalRaw && (
+              <span className="text-gray-500 font-normal">&middot; existing image</span>
+            )}
           </p>
         ) : (
           <p className="font-mono text-xs text-gray-500 truncate">{slot.originalRaw}</p>
@@ -259,7 +335,7 @@ function SlotRow({
             onClick={onDelete}
             disabled={uploading}
             className="inline-flex items-center text-xs font-semibold text-red-700 hover:bg-red-50 px-1.5 py-1 rounded disabled:opacity-50"
-            title="Remove uploaded image and restore placeholder"
+            title={slot.originalRaw ? 'Remove image and restore placeholder' : 'Remove image from body'}
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>

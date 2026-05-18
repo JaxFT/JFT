@@ -75,13 +75,16 @@ export default function Navbar({ initialUserId, initialUserEmail }: Props) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
-          {/* Logo — the SVG wordmark IS the brand, no extra text needed */}
-          <Link href="/" className="flex items-center shrink-0">
+          {/* Logo + wordmark side by side */}
+          <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <Logo
               height={36}
               variant={transparent ? 'onDark' : 'gradient'}
               ariaLabel="Jax | Family Travels — home"
             />
+            <span className={`hidden sm:inline font-bold text-sm tracking-wide uppercase ${transparent ? 'text-white' : 'text-gray-900'}`}>
+              Jax <span className="opacity-50 font-light mx-0.5">|</span> Family Travels
+            </span>
           </Link>
 
           {/* Desktop links */}

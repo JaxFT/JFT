@@ -93,7 +93,6 @@ export interface CurrencyInfo {
   code: string
   name: string
   symbol: string
-  approxGBP: number         // how many local units = 1 GBP
   recommendedBudget: number
   budgetNote: string
 }

@@ -20,7 +20,6 @@ export const FRANCE_DATA: AdventurePackData = {
     code: 'EUR',
     name: 'Euro',
     symbol: '€',
-    approxGBP: 1.17,
     recommendedBudget: 20,
     budgetNote: 'Recommended: 20 €',
   },
@@ -111,12 +110,121 @@ export const FRANCE_DATA: AdventurePackData = {
   ],
 }
 
+// ── MOROCCO (premium, live) ──────────────────────────────────────
+export const MOROCCO_DATA: AdventurePackData = {
+  slug: 'morocco',
+  country: 'Morocco',
+  flag: '🇲🇦',
+  isFree: false,
+  heroColour: 'bg-amber-900',
+  currency: {
+    code: 'MAD',
+    name: 'Moroccan Dirham',
+    symbol: 'DH',
+    recommendedBudget: 40,
+    budgetNote: 'Recommended: 40 DH',
+  },
+  mapQuestions: [
+    { question: 'Which continent is Morocco on?', answer: 'Africa, in the north-west corner closest to Europe 🌍' },
+    { question: 'What sea and ocean touch Morocco?', answer: 'The Atlantic Ocean on the west and the Mediterranean Sea on the north 🌊' },
+    { question: 'What is the capital of Morocco?', answer: 'Rabat. Most people guess Marrakech or Casablanca, but the capital is actually Rabat on the Atlantic coast.' },
+    { question: 'Which big country borders Morocco to the east?', answer: 'Algeria. The border has been closed since 1994, you cannot cross it.', olderOnly: true },
+    { question: 'What is the highest mountain in Morocco?', answer: 'Mount Toubkal, 4,167 metres, in the High Atlas mountains south of Marrakech. People climb it in two days.', olderOnly: true },
+    { question: 'What huge desert covers part of Morocco?', answer: 'The Sahara, the largest hot desert in the world. It stretches across ten countries.', olderOnly: true },
+  ],
+  phrases: [
+    { english: 'Hello (peace)', nativeScript: 'السلام عليكم', nativeLatin: 'Salam aleikum', phonetic: 'sa-LAM a-LAY-koom', lang: 'ar' },
+    { english: 'Thank you', nativeScript: 'شكرا', nativeLatin: 'Shukran', phonetic: 'SHOOK-ran', lang: 'ar' },
+    { english: 'Please', nativeScript: 'عافاك', nativeLatin: 'Afak', phonetic: 'AH-fak', lang: 'ar' },
+    { english: 'How much?', nativeScript: 'بشحال؟', nativeLatin: 'Bshhal?', phonetic: 'b-SHAH-al', lang: 'ar' },
+    { english: 'Delicious!', nativeScript: 'بنين!', nativeLatin: 'Bnin!', phonetic: 'b-NEEN', lang: 'ar' },
+    { english: 'Goodbye', nativeScript: 'بسلامة', nativeLatin: 'Beslama', phonetic: 'bess-LAH-ma', lang: 'ar' },
+    { english: 'No thank you', nativeScript: 'لا شكرا', nativeLatin: 'La, shukran', phonetic: 'lah SHOOK-ran', lang: 'ar', olderOnly: true },
+    { english: 'I would like…', nativeScript: '…بغيت', nativeLatin: 'Bghit…', phonetic: 'b-GHEET', lang: 'ar', olderOnly: true },
+  ],
+  foods: [
+    { emoji: '🍲', name: 'Tagine', description: 'Slow-cooked stew named after the conical clay pot it cooks in. Chicken with preserved lemon, or lamb with prunes, are classics.' },
+    { emoji: '🍵', name: 'Mint tea', description: 'Sweet green tea with fresh mint, poured from high up into small glasses. Refuse a glass at your own peril, it is offered everywhere.' },
+    { emoji: '🍛', name: 'Couscous', description: 'Tiny steamed pasta with vegetables, chickpeas, and usually lamb or chicken. Traditionally eaten on Fridays after midday prayer.' },
+    { emoji: '🥖', name: 'Khobz', description: 'Round flat bread, baked fresh every morning. Used as a spoon to scoop up tagine. Forks are optional, bread is not.' },
+    { emoji: '🥧', name: 'Pastilla', description: 'A sweet-and-savoury pie. Shredded chicken or pigeon inside, dusted with cinnamon and icing sugar on top. Sounds wrong, tastes amazing.' },
+    { emoji: '🫒', name: 'Olives & preserved lemons', description: 'Bowls of them on every table. The lemons are salted whole and left for weeks, they taste nothing like a fresh lemon.' },
+  ],
+  scavengerItems: [
+    { emoji: '🫖', label: 'Mint tea being poured from really high up' },
+    { emoji: '🐈', label: 'A cat curled up asleep in the medina (there are a LOT of cats)' },
+    { emoji: '🚪', label: 'A bright blue painted door' },
+    { emoji: '🐴', label: 'A donkey carrying things through narrow alleys' },
+    { emoji: '🧵', label: 'A handmade Berber rug or carpet' },
+    { emoji: '🟫', label: 'A clay tagine pot stacked outside a shop' },
+    { emoji: '⛲', label: 'A fountain covered in colourful geometric tiles (zellige)' },
+    { emoji: '🌿', label: 'A pile of fresh mint at a market stall' },
+    { emoji: '🕌', label: 'A minaret (tall mosque tower) above the rooftops' },
+    { emoji: '🧶', label: 'A craftsperson hammering brass or weaving on a loom', olderOnly: true },
+    { emoji: '⭐', label: 'The five-pointed star on the Moroccan flag, on a building or sign', olderOnly: true },
+    { emoji: '🧭', label: 'A moment where you are completely lost in the medina (it will happen)', olderOnly: true },
+  ],
+  geoMatches: [
+    { place: 'Marrakech',     emoji: '🌆', description: 'The red city. Famous medina, snake charmers and storytellers in the huge Jemaa el-Fna square, and souks that go on forever.' },
+    { place: 'Fez',           emoji: '🏛️', description: 'The oldest medina in the world, a 1,200-year-old maze of 9,000 alleys. Home to the world\'s oldest still-running university.' },
+    { place: 'Chefchaouen',   emoji: '🔵', description: 'A small mountain town where almost every wall is painted blue. Nobody fully agrees on why.' },
+    { place: 'The Sahara',    emoji: '🐪', description: 'Vast orange sand dunes in the south-east. People ride camels and sleep in Berber tents under the stars.' },
+    { place: 'Atlas Mountains', emoji: '🏔️', description: 'Tall snow-capped mountains running across the country. Berber villages cling to the valleys.' },
+    { place: 'Essaouira',     emoji: '🌊', description: 'Windswept Atlantic coast town. Blue fishing boats, fresh seafood, and a constant breeze that makes the heat bearable.' },
+  ],
+  senses: {
+    smell: 'Mint, cumin and cinnamon in the souk, leather from the tanneries, sweet pastries, charcoal smoke from grills, sometimes diesel and donkey…',
+    hear:  'The call to prayer five times a day, sellers shouting prices, motorbikes weaving through alleys, the slap of bread dough, "Bonjour my friend!" from every shop…',
+    taste: 'Very sweet mint tea, salty olives, warm cinnamon on pastilla, the crunch of fresh bread, sticky honey pastries, the deep slow flavour of tagine…',
+    feel:  'Cool tile underfoot in a riad, warm desert sand between your toes, the scratch of a wool rug, sticky midday heat in the medina, sudden cold at night in the mountains…',
+    see:   'What is the most incredible thing right in front of you right now…',
+  },
+  stories: [
+    {
+      location: '📍 Marrakech',
+      question: 'Why is Jemaa el-Fna square so wild?',
+      body: 'Jemaa el-Fna is the huge square in the middle of Marrakech and it has been a meeting place for nearly a thousand years. During the day it is full of orange-juice carts, snake charmers and henna painters. At sunset the food stalls roll in and the whole square turns into a smoky open-air restaurant with hundreds of tables. UNESCO actually protects the square as "intangible heritage" because of its storytellers, the men in robes who sit in a circle and tell tales from memory, a tradition that goes back centuries.',
+    },
+    {
+      location: '📍 Fez',
+      question: 'Why is the medina of Fez so confusing?',
+      body: 'The medina of Fez is the oldest still-living medieval city in the world, built more than 1,200 years ago. It has around 9,000 alleys, some so narrow you have to turn sideways. There are no cars inside, the only deliveries are by donkey or handcart. The alleys were deliberately designed to confuse invaders, and they still confuse everyone else. Locals say if you ask a child for directions, give them a coin. If they ask first, give them nothing, they will probably take you in circles.',
+    },
+    {
+      location: '📍 Fez',
+      question: 'What is the oldest university in the world?',
+      body: 'It is here in Fez. The University of al-Qarawiyyin was founded in the year 859, more than 1,100 years ago, which makes it older than Oxford and Cambridge. The wild bit: it was founded by a woman named Fatima al-Fihri, who used her inheritance to build a school and mosque for her community. It is still operating today as both a mosque and a university, and the building has been continuously running longer than almost anything else on earth.',
+      olderOnly: true,
+      thinkingQuestion: 'Fatima built a school instead of keeping the money. If someone gave you a huge amount of money but said you had to spend it on something for other people, what would you build?',
+    },
+    {
+      location: '📍 Chefchaouen',
+      question: 'Why is the whole town painted blue?',
+      body: 'Chefchaouen sits high in the Rif Mountains, and almost every wall, door and step is painted some shade of blue. Nobody fully agrees on why. The most popular story is that Jewish refugees who came here in the 1930s brought a tradition of painting buildings blue to symbolise the sky and heaven. Other people say the blue keeps mosquitoes away, or that it keeps the houses cool in summer. Whatever the real answer, the town now has to repaint itself every few months to keep it looking right.',
+    },
+    {
+      location: '📍 The Sahara',
+      question: 'Who lives in the desert?',
+      body: 'The Berbers, who call themselves Amazigh meaning "free people", have lived in north Africa for thousands of years, long before Arabs arrived. In the Sahara some of them are still nomads, moving with camels and goats between water sources. They navigate by stars, and they have a tea ritual where the first glass is poured bitter, the second sweeter, and the third sweetest of all. The saying goes: "the first is bitter like life, the second is sweet like love, the third is gentle like death." They serve all three to any visitor, and you are meant to drink all three.',
+      olderOnly: true,
+    },
+  ],
+  convoQuestions: [
+    { question: 'What\'s the best thing you\'ve eaten in Morocco so far?' },
+    { question: 'What\'s harder here than at home?' },
+    { question: 'If we got separated in the medina, what would you do?' },
+    { question: 'How did haggling for something go? Did you get a fair price?' },
+    { question: 'Which place has felt the most different from home?' },
+    { question: 'Would you rather live in a busy city like Marrakech, or a quiet mountain village in the Atlas?', olderOnly: true },
+  ],
+}
+
 // ── COUNTRY REGISTRY ────────────────────────────────────────────
 // One entry per country, including the 14 not-yet-populated ones so
 // the listing page shows them all (with a "Coming soon" badge).
 export const PACK_META: AdventurePackMeta[] = [
   { slug: 'france',    country: 'France',    flag: '🇫🇷', isFree: true,  heroColour: 'bg-brand-900',  status: 'live' },
-  { slug: 'morocco',   country: 'Morocco',   flag: '🇲🇦', isFree: false, heroColour: 'bg-amber-900',  status: 'coming-soon' },
+  { slug: 'morocco',   country: 'Morocco',   flag: '🇲🇦', isFree: false, heroColour: 'bg-amber-900',  status: 'live' },
   { slug: 'indonesia', country: 'Indonesia', flag: '🇮🇩', isFree: false, heroColour: 'bg-rose-700',   status: 'coming-soon' },
   { slug: 'thailand',  country: 'Thailand',  flag: '🇹🇭', isFree: false, heroColour: 'bg-fuchsia-700',status: 'coming-soon' },
   { slug: 'malaysia',  country: 'Malaysia',  flag: '🇲🇾', isFree: false, heroColour: 'bg-amber-700',  status: 'coming-soon' },
@@ -136,6 +244,7 @@ export const PACK_META: AdventurePackMeta[] = [
 // Lookup table for fully-built packs.
 const FULL_DATA: Record<string, AdventurePackData> = {
   france: FRANCE_DATA,
+  morocco: MOROCCO_DATA,
 }
 
 export function getPackData(slug: string): AdventurePackData | null {

@@ -63,7 +63,7 @@ export default function MoneySection({ data, pack }: { data: AdventurePackData; 
             placeholder={String(cur.recommendedBudget)}
           />
           <span className="text-xs text-gray-400 mt-1 block">
-            {cur.budgetNote} · 1 GBP ≈ {cur.approxGBP} {cur.symbol}
+            {cur.budgetNote}
           </span>
         </label>
 

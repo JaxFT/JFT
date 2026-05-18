@@ -42,9 +42,9 @@ export default async function AdventurePacksListing() {
         {!user && (
           <div className="bg-brand-50 border border-brand-200 rounded-2xl px-5 py-4 mb-8 text-sm text-brand-900">
             <strong>Sign in to use Adventure Packs.</strong>{' '}
-            <Link href="/login?next=/learning/adventure-packs" className="underline font-semibold">Log in</Link>{' '}
+            <Link href="/login?next=/adventure-packs" className="underline font-semibold">Log in</Link>{' '}
             or{' '}
-            <Link href="/signup?next=/learning/adventure-packs" className="underline font-semibold">create a free account</Link> — France is free for every member.
+            <Link href="/signup?next=/adventure-packs" className="underline font-semibold">create a free account</Link> — France is free for every member.
           </div>
         )}
 
@@ -88,7 +88,7 @@ export default async function AdventurePacksListing() {
                     <p className="text-sm text-gray-400 italic mt-auto">Coming soon</p>
                   ) : !user ? (
                     <Link
-                      href={`/login?next=/learning/adventure-packs/${p.slug}`}
+                      href={`/login?next=/adventure-packs/${p.slug}`}
                       className="mt-auto btn-primary justify-center !py-2 !px-4 !text-sm"
                     >
                       Sign in to open <ArrowRight className="w-3.5 h-3.5" />
@@ -102,7 +102,7 @@ export default async function AdventurePacksListing() {
                     </Link>
                   ) : (
                     <Link
-                      href={`/learning/adventure-packs/${p.slug}`}
+                      href={`/adventure-packs/${p.slug}`}
                       className="mt-auto btn-primary justify-center !py-2 !px-4 !text-sm"
                     >
                       Open pack <ArrowRight className="w-3.5 h-3.5" />

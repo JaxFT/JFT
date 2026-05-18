@@ -37,7 +37,7 @@ export default async function AdventurePackPage({
     return (
       <div className="min-h-screen bg-sand-50 pt-24 pb-20">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
-          <Link href="/learning/adventure-packs" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-700 mb-6">
+          <Link href="/adventure-packs" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-700 mb-6">
             <ArrowLeft className="w-4 h-4" /> All adventure packs
           </Link>
           <div className="text-6xl mb-3">{meta.flag}</div>
@@ -45,7 +45,7 @@ export default async function AdventurePackPage({
           <p className="text-gray-500 mt-3 leading-relaxed">
             We&apos;re still writing this one. We&apos;re shipping new country packs every few weeks — check back soon, or start with the France pack which is free for every member.
           </p>
-          <Link href="/learning/adventure-packs" className="btn-primary mt-6 inline-flex justify-center !py-2 !px-5 !text-sm">
+          <Link href="/adventure-packs" className="btn-primary mt-6 inline-flex justify-center !py-2 !px-5 !text-sm">
             Browse all packs <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -57,14 +57,14 @@ export default async function AdventurePackPage({
   const access = await checkAdventurePackAccess(slug)
 
   if (access.kind === 'login') {
-    redirect(`/login?next=/learning/adventure-packs/${slug}`)
+    redirect(`/login?next=/adventure-packs/${slug}`)
   }
 
   if (access.kind === 'locked') {
     return (
       <div className="min-h-screen bg-sand-50 pt-24 pb-20">
         <div className="max-w-md mx-auto px-4 sm:px-6 text-center">
-          <Link href="/learning/adventure-packs" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-700 mb-6">
+          <Link href="/adventure-packs" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-700 mb-6">
             <ArrowLeft className="w-4 h-4" /> All adventure packs
           </Link>
           <div className={`${meta.heroColour} text-white rounded-2xl px-6 py-8 mb-6`}>
@@ -93,7 +93,7 @@ export default async function AdventurePackPage({
   // Need the user id for the client hook
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect(`/login?next=/learning/adventure-packs/${slug}`)
+  if (!user) redirect(`/login?next=/adventure-packs/${slug}`)
 
   return <PackShell userId={user.id} data={data} />
 }

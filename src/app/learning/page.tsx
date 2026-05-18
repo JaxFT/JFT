@@ -5,7 +5,7 @@ import { BookOpen, Lock, ArrowRight, ExternalLink, GraduationCap, Users } from '
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Learning',
+  title: 'Learning Resources',
   description: 'Learning resources for families travelling long-term — sites we use and trust, plus our own learning packs.',
 }
 
@@ -80,7 +80,7 @@ export default async function LearningPage() {
 
         {/* HEADER */}
         <div className="mb-12 max-w-2xl">
-          <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Learning</p>
+          <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Learning Resources</p>
           <h1 className="text-4xl font-bold text-gray-900">Resources for families on the road</h1>
           <p className="text-gray-500 mt-2 text-lg">Sites we actually use and trust — plus our own learning packs for members.</p>
         </div>
@@ -88,7 +88,7 @@ export default async function LearningPage() {
         {/* ADVENTURE PACKS PROMO */}
         <section className="mb-16">
           <Link
-            href="/learning/adventure-packs"
+            href="/adventure-packs"
             className="block bg-gradient-to-br from-brand-700 to-brand-900 text-white rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow"
           >
             <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-2">Adventure Packs</p>

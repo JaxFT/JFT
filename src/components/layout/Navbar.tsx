@@ -8,12 +8,13 @@ import { isAdminEmail } from '@/lib/admin'
 import { Plane, Menu, X, User, LogOut, ShieldCheck } from 'lucide-react'
 
 const navLinks = [
-  { label: 'Home',              href: '/' },
-  { label: 'Blog',              href: '/blog' },
-  { label: 'Guides',           href: '/guides' },
-  { label: 'Planning',         href: '/planning' },
-  { label: 'I Want To Travel', href: '/i-want-to-travel' },
-  { label: 'Learning',         href: '/learning' },
+  { label: 'Home',               href: '/' },
+  { label: 'Blog',               href: '/blog' },
+  { label: 'Guides',             href: '/guides' },
+  { label: 'Planning',           href: '/planning' },
+  { label: 'I Want To Travel',   href: '/i-want-to-travel' },
+  { label: 'Adventure Packs',    href: '/adventure-packs' },
+  { label: 'Learning Resources', href: '/learning' },
 ]
 
 // Tiny shape — id + email is everything Navbar needs.

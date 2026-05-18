@@ -50,7 +50,7 @@ export default function PackShell({ userId, data }: Props) {
     <div className="min-h-screen bg-sand-50 pt-20 pb-20">
       <div className="max-w-3xl mx-auto px-4 sm:px-6">
 
-        <Link href="/learning/adventure-packs" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-700 mb-4">
+        <Link href="/adventure-packs" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-700 mb-4">
           <ArrowLeft className="w-4 h-4" /> All adventure packs
         </Link>
 

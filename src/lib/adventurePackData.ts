@@ -15,7 +15,7 @@ export const FRANCE_DATA: AdventurePackData = {
   country: 'France',
   flag: '🇫🇷',
   isFree: true,
-  heroColour: 'bg-blue-800',
+  heroColour: 'bg-brand-900',
   currency: {
     code: 'EUR',
     name: 'Euro',
@@ -115,7 +115,7 @@ export const FRANCE_DATA: AdventurePackData = {
 // One entry per country, including the 14 not-yet-populated ones so
 // the listing page shows them all (with a "Coming soon" badge).
 export const PACK_META: AdventurePackMeta[] = [
-  { slug: 'france',    country: 'France',    flag: '🇫🇷', isFree: true,  heroColour: 'bg-blue-800',   status: 'live' },
+  { slug: 'france',    country: 'France',    flag: '🇫🇷', isFree: true,  heroColour: 'bg-brand-900',  status: 'live' },
   { slug: 'morocco',   country: 'Morocco',   flag: '🇲🇦', isFree: false, heroColour: 'bg-amber-900',  status: 'coming-soon' },
   { slug: 'indonesia', country: 'Indonesia', flag: '🇮🇩', isFree: false, heroColour: 'bg-rose-700',   status: 'coming-soon' },
   { slug: 'thailand',  country: 'Thailand',  flag: '🇹🇭', isFree: false, heroColour: 'bg-fuchsia-700',status: 'coming-soon' },

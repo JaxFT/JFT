@@ -22,6 +22,7 @@ import {
 import GuideMarkdown from './GuideMarkdown'
 import PdfPanel from './PdfPanel'
 import ImageSlotsPanel from './ImageSlotsPanel'
+import IntroEditor from './IntroEditor'
 import { resizeImageIfLarge } from '@/lib/image-resize'
 import type { GuideRow, GuideContentBlock } from '@/lib/guide-types'
 import { extractMarkdownToc } from '@/lib/guide-types'
@@ -190,6 +191,11 @@ function SingleDocPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
       <div className="min-h-screen bg-sand-50 pb-20">
         <CoverHero guide={guide} />
         <PdfPanel guideId={guide.id} hasPdf={!!guide.pdf_path} />
+        <IntroEditor
+          guideId={guide.id}
+          initialMarkdown={guide.intro_markdown}
+          autoLinkPhrases={autoLinkPhrases}
+        />
 
         {/* VIEW MODE — render the whole doc with TOC, same as readers see */}
         {!editMode && (
@@ -398,6 +404,11 @@ function BlocksPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
       <div className="min-h-screen bg-sand-50 pb-20">
         <CoverHero guide={guide} />
         <PdfPanel guideId={guide.id} hasPdf={!!guide.pdf_path} />
+        <IntroEditor
+          guideId={guide.id}
+          initialMarkdown={guide.intro_markdown}
+          autoLinkPhrases={autoLinkPhrases}
+        />
 
         {toc.length > 0 && <TocBlock toc={toc} />}
 

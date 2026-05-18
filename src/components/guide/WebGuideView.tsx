@@ -81,6 +81,10 @@ export default function WebGuideView({
         </div>
       </div>
 
+      {guide.intro_markdown.trim() && (
+        <IntroSection markdown={guide.intro_markdown} autoLinkPhrases={autoLinkPhrases} />
+      )}
+
       {useSingleDoc
         ? (
           <SingleDocBody
@@ -102,6 +106,19 @@ export default function WebGuideView({
             hideAbout={hideAbout}
           />
         )}
+    </div>
+  )
+}
+
+// Subtle card between the cover and TOC for short editorial updates
+// from the authors ("we've been back twice and added new sections on
+// Tangalle and the east coast"). Hidden when the intro is empty.
+function IntroSection({ markdown, autoLinkPhrases }: { markdown: string; autoLinkPhrases: AutoLinkPhrase[] }) {
+  return (
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 mt-8">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4 sm:px-6 sm:py-5">
+        <GuideMarkdown markdown={markdown} autoLinkPhrases={autoLinkPhrases} />
+      </div>
     </div>
   )
 }

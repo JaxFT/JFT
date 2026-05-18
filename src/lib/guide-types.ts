@@ -50,6 +50,11 @@ export type GuideRow = {
   is_premium: boolean
   price_pence: number
   tags: string[]
+  // Optional editable intro that appears between cover + TOC. Used for
+  // "we've added new destinations since this guide shipped" notes etc.
+  // Lives separately from body_markdown so it can be updated without
+  // re-importing the whole doc.
+  intro_markdown: string
   // NEW model — the whole guide as one markdown doc. When non-empty,
   // takes precedence over `sections.blocks`.
   body_markdown: string

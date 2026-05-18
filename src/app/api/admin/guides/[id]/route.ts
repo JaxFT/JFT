@@ -26,6 +26,7 @@ type UpdateBody = {
   preview_destinations?: number
   // NEW single-doc model
   body_markdown?: string
+  intro_markdown?: string
   preview_percent?: number
   // Either full section blob, or a single-key patch. We accept both.
   sections?: GuideSections
@@ -59,6 +60,7 @@ export async function PATCH(
     update.preview_destinations = Math.max(0, Math.min(20, Math.floor(body.preview_destinations)))
   }
   if (typeof body.body_markdown === 'string') update.body_markdown = body.body_markdown
+  if (typeof body.intro_markdown === 'string') update.intro_markdown = body.intro_markdown
   if (typeof body.preview_percent === 'number') {
     update.preview_percent = Math.max(0, Math.min(100, Math.floor(body.preview_percent)))
   }

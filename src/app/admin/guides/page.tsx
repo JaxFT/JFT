@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Map, ExternalLink, ShieldCheck, Users, BookOpen, FileText, Plus } from 'lucide-react'
+import { Map, ExternalLink, ShieldCheck, Users, BookOpen, FileText, Plus, Download } from 'lucide-react'
 import type { Metadata } from 'next'
 import { listAllWebGuidesForAdmin } from '@/lib/guides-content-db'
 import { listAllLegacyGuidesForAdmin } from '@/lib/guides-db'
@@ -105,6 +105,15 @@ export default async function AdminGuidesListPage() {
                           View <ExternalLink className="w-3 h-3" />
                         </Link>
                       )}
+                      <a
+                        href={`/admin/guides/${g.id}/print`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md border border-gray-200 hover:bg-white"
+                        title="Open the print view, then choose Save as PDF in the browser dialog"
+                      >
+                        <Download className="w-3 h-3" /> PDF
+                      </a>
                       <Link
                         href={`/admin/guides/${g.id}/edit`}
                         className="text-xs font-semibold text-brand-600 hover:text-brand-700 px-3 py-2 rounded-md border border-brand-200 hover:bg-brand-50"

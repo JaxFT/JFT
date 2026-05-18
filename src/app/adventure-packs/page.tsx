@@ -4,7 +4,7 @@ import { Lock, Crown, ArrowRight, Compass } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
 import { PACK_META } from '@/lib/adventurePackData'
-import FlagBanner from '@/components/adventure-packs/FlagBanner'
+import FlagHalfBanner from '@/components/adventure-packs/FlagHalfBanner'
 
 export const metadata: Metadata = {
   title: 'Adventure Packs',
@@ -63,18 +63,18 @@ export default async function AdventurePacksListing() {
                 }`}
               >
                 <div className="relative">
-                  <FlagBanner iso2={p.iso2} country={p.country} fallbackColour={p.heroColour} size="sm" />
-                  <span className="absolute top-3 right-3">
+                  <FlagHalfBanner iso2={p.iso2} country={p.country} fallbackColour={p.heroColour} />
+                  <span className="absolute top-2 right-2">
                     {p.isFree ? (
                       <span className="inline-flex items-center gap-1 text-xs font-bold bg-white text-brand-700 px-2 py-1 rounded-full shadow-sm">
                         Free
                       </span>
                     ) : unlocked ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-bold bg-black/55 text-white px-2 py-1 rounded-full backdrop-blur-sm">
+                      <span className="inline-flex items-center gap-1 text-xs font-bold bg-white/15 text-white px-2 py-1 rounded-full backdrop-blur-sm">
                         <Crown className="w-3 h-3" /> Included
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-xs font-bold bg-black/55 text-white px-2 py-1 rounded-full backdrop-blur-sm">
+                      <span className="inline-flex items-center gap-1 text-xs font-bold bg-white/15 text-white px-2 py-1 rounded-full backdrop-blur-sm">
                         <Lock className="w-3 h-3" /> Premium
                       </span>
                     )}

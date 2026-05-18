@@ -43,11 +43,21 @@ function AuthCallbackHandler() {
       router.replace(next)
     }
 
+    // Fire the welcome-email endpoint. The server checks
+    // profiles.welcome_sent_at so this is safely idempotent — only the
+    // first successful call per user actually sends.
+    const fireWelcome = () => {
+      fetch('/api/auth/welcome', { method: 'POST' }).catch(() => null)
+    }
+
     // The browser client (with detectSessionInUrl: true and implicit flow)
     // auto-parses the URL fragment / code on mount. Once a session is
     // established it fires SIGNED_IN or PASSWORD_RECOVERY.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED' || event === 'PASSWORD_RECOVERY')) {
+        // Only fire welcome on the actual sign-in event — not on token
+        // refresh / password recovery flows.
+        if (event === 'SIGNED_IN') fireWelcome()
         goToNext()
       }
     })

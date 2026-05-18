@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient as createSbClient } from '@supabase/supabase-js'
+import {
+  sendEmail, buildCallRequestNotificationEmail, buildCallRequestConfirmationEmail,
+  BEC_FROM, HELLO_FROM, ADMIN_NOTIFY,
+} from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -51,19 +55,54 @@ export async function POST(request: Request) {
     { auth: { persistSession: false, autoRefreshToken: false } },
   )
 
+  const familySituation = (body.family_situation ?? '').trim() || null
+  const whereNow = (body.where_now ?? '').trim() || null
+  const timezone = (body.timezone ?? '').trim() || null
+
   const { error } = await supabase.from('call_requests').insert({
     name,
     email,
-    family_situation: (body.family_situation ?? '').trim() || null,
-    where_now: (body.where_now ?? '').trim() || null,
+    family_situation: familySituation,
+    where_now: whereNow,
     journey_stage: journeyStage,
     what_to_discuss: whatToDiscuss,
-    timezone: (body.timezone ?? '').trim() || null,
+    timezone,
   })
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  // Fire-and-forget both emails — don't block the response or fail
+  // the form if Resend has an off day. Logged for debugging via the
+  // return value of sendEmail but not surfaced to the user.
+  const payload = {
+    name, email,
+    familySituation, whereNow,
+    journeyStage,
+    whatToDiscuss,
+    timezone,
+  }
+  const notif = buildCallRequestNotificationEmail(payload)
+  const confirm = buildCallRequestConfirmationEmail({ name, whatToDiscuss })
+  await Promise.all([
+    sendEmail({
+      from: HELLO_FROM,
+      to: ADMIN_NOTIFY,
+      subject: notif.subject,
+      html: notif.html,
+      text: notif.text,
+      replyTo: email,
+    }),
+    sendEmail({
+      from: BEC_FROM,
+      to: email,
+      subject: confirm.subject,
+      html: confirm.html,
+      text: confirm.text,
+      replyTo: ADMIN_NOTIFY,
+    }),
+  ])
 
   return NextResponse.json({ ok: true })
 }

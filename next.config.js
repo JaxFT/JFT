@@ -9,16 +9,24 @@ const nextConfig = {
   async headers() {
     return [
       {
-        // Override Next.js's default 1-year s-maxage on HTML pages so
-        // Cloudflare's edge cache stops serving stale HTML that
-        // references replaced bundle URLs. Static assets under
-        // /_next/static/ are excluded — those have content-hashed
-        // filenames and SHOULD cache for a year.
+        // Every HTML page on the site is force-dynamic (per-request
+        // SSR), so it can never be safely cached on the edge. The
+        // earlier rule used s-maxage=60 + stale-while-revalidate, but
+        // that produced a hard-to-debug FOUC: after a deploy the edge
+        // happily served day-old HTML pointing at CSS chunk hashes
+        // that no longer existed, so the browser 404'd the stylesheet
+        // and rendered the page unstyled until a refresh.
+        //
+        // s-maxage=0 + no stale-while-revalidate forces the edge to
+        // hit the Worker on every request. OpenNext on CF Workers is
+        // fast enough that this is fine, and stale-HTML / dead-CSS is
+        // gone. Static assets under /_next/static/ are excluded by
+        // the source regex and keep their year-long immutable cache.
         source: '/((?!_next/static|_next/image|favicon).*)',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=0, s-maxage=60, stale-while-revalidate=86400',
+            value: 'public, max-age=0, s-maxage=0, must-revalidate',
           },
         ],
       },

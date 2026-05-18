@@ -18,6 +18,7 @@ import { useRouter } from 'next/navigation'
 import {
   ArrowLeft, ArrowRight, Crown, Map, ListOrdered, Eye, EyeOff,
   Pencil, Loader2, Check, X, FileEdit, Sparkles, Upload,
+  Link2, Settings,
 } from 'lucide-react'
 import GuideMarkdown from './GuideMarkdown'
 import PdfPanel from './PdfPanel'
@@ -169,6 +170,16 @@ function SingleDocPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
     if (url) insertAtCursor(`![](${url})`)
   }
 
+  const handleInsertLink = () => {
+    const ta = textareaRef.current
+    const selected = ta ? body.slice(ta.selectionStart, ta.selectionEnd) : ''
+    const url = window.prompt('Link URL (paste the full URL, starting with https://)')
+    if (!url || !url.trim()) return
+    const text = window.prompt('Link text, what the reader sees and clicks', selected || '')
+    if (!text || !text.trim()) return
+    insertAtCursor(`[${text.trim()}](${url.trim()})`)
+  }
+
   return (
     // pt-16 pushes everything below the fixed site Navbar (h-16) so the
     // sticky admin banner is actually visible. Without this, the banner
@@ -190,6 +201,11 @@ function SingleDocPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
 
       <div className="min-h-screen bg-sand-50 pb-20">
         <CoverHero guide={guide} />
+        <GuideSettingsPanel
+          guideId={guide.id}
+          initialPricePence={guide.price_pence}
+          initialPreviewPercent={guide.preview_percent}
+        />
         <PdfPanel guideId={guide.id} hasPdf={!!guide.pdf_path} />
         <IntroEditor
           guideId={guide.id}
@@ -261,6 +277,14 @@ function SingleDocPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
                   {uploading
                     ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading…</>
                     : <><Upload className="w-3.5 h-3.5" /> Insert image at cursor</>}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleInsertLink}
+                  disabled={view !== 'write'}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-2.5 py-1.5 rounded-md disabled:opacity-50"
+                >
+                  <Link2 className="w-3.5 h-3.5" /> Insert link
                 </button>
                 {uploadError && <span className="text-xs text-red-700">{uploadError}</span>}
               </div>
@@ -800,3 +824,106 @@ function BlockEditor({
 
 // Image placeholder slot UI is now in src/components/guide/ImageSlotsPanel.tsx
 // (used by both editor paths above). Detection + per-slot state lives there.
+
+// ─────────────────────────────────────────────────────────────
+// Pricing & preview settings panel
+// ─────────────────────────────────────────────────────────────
+
+function GuideSettingsPanel({
+  guideId,
+  initialPricePence,
+  initialPreviewPercent,
+}: {
+  guideId: string
+  initialPricePence: number
+  initialPreviewPercent: number
+}) {
+  const [pricePence, setPricePence] = useState(initialPricePence)
+  const [previewPercent, setPreviewPercent] = useState(initialPreviewPercent)
+  const [saving, setSaving] = useState(false)
+  const [savedAt, setSavedAt] = useState<number | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const initialPounds = (initialPricePence / 100).toFixed(2)
+  const [poundsInput, setPoundsInput] = useState(initialPounds)
+  const dirty = pricePence !== initialPricePence || previewPercent !== initialPreviewPercent
+
+  const save = async () => {
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/admin/guides/${guideId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ price_pence: pricePence, preview_percent: previewPercent }),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`)
+      setSavedAt(Date.now())
+      setTimeout(() => setSavedAt(saved => (saved && Date.now() - saved >= 2000 ? null : saved)), 2100)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Save failed')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 mt-6">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <p className="text-xs font-bold tracking-widest uppercase text-gray-500 inline-flex items-center gap-1.5">
+            <Settings className="w-3.5 h-3.5" /> Pricing &amp; preview
+          </p>
+          <div className="flex items-center gap-2">
+            {savedAt && !dirty && <span className="text-xs text-brand-700 inline-flex items-center gap-1"><Check className="w-3 h-3" /> Saved</span>}
+            <button
+              type="button"
+              onClick={save}
+              disabled={!dirty || saving}
+              className="btn-primary !py-1.5 !px-3 !text-xs disabled:opacity-50"
+            >
+              {saving ? <><Loader2 className="w-3 h-3 animate-spin" /> Saving…</> : 'Save settings'}
+            </button>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <label className="block">
+            <span className="text-xs font-medium text-gray-600">One-off price</span>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="text-sm text-gray-500">£</span>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={poundsInput}
+                onChange={e => {
+                  setPoundsInput(e.target.value)
+                  const pounds = parseFloat(e.target.value)
+                  setPricePence(Number.isFinite(pounds) && pounds >= 0 ? Math.round(pounds * 100) : 0)
+                }}
+                className="w-28 text-sm px-3 py-2 bg-white border border-gray-200 rounded-md font-mono focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+              <span className="text-xs text-gray-400">£0 = Premium-only</span>
+            </div>
+          </label>
+          <label className="block">
+            <span className="text-xs font-medium text-gray-600">
+              Free preview: <strong className="text-brand-700">{previewPercent}%</strong> of the guide visible to non-buyers
+            </span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={previewPercent}
+              onChange={e => setPreviewPercent(Number(e.target.value))}
+              className="mt-2 w-full accent-brand-600"
+            />
+          </label>
+        </div>
+        {error && <p className="text-xs text-red-700 mt-3 bg-red-50 border border-red-100 rounded-md px-2 py-1.5">{error}</p>}
+      </div>
+    </div>
+  )
+}

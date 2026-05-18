@@ -89,6 +89,7 @@ function normaliseRow(row: unknown): GuideRow {
     preview_percent: typeof r.preview_percent === 'number'
       ? Math.max(0, Math.min(100, Math.round(r.preview_percent)))
       : 25,
+    pdf_path: (r.pdf_path as string | null) ?? null,
     sections: { blocks, hideAbout: !!rawSections.hideAbout },
     preview_destinations: previewDestinations,
     published_at: (r.published_at as string | null) ?? null,

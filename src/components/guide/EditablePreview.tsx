@@ -20,6 +20,7 @@ import {
   Pencil, Loader2, Check, X, FileEdit, Sparkles, Image as ImageIcon, Upload,
 } from 'lucide-react'
 import GuideMarkdown from './GuideMarkdown'
+import PdfPanel from './PdfPanel'
 import type { GuideRow, GuideContentBlock } from '@/lib/guide-types'
 import { extractMarkdownToc } from '@/lib/guide-types'
 import type { AutoLinkPhrase } from '@/lib/blog-links'
@@ -197,6 +198,7 @@ function SingleDocPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
 
       <div className="min-h-screen bg-sand-50 pb-20">
         <CoverHero guide={guide} />
+        <PdfPanel guideId={guide.id} hasPdf={!!guide.pdf_path} />
 
         {/* VIEW MODE — render the whole doc with TOC, same as readers see */}
         {!editMode && (
@@ -422,6 +424,7 @@ function BlocksPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
 
       <div className="min-h-screen bg-sand-50 pb-20">
         <CoverHero guide={guide} />
+        <PdfPanel guideId={guide.id} hasPdf={!!guide.pdf_path} />
 
         {toc.length > 0 && <TocBlock toc={toc} />}
 

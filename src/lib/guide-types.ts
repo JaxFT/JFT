@@ -54,6 +54,9 @@ export type GuideRow = {
   // takes precedence over `sections.blocks`.
   body_markdown: string
   preview_percent: number   // 0-100, how much of body_markdown shows to non-buyers
+  // Downloadable PDF version. Storage path in the guide-files bucket
+  // (e.g. "web/sri-lanka.pdf"). NULL = no PDF uploaded yet.
+  pdf_path: string | null
   sections: GuideSections   // legacy blocks model; used when body_markdown is empty
   preview_destinations: number   // legacy; new model uses per-block freePreview
   published_at: string | null

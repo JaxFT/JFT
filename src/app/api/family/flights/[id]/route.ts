@@ -24,7 +24,8 @@ export async function PATCH(
 
   let body: {
     from_airport?: string; to_airport?: string; flight_date?: string;
-    duration_mins?: number | null; notes?: string | null
+    duration_mins?: number | null; distance_km?: number | null;
+    notes?: string | null
   } = {}
   try { body = await request.json() } catch {}
 
@@ -49,6 +50,11 @@ export async function PATCH(
     update.duration_mins = null
   } else if (typeof body.duration_mins === 'number' && body.duration_mins > 0 && body.duration_mins <= 24 * 60) {
     update.duration_mins = Math.round(body.duration_mins)
+  }
+  if (body.distance_km === null) {
+    update.distance_km = null
+  } else if (typeof body.distance_km === 'number' && body.distance_km > 0 && body.distance_km <= 30000) {
+    update.distance_km = Math.round(body.distance_km)
   }
   if (body.notes === null) {
     update.notes = null

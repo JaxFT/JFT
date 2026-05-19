@@ -7,12 +7,16 @@ import {
 } from 'lucide-react'
 import type { FlightRow } from '@/lib/passport-db'
 
+type PackMetaLite = { slug: string; country: string; flag: string }
+
 export default function FlightLog({
   initialFlights,
   childCount,
+  allPacks,
 }: {
   initialFlights: FlightRow[]
   childCount: number
+  allPacks: PackMetaLite[]
 }) {
   const router = useRouter()
   const [flights, setFlights] = useState<FlightRow[]>(initialFlights)
@@ -26,6 +30,8 @@ export default function FlightLog({
   const [to, setTo] = useState('')
   const [date, setDate] = useState(today())
   const [duration, setDuration] = useState<string>('')
+  const [distance, setDistance] = useState<string>('')
+  const [destSlug, setDestSlug] = useState<string>('')
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [lastAwarded, setLastAwarded] = useState<number | null>(null)
@@ -44,6 +50,8 @@ export default function FlightLog({
           to_airport: to.trim(),
           flight_date: date,
           duration_mins: duration ? parseInt(duration, 10) : undefined,
+          distance_km: distance ? parseInt(distance, 10) : undefined,
+          destination_country_slug: destSlug || undefined,
           notes: notes.trim() || undefined,
         }),
       })
@@ -55,6 +63,7 @@ export default function FlightLog({
         to_airport: to.trim(),
         flight_date: date,
         duration_mins: duration ? parseInt(duration, 10) : null,
+        distance_km: distance ? parseInt(distance, 10) : null,
         notes: notes.trim() || null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -64,6 +73,8 @@ export default function FlightLog({
       setTo('')
       setDate(today())
       setDuration('')
+      setDistance('')
+      setDestSlug('')
       setNotes('')
       setAdding(false)
       router.refresh()
@@ -128,7 +139,7 @@ export default function FlightLog({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1.5">Date</label>
               <input
@@ -141,7 +152,7 @@ export default function FlightLog({
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1.5">Duration (minutes, optional)</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Duration (minutes)</label>
               <input
                 type="number"
                 value={duration}
@@ -152,6 +163,35 @@ export default function FlightLog({
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
               />
             </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Distance (km)</label>
+              <input
+                type="number"
+                value={distance}
+                onChange={e => setDistance(e.target.value)}
+                min={1}
+                max={30000}
+                placeholder="9560"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">Destination country (for the stamp + map)</label>
+            <select
+              value={destSlug}
+              onChange={e => setDestSlug(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
+            >
+              <option value="">Pick a country (optional)…</option>
+              {allPacks.map(p => (
+                <option key={p.slug} value={p.slug}>{p.flag} {p.country}</option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-400 mt-1.5">
+              If set, the Brave Traveller stamp lands on this country&apos;s page and the country auto-unlocks on the kid&apos;s map.
+            </p>
           </div>
 
           <div>
@@ -263,6 +303,7 @@ function FlightRowItem({
   const [to, setTo] = useState(flight.to_airport)
   const [date, setDate] = useState(flight.flight_date)
   const [duration, setDuration] = useState<string>(flight.duration_mins ? String(flight.duration_mins) : '')
+  const [distance, setDistance] = useState<string>(flight.distance_km ? String(flight.distance_km) : '')
   const [notes, setNotes] = useState(flight.notes ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -279,6 +320,7 @@ function FlightRowItem({
           to_airport: to.trim(),
           flight_date: date,
           duration_mins: duration ? parseInt(duration, 10) : null,
+          distance_km: distance ? parseInt(distance, 10) : null,
           notes: notes.trim() || null,
         }),
       })
@@ -290,6 +332,7 @@ function FlightRowItem({
         to_airport: to.trim(),
         flight_date: date,
         duration_mins: duration ? parseInt(duration, 10) : null,
+        distance_km: distance ? parseInt(distance, 10) : null,
         notes: notes.trim() || null,
         updated_at: new Date().toISOString(),
       })
@@ -319,7 +362,7 @@ function FlightRowItem({
             className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
           />
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <input
             type="date"
             value={date}
@@ -331,7 +374,14 @@ function FlightRowItem({
             type="number"
             value={duration}
             onChange={e => setDuration(e.target.value)}
-            placeholder="Duration (mins)"
+            placeholder="Mins"
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
+          />
+          <input
+            type="number"
+            value={distance}
+            onChange={e => setDistance(e.target.value)}
+            placeholder="km"
             className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
           />
         </div>
@@ -378,6 +428,7 @@ function FlightRowItem({
           <p className="text-xs text-gray-500 mt-0.5">
             {formatDate(flight.flight_date)}
             {flight.duration_mins ? ` · ${formatDuration(flight.duration_mins)}` : ''}
+            {flight.distance_km ? ` · ${flight.distance_km.toLocaleString()} km` : ''}
           </p>
           {flight.notes && (
             <p className="text-xs text-gray-600 mt-2 whitespace-pre-wrap">{flight.notes}</p>

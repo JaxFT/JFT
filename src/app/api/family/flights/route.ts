@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
+import { createClient as createSbClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { awardOrSuggestStamp } from '@/lib/passport-stamps-db'
+import { getPackMeta } from '@/lib/adventurePackData'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -11,11 +13,23 @@ function isValidDate(s: string): boolean {
   return !Number.isNaN(d.getTime()) && d.getUTCFullYear() >= 1900
 }
 
+function admin() {
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set.')
+  return createSbClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    serviceKey,
+    { auth: { persistSession: false, autoRefreshToken: false } },
+  )
+}
+
 // POST /api/family/flights
-// Body: { from_airport, to_airport, flight_date, duration_mins?, notes? }
-// Creates the flight, then fans a BRAVE_TRAVELLER stamp out to every
-// active child in the family. Stamps are NOT deduped — each flight
-// is its own milestone, so two flights = two stamps per child.
+// Body: { from_airport, to_airport, flight_date, duration_mins?, distance_km?, notes?, destination_country_slug? }
+// Creates the flight, then for each child in the family:
+//   - Awards a Brave Traveller stamp (country-scoped if dest provided)
+//   - Inserts a country visit row (so the map lights up from flights
+//     alone, no Adventure Pack needed)
+// Stamps are NOT deduped — each flight is its own milestone.
 export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -23,7 +37,8 @@ export async function POST(request: Request) {
 
   let body: {
     from_airport?: string; to_airport?: string; flight_date?: string;
-    duration_mins?: number; notes?: string
+    duration_mins?: number; distance_km?: number; notes?: string;
+    destination_country_slug?: string | null
   } = {}
   try { body = await request.json() } catch {}
 
@@ -36,11 +51,22 @@ export async function POST(request: Request) {
   const duration = typeof body.duration_mins === 'number' && body.duration_mins > 0 && body.duration_mins <= 24 * 60
     ? Math.round(body.duration_mins)
     : null
+  const distance = typeof body.distance_km === 'number' && body.distance_km > 0 && body.distance_km <= 30000
+    ? Math.round(body.distance_km)
+    : null
   const notes = typeof body.notes === 'string' && body.notes.trim().length > 0
     ? body.notes.trim().slice(0, 500)
     : null
 
-  // Insert the flight (RLS scopes to the signed-in parent).
+  // Validate optional destination country against known packs.
+  let destCountrySlug: string | null = null
+  if (body.destination_country_slug) {
+    if (!getPackMeta(body.destination_country_slug)) {
+      return NextResponse.json({ error: 'Unknown destination country.' }, { status: 400 })
+    }
+    destCountrySlug = body.destination_country_slug
+  }
+
   const { data: flight, error: flightErr } = await supabase
     .from('flights')
     .insert({
@@ -49,6 +75,7 @@ export async function POST(request: Request) {
       to_airport: to,
       flight_date: date,
       duration_mins: duration,
+      distance_km: distance,
       notes,
     })
     .select('id')
@@ -57,36 +84,49 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: flightErr?.message ?? 'Could not save flight' }, { status: 500 })
   }
 
-  // Fan out BRAVE_TRAVELLER to every child in the family. The stamp
-  // engine uses service role, so we look up the parent's children
-  // here with the cookie client (RLS handles scoping), then award
-  // each via the engine with skipDedupe so each flight earns a new
-  // stamp.
+  // Look up the parent's children via the cookie supabase client so RLS scopes correctly.
   const { data: kids } = await supabase
     .from('children')
     .select('id')
     .eq('parent_id', user.id)
 
   const flightLabel = `${from} → ${to}`
-  // Park the stamp at noon UTC on the flight date so it sorts with
-  // other same-day events naturally.
   const earnedAt = new Date(date + 'T12:00:00Z').toISOString()
+
+  // For each kid: award stamp (country-scoped if dest provided) AND
+  // try to add a country visit. Service role bypasses RLS for the
+  // visit insert; 23505 (unique violation) means a visit already
+  // existed, which we silently accept.
+  const adminSb = destCountrySlug ? admin() : null
 
   let stampsAwarded = 0
   for (const k of kids ?? []) {
     const r = await awardOrSuggestStamp({
       childId: k.id,
       type: 'BRAVE_TRAVELLER',
-      countrySlug: null,
+      countrySlug: destCountrySlug,
       note: flightLabel,
       awardedBy: 'system',
       earnedAt,
       skipDedupe: true,
     })
     if (r.ok && r.created) stampsAwarded++
+
+    if (destCountrySlug && adminSb) {
+      const { error: visitErr } = await adminSb
+        .from('child_country_visits')
+        .insert({
+          child_id: k.id,
+          country_slug: destCountrySlug,
+          first_visit_date: date,
+        })
+      // 23505 = unique_violation, child already visited this country.
+      // Keep whichever date already exists.
+      if (visitErr && visitErr.code !== '23505') {
+        console.error('[flights] visit insert', visitErr)
+      }
+    }
   }
 
   return NextResponse.json({ ok: true, id: flight.id, stamps_awarded: stampsAwarded })
 }
-
-// (no GET — the page server-renders flights via passport-db helper)

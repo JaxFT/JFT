@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
 import { listFlightsForParent, listChildrenForParent } from '@/lib/passport-db'
+import { PACK_META } from '@/lib/adventurePackData'
 import FlightLog from './FlightLog'
 
 export const metadata: Metadata = { title: 'Family flights' }
@@ -52,6 +53,7 @@ export default async function FlightsPage() {
         <FlightLog
           initialFlights={flights}
           childCount={children.length}
+          allPacks={PACK_META.map(p => ({ slug: p.slug, country: p.country, flag: p.flag }))}
         />
       </div>
     </div>

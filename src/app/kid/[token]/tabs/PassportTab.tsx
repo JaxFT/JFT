@@ -25,7 +25,9 @@ export default function PassportTab({
 }) {
   const recent = stamps.slice(0, 6)
   const totalSections = SECTION_KEYS.length
-  const [packsOpen, setPacksOpen] = useState(true)
+  // Default closed: the catalogue is large now, so the page loads on
+  // the recent-stamps preview instead of pushing it below the fold.
+  const [packsOpen, setPacksOpen] = useState(false)
 
   return (
     <div className="space-y-5">

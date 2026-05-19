@@ -2,13 +2,15 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Compass, Plus, X, Loader2, Crown, Lock } from 'lucide-react'
+import { Compass, Plus, X, Loader2, Crown, Search, ChevronDown } from 'lucide-react'
+import { CONTINENT_ORDER, type Continent } from '@/lib/adventurePackTypes'
 
 type PackMetaLite = {
   slug: string
   country: string
   flag: string
   status: 'live' | 'coming-soon'
+  continent: Continent
 }
 
 export default function PackAssignmentSection({
@@ -24,6 +26,8 @@ export default function PackAssignmentSection({
   const [assigned, setAssigned] = useState<Set<string>>(new Set(initialAssigned))
   const [busy, setBusy] = useState<string | null>(null) // slug currently mutating
   const [error, setError] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
+  const [openContinents, setOpenContinents] = useState<Set<Continent>>(new Set())
 
   // Two lists: the ones already assigned (shown as removable chips at
   // the top), and the available ones (live packs only — coming-soon
@@ -32,10 +36,28 @@ export default function PackAssignmentSection({
     () => allPacks.filter(p => assigned.has(p.slug)),
     [allPacks, assigned],
   )
-  const unassignedLivePacks = useMemo(
-    () => allPacks.filter(p => p.status === 'live' && !assigned.has(p.slug)),
-    [allPacks, assigned],
-  )
+
+  // Group unassigned live packs by continent, sorted alphabetically.
+  const groups = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    const available = allPacks.filter(p =>
+      p.status === 'live'
+      && !assigned.has(p.slug)
+      && (q === '' || p.country.toLowerCase().includes(q))
+    )
+    const byContinent = new Map<Continent, PackMetaLite[]>()
+    for (const c of CONTINENT_ORDER) byContinent.set(c, [])
+    for (const p of available) byContinent.get(p.continent)?.push(p)
+    for (const list of byContinent.values()) {
+      list.sort((a, b) => a.country.localeCompare(b.country))
+    }
+    return CONTINENT_ORDER
+      .map(c => ({ continent: c, packs: byContinent.get(c) ?? [] }))
+      .filter(g => g.packs.length > 0)
+  }, [allPacks, assigned, query])
+
+  const isSearching = query.trim().length > 0
+  const availableCount = groups.reduce((n, g) => n + g.packs.length, 0)
 
   const assign = async (slug: string) => {
     setBusy(slug)
@@ -116,30 +138,84 @@ export default function PackAssignmentSection({
         <p className="text-sm text-gray-400 italic mb-5">No packs assigned yet.</p>
       )}
 
-      {/* Available */}
-      {unassignedLivePacks.length > 0 && (
-        <div>
-          <p className="text-xs font-bold tracking-widest uppercase text-gray-500 mb-2">
-            Available ({unassignedLivePacks.length})
+      {/* Available — grouped by continent, with a search box. */}
+      <div>
+        <div className="flex items-baseline justify-between mb-2">
+          <p className="text-xs font-bold tracking-widest uppercase text-gray-500">
+            Available ({availableCount})
           </p>
-          <div className="flex flex-wrap gap-2">
-            {unassignedLivePacks.map(p => (
-              <button
-                key={p.slug}
-                onClick={() => assign(p.slug)}
-                disabled={busy === p.slug}
-                className="inline-flex items-center gap-2 bg-white border border-gray-200 hover:border-brand-300 hover:bg-brand-50 text-gray-700 rounded-full pl-2.5 pr-3 py-1 text-sm disabled:opacity-50"
-              >
-                <span className="text-base leading-none">{p.flag}</span>
-                <span>{p.country}</span>
-                {busy === p.slug
-                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  : <Plus className="w-3.5 h-3.5 text-brand-600" />}
-              </button>
-            ))}
-          </div>
         </div>
-      )}
+
+        <div className="relative mb-3">
+          <Search className="absolute top-1/2 left-3 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+          <input
+            type="search"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search by country…"
+            className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-300"
+            aria-label="Search Adventure Packs"
+          />
+        </div>
+
+        {groups.length === 0 ? (
+          <p className="text-sm text-gray-400 italic">
+            {isSearching ? `No matches for "${query}".` : 'All available packs are already assigned.'}
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {groups.map(({ continent, packs: group }) => {
+              const open = isSearching || openContinents.has(continent)
+              return (
+                <div key={continent} className="border border-gray-100 rounded-lg overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isSearching) return
+                      setOpenContinents(prev => {
+                        const next = new Set(prev)
+                        if (next.has(continent)) next.delete(continent)
+                        else next.add(continent)
+                        return next
+                      })
+                    }}
+                    className="w-full flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-left"
+                    aria-expanded={open}
+                  >
+                    <span className="inline-flex items-baseline gap-2">
+                      <span className="text-sm font-semibold text-gray-800">{continent}</span>
+                      <span className="text-[11px] text-gray-500">
+                        {group.length} {group.length === 1 ? 'pack' : 'packs'}
+                      </span>
+                    </span>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-gray-400 transition-transform ${open ? '' : '-rotate-90'}`}
+                    />
+                  </button>
+                  {open && (
+                    <div className="flex flex-wrap gap-2 p-3">
+                      {group.map(p => (
+                        <button
+                          key={p.slug}
+                          onClick={() => assign(p.slug)}
+                          disabled={busy === p.slug}
+                          className="inline-flex items-center gap-2 bg-white border border-gray-200 hover:border-brand-300 hover:bg-brand-50 text-gray-700 rounded-full pl-2.5 pr-3 py-1 text-sm disabled:opacity-50"
+                        >
+                          <span className="text-base leading-none">{p.flag}</span>
+                          <span>{p.country}</span>
+                          {busy === p.slug
+                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            : <Plus className="w-3.5 h-3.5 text-brand-600" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
 
       {error && (
         <p className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-md px-3 py-2 mt-4">{error}</p>

@@ -102,12 +102,12 @@ export default function WorldMap({ unlockedSlugs, hrefForSlug, homeCountrySlug }
 
   return (
     <div
-      className="relative w-full h-[80dvh] min-h-[320px] sm:min-h-[420px] bg-amber-50 rounded-2xl overflow-hidden border border-amber-200 shadow-inner"
+      className="relative w-full aspect-[8/5] max-h-[80dvh] min-h-[280px] bg-amber-50 rounded-2xl overflow-hidden border border-amber-200 shadow-inner"
       style={{ touchAction: 'none' }}
     >
       <ComposableMap
         projection="geoNaturalEarth1"
-        projectionConfig={{ scale: 140 }}
+        projectionConfig={{ scale: 165 }}
         style={{ width: '100%', height: '100%' }}
       >
         <ZoomableGroup

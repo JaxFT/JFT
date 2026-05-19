@@ -123,6 +123,20 @@ export interface AdventurePackData {
   convoQuestions: ConvoQuestion[]
 }
 
+// Continents we group packs by in the listing UIs.
+export type Continent =
+  | 'Europe'
+  | 'Asia'
+  | 'Africa'
+  | 'North America'
+  | 'South America'
+  | 'Oceania'
+
+// Display order for continent groupings (kid-facing).
+export const CONTINENT_ORDER: Continent[] = [
+  'Europe', 'Asia', 'Africa', 'North America', 'South America', 'Oceania',
+]
+
 // Metadata for the listing page. Every country has a meta entry; only
 // fully-built ones have a full AdventurePackData export.
 export interface AdventurePackMeta {
@@ -133,6 +147,7 @@ export interface AdventurePackMeta {
   isFree: boolean
   heroColour: string        // fallback bg while the flag image loads
   status: 'live' | 'coming-soon'
+  continent: Continent
 }
 
 // ── Saved-state types ───────────────────────────────────────────

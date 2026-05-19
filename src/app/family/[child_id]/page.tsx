@@ -63,12 +63,14 @@ export default async function ChildDetailPage({
   ])
 
   // Strip PACK_META down to the lite shape the sections need — slug,
-  // country, flag, status. Everything else stays on the server.
+  // country, flag, status, continent. Everything else stays on the
+  // server.
   const allPacks = PACK_META.map(p => ({
     slug: p.slug,
     country: p.country,
     flag: p.flag,
     status: p.status,
+    continent: p.continent,
   }))
 
   return (

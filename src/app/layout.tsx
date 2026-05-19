@@ -8,6 +8,16 @@ export const metadata: Metadata = {
   title: { default: 'Jax Family Travels', template: '%s | Jax Family Travels' },
   description: 'Real family travel, honest guides, resources, and tools for families exploring the world.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'),
+  // favicon.ico, icon.svg and apple-icon.png in src/app/ are picked up
+  // automatically by the App Router. The manifest + 192/512 PNGs for
+  // PWA-style installs live under /public/favicons/ and are wired in
+  // explicitly below.
+  manifest: '/favicons/site.webmanifest',
+  icons: {
+    icon: [
+      { url: '/favicons/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+    ],
+  },
   openGraph: {
     siteName: 'Jax Family Travels',
     type: 'website',

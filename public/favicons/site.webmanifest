@@ -1,0 +1,23 @@
+{
+  "name": "Jax Family Travels",
+  "short_name": "Jax Family",
+  "description": "Real family travel, honest guides, resources, and tools for families exploring the world.",
+  "icons": [
+    {
+      "src": "/favicons/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicons/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "theme_color": "#0f3a2a",
+  "background_color": "#faf7f2",
+  "display": "standalone",
+  "start_url": "/"
+}

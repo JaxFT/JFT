@@ -4,13 +4,16 @@ import { ArrowLeft, ExternalLink } from 'lucide-react'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
-import { getChildById, listChildPackAssignments } from '@/lib/passport-db'
+import {
+  getChildById, listChildPackAssignments, listCountryVisitsForChildParent,
+} from '@/lib/passport-db'
 import { PERMISSION_LABELS } from '@/lib/passport-types'
 import { PACK_META } from '@/lib/adventurePackData'
 import EditProfileSection from './EditProfileSection'
 import PermissionSection from './PermissionSection'
 import QRSection from './QRSection'
 import PackAssignmentSection from './PackAssignmentSection'
+import CountryVisitsSection from './CountryVisitsSection'
 import DeleteChildButton from './DeleteChildButton'
 
 export const dynamic = 'force-dynamic'
@@ -47,10 +50,13 @@ export default async function ChildDetailPage({
   const child = await getChildById(child_id)
   if (!child) notFound()
 
-  const assignments = await listChildPackAssignments(child_id)
+  const [assignments, visits] = await Promise.all([
+    listChildPackAssignments(child_id),
+    listCountryVisitsForChildParent(child_id),
+  ])
 
-  // Strip PACK_META down to the lite shape the assignment section needs
-  // — slug, country, flag, status. Everything else stays on the server.
+  // Strip PACK_META down to the lite shape the sections need — slug,
+  // country, flag, status. Everything else stays on the server.
   const allPacks = PACK_META.map(p => ({
     slug: p.slug,
     country: p.country,
@@ -94,6 +100,12 @@ export default async function ChildDetailPage({
             childId={child.id}
             initialAssigned={assignments}
             allPacks={allPacks}
+          />
+
+          <CountryVisitsSection
+            childId={child.id}
+            initialVisits={visits}
+            allPacks={allPacks.map(p => ({ slug: p.slug, country: p.country, flag: p.flag }))}
           />
 
           <EditProfileSection

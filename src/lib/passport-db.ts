@@ -20,6 +20,28 @@ export async function listChildPackAssignments(childId: string): Promise<string[
   return (data ?? []).map(r => r.country_slug as string)
 }
 
+export type ChildCountryVisitRow = {
+  country_slug: string
+  first_visit_date: string // YYYY-MM-DD
+}
+
+// Parent-scoped list of a child's country visits, ordered by date so
+// the most recent are at the top of the parent's edit list.
+export async function listCountryVisitsForChildParent(childId: string): Promise<ChildCountryVisitRow[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('child_country_visits')
+    .select('country_slug, first_visit_date')
+    .eq('child_id', childId)
+    .order('first_visit_date', { ascending: false })
+
+  if (error) {
+    console.error('[passport] listCountryVisitsForChildParent', error)
+    return []
+  }
+  return (data ?? []) as ChildCountryVisitRow[]
+}
+
 export async function listChildrenForParent(): Promise<ChildRow[]> {
   const supabase = await createClient()
   const { data, error } = await supabase

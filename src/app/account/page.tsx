@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Crown, ShoppingBag, ArrowRight, Calendar, ShieldCheck, FileText, Mail } from 'lucide-react'
+import { Crown, ShoppingBag, ArrowRight, Calendar, ShieldCheck, FileText, Mail, Users } from 'lucide-react'
 import type { Metadata } from 'next'
 import SignOutButton from './SignOutButton'
 import AccountEditor from './AccountEditor'
@@ -114,6 +114,25 @@ export default async function AccountPage() {
             )}
           </div>
         </div>
+
+        {/* Family Passport, premium-only */}
+        {isPremium && (
+          <Link
+            href="/family"
+            className="block bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6 hover:border-brand-200 hover:shadow transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <div className="bg-brand-50 text-brand-700 rounded-xl p-3">
+                <Users className="w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-gray-900">Family Passport</p>
+                <p className="text-sm text-gray-500">Manage children, assign Adventure Packs, view QR codes.</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-gray-400" />
+            </div>
+          </Link>
+        )}
 
         {/* Purchases */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">

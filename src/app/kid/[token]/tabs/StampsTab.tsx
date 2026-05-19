@@ -2,60 +2,40 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight, Award } from 'lucide-react'
 import PassportPage from '@/components/passport/PassportPage'
 import PassportStamp from '@/components/passport/PassportStamp'
+import MilestoneStamp from '@/components/passport/MilestoneStamp'
 import { getPackMeta } from '@/lib/adventurePackData'
-import type { StampRow } from '@/lib/passport-kid-db'
+import { computeMilestones, type MilestoneStamp as Milestone } from '@/lib/passport-milestones'
+import type { StampRow, CountryVisitRow } from '@/lib/passport-kid-db'
 
-type Group = {
-  countrySlug: string | null
-  countryName: string
-  flag: string
-  stamps: StampRow[]
-}
+type Page =
+  | { kind: 'traveler'; milestones: Milestone[] }
+  | { kind: 'country'; countrySlug: string | null; countryName: string; flag: string; stamps: StampRow[] }
 
 export default function StampsTab({
   token,
   stamps,
+  visits,
 }: {
   token: string
   stamps: StampRow[]
+  visits: CountryVisitRow[]
 }) {
-  const groups = useMemo(() => groupByCountry(stamps), [stamps])
+  const pages = useMemo(() => buildPages(stamps, visits), [stamps, visits])
   const [pageIndex, setPageIndex] = useState(0)
-  // Direction drives which page-turn animation to play.
   const [direction, setDirection] = useState<'next' | 'prev'>('next')
-  // Bump on every page change so React re-mounts the inner content
-  // and the CSS animation re-runs.
   const [animKey, setAnimKey] = useState(0)
 
-  if (stamps.length === 0) {
-    return (
-      <PassportPage className="p-6 sm:p-8 min-h-[60vh]">
-        <div className="flex items-baseline justify-between mb-6">
-          <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: '#5a3a12' }}>
-              All stamps
-            </p>
-            <p className="text-xs uppercase tracking-widest mt-0.5" style={{ color: '#5a3a12', opacity: 0.6 }}>
-              Empty book
-            </p>
-          </div>
-        </div>
-        <div className="text-center py-16 text-sm" style={{ color: '#5a3a12', opacity: 0.75 }}>
-          <p className="text-lg font-semibold mb-2">No stamps yet.</p>
-          <p className="text-xs uppercase tracking-widest opacity-70 max-w-xs mx-auto leading-relaxed">
-            Pick a food, learn a phrase, or finish a mission. Your first stamp will be pressed here.
-          </p>
-        </div>
-      </PassportPage>
-    )
-  }
+  // Empty book (no stamps at all, no visits) — but we still show
+  // the Traveler page so the empty state is at least one branded
+  // page rather than a bare message.
+  const onlyTravelerEmpty = pages.length === 1 && pages[0].kind === 'traveler' && pages[0].milestones.length === 0
 
-  const current = groups[pageIndex] ?? groups[0]
+  const current = pages[pageIndex] ?? pages[0]
   const hasPrev = pageIndex > 0
-  const hasNext = pageIndex < groups.length - 1
+  const hasNext = pageIndex < pages.length - 1
 
   const turn = (dir: 'next' | 'prev') => {
     if (dir === 'next' && !hasNext) return
@@ -65,36 +45,39 @@ export default function StampsTab({
     setAnimKey(k => k + 1)
   }
 
+  const totalStamps = stamps.length
+  const countryPageCount = pages.length - 1
+
   return (
     <PassportPage className="p-6 sm:p-8 min-h-[60vh]">
-      {/* Header always visible — book "spine" info */}
       <div className="flex items-baseline justify-between mb-5">
         <div>
           <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: '#5a3a12' }}>
             All stamps
           </p>
           <p className="text-xs uppercase tracking-widest mt-0.5" style={{ color: '#5a3a12', opacity: 0.6 }}>
-            {stamps.length} {stamps.length === 1 ? 'stamp' : 'stamps'} across {groups.length} {groups.length === 1 ? 'page' : 'pages'}
+            {totalStamps === 0
+              ? 'Empty book'
+              : `${totalStamps} ${totalStamps === 1 ? 'stamp' : 'stamps'} · ${countryPageCount} ${countryPageCount === 1 ? 'country' : 'countries'}`}
           </p>
         </div>
-        {groups.length > 1 && (
+        {pages.length > 1 && (
           <p className="text-xs uppercase tracking-widest" style={{ color: '#5a3a12', opacity: 0.6 }}>
-            Page {pageIndex + 1} of {groups.length}
+            Page {pageIndex + 1} of {pages.length}
           </p>
         )}
       </div>
 
-      {/* The animated page itself. key change + class re-runs the CSS
-          keyframes for a brief 3D page-turn effect. */}
       <div
         key={animKey}
         className={direction === 'next' ? 'animate-page-turn-next' : 'animate-page-turn-prev'}
       >
-        <CountryPage group={current} token={token} />
+        {current.kind === 'traveler'
+          ? <TravelerPage milestones={current.milestones} empty={onlyTravelerEmpty} />
+          : <CountryPage group={current} token={token} />}
       </div>
 
-      {/* Page-turn controls — only shown when there's more than one page */}
-      {groups.length > 1 && (
+      {pages.length > 1 && (
         <footer
           className="mt-8 pt-4 flex items-center justify-between gap-3 text-sm"
           style={{ borderTop: '1px dashed rgba(120,80,30,0.25)', color: '#5a3a12' }}
@@ -107,14 +90,12 @@ export default function StampsTab({
             aria-label="Previous page"
           >
             <ChevronLeft className="w-4 h-4" />
-            <span className="uppercase tracking-widest text-xs">{hasPrev ? groups[pageIndex - 1].countryName : 'Prev'}</span>
+            <span className="uppercase tracking-widest text-xs">{hasPrev ? pageLabel(pages[pageIndex - 1]) : 'Prev'}</span>
           </button>
-
-          {/* Tiny page-dot indicator */}
           <div className="flex items-center gap-1">
-            {groups.map((g, i) => (
+            {pages.map((p, i) => (
               <button
-                key={g.countrySlug ?? '__none__'}
+                key={pageKey(p, i)}
                 type="button"
                 onClick={() => {
                   if (i === pageIndex) return
@@ -125,11 +106,10 @@ export default function StampsTab({
                 className={`w-2 h-2 rounded-full transition-all ${
                   i === pageIndex ? 'bg-amber-800 w-4' : 'bg-amber-800/30 hover:bg-amber-800/50'
                 }`}
-                aria-label={`Go to ${g.countryName} page`}
+                aria-label={`Go to ${pageLabel(p)} page`}
               />
             ))}
           </div>
-
           <button
             type="button"
             onClick={() => turn('next')}
@@ -137,7 +117,7 @@ export default function StampsTab({
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             aria-label="Next page"
           >
-            <span className="uppercase tracking-widest text-xs">{hasNext ? groups[pageIndex + 1].countryName : 'Next'}</span>
+            <span className="uppercase tracking-widest text-xs">{hasNext ? pageLabel(pages[pageIndex + 1]) : 'Next'}</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         </footer>
@@ -146,10 +126,55 @@ export default function StampsTab({
   )
 }
 
-function CountryPage({ group, token }: { group: Group; token: string }) {
+function TravelerPage({ milestones, empty }: { milestones: Milestone[]; empty: boolean }) {
   return (
     <section>
-      {/* Country chapter header */}
+      <div
+        className="flex items-baseline justify-between gap-3 mb-5 pb-2"
+        style={{ borderBottom: '1px dashed rgba(120,80,30,0.25)', color: '#5a3a12' }}
+      >
+        <div className="inline-flex items-center gap-2">
+          <Award className="w-4 h-4" />
+          <h3 className="text-base font-extrabold uppercase tracking-[0.18em]">Traveller</h3>
+        </div>
+        <p className="text-xs uppercase tracking-widest opacity-60">
+          {empty ? 'Empty' : `${milestones.length} ${milestones.length === 1 ? 'badge' : 'badges'}`}
+        </p>
+      </div>
+
+      {empty ? (
+        <p
+          className="text-center text-xs uppercase tracking-widest py-10 leading-relaxed"
+          style={{ color: '#5a3a12', opacity: 0.7 }}
+        >
+          Visit your first country to start earning traveller badges.
+          <br />
+          Open an Adventure Pack or log a flight to begin.
+        </p>
+      ) : (
+        <div className="flex flex-wrap items-start justify-center gap-x-5 gap-y-6 py-3">
+          {milestones.map(m => (
+            <MilestoneStamp
+              key={m.id}
+              emoji={m.emoji}
+              label={m.label}
+              ink={m.ink}
+              date={m.earnedAt}
+              size="md"
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
+function CountryPage({ group, token }: {
+  group: Extract<Page, { kind: 'country' }>
+  token: string
+}) {
+  return (
+    <section>
       <div
         className="flex items-baseline justify-between gap-3 mb-5 pb-2"
         style={{ borderBottom: '1px dashed rgba(120,80,30,0.25)', color: '#5a3a12' }}
@@ -167,7 +192,6 @@ function CountryPage({ group, token }: { group: Group; token: string }) {
           </Link>
         )}
       </div>
-      {/* The stamps for this country, clustered. */}
       <div className="flex flex-wrap items-start justify-center gap-x-4 gap-y-6 py-3">
         {group.stamps.map(s => (
           <PassportStamp
@@ -183,13 +207,18 @@ function CountryPage({ group, token }: { group: Group; token: string }) {
   )
 }
 
-function groupByCountry(stamps: StampRow[]): Group[] {
-  const byCountry = new Map<string, Group>()
+function buildPages(stamps: StampRow[], visits: CountryVisitRow[]): Page[] {
+  // Always lead with the Traveler page
+  const milestones = computeMilestones(visits, stamps)
+
+  // Group country stamps
+  const byCountry = new Map<string, Extract<Page, { kind: 'country' }>>()
   for (const s of stamps) {
     const key = s.country_slug ?? '__none__'
     const meta = s.country_slug ? getPackMeta(s.country_slug) : null
     if (!byCountry.has(key)) {
       byCountry.set(key, {
+        kind: 'country',
         countrySlug: s.country_slug ?? null,
         countryName: meta?.country ?? '✈️ Travel',
         flag: meta?.flag ?? '✈️',
@@ -198,14 +227,25 @@ function groupByCountry(stamps: StampRow[]): Group[] {
     }
     byCountry.get(key)!.stamps.push(s)
   }
-  const groups = Array.from(byCountry.values())
-  for (const g of groups) {
+  for (const g of byCountry.values()) {
     g.stamps.sort((a, b) => (a.earned_at < b.earned_at ? 1 : -1))
   }
-  groups.sort((a, b) => {
+  const countryPages = Array.from(byCountry.values()).sort((a, b) => {
     const aLatest = a.stamps[0]?.earned_at ?? ''
     const bLatest = b.stamps[0]?.earned_at ?? ''
     return aLatest < bLatest ? 1 : -1
   })
-  return groups
+
+  return [
+    { kind: 'traveler', milestones },
+    ...countryPages,
+  ]
+}
+
+function pageLabel(p: Page): string {
+  if (p.kind === 'traveler') return 'Traveller'
+  return p.countryName
+}
+function pageKey(p: Page, i: number): string {
+  return p.kind === 'traveler' ? 'traveler' : (p.countrySlug ?? `__none-${i}`)
 }

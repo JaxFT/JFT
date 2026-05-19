@@ -40,20 +40,22 @@ export default function PassportTab({
         ))}
       </div>
 
-      {/* Adventures — assigned packs the kid can open. Ordered: in
-          progress first (most exciting), then unstarted, then completed. */}
-      <section>
-        <div className="flex items-center gap-2 mb-3 px-1">
+      {/* Adventure Packs — assigned packs the kid can open. Ordered:
+          in progress first (most exciting), then unstarted, then
+          completed. Each card cascades indented from the heading to
+          read like a list flowing from the words. */}
+      <section className="relative">
+        <div className="flex items-center gap-2 mb-3 pl-1">
           <Compass className="w-4 h-4 text-brand-300" />
-          <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-white">Adventures</p>
+          <h2 className="text-xs font-extrabold uppercase tracking-[0.2em] text-white">Adventure Packs</h2>
         </div>
 
         {assignedPacks.length === 0 ? (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center text-sm text-white/70">
+          <div className="ml-5 bg-white/5 border border-white/10 rounded-2xl p-5 text-center text-sm text-white/70">
             <p>Ask a grown-up to add an Adventure Pack for you to start.</p>
           </div>
         ) : (
-          <ul className="space-y-2">
+          <ul className="ml-5 border-l-2 border-brand-300/40 pl-4 space-y-2">
             {sortPacks(assignedPacks).map(p => {
               const meta = getPackMeta(p.country_slug)
               if (!meta) return null

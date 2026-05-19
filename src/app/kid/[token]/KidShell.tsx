@@ -105,7 +105,7 @@ export default function KidShell({
         {tab === 'map'       && <MapTab token={token} visits={visits} />}
         {tab === 'countries' && <CountriesTab token={token} visits={visits} />}
         {tab === 'journal'   && <JournalTab token={token} childName={child.name} permissionMode={child.permission_mode} entries={journal} />}
-        {tab === 'stamps'    && <StampsTab token={token} stamps={stamps} />}
+        {tab === 'stamps'    && <StampsTab token={token} stamps={stamps} visits={visits} />}
       </main>
     </div>
   )

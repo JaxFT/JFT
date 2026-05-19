@@ -1,17 +1,17 @@
 'use client'
 
-// Interactive SVG world map. Flat Mercator projection (the familiar
-// Google-Maps look), zoomable down to country level, pannable around
-// the globe via drag or touch. Visited countries glow brand green.
-// Tapping a visited country routes to its passport page.
-//
-// Uses react-simple-maps's ZoomableGroup. World geography is loaded
-// once from world-atlas at 1:110m via CDN.
+// Interactive SVG world map. Uses geoNaturalEarth1 — a "flat enough"
+// pseudocylindrical projection that keeps Antarctica its real size
+// (Mercator stretches it to fill half the southern hemisphere). Tap
+// any country to see its name and either open its passport page (if
+// the kid has unlocked it) or get a friendly "not visited yet" hint.
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Minus, Maximize2 } from 'lucide-react'
-import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps'
+import { Plus, Minus, Maximize2, X, ArrowRight } from 'lucide-react'
+import {
+  ComposableMap, Geographies, Geography, ZoomableGroup,
+} from 'react-simple-maps'
 
 const SLUG_TO_NUMERIC: Record<string, string> = {
   'france':          '250',
@@ -36,8 +36,15 @@ const SLUG_TO_NUMERIC: Record<string, string> = {
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
 
 const MIN_ZOOM = 1
-const MAX_ZOOM = 20
-const INITIAL_CENTER: [number, number] = [0, 20]
+const MAX_ZOOM = 40
+const INITIAL_CENTER: [number, number] = [10, 20]
+
+type SelectedCountry = {
+  name: string
+  slug: string | null
+  isUnlocked: boolean
+  isPack: boolean
+}
 
 type Props = {
   unlockedSlugs: string[]
@@ -46,11 +53,9 @@ type Props = {
 
 export default function WorldMap({ unlockedSlugs, hrefForSlug }: Props) {
   const router = useRouter()
-  // Zoom + center are kept in state so the +/- buttons can drive them
-  // imperatively. ZoomableGroup also writes back via onMoveEnd when
-  // the user drags or pinches.
   const [zoom, setZoom] = useState(1)
   const [center, setCenter] = useState<[number, number]>(INITIAL_CENTER)
+  const [selected, setSelected] = useState<SelectedCountry | null>(null)
 
   const numericToSlug = useMemo(() => {
     const m = new Map<string, string>()
@@ -68,13 +73,11 @@ export default function WorldMap({ unlockedSlugs, hrefForSlug }: Props) {
   return (
     <div
       className="relative w-full h-[80vh] min-h-[420px] bg-amber-50 rounded-2xl overflow-hidden border border-amber-200 shadow-inner"
-      // Disable native touch gestures so ZoomableGroup gets clean
-      // pinch/pan events instead of the browser fighting it.
       style={{ touchAction: 'none' }}
     >
       <ComposableMap
-        projection="geoMercator"
-        projectionConfig={{ scale: 100 }}
+        projection="geoNaturalEarth1"
+        projectionConfig={{ scale: 140 }}
         style={{ width: '100%', height: '100%' }}
       >
         <ZoomableGroup
@@ -99,7 +102,12 @@ export default function WorldMap({ unlockedSlugs, hrefForSlug }: Props) {
                     key={geo.rsmKey}
                     geography={geo}
                     onClick={() => {
-                      if (slug && isUnlocked) router.push(hrefForSlug(slug))
+                      setSelected({
+                        name: geo.properties.name,
+                        slug: slug ?? null,
+                        isUnlocked,
+                        isPack: isAssignable,
+                      })
                     }}
                     style={{
                       default: {
@@ -109,19 +117,17 @@ export default function WorldMap({ unlockedSlugs, hrefForSlug }: Props) {
                             ? '#d8c896'
                             : '#ecdfb8',
                         stroke: '#a37a32',
-                        // Stroke gets thinner at high zoom so borders
-                        // don't dominate the country fill.
                         strokeWidth: Math.max(0.15, 0.5 / zoom),
                         outline: 'none',
-                        cursor: isUnlocked ? 'pointer' : 'default',
+                        cursor: 'pointer',
                         transition: 'fill 0.2s ease',
                       },
                       hover: {
-                        fill: isUnlocked ? '#5fa37a' : isAssignable ? '#d0bd84' : '#ecdfb8',
+                        fill: isUnlocked ? '#5fa37a' : isAssignable ? '#d0bd84' : '#e8d8a8',
                         stroke: '#5a3a12',
                         strokeWidth: Math.max(0.25, 0.8 / zoom),
                         outline: 'none',
-                        cursor: isUnlocked ? 'pointer' : 'default',
+                        cursor: 'pointer',
                       },
                       pressed: { fill: '#3e7757', outline: 'none' },
                     }}
@@ -163,11 +169,48 @@ export default function WorldMap({ unlockedSlugs, hrefForSlug }: Props) {
         </button>
       </div>
 
-      {/* Tiny hint of how to interact — only when at the default view. */}
-      {zoom === 1 && (
+      {/* Default-view hint */}
+      {zoom === 1 && !selected && (
         <p className="absolute bottom-3 left-3 text-[10px] uppercase tracking-widest text-amber-900/60 bg-white/70 backdrop-blur-sm px-2 py-1 rounded-full pointer-events-none">
-          Pinch or scroll to zoom · drag to pan
+          Tap any country · pinch to zoom
         </p>
+      )}
+
+      {/* Selected-country popup. Sits at the bottom of the map. */}
+      {selected && (
+        <div className="absolute bottom-3 left-3 right-16 bg-white rounded-2xl shadow-2xl border border-amber-200 p-4 max-w-sm">
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <p className="text-lg font-extrabold text-amber-950 leading-tight">{selected.name}</p>
+            <button
+              type="button"
+              onClick={() => setSelected(null)}
+              className="text-amber-900/40 hover:text-amber-900 -mr-1 -mt-1 p-1.5"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          {selected.isUnlocked && selected.slug ? (
+            <>
+              <p className="text-xs text-amber-900/70 mb-3">In your passport.</p>
+              <button
+                type="button"
+                onClick={() => router.push(hrefForSlug(selected.slug!))}
+                className="inline-flex items-center gap-1.5 bg-amber-900 hover:bg-amber-950 text-amber-50 text-sm font-semibold px-3 py-2 rounded-full"
+              >
+                Open passport page <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </>
+          ) : selected.isPack ? (
+            <p className="text-xs text-amber-900/70">
+              Not yet visited. Ask a grown-up to add the {selected.name} Adventure Pack so you can start exploring.
+            </p>
+          ) : (
+            <p className="text-xs text-amber-900/70">
+              Not in your passport yet. Maybe one day&nbsp;✈️
+            </p>
+          )}
+        </div>
       )}
     </div>
   )

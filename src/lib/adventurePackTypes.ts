@@ -11,6 +11,7 @@ export const SECTION_KEYS = [
   'food',
   'geography',
   'scavenger',
+  'animals',
   'senses',
   'stories',
   'convo',
@@ -25,6 +26,7 @@ export const SECTION_LABELS: Record<SectionKey, string> = {
   food:      'Food',
   geography: 'Geography',
   scavenger: 'Scavenger hunt',
+  animals:   'Animal spotter',
   senses:    'Senses',
   stories:   'Stories',
   convo:     'Family chat',
@@ -38,6 +40,7 @@ export const SECTION_EMOJI: Record<SectionKey, string> = {
   food:      '🍽️',
   geography: '🌍',
   scavenger: '🔎',
+  animals:   '🐾',
   senses:    '✨',
   stories:   '📖',
   convo:     '☕',
@@ -61,6 +64,15 @@ export interface FoodItem {
 export interface ScavengerItem {
   emoji: string
   label: string
+  olderOnly?: boolean
+}
+
+// Country-specific animals to spot in the wild, on a farm or in the
+// street. Spot 3+ to earn the Animal Spotter stamp.
+export interface AnimalItem {
+  emoji: string
+  name: string
+  description: string
   olderOnly?: boolean
 }
 
@@ -121,6 +133,12 @@ export interface AdventurePackData {
   senses: SensesPlaceholders
   stories: Story[]
   convoQuestions: ConvoQuestion[]
+  // Animals are stored in a separate file (adventurePackAnimals.ts)
+  // and merged in by `getPackData`, so the individual pack data
+  // blocks don't have to inline 100+ lines of animal content. Always
+  // populated (possibly to `[]`) by the time a Section component
+  // sees the pack.
+  animals?: AnimalItem[]
 }
 
 // Continents we group packs by in the listing UIs.

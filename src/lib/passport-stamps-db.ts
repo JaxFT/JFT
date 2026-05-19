@@ -112,6 +112,7 @@ export async function awardOrSuggestStamp(input: AwardInput): Promise<AwardResul
 // open it.
 const FOOD_THRESHOLD = 3
 const LANGUAGE_THRESHOLD = 3
+const ANIMAL_THRESHOLD = 3
 
 // Detect which auto-stamps a section save should fire. Reads the
 // stored answers and returns the stamp types triggered. Idempotent —
@@ -131,6 +132,11 @@ export function autoStampsForSection(
     const used = Object.entries(answers).filter(([k, v]) => k.startsWith('used-') && !!v).length
     if (used >= LANGUAGE_THRESHOLD) out.push('LOCAL_LINGO')
   }
+  // Animals: ANIMAL_SPOTTER fires after spotting 3+ animals.
+  if (section === 'animals') {
+    const spotted = Object.entries(answers).filter(([k, v]) => k.startsWith('spotted-') && !!v).length
+    if (spotted >= ANIMAL_THRESHOLD) out.push('ANIMAL_SPOTTER')
+  }
   return out
 }
 
@@ -146,6 +152,7 @@ const SECTION_STAMPS: Record<SectionKey, StampType[]> = {
   food:      [], // gated by 3+ tried-* in autoStampsForSection
   geography: ['GEOGRAPHY_GENIUS'],
   scavenger: ['SCAVENGER_HUNTER'],
+  animals:   [], // gated by 3+ spotted-* in autoStampsForSection
   senses:    ['SENSE_SEEKER'],
   stories:   ['STORY_KEEPER'],
   convo:     ['FAMILY_CHATTERBOX'],

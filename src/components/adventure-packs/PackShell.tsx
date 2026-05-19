@@ -159,7 +159,7 @@ export default function PackShell({
               style={{ width: `${percent}%` }}
             />
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-9 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-5 lg:grid-cols-10 gap-2">
             {SECTION_KEYS.map(k => {
               const isCurrent = currentSection === k
               const isDone = pack.isMissionComplete(k)

@@ -53,6 +53,7 @@ export type StampType =
   | 'MONEY_CHANGER'
   | 'GEOGRAPHY_GENIUS'
   | 'SCAVENGER_HUNTER'
+  | 'ANIMAL_SPOTTER'
   | 'SENSE_SEEKER'
   | 'STORY_KEEPER'
   | 'FAMILY_CHATTERBOX'
@@ -70,6 +71,7 @@ export const AUTO_STAMP_TYPES: StampType[] = [
   'MONEY_CHANGER',
   'GEOGRAPHY_GENIUS',
   'SCAVENGER_HUNTER',
+  'ANIMAL_SPOTTER',
   'SENSE_SEEKER',
   'STORY_KEEPER',
   'FAMILY_CHATTERBOX',
@@ -165,6 +167,12 @@ export const STAMP_META: Record<StampType, { emoji: string; label: string; descr
     label: 'Scavenger Hunter',
     description: 'Spotted things from the scavenger list.',
     ink: '#5b21b6', // royal purple
+  },
+  ANIMAL_SPOTTER: {
+    emoji: '🐾',
+    label: 'Animal Spotter',
+    description: 'Spotted 3+ animals on the country\'s animal list.',
+    ink: '#15803d', // emerald
   },
   SENSE_SEEKER: {
     emoji: '✨',

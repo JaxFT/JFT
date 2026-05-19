@@ -38,6 +38,7 @@ const SHAPE_FOR_TYPE: Record<StampType, StampShape> = {
   MONEY_CHANGER:           'circle',
   GEOGRAPHY_GENIUS:        'shield',
   SCAVENGER_HUNTER:        'circle',
+  ANIMAL_SPOTTER:          'oval',
   SENSE_SEEKER:            'oval',
   STORY_KEEPER:            'rounded',
   FAMILY_CHATTERBOX:       'circle',

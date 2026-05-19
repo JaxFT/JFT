@@ -8,6 +8,7 @@
 import type {
   AdventurePackData, AdventurePackMeta,
 } from './adventurePackTypes'
+import { ANIMALS_BY_SLUG } from './adventurePackAnimals'
 
 // ── FRANCE (live + free) ─────────────────────────────────────────
 export const FRANCE_DATA: AdventurePackData = {
@@ -3954,7 +3955,12 @@ const FULL_DATA: Record<string, AdventurePackData> = {
 }
 
 export function getPackData(slug: string): AdventurePackData | null {
-  return FULL_DATA[slug] ?? null
+  const base = FULL_DATA[slug]
+  if (!base) return null
+  // Animals are kept in a separate file and merged in here so the
+  // individual data blocks don't have to inline 100+ lines of animal
+  // content. Falls back to [] if a pack doesn't yet have a list.
+  return { ...base, animals: ANIMALS_BY_SLUG[slug] ?? [] }
 }
 
 export function getPackMeta(slug: string): AdventurePackMeta | null {

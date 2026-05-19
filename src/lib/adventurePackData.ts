@@ -101,6 +101,13 @@ export const FRANCE_DATA: AdventurePackData = {
       olderOnly: true,
       thinkingQuestion: 'The revolutionaries believed three things every person deserved: liberty, equality, and brotherhood. Which one do you think is the hardest to actually make happen?',
     },
+    {
+      location: '📍 Normandy',
+      question: 'Why are there beaches in France named after letters and code words?',
+      body: 'On 6 June 1944, near the end of World War 2, around 156,000 American, British and Canadian soldiers landed on five beaches along the Normandy coast in northern France. The beaches were given the code names Utah, Omaha, Gold, Juno and Sword. France had been occupied by Nazi Germany for four years, and this was the start of taking it back. It was the largest seaborne invasion in history. Today the beaches are quiet sand and dunes again, but you can still find concrete bunkers, huge war cemeteries and museums all along the coast. Small French towns still hold ceremonies to thank the soldiers every June.',
+      olderOnly: true,
+      thinkingQuestion: 'Why do you think small French towns still hold ceremonies for soldiers who died over 80 years ago?',
+    },
   ],
   convoQuestions: [
     { question: 'What\'s the best thing you\'ve eaten in France so far?' },
@@ -317,6 +324,12 @@ export const INDONESIA_DATA: AdventurePackData = {
       olderOnly: true,
       thinkingQuestion: 'If you had to design a brand new capital city from nothing, what is the first thing you would build?',
     },
+    {
+      location: '📍 Yogyakarta, Java',
+      question: 'What is a wayang shadow puppet show?',
+      body: 'On Java and Bali, people have been telling stories with shadow puppets for over a thousand years. The puppets are flat, made of buffalo leather, beautifully painted, with long sticks for arms. A puppet master (called a "dalang") sits behind a white cotton screen with a lamp shining through, and moves the puppets so the audience on the other side sees their shadows dancing. The shows can last all night, sometimes from sunset to sunrise, telling huge old stories about gods and battles. A live gamelan orchestra clangs and chimes along beside the dalang the whole time.',
+      thinkingQuestion: 'If you could put on your own shadow puppet show, what story would you tell?',
+    },
   ],
   convoQuestions: [
     { question: 'What\'s the best thing you\'ve eaten in Indonesia so far?' },
@@ -419,6 +432,12 @@ export const THAILAND_DATA: AdventurePackData = {
       location: '📍 Ayutthaya',
       question: 'Why is there a Buddha head in a tree?',
       body: 'In the ruins of Ayutthaya, the old capital, there is one stone Buddha head completely wrapped in the roots of a fig tree. The story: Ayutthaya was a huge, wealthy city until 1767, when a Burmese army invaded, burned the city to the ground and smashed most of the Buddha statues. One head fell to the ground, and over the next 250 years a tree slowly grew around it, swallowing it into its roots. The tree is still alive, and the Buddha is still inside it.',
+      olderOnly: true,
+    },
+    {
+      location: '📍 Across Thailand',
+      question: 'What is Muay Thai?',
+      body: 'Muay Thai is the national sport of Thailand, a centuries-old kind of kickboxing where fighters use their fists, elbows, knees and shins. It started as the way Thai soldiers were trained for battle, hundreds of years ago. Every fight begins with a slow, graceful dance called the "wai khru ram muay", where the fighter pays respect to their teacher and to the spirits of the ring. Then traditional music plays through the whole fight, getting faster as the action heats up. Thai kids start training as young as 6 or 7, and the best fighters become national heroes.',
       olderOnly: true,
     },
   ],
@@ -526,6 +545,12 @@ export const MALAYSIA_DATA: AdventurePackData = {
       olderOnly: true,
       thinkingQuestion: 'Orangutans share 97% of our DNA. What is one human thing they do that surprises you most?',
     },
+    {
+      location: '📍 Anywhere in Malaysia',
+      question: 'Why is one fruit banned in hotels?',
+      body: 'Durian is a big, spiky green fruit that Malaysians call "the king of fruits". The flesh inside is sweet, creamy and rich, and some people would happily fight a tiger for one. The catch: it smells. Really smells. People have compared it to gym socks, blue cheese, rotting onions, or all three at once. The smell is so strong, and it clings to fabric so well, that you will see "No durian" signs in hotels, airports and trains all over South-East Asia. Whole shops sell nothing but durian. Try a piece if you dare, just maybe wash your hands afterwards.',
+      thinkingQuestion: 'Imagine inventing a fruit that smells terrible but tastes amazing. Who would you trick into trying it first?',
+    },
   ],
   convoQuestions: [
     { question: 'What\'s the best thing you\'ve eaten in Malaysia?' },
@@ -629,6 +654,13 @@ export const SPAIN_DATA: AdventurePackData = {
       question: 'Why do thousands of people throw tomatoes at each other every August?',
       body: 'Every August, the small town of Buñol in Valencia holds "La Tomatina", the world\'s biggest food fight. For one hour, around 20,000 people pelt each other with 150,000 over-ripe tomatoes in the streets, until the whole town runs red. It started around 1945 from a small fight at a parade, with no one really sure why it happened, but it kept going year after year because everyone had fun. Now you have to buy a ticket. The town fire engines hose everyone down afterwards.',
       thinkingQuestion: 'If your town invented a yearly festival, what should everyone do for one hour, just for fun?',
+    },
+    {
+      location: '📍 Madrid',
+      question: 'What is the most famous painting in Spain?',
+      body: 'In 1937, during the Spanish Civil War, the small town of Guernica in the Basque Country was bombed for hours by German and Italian planes helping the Spanish dictator Franco. Most of the town was destroyed and hundreds of civilians died. A Spanish artist living in Paris, Pablo Picasso, was so horrified that he painted a huge mural in black, white and grey, showing screaming people and animals, broken bodies, a crying woman holding a dead child. It is called "Guernica", it is over 3 metres tall and 7 metres wide, and it now lives in the Reina Sofía museum in Madrid. Picasso said it should stay outside Spain until democracy returned. It only came home in 1981.',
+      olderOnly: true,
+      thinkingQuestion: 'Picasso believed a painting could change how people feel about war. Do you think a picture can really change minds?',
     },
   ],
   convoQuestions: [
@@ -735,6 +767,12 @@ export const PORTUGAL_DATA: AdventurePackData = {
       question: 'What is "saudade"?',
       body: '"Saudade" is a Portuguese word that does not really translate into English. It means a deep, sweet, slightly sad longing for someone or somewhere that is far away, or for a moment in the past that you can never get back. Portuguese people say it is at the heart of who they are. You can hear it in fado music, the soulful guitar songs you hear in old Lisbon bars at night. The Portuguese feel saudade for their lost empire, for emigrant family members in other countries, for childhood beaches. It is, basically, a kind of homesickness for things that never quite existed.',
       thinkingQuestion: 'Is there a place or a time in your life that you sometimes miss, even though it is gone? What do you miss about it?',
+    },
+    {
+      location: '📍 Barcelos, northern Portugal',
+      question: 'Why is a colourful rooster the symbol of Portugal?',
+      body: 'You will see colourful pottery roosters everywhere in Portugal, in shops, on key rings, on tea towels. They come from a legend hundreds of years old. A pilgrim walking to Santiago was wrongly accused of stealing silver and sentenced to be hanged. As the judge sat down to a roast chicken dinner, the pilgrim called out: "if I am innocent, that rooster will stand up and crow." Right on cue, the cooked rooster on the judge\'s plate jumped up, flapped its wings, and crowed. The judge let the pilgrim go. Now the Galo de Barcelos is a Portuguese symbol of luck, honesty and faith.',
+      thinkingQuestion: 'If you could pick an animal to be your country\'s lucky symbol, what would it be and why?',
     },
   ],
   convoQuestions: [

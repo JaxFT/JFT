@@ -9,7 +9,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
   AgeMode, SectionAnswers, SectionKey,
 } from '@/lib/adventurePackTypes'
-import type { UseAdventurePackResult } from './useAdventurePack'
+import type { StampType } from '@/lib/passport-types'
+import type { UseAdventurePackResult, NewStampNotification } from './useAdventurePack'
 
 const SAVE_DEBOUNCE_MS = 1000
 
@@ -33,9 +34,35 @@ export function useKidAdventurePack(token: string, countrySlug: string): UseAdve
   const [missionsComplete, setMissionsComplete] = useState<string[]>([])
   const [answers, setAnswers] = useState<Record<string, SectionAnswers>>({})
   const [loading, setLoading] = useState(true)
+  // Queue of stamps just earned — the shell pops the head, shows a
+  // celebration toast, then calls dismissStamp to advance.
+  const [newStamps, setNewStamps] = useState<NewStampNotification[]>([])
 
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
   const latestAnswers = useRef<Record<string, SectionAnswers>>({})
+
+  // Merge stamps coming back from a section/session response into the
+  // celebration queue. Filter to known stamp types just in case.
+  const ingestNewStamps = useCallback((items: unknown) => {
+    if (!Array.isArray(items)) return
+    const valid: NewStampNotification[] = []
+    for (const it of items) {
+      if (it && typeof it === 'object'
+        && typeof (it as { type?: unknown }).type === 'string'
+        && typeof (it as { country_slug?: unknown }).country_slug === 'string') {
+        valid.push({
+          type: (it as { type: string }).type as StampType,
+          country_slug: (it as { country_slug: string }).country_slug,
+        })
+      }
+    }
+    if (valid.length === 0) return
+    setNewStamps(prev => [...prev, ...valid])
+  }, [])
+
+  const dismissStamp = useCallback(() => {
+    setNewStamps(prev => prev.slice(1))
+  }, [])
 
   // Build the API path once; everything keys off this.
   const base = `/api/kid/${encodeURIComponent(token)}/pack/${encodeURIComponent(countrySlug)}`
@@ -76,8 +103,11 @@ export function useKidAdventurePack(token: string, countrySlug: string): UseAdve
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(snapshot),
-    }).catch(() => null)
-  }, [base])
+    })
+      .then(r => r.json().catch(() => null))
+      .then(body => body && ingestNewStamps(body.newStamps))
+      .catch(() => null)
+  }, [base, ingestNewStamps])
 
   const updateAnswer = useCallback((section: SectionKey, key: string, value: unknown) => {
     setAnswers(prev => {
@@ -104,8 +134,11 @@ export function useKidAdventurePack(token: string, countrySlug: string): UseAdve
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ age_mode: mode, missions_complete: missions }),
-    }).catch(() => null)
-  }, [base])
+    })
+      .then(r => r.json().catch(() => null))
+      .then(body => body && ingestNewStamps(body.newStamps))
+      .catch(() => null)
+  }, [base, ingestNewStamps])
 
   const completeMission = useCallback((mission: SectionKey) => {
     setMissionsComplete(prev => {
@@ -146,5 +179,7 @@ export function useKidAdventurePack(token: string, countrySlug: string): UseAdve
     // Kid packs never expire, but the shared hook contract carries
     // expiresAt anyway — leave it null.
     expiresAt: null,
+    newStamps,
+    dismissStamp,
   }
 }

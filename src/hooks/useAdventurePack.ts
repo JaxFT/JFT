@@ -15,6 +15,15 @@ import {
 import type {
   AgeMode, SectionAnswers, SectionKey,
 } from '@/lib/adventurePackTypes'
+import type { StampType } from '@/lib/passport-types'
+
+// A stamp just earned during this pack session. Only kid-mode hooks
+// populate this; user mode leaves it empty since adults don't get
+// stamps from packs.
+export type NewStampNotification = {
+  type: StampType
+  country_slug: string
+}
 
 export type UseAdventurePackResult = {
   loading: boolean
@@ -28,6 +37,10 @@ export type UseAdventurePackResult = {
   updateAnswer: (section: SectionKey, key: string, value: unknown) => void
   clearAll: () => Promise<void>
   expiresAt: string | null
+  // Queue of stamps just earned (kid mode only). The shell renders a
+  // celebration toast then calls dismissStamp / dismissAll.
+  newStamps: NewStampNotification[]
+  dismissStamp: () => void
 }
 
 const SAVE_DEBOUNCE_MS = 1000
@@ -167,5 +180,8 @@ export function useAdventurePack(
     answers, getAnswer, updateAnswer,
     clearAll,
     expiresAt,
+    // Adult mode doesn't fire stamps — kids do. No-op for parity.
+    newStamps: [],
+    dismissStamp: () => {},
   }
 }

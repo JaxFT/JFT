@@ -37,16 +37,22 @@ export async function PUT(
   await saveKidSection(resolved.child.id, slug, section as SectionKey, answers)
 
   // Detect and fire any auto-stamps this section save earns. The
-  // engine dedupes per (child, type, country) so repeat saves are safe.
+  // engine dedupes per (child, type, country) so repeat saves are
+  // safe. Just-minted stamps go back in the response so the client
+  // can pop a celebration toast.
+  const newStamps: Array<{ type: string; country_slug: string }> = []
   const stampsToAward = autoStampsForSection(section as SectionKey, answers)
   for (const type of stampsToAward) {
-    await awardOrSuggestStamp({
+    const r = await awardOrSuggestStamp({
       childId: resolved.child.id,
       type,
       countrySlug: slug,
       awardedBy: 'system',
     })
+    if (r.ok && r.created && r.status === 'awarded') {
+      newStamps.push({ type, country_slug: slug })
+    }
   }
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true, newStamps })
 }

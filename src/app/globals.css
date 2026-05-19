@@ -32,6 +32,16 @@
 .animate-page-turn-next { animation: pageTurnNext 350ms ease-out; transform-origin: left center; }
 .animate-page-turn-prev { animation: pageTurnPrev 350ms ease-out; transform-origin: right center; }
 
+/* Stamp celebration burst: pop in big, settle, then a tiny wiggle
+   like the stamp was just slammed down on the page. */
+@keyframes stampBurst {
+  0%   { transform: scale(0.5) rotate(-12deg); opacity: 0; }
+  50%  { transform: scale(1.08) rotate(2deg);  opacity: 1; }
+  70%  { transform: scale(0.97) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+.animate-stamp-burst { animation: stampBurst 480ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+
 @layer components {
   .btn-primary {
     @apply inline-flex items-center gap-2 bg-brand-600 text-white px-6 py-3 rounded-lg font-semibold

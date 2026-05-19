@@ -46,29 +46,40 @@ export async function PUT(
   )
 
   // Mission-completion auto-stamps. Fires BRAVE_EATER when the food
-  // mission is now complete, LOCAL_LINGO for language. Dedup makes
-  // this safe to call on every session save.
+  // mission is now complete, LOCAL_LINGO for language, etc. Dedup
+  // makes this safe to call on every session save.
+  //
+  // We collect just-minted stamps (created=true) and return them in
+  // the response so the client can pop a celebration toast — the
+  // moment of reward.
+  const newStamps: Array<{ type: string; country_slug: string }> = []
   for (const m of missions) {
     const types = autoStampsForMissionComplete(m as SectionKey)
     for (const type of types) {
-      await awardOrSuggestStamp({
+      const r = await awardOrSuggestStamp({
         childId: resolved.child.id,
         type,
         countrySlug: slug,
         awardedBy: 'system',
       })
+      if (r.ok && r.created && r.status === 'awarded') {
+        newStamps.push({ type, country_slug: slug })
+      }
     }
   }
 
   // Full-pack completion stamp.
   if (result.firstCompletion) {
-    await awardOrSuggestStamp({
+    const r = await awardOrSuggestStamp({
       childId: resolved.child.id,
       type: 'ADVENTURE_PACK_COMPLETE',
       countrySlug: slug,
       awardedBy: 'system',
     })
+    if (r.ok && r.created && r.status === 'awarded') {
+      newStamps.push({ type: 'ADVENTURE_PACK_COMPLETE', country_slug: slug })
+    }
   }
 
-  return NextResponse.json({ ok: true, ...result })
+  return NextResponse.json({ ok: true, ...result, newStamps })
 }

@@ -66,17 +66,48 @@ export default function BlogBrowser({ posts }: { posts: BlogPostView[] }) {
   }, [posts, stage, destination, topic, q])
 
   const livePacks = useMemo(() => PACK_META.filter(p => p.status === 'live'), [])
+
+  // What filter values actually have at least one post behind them?
+  // We hide everything else from the dropdowns so the writer doesn't
+  // see options that would return an empty list. As content grows
+  // the options re-appear automatically.
+  const usedStages = useMemo(() => {
+    const set = new Set<TravelStage>()
+    for (const p of posts) for (const s of p.travelStages) set.add(s)
+    return set
+  }, [posts])
+
+  const usedTopics = useMemo(() => {
+    const set = new Set<BlogTopic>()
+    for (const p of posts) for (const t of p.topics) set.add(t)
+    return set
+  }, [posts])
+
+  const usedDestinations = useMemo(() => {
+    const set = new Set<string>()           // either DESTINATION_GENERAL or a pack slug
+    let hasGeneral = false
+    for (const p of posts) {
+      if (p.destinationCountry) set.add(p.destinationCountry)
+      else hasGeneral = true
+    }
+    if (hasGeneral) set.add(DESTINATION_GENERAL)
+    return set
+  }, [posts])
+
   const groupedDestinations = useMemo(() => {
     const byContinent = new Map<Continent, typeof livePacks>()
     for (const c of CONTINENT_ORDER) byContinent.set(c, [])
-    for (const p of livePacks) byContinent.get(p.continent)?.push(p)
+    for (const p of livePacks) {
+      if (!usedDestinations.has(p.slug)) continue
+      byContinent.get(p.continent)?.push(p)
+    }
     for (const list of byContinent.values()) {
       list.sort((a, b) => a.country.localeCompare(b.country))
     }
     return CONTINENT_ORDER
       .map(c => ({ continent: c, packs: byContinent.get(c) ?? [] }))
       .filter(g => g.packs.length > 0)
-  }, [livePacks])
+  }, [livePacks, usedDestinations])
 
   const destinationLabel = (() => {
     if (!destination) return 'All destinations'
@@ -105,48 +136,62 @@ export default function BlogBrowser({ posts }: { posts: BlogPostView[] }) {
           />
         </div>
 
-        {/* Stage */}
-        <select
-          value={stage ?? ''}
-          onChange={e => setParam('stage', e.target.value || null)}
-          className="text-sm bg-gray-50 border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-300"
-        >
-          <option value="">All stages</option>
-          {TRAVEL_STAGES.map(s => (
-            <option key={s.value} value={s.value}>{s.label}</option>
-          ))}
-        </select>
-
-        {/* Destination — native <select> with <optgroup> per continent
-            for visual consistency with the Stage + Topic dropdowns and
-            so it always fits on small screens. */}
-        <select
-          value={destination ?? ''}
-          onChange={e => setParam('destination', e.target.value || null)}
-          className="text-sm bg-gray-50 border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-300 max-w-full"
-        >
-          <option value="">All destinations</option>
-          <option value={DESTINATION_GENERAL}>No specific destination</option>
-          {groupedDestinations.map(({ continent, packs }) => (
-            <optgroup key={continent} label={continent}>
-              {packs.map(p => (
-                <option key={p.slug} value={p.slug}>{p.country}</option>
+        {/* Stage — only stages used by at least one post show up,
+            plus the currently-selected one (so a deep link to a stage
+            that no longer has posts still renders sanely). */}
+        {(usedStages.size > 0 || stage) && (
+          <select
+            value={stage ?? ''}
+            onChange={e => setParam('stage', e.target.value || null)}
+            className="text-sm bg-gray-50 border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-300"
+          >
+            <option value="">All stages</option>
+            {TRAVEL_STAGES
+              .filter(s => usedStages.has(s.value) || s.value === stage)
+              .map(s => (
+                <option key={s.value} value={s.value}>{s.label}</option>
               ))}
-            </optgroup>
-          ))}
-        </select>
+          </select>
+        )}
 
-        {/* Topic */}
-        <select
-          value={topic ?? ''}
-          onChange={e => setParam('topic', e.target.value || null)}
-          className="text-sm bg-gray-50 border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-300"
-        >
-          <option value="">All topics</option>
-          {BLOG_TOPICS.map(t => (
-            <option key={t.value} value={t.value}>{t.label}</option>
-          ))}
-        </select>
+        {/* Destination — only countries used by at least one post,
+            plus "No specific destination" if any post is missing a
+            country. Same currently-selected-survives rule. */}
+        {(usedDestinations.size > 0 || destination) && (
+          <select
+            value={destination ?? ''}
+            onChange={e => setParam('destination', e.target.value || null)}
+            className="text-sm bg-gray-50 border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-300 max-w-full"
+          >
+            <option value="">All destinations</option>
+            {(usedDestinations.has(DESTINATION_GENERAL) || destination === DESTINATION_GENERAL) && (
+              <option value={DESTINATION_GENERAL}>No specific destination</option>
+            )}
+            {groupedDestinations.map(({ continent, packs }) => (
+              <optgroup key={continent} label={continent}>
+                {packs.map(p => (
+                  <option key={p.slug} value={p.slug}>{p.country}</option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        )}
+
+        {/* Topic — same rule. */}
+        {(usedTopics.size > 0 || topic) && (
+          <select
+            value={topic ?? ''}
+            onChange={e => setParam('topic', e.target.value || null)}
+            className="text-sm bg-gray-50 border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-300"
+          >
+            <option value="">All topics</option>
+            {BLOG_TOPICS
+              .filter(t => usedTopics.has(t.value) || t.value === topic)
+              .map(t => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+          </select>
+        )}
 
         {/* Clear-all */}
         {hasAnyFilter && (

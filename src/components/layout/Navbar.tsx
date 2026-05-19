@@ -88,13 +88,16 @@ export default function Navbar({ initialUserId, initialUserEmail }: Props) {
         <div className="flex items-center justify-between h-16">
 
           {/* Logo + wordmark side by side */}
-          <a href="/" className="flex items-center gap-2.5 shrink-0">
+          <a href="/" className="flex items-center gap-2 sm:gap-2.5 min-w-0">
             <Logo
               height={36}
               variant={transparent ? 'onDark' : 'gradient'}
               ariaLabel="Jax | Family Travels, home"
             />
-            <span className={`hidden sm:inline font-bold text-sm tracking-wide uppercase ${transparent ? 'text-white' : 'text-gray-900'}`}>
+            {/* Wordmark sits next to the logo on every screen size.
+                On phones it shrinks slightly to leave room for the
+                burger button on the right. */}
+            <span className={`font-bold text-[11px] sm:text-sm tracking-wide uppercase whitespace-nowrap ${transparent ? 'text-white' : 'text-gray-900'}`}>
               Jax <span className="opacity-50 font-light mx-0.5">|</span> Family Travels
             </span>
           </a>

@@ -12,7 +12,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Home, Loader2, Check, Search, ChevronDown } from 'lucide-react'
+import { Home, Loader2, Check, Search, ChevronDown, X } from 'lucide-react'
 import { COUNTRIES, getCountryByIso2 } from '@/lib/countries'
 import CountryFlag from '@/components/CountryFlag'
 
@@ -52,6 +52,14 @@ export default function HomeCountrySection({
     } else {
       setQuery('')
     }
+  }, [open])
+
+  // Escape closes the modal.
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
   }, [open])
 
   // Simple includes-match. Searches the country name only.
@@ -127,56 +135,76 @@ export default function HomeCountrySection({
         </button>
       </div>
 
+      {/* Centred modal — gives the 200-country list room on tall
+          phones where an inline dropdown would scroll off the bottom
+          of the viewport. */}
       {open && (
-        <div className="mt-3 border border-gray-200 rounded-xl bg-white overflow-hidden">
-          {/* Type-to-search */}
-          <div className="relative p-2 border-b border-gray-100">
-            <Search className="absolute top-1/2 left-4 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-            <input
-              ref={searchInputRef}
-              type="search"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder="Type to search…"
-              className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
-            />
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px] px-4"
+          onMouseDown={e => { if (e.target === e.currentTarget) setOpen(false) }}
+        >
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 max-h-[85dvh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-gray-100 shrink-0">
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-500 inline-flex items-center gap-1.5">
+                <Home className="w-3.5 h-3.5" /> Pick a home country
+              </p>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="text-gray-400 hover:text-gray-700 p-1"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="relative p-3 border-b border-gray-100 shrink-0">
+              <Search className="absolute top-1/2 left-5 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+              <input
+                ref={searchInputRef}
+                type="search"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Type to search…"
+                className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => { setIso2(null); setOpen(false) }}
+              className={`w-full text-left px-4 py-2.5 text-sm border-b border-gray-100 shrink-0 ${
+                iso2 === null ? 'bg-brand-50 text-brand-800 font-semibold' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              — No home set —
+            </button>
+
+            {filtered.length === 0 ? (
+              <p className="px-4 py-6 text-sm text-gray-500 italic">No countries match &quot;{query}&quot;.</p>
+            ) : (
+              <ul className="flex-1 overflow-y-auto">
+                {filtered.map(c => {
+                  const isCurrent = c.iso2 === iso2
+                  return (
+                    <li key={c.iso2}>
+                      <button
+                        type="button"
+                        onClick={() => { setIso2(c.iso2); setOpen(false) }}
+                        className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm text-left ${
+                          isCurrent ? 'bg-brand-50 text-brand-800 font-semibold' : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <CountryFlag iso2={c.iso2} country={c.name} ariaHidden size="sm" />
+                        {c.name}
+                        {isCurrent && <Check className="w-3.5 h-3.5 ml-auto" />}
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
           </div>
-
-          {/* "Clear home" pinned to the top */}
-          <button
-            type="button"
-            onClick={() => { setIso2(null); setOpen(false) }}
-            className={`w-full text-left px-3 py-2 text-sm border-b border-gray-100 ${
-              iso2 === null ? 'bg-brand-50 text-brand-800 font-semibold' : 'text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            — No home set —
-          </button>
-
-          {filtered.length === 0 ? (
-            <p className="px-3 py-4 text-sm text-gray-500 italic">No countries match &quot;{query}&quot;.</p>
-          ) : (
-            <ul className="max-h-80 overflow-y-auto">
-              {filtered.map(c => {
-                const isCurrent = c.iso2 === iso2
-                return (
-                  <li key={c.iso2}>
-                    <button
-                      type="button"
-                      onClick={() => { setIso2(c.iso2); setOpen(false) }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left ${
-                        isCurrent ? 'bg-brand-50 text-brand-800 font-semibold' : 'text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <CountryFlag iso2={c.iso2} country={c.name} ariaHidden size="sm" />
-                      {c.name}
-                      {isCurrent && <Check className="w-3.5 h-3.5 ml-auto" />}
-                    </button>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
         </div>
       )}
 

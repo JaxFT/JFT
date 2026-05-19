@@ -441,26 +441,22 @@ export default function PdfBuilder({
         </div>
       </div>
 
-      {/* IMAGE OPTIONS POPOVER. Anchored to the click point (viewport
-          coords), clamped to stay in the visible area. */}
+      {/* IMAGE OPTIONS — centred modal. Was previously a popover
+          anchored to click coordinates with viewport-clamping math;
+          the focus picker thumbnail was cramped inside a 340px panel
+          and edge cases (zoomed viewport, scrolled preview) were
+          fragile. A centred modal is simpler code, gives the focus
+          thumbnail breathing room, and works the same on any screen. */}
       {popover && (
         <div
-          className="fixed inset-0 z-40"
-          onClick={() => setPopover(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px] px-4"
+          onMouseDown={e => { if (e.target === e.currentTarget) setPopover(null) }}
         >
-          <div
-            className="absolute bg-white rounded-2xl shadow-2xl border border-gray-200 p-3"
-            style={{
-              left: Math.max(8, Math.min(popover.x - 170, window.innerWidth - 348)),
-              top: Math.max(8, Math.min(popover.y, window.innerHeight - 340)),
-              width: 340,
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-2">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 max-h-[90dvh] overflow-y-auto p-4">
+            <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Image options</p>
-              <button onClick={() => setPopover(null)} className="text-gray-400 hover:text-gray-700 p-1">
-                <X className="w-3.5 h-3.5" />
+              <button onClick={() => setPopover(null)} className="text-gray-400 hover:text-gray-700 p-1" aria-label="Close">
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -496,7 +492,7 @@ export default function PdfBuilder({
             <button
               type="button"
               onClick={resetOpts}
-              className="w-full mt-2 text-[10px] uppercase tracking-widest text-gray-400 hover:text-gray-700 py-1.5"
+              className="w-full mt-3 text-[10px] uppercase tracking-widest text-gray-400 hover:text-gray-700 py-2"
             >
               Reset to defaults
             </button>

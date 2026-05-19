@@ -2869,13 +2869,6 @@ export const ARGENTINA_DATA: AdventurePackData = {
       body: 'Argentina took in more European immigrants per person than almost anywhere else on Earth. Between 1850 and 1950 around 7 million Europeans arrived, mostly Italian and Spanish, plus huge numbers from Germany, Wales, Ireland, France and Lebanon. About 60% of Argentines today have some Italian ancestry. That is why Buenos Aires has wide European boulevards and grand opera houses, why Argentine Spanish has an Italian-style singsong rhythm, why pasta and pizza are everyday foods, why Argentines wave their hands when they speak, and why "che" (the Argentine "hey, mate") sounds suspiciously like Italian. Pope Francis, whose family is Italian, is Argentine.',
       olderOnly: true,
     },
-    {
-      location: '📍 Plaza de Mayo, Buenos Aires',
-      question: 'Who were the "disappeared"?',
-      body: 'From 1976 to 1983 Argentina was ruled by a military dictatorship. The generals "disappeared" — kidnapped, tortured and killed — around 30,000 of their own people, mostly young students, journalists and union leaders. Many were drugged and thrown alive from airplanes over the ocean. The mothers and grandmothers of the disappeared, called "Las Madres de Plaza de Mayo", began walking every Thursday in white headscarves in the square outside the presidential palace, holding photos of their missing children, demanding to know what had happened to them. They are still walking, decades later. Argentina has now had longer and more thorough trials of former dictators than any other country in the world. The lesson is taught in every Argentine school: "Nunca más" — Never again.',
-      olderOnly: true,
-      thinkingQuestion: 'How does a country make sure something like the "Dirty War" can never happen again?',
-    },
   ],
   convoQuestions: [
     { question: 'Best Argentine food you have eaten so far?' },
@@ -2883,7 +2876,7 @@ export const ARGENTINA_DATA: AdventurePackData = {
     { question: 'Have you heard Argentine Spanish? It sounds more Italian than Spanish — true?' },
     { question: 'If you could pick one — Messi memorabilia, tango lesson, or pampas horse ride — which one?' },
     { question: 'Argentina swings between super formal and super wild. What\'s been your favourite moment so far?' },
-    { question: 'Almost every Argentine has a story about the 1970s dictatorship in their family. How do you think a country starts to heal from something like that?', olderOnly: true },
+    { question: 'Argentina is famous for its writers (Borges), artists, and 5am footy matches. Which side of it surprised you?', olderOnly: true },
   ],
 }
 
@@ -3035,7 +3028,7 @@ export const GERMANY_DATA: AdventurePackData = {
     { emoji: '🍖', name: 'Schnitzel', description: 'A thin slice of pork or veal, breaded and pan-fried until golden. Usually served with potato salad, lemon and parsley. Wiener Schnitzel is the most famous version (technically Austrian).' },
     { emoji: '🥬', name: 'Sauerkraut', description: 'Cabbage finely shredded and left to ferment for weeks until it turns sour. Sounds strange, tastes amazing with sausages. Full of probiotics, so good for your gut.' },
     { emoji: '🍰', name: 'Black Forest cake', description: 'Layers of chocolate sponge soaked in cherry brandy, layered with whipped cream and dark cherries, with chocolate shavings on top. From the Black Forest region in the south-west.' },
-    { emoji: '🍺', name: 'Beer culture', description: 'Germany has over 1,500 breweries and around 7,000 different beers. The 500-year-old Reinheitsgebot purity law says beer can only contain water, barley, hops and yeast. Bavarian beer halls serve them in 1-litre glasses.' },
+    { emoji: '🌭', name: 'Currywurst', description: 'A sliced pork sausage smothered in spiced tomato-curry sauce, dusted with curry powder, served with chips or a bread roll. Berlin street-food classic since the 1940s.' },
   ],
   scavengerItems: [
     { emoji: '🥨', label: 'A real pretzel hanging in a bakery window' },
@@ -3049,7 +3042,7 @@ export const GERMANY_DATA: AdventurePackData = {
     { emoji: '🛤️', label: 'A "Vorsicht" warning sign or a clear, crisp Deutsche Bahn timetable' },
     { emoji: '🧱', label: 'A piece of the Berlin Wall in a museum or on a street', olderOnly: true },
     { emoji: '👗', label: 'Someone in Dirndl or Lederhosen (Oktoberfest / village fest)', olderOnly: true },
-    { emoji: '🪙', label: 'A "Stolperstein" — a brass cobblestone in front of a house naming someone deported in the Holocaust', olderOnly: true },
+    { emoji: '🚗', label: 'A Trabant — the boxy East German car still occasionally on the road in Berlin', olderOnly: true },
   ],
   geoMatches: [
     { place: 'Berlin',           emoji: '🏙️', description: 'The capital. East and West for 28 years, reunited in 1990. Edgy, gritty, alternative, packed with museums and history. Cheaper than most German cities.' },
@@ -3062,7 +3055,7 @@ export const GERMANY_DATA: AdventurePackData = {
   senses: {
     smell: 'Bratwurst grilling, fresh-baked pretzels, beer halls, pine forests, glühwein (mulled wine) at a Christmas market, roasted almonds, wood smoke in the Black Forest…',
     hear:  'Church bells across an old town, "Hallo", "Danke", oompah brass bands, beer-hall singing, a crisp Deutsche Bahn train announcement, bicycle bells in every city…',
-    taste: 'Sharp mustard on a bratwurst, salty soft pretzel, foamy lager, sweet apfelstrudel with vanilla sauce, hot Glühwein in winter, tangy sauerkraut, dark Black Forest cherries…',
+    taste: 'Sharp mustard on a bratwurst, salty soft pretzel, curry-dusted currywurst sauce, sweet apfelstrudel with vanilla sauce, hot Glühwein in winter, tangy sauerkraut, dark Black Forest cherries…',
     feel:  'Cold mountain air in winter, the polished wood of a long beer-hall bench, cobblestones underfoot, soft new snow, sticky strudel pastry on your fingers…',
     see:   'What is the most incredible thing right in front of you right now…',
   },
@@ -3089,12 +3082,6 @@ export const GERMANY_DATA: AdventurePackData = {
       olderOnly: true,
       thinkingQuestion: 'A wall fell because ordinary people kept showing up to protest, week after week. What change would you keep protesting for, year after year?',
     },
-    {
-      location: '📍 Across Germany',
-      question: 'Why does Germany take its dark history so seriously?',
-      body: 'From 1933 to 1945, Nazi Germany under Adolf Hitler started World War 2 and murdered six million Jewish people, plus millions of Roma, disabled people, gay people, and political opponents, in the Holocaust. Modern Germany has spent 80 years confronting that history rather than hiding it. Berlin\'s Holocaust Memorial covers a whole city block with 2,711 stone blocks. German schools teach about the Holocaust seriously and repeatedly. Most German cities have "Stolpersteine" — small brass cobblestones outside houses where Jewish families lived, with their names and where they were sent to die. The German word "Vergangenheitsbewältigung" means "coming to terms with the past". It is a thing the country actively works at, every generation.',
-      olderOnly: true,
-    },
   ],
   convoQuestions: [
     { question: 'What\'s the best German food you have tried so far?' },
@@ -3102,7 +3089,7 @@ export const GERMANY_DATA: AdventurePackData = {
     { question: 'Punctuality is sacred here. What\'s been the most "German" thing about how things run?' },
     { question: 'What\'s been the biggest castle, cathedral or town hall you have seen?' },
     { question: 'Bikes are everywhere in some cities. Have you ridden one yet?' },
-    { question: 'Germany teaches its Nazi-era history in every school. Should every country teach its worst moments that openly?', olderOnly: true },
+    { question: 'Castles, cars, music or food — what part of Germany has surprised you most?', olderOnly: true },
   ],
 }
 
@@ -3144,7 +3131,7 @@ export const BELGIUM_DATA: AdventurePackData = {
     { emoji: '🧇', name: 'Belgian waffle', description: 'Two main kinds: Brussels (rectangular, lighter, dusted with powdered sugar) and Liège (oval, denser, with caramelised sugar pockets baked into it). Eaten with strawberries, chocolate or whipped cream.' },
     { emoji: '🦪', name: 'Moules-frites', description: 'A whole pot of steamed mussels (often cooked in white wine and onions or with celery) served with a big cone of frites. The unofficial national dish.' },
     { emoji: '🍖', name: 'Carbonade flamande', description: 'A Flemish beef stew slow-cooked in Belgian beer with onions and a slice of mustardy bread to thicken the sauce. Comfort food in a bowl.' },
-    { emoji: '🍺', name: 'Trappist beer', description: 'Beer brewed inside Catholic monasteries by monks. There are only 14 Trappist breweries in the world — six are in Belgium. Each beer has its own special glass.' },
+    { emoji: '🍪', name: 'Speculoos', description: 'A thin, crunchy spiced biscuit (cinnamon, nutmeg, cloves), often pressed with windmill or saint shapes. Sold as Lotus Biscoff abroad, but in Belgium they appear with every coffee.' },
   ],
   scavengerItems: [
     { emoji: '🍟', label: 'A "Frituur" / "Friterie" shop selling frites in paper cones' },
@@ -3171,7 +3158,7 @@ export const BELGIUM_DATA: AdventurePackData = {
   senses: {
     smell: 'Belgian chocolate on every street, frites bubbling in hot beef fat, sweet waffle batter, malty beer cellars, North Sea mussels boiling, summer rain on cobblestones…',
     hear:  'Dutch and French in the same conversation, bicycle bells, the chimes of carillons (bell towers playing music), tram bells, "Hallo!", "Bonjour!", the clink of beer glasses…',
-    taste: 'Crispy hot frites with mayo, melting praline chocolate, warm Liège waffle with caramelised sugar pockets, malty Trappist beer, sweet mussel broth…',
+    taste: 'Crispy hot frites with mayo, melting praline chocolate, warm Liège waffle with caramelised sugar pockets, spiced crunchy speculoos, sweet mussel broth…',
     feel:  'Cold drizzle (Belgium\'s default weather), the warmth of a Brussels chocolate shop, smooth chocolate melting on your fingers, cobblestones rolling under your shoes, soft Belgian lace…',
     see:   'What is the most incredible thing right in front of you right now…',
   },

@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import type { BlogCategory } from '@/lib/blog-categories'
+import type { TravelStage, BlogTopic } from '@/lib/blog-meta'
+import { sanitizeTravelStages, sanitizeBlogTopics } from '@/lib/blog-meta'
 
 export { BLOG_CATEGORIES, VALID_BLOG_CATEGORIES } from '@/lib/blog-categories'
 export type { BlogCategory } from '@/lib/blog-categories'
@@ -34,6 +36,11 @@ export type BlogPostRow = {
   links: BlogLink[]
   trip_date: string | null     // ISO yyyy-mm-dd, when the family went
   target_minutes: number | null // intended read-time, 1..20
+  // Structured tagging (see blog-meta.ts). Always arrays (possibly empty);
+  // destination_country is nullable for posts not tied to a specific country.
+  travel_stages: TravelStage[]
+  destination_country: string | null
+  topics: BlogTopic[]
   published_at: string | null
   created_at: string
   updated_at: string
@@ -90,6 +97,11 @@ function normaliseRow(raw: unknown): BlogPostRow {
     links,
     trip_date: (r.trip_date as string | null) ?? null,
     target_minutes: targetMinutes,
+    travel_stages: sanitizeTravelStages(r.travel_stages),
+    destination_country: typeof r.destination_country === 'string' && r.destination_country.trim()
+      ? r.destination_country.trim().toLowerCase()
+      : null,
+    topics: sanitizeBlogTopics(r.topics),
     published_at: (r.published_at as string | null) ?? null,
     created_at: r.created_at as string,
     updated_at: r.updated_at as string,
@@ -162,6 +174,9 @@ export type BlogPostView = {
   readTime: number
   isPremium: boolean
   links: BlogLink[]
+  travelStages: TravelStage[]
+  destinationCountry: string | null
+  topics: BlogTopic[]
 }
 
 export function rowToView(row: BlogPostRow): BlogPostView {
@@ -180,6 +195,9 @@ export function rowToView(row: BlogPostRow): BlogPostView {
     readTime: readingTimeMinutes(row.body_markdown),
     isPremium: row.is_premium,
     links: row.links,
+    travelStages: row.travel_stages,
+    destinationCountry: row.destination_country,
+    topics: row.topics,
   }
 }
 

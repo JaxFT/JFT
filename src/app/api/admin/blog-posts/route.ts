@@ -3,8 +3,13 @@ import matter from 'gray-matter'
 import { createClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/admin'
 import { slugify, type BlogCategory, type BlogLink } from '@/lib/blog-db'
+import {
+  sanitizeTravelStages, sanitizeBlogTopics, sanitizeDestinationCountry,
+} from '@/lib/blog-meta'
+import { PACK_META } from '@/lib/adventurePackData'
 
 const VALID_CATEGORIES: BlogCategory[] = ['accommodation', 'restaurant', 'bar', 'activity', 'general']
+const VALID_DESTINATION_SLUGS = PACK_META.map(p => p.slug)
 
 export const dynamic = 'force-dynamic'
 
@@ -57,6 +62,9 @@ export async function POST(request: Request) {
         links?: unknown                 // new multi-link
         trip_date?: string | null
         target_minutes?: number | null
+        travel_stages?: unknown
+        destination_country?: string | null
+        topics?: unknown
       }
     | null
   if (!body) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
@@ -70,6 +78,9 @@ export async function POST(request: Request) {
   const links = cleanLinks(body.links)
   const tripDate = cleanTripDate(body.trip_date)
   const targetMinutes = cleanTargetMinutes(body.target_minutes)
+  const travelStages = sanitizeTravelStages(body.travel_stages)
+  const destinationCountry = sanitizeDestinationCountry(body.destination_country, VALID_DESTINATION_SLUGS)
+  const topics = sanitizeBlogTopics(body.topics)
 
   let title = (body.title ?? '').trim()
   let excerpt: string | null = null
@@ -115,6 +126,9 @@ export async function POST(request: Request) {
     links,
     trip_date: tripDate,
     target_minutes: targetMinutes,
+    travel_stages: travelStages,
+    destination_country: destinationCountry,
+    topics,
     status: 'draft',
     created_by: auth.user.id,
   }

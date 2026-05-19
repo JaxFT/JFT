@@ -8,8 +8,14 @@ import {
   Trash2, X, ChevronUp, ChevronDown, Sparkles, Plus, Link as LinkIcon,
 } from 'lucide-react'
 import { BLOG_CATEGORIES, type BlogCategory } from '@/lib/blog-categories'
+import {
+  type TravelStage, type BlogTopic,
+  TRAVEL_STAGE_LABEL, BLOG_TOPIC_LABEL,
+} from '@/lib/blog-meta'
 import { VOICE_PROFILE } from '@/lib/voice-profile'
 import { resizeImageIfLarge } from '@/lib/image-resize'
+import TaggingFields from '@/components/admin/blog/TaggingFields'
+import { getPackMeta } from '@/lib/adventurePackData'
 
 type Photo = {
   id: string
@@ -88,6 +94,17 @@ export default function Wizard() {
   const [detail, setDetail] = useState('')
   const [vibes, setVibes] = useState<string[]>([])
   const [targetMinutes, setTargetMinutes] = useState<number>(3)
+  // Structured tagging fields (see blog-meta.ts). Required at publish
+  // time, but we let the writer pick them here during step 2 — they
+  // also enrich the AI prompt with the destination + stage hints.
+  const [travelStages, setTravelStages] = useState<TravelStage[]>([])
+  const [destinationCountry, setDestinationCountry] = useState<string | null>(null)
+  // Did the writer explicitly pick a destination (even "none")? We
+  // can't distinguish "null = not chosen" from "null = chose 'no
+  // specific destination'" by value alone, so we track the explicit
+  // tick separately for the "required at progression" check.
+  const [destinationPicked, setDestinationPicked] = useState(false)
+  const [topics, setTopics] = useState<BlogTopic[]>([])
   const [photos, setPhotos] = useState<Photo[]>([])
   const [aiResponse, setAiResponse] = useState('')
   const [copied, setCopied] = useState(false)
@@ -203,6 +220,9 @@ TASK: Write one blog post for JaxFamilyTravels.com using the voice profile above
 POST DETAILS:
 Type of post: ${category ? CATEGORY_LABEL[category] : 'not specified'}
 Location: ${location || 'not specified'}
+Destination country (matches our country pack catalogue): ${destinationCountry ? (getPackMeta(destinationCountry)?.country ?? destinationCountry) : 'none / general post'}
+Travel stage of the reader (use this to pitch the post — a "Dreaming" reader wants atmosphere; a "Planning" reader wants logistics): ${travelStages.length > 0 ? travelStages.map(s => TRAVEL_STAGE_LABEL[s]).join(', ') : 'not specified'}
+Topic buckets this post belongs to: ${topics.length > 0 ? topics.map(t => BLOG_TOPIC_LABEL[t]).join(', ') : 'not specified'}
 What this post is about: ${about || 'not specified'}
 ${tripDateHuman ? `When we visited: ${tripDateHuman}` : 'When we visited: not specified'}
 ${placeName.trim()
@@ -263,7 +283,13 @@ Do NOT add any text before or after the code block. The code block IS the entire
       if (placeNameRequired && !placeName.trim()) return false
       return true
     }
-    if (step === 2) return location.trim() && about.trim()
+    // Stage + destination are required to make the structured filters
+    // useful. Destination can be null (general post), but the writer
+    // has to have explicitly picked it (otherwise we treat it as
+    // "not yet chosen" and block progression).
+    if (step === 2) {
+      return Boolean(location.trim() && about.trim() && travelStages.length > 0 && destinationPicked)
+    }
     if (step === 3) return detail.trim()
     if (step === 4) return allPhotosReady
     return true
@@ -298,6 +324,9 @@ Do NOT add any text before or after the code block. The code block IS the entire
           links: cleanLinks.map(l => ({ url: l.url, label: l.label || 'Website' })),
           trip_date: tripDateIso,
           target_minutes: targetMinutes,
+          travel_stages: travelStages,
+          destination_country: destinationCountry,
+          topics,
         }),
       })
       const body = await res.json().catch(() => ({}))
@@ -478,6 +507,20 @@ Do NOT add any text before or after the code block. The code block IS the entire
                 placeholder="e.g. Galle, Sri Lanka"
                 autoComplete="off"
                 className="w-full text-lg px-4 py-3.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+              <p className="text-xs text-gray-400 mt-1.5">Free-text location (city / region / "Mediterranean coast"). The structured country goes below.</p>
+            </div>
+
+            {/* Structured tagging — drives the /blog filters and SEO hubs. */}
+            <div className="bg-sand-50 border border-gray-200 rounded-2xl p-5">
+              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-3">How does this post fit the site?</p>
+              <TaggingFields
+                travelStages={travelStages}
+                onTravelStagesChange={setTravelStages}
+                destinationCountry={destinationCountry}
+                onDestinationCountryChange={v => { setDestinationCountry(v); setDestinationPicked(true) }}
+                topics={topics}
+                onTopicsChange={setTopics}
               />
             </div>
 

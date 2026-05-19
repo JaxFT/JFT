@@ -2,10 +2,15 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/admin'
 import { slugify, type BlogCategory, type BlogLink } from '@/lib/blog-db'
+import {
+  sanitizeTravelStages, sanitizeBlogTopics, sanitizeDestinationCountry,
+} from '@/lib/blog-meta'
+import { PACK_META } from '@/lib/adventurePackData'
 
 export const dynamic = 'force-dynamic'
 
 const VALID_CATEGORIES: BlogCategory[] = ['accommodation', 'restaurant', 'bar', 'activity', 'general']
+const VALID_DESTINATION_SLUGS = PACK_META.map(p => p.slug)
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -31,6 +36,9 @@ type UpdateBody = {
   links?: unknown
   trip_date?: string | null
   target_minutes?: number | null
+  travel_stages?: unknown
+  destination_country?: string | null
+  topics?: unknown
   published_at?: string | null
 }
 
@@ -118,6 +126,15 @@ export async function PATCH(
   }
   if (body.target_minutes !== undefined) {
     update.target_minutes = cleanTargetMinutes(body.target_minutes)
+  }
+  if (body.travel_stages !== undefined) {
+    update.travel_stages = sanitizeTravelStages(body.travel_stages)
+  }
+  if (body.destination_country !== undefined) {
+    update.destination_country = sanitizeDestinationCountry(body.destination_country, VALID_DESTINATION_SLUGS)
+  }
+  if (body.topics !== undefined) {
+    update.topics = sanitizeBlogTopics(body.topics)
   }
 
   // Published-at + status interaction:

@@ -13,6 +13,9 @@ import {
 import ImageSlotsPanel from '@/components/guide/ImageSlotsPanel'
 import type { BlogPostRow, BlogLink } from '@/lib/blog-db'
 import { BLOG_CATEGORIES, type BlogCategory } from '@/lib/blog-categories'
+import type { TravelStage, BlogTopic } from '@/lib/blog-meta'
+import TaggingFields from '@/components/admin/blog/TaggingFields'
+import InsertLinkButton from '@/components/admin/blog/InsertLinkButton'
 import CoverFocalPicker from '@/components/blog/CoverFocalPicker'
 import { buildRewritePrompt } from '@/lib/blog-rewrite-prompt'
 import { resizeImageIfLarge } from '@/lib/image-resize'
@@ -67,6 +70,10 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
   const [links, setLinks] = useState<EditLink[]>(
     post.links.map((l, i) => ({ ...l, _key: `seed-${i}` })),
   )
+  // Structured tagging fields. See blog-meta.ts.
+  const [travelStages, setTravelStages] = useState<TravelStage[]>(post.travel_stages ?? [])
+  const [destinationCountry, setDestinationCountry] = useState<string | null>(post.destination_country ?? null)
+  const [topics, setTopics] = useState<BlogTopic[]>(post.topics ?? [])
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -247,6 +254,9 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
           published_at: publishedDate || null,
           cover_focal_x: focalX,
           cover_focal_y: focalY,
+          travel_stages: travelStages,
+          destination_country: destinationCountry,
+          topics,
         }),
       })
       if (!res.ok) {
@@ -706,6 +716,7 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
                   <option key={c.value} value={c.value}>{c.label}</option>
                 ))}
               </select>
+              <p className="text-[10px] text-gray-400 mt-1 leading-snug">What kind of place does this review? Drives the affiliate-link CTA hints.</p>
             </div>
             <div>
               <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Place name</label>
@@ -716,6 +727,19 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
                 placeholder="e.g. Casa Fuzetta"
               />
             </div>
+          </div>
+
+          {/* Structured tagging — drives the /blog filters and SEO hubs. */}
+          <div className="bg-sand-50 border border-gray-200 rounded-2xl p-5">
+            <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-3">How this post fits the site</p>
+            <TaggingFields
+              travelStages={travelStages}
+              onTravelStagesChange={setTravelStages}
+              destinationCountry={destinationCountry}
+              onDestinationCountryChange={setDestinationCountry}
+              topics={topics}
+              onTopicsChange={setTopics}
+            />
           </div>
 
           {/* Multi-link editor */}
@@ -911,13 +935,25 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
               type="button"
               onClick={() => bodyFileInputRef.current?.click()}
               disabled={insertingBodyImage || view !== 'edit'}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 mr-3 rounded-md disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 mr-2 rounded-md disabled:opacity-50"
               title={view !== 'edit' ? 'Switch to Markdown to insert at cursor' : 'Upload a photo and drop it at your cursor position'}
             >
               {insertingBodyImage
                 ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading…</>
                 : <><ImageIcon className="w-3.5 h-3.5" /> Insert image</>}
             </button>
+            {/* Pick one of the saved links and drop it as a proper
+                markdown link at the cursor — useful when the AI
+                forgot to weave one in, or you added a link after the
+                fact. Disabled when the post has no saved links. */}
+            <div className="mr-3">
+              <InsertLinkButton
+                links={links.map(l => ({ url: l.url, label: l.label }))}
+                textareaRef={bodyTextareaRef}
+                value={body}
+                onChange={setBody}
+              />
+            </div>
           </div>
 
           {bodyInsertError && (

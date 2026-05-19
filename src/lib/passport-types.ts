@@ -44,16 +44,32 @@ export type StampType =
   | 'BRAVE_TRAVELLER'
   | 'WATER_ADVENTURER'
   | 'EARLY_BIRD'
+  // One per Adventure Pack section (in addition to BRAVE_EATER and
+  // LOCAL_LINGO above which already covered food + language).
+  | 'MAP_READER'
+  | 'MONEY_CHANGER'
+  | 'GEOGRAPHY_GENIUS'
+  | 'SCAVENGER_HUNTER'
+  | 'SENSE_SEEKER'
+  | 'STORY_KEEPER'
+  | 'FAMILY_CHATTERBOX'
 
 export type StampStatus = 'suggested' | 'awarded' | 'rejected'
 
 // Stamps the system can auto-suggest based on pack interaction. The
-// other 6 types in StampType are manual-award-only in v1.
+// other types are manual-award-only.
 export const AUTO_STAMP_TYPES: StampType[] = [
   'BRAVE_EATER',
   'LOCAL_LINGO',
   'ADVENTURE_PACK_COMPLETE',
   'BRAVE_TRAVELLER',
+  'MAP_READER',
+  'MONEY_CHANGER',
+  'GEOGRAPHY_GENIUS',
+  'SCAVENGER_HUNTER',
+  'SENSE_SEEKER',
+  'STORY_KEEPER',
+  'FAMILY_CHATTERBOX',
 ]
 
 // Human-facing copy for every stamp type. Used on the stamps page,
@@ -121,5 +137,48 @@ export const STAMP_META: Record<StampType, { emoji: string; label: string; descr
     label: 'Early Bird',
     description: 'Started a travel day before sunrise.',
     ink: '#9c2516', // deep red
+  },
+  // Section-completion stamps
+  MAP_READER: {
+    emoji: '🗺️',
+    label: 'Map Reader',
+    description: 'Found a country on the map.',
+    ink: '#1e3a8a', // navy
+  },
+  MONEY_CHANGER: {
+    emoji: '💰',
+    label: 'Money Changer',
+    description: 'Worked out the local money.',
+    ink: '#0f3a2a', // brand dark green
+  },
+  GEOGRAPHY_GENIUS: {
+    emoji: '🌍',
+    label: 'Geography Genius',
+    description: 'Matched the country\'s places.',
+    ink: '#15803d', // emerald
+  },
+  SCAVENGER_HUNTER: {
+    emoji: '🔎',
+    label: 'Scavenger Hunter',
+    description: 'Spotted things from the scavenger list.',
+    ink: '#5b21b6', // royal purple
+  },
+  SENSE_SEEKER: {
+    emoji: '✨',
+    label: 'Sense Seeker',
+    description: 'Wrote down what you saw, heard, smelled, tasted, felt.',
+    ink: '#9c2516', // deep red
+  },
+  STORY_KEEPER: {
+    emoji: '📖',
+    label: 'Story Keeper',
+    description: 'Read the country\'s stories.',
+    ink: '#5b21b6', // royal purple
+  },
+  FAMILY_CHATTERBOX: {
+    emoji: '☕',
+    label: 'Family Chatterbox',
+    description: 'Did the family chat cards together.',
+    ink: '#0f3a2a', // brand dark green
   },
 }

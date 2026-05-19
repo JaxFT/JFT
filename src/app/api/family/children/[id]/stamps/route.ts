@@ -18,6 +18,13 @@ const ALL_TYPES: StampType[] = [
   'BRAVE_TRAVELLER',
   'WATER_ADVENTURER',
   'EARLY_BIRD',
+  'MAP_READER',
+  'MONEY_CHANGER',
+  'GEOGRAPHY_GENIUS',
+  'SCAVENGER_HUNTER',
+  'SENSE_SEEKER',
+  'STORY_KEEPER',
+  'FAMILY_CHATTERBOX',
 ]
 
 // POST /api/family/children/[id]/stamps

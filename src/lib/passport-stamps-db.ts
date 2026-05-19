@@ -130,14 +130,21 @@ export function autoStampsForSection(
   return out
 }
 
-// Detect which auto-stamps the act of MARKING a mission complete
-// should fire. The intent of "Mark food complete" is "I tried local
-// food", same as ticking a food checkbox — so we fire here too,
-// covering the case where a kid presses the button without ticking
-// individual items. Dedupe stops this from double-awarding when both
-// fire (section-save AND mission-complete).
+// One stamp per Adventure Pack section. Marking a mission complete
+// awards the matching stamp. Dedupe (in awardOrSuggestStamp) makes
+// repeat fires safe.
+const SECTION_STAMPS: Record<SectionKey, StampType[]> = {
+  map:       ['MAP_READER'],
+  language:  ['LOCAL_LINGO'],
+  money:     ['MONEY_CHANGER'],
+  food:      ['BRAVE_EATER'],
+  geography: ['GEOGRAPHY_GENIUS'],
+  scavenger: ['SCAVENGER_HUNTER'],
+  senses:    ['SENSE_SEEKER'],
+  stories:   ['STORY_KEEPER'],
+  convo:     ['FAMILY_CHATTERBOX'],
+}
+
 export function autoStampsForMissionComplete(section: SectionKey): StampType[] {
-  if (section === 'food') return ['BRAVE_EATER']
-  if (section === 'language') return ['LOCAL_LINGO']
-  return []
+  return SECTION_STAMPS[section] ?? []
 }

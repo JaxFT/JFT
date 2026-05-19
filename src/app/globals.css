@@ -15,6 +15,23 @@
   }
 }
 
+/* Page-turn animations for the kid passport's Stamps tab. Two flavours
+   (next = flipping forward, prev = flipping back) using a brief
+   3D rotateY + slight x-translate so it reads like turning a real
+   paper page. Animation is short so kids can flick quickly. */
+@keyframes pageTurnNext {
+  0%   { transform: perspective(1200px) rotateY(-25deg) translateX(40px); opacity: 0; }
+  60%  { opacity: 1; }
+  100% { transform: perspective(1200px) rotateY(0deg)   translateX(0);    opacity: 1; }
+}
+@keyframes pageTurnPrev {
+  0%   { transform: perspective(1200px) rotateY(25deg)  translateX(-40px); opacity: 0; }
+  60%  { opacity: 1; }
+  100% { transform: perspective(1200px) rotateY(0deg)   translateX(0);     opacity: 1; }
+}
+.animate-page-turn-next { animation: pageTurnNext 350ms ease-out; transform-origin: left center; }
+.animate-page-turn-prev { animation: pageTurnPrev 350ms ease-out; transform-origin: right center; }
+
 @layer components {
   .btn-primary {
     @apply inline-flex items-center gap-2 bg-brand-600 text-white px-6 py-3 rounded-lg font-semibold

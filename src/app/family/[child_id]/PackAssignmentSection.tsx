@@ -4,11 +4,13 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Compass, Plus, X, Loader2, Crown, Search, ChevronDown } from 'lucide-react'
 import { CONTINENT_ORDER, type Continent } from '@/lib/adventurePackTypes'
+import CountryFlag from '@/components/CountryFlag'
 
 type PackMetaLite = {
   slug: string
   country: string
   flag: string
+  iso2: string
   status: 'live' | 'coming-soon'
   continent: Continent
 }
@@ -120,7 +122,7 @@ export default function PackAssignmentSection({
                 key={p.slug}
                 className="inline-flex items-center gap-2 bg-brand-50 border border-brand-200 text-brand-900 rounded-full pl-2.5 pr-1.5 py-1 text-sm"
               >
-                <span className="text-base leading-none">{p.flag}</span>
+                <CountryFlag iso2={p.iso2} country={p.country} ariaHidden size="sm" />
                 <span className="font-semibold">{p.country}</span>
                 <button
                   onClick={() => unassign(p.slug)}
@@ -201,7 +203,7 @@ export default function PackAssignmentSection({
                           disabled={busy === p.slug}
                           className="inline-flex items-center gap-2 bg-white border border-gray-200 hover:border-brand-300 hover:bg-brand-50 text-gray-700 rounded-full pl-2.5 pr-3 py-1 text-sm disabled:opacity-50"
                         >
-                          <span className="text-base leading-none">{p.flag}</span>
+                          <CountryFlag iso2={p.iso2} country={p.country} ariaHidden size="sm" />
                           <span>{p.country}</span>
                           {busy === p.slug
                             ? <Loader2 className="w-3.5 h-3.5 animate-spin" />

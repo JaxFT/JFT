@@ -6,6 +6,7 @@ import {
   Loader2, Pencil, X, Check, ChevronLeft, ChevronRight, MapPin,
 } from 'lucide-react'
 import PassportPage from '@/components/passport/PassportPage'
+import CountryFlag from '@/components/CountryFlag'
 import { getPackMeta, PACK_META } from '@/lib/adventurePackData'
 import type { PermissionMode } from '@/lib/passport-types'
 import type { JournalEntryRow } from '@/lib/passport-journal-db'
@@ -25,6 +26,7 @@ type Group = {
   countrySlug: string | null
   countryName: string
   flag: string
+  iso2: string | null
   entries: JournalEntryRow[]
 }
 
@@ -394,7 +396,9 @@ function CountryJournalPage({ group }: { group: Group }) {
         style={{ borderBottom: '1px dashed rgba(120,80,30,0.25)', color: '#5a3a12' }}
       >
         <div className="inline-flex items-center gap-2">
-          <span className="text-2xl leading-none" aria-hidden>{group.flag}</span>
+          {group.iso2
+            ? <CountryFlag iso2={group.iso2} country={group.countryName} ariaHidden size="lg" />
+            : <span className="text-2xl leading-none" aria-hidden>{group.flag}</span>}
           <h3 className="text-base font-extrabold uppercase tracking-[0.18em]">{group.countryName}</h3>
         </div>
         <p className="text-xs uppercase tracking-widest opacity-60">
@@ -456,6 +460,7 @@ function groupByCountry(entries: JournalEntryRow[]): Group[] {
         countrySlug: e.country_slug ?? null,
         countryName: meta?.country ?? 'Other entries',
         flag: meta?.flag ?? '📓',
+        iso2: meta?.iso2 ?? null,
         entries: [],
       })
     }

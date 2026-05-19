@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
 import { PACK_META } from '@/lib/adventurePackData'
 import AdventurePackBrowser from './AdventurePackBrowser'
+import CountryFlag from '@/components/CountryFlag'
 
 export const metadata: Metadata = {
   title: 'Adventure Packs',
@@ -76,7 +77,7 @@ export default async function AdventurePacksListing() {
                   key={p.slug}
                   className="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-full px-3 py-1.5 text-sm text-gray-600"
                 >
-                  <span className="text-base leading-none" aria-hidden="true">{p.flag}</span>
+                  <CountryFlag iso2={p.iso2} country={p.country} ariaHidden size="sm" />
                   {p.country}
                 </li>
               ))}

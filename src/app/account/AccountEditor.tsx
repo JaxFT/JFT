@@ -20,6 +20,7 @@ export default function AccountEditor({ initialFullName, email, initialMarketing
   const [savingName, setSavingName] = useState(false)
   const [nameError, setNameError] = useState<string | null>(null)
   const [nameSaved, setNameSaved] = useState(false)
+  const [showNamePanel, setShowNamePanel] = useState(false)
 
   const saveName = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,7 +54,10 @@ export default function AccountEditor({ initialFullName, email, initialMarketing
 
       setNameSaved(true)
       router.refresh()
-      setTimeout(() => setNameSaved(false), 3000)
+      setTimeout(() => {
+        setNameSaved(false)
+        setShowNamePanel(false)
+      }, 1500)
     } catch (e) {
       setNameError(e instanceof Error ? e.message : 'Could not save')
     } finally {
@@ -89,6 +93,43 @@ export default function AccountEditor({ initialFullName, email, initialMarketing
       setMarketingError(e instanceof Error ? e.message : 'Could not save')
     } finally {
       setSavingMarketing(false)
+    }
+  }
+
+  // ── Email change state ──────────────────────────
+  const [showEmailPanel, setShowEmailPanel] = useState(false)
+  const [newEmail, setNewEmail] = useState('')
+  const [savingEmail, setSavingEmail] = useState(false)
+  const [emailError, setEmailError] = useState<string | null>(null)
+  // Pending message — we keep showing it after the API call because
+  // the change isn't live until the user confirms via emails sent to
+  // BOTH old + new addresses.
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null)
+
+  const changeEmail = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSavingEmail(true)
+    setEmailError(null)
+    try {
+      const trimmed = newEmail.trim().toLowerCase()
+      if (!trimmed) throw new Error('Email cannot be empty.')
+      if (trimmed === email.toLowerCase()) {
+        throw new Error('That is your current email.')
+      }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(trimmed)) {
+        throw new Error('That doesn\'t look like a valid email.')
+      }
+
+      const { error } = await supabase.auth.updateUser({ email: trimmed })
+      if (error) throw new Error(error.message)
+
+      setPendingEmail(trimmed)
+      setNewEmail('')
+      setShowEmailPanel(false)
+    } catch (e) {
+      setEmailError(e instanceof Error ? e.message : 'Could not change email')
+    } finally {
+      setSavingEmail(false)
     }
   }
 
@@ -130,16 +171,71 @@ export default function AccountEditor({ initialFullName, email, initialMarketing
 
   return (
     <div className="space-y-6">
-      {/* EMAIL — read-only, but with "email us to change" copy. */}
+      {/* EMAIL — self-service, with two-sided confirmation. Supabase
+          requires the user to click a verification link sent to both
+          their old AND new address before the change goes live. */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <div className="flex items-center gap-2 mb-3">
-          <Mail className="w-5 h-5 text-brand-600" />
-          <h2 className="font-bold text-gray-900">Email</h2>
+        <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Mail className="w-5 h-5 text-brand-600" />
+            <h2 className="font-bold text-gray-900">Email</h2>
+          </div>
+          {!showEmailPanel && (
+            <button
+              type="button"
+              onClick={() => { setShowEmailPanel(true); setEmailError(null) }}
+              className="text-sm font-semibold text-brand-700 hover:text-brand-800"
+            >
+              Change email
+            </button>
+          )}
         </div>
-        <p className="text-sm text-gray-700 font-mono">{email}</p>
-        <p className="text-xs text-gray-400 mt-2">
-          Email isn&apos;t self-service yet. <a href="mailto:hello@jaxfamilytravels.com" className="underline hover:text-brand-700">Drop us a line</a> to update it.
-        </p>
+        <p className="text-sm text-gray-700 font-mono break-all">{email}</p>
+        {pendingEmail && (
+          <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mt-3 leading-relaxed">
+            Pending change to <strong className="break-all">{pendingEmail}</strong>. Check both your old and new inboxes
+            and click the verification link in each to confirm. Until you do, you stay logged in with your current email.
+          </p>
+        )}
+
+        {showEmailPanel && (
+          <form onSubmit={changeEmail} className="space-y-3 mt-5 pt-5 border-t border-gray-100">
+            <div>
+              <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">New email</label>
+              <input
+                type="email"
+                value={newEmail}
+                onChange={e => setNewEmail(e.target.value)}
+                required
+                className={input}
+                placeholder="you@example.com"
+                autoComplete="email"
+              />
+              <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
+                We&apos;ll send a confirmation link to both your old and new addresses. Both have to be clicked.
+              </p>
+            </div>
+            {emailError && (
+              <p className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-md px-3 py-2">{emailError}</p>
+            )}
+            <div className="flex items-center gap-3 flex-wrap">
+              <button
+                type="submit"
+                disabled={savingEmail || !newEmail.trim()}
+                className="btn-primary !py-2 !px-4 !text-sm disabled:opacity-50"
+              >
+                {savingEmail ? (<><Loader2 className="w-4 h-4 animate-spin" /> Sending…</>) : 'Send confirmation'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowEmailPanel(false); setNewEmail(''); setEmailError(null) }}
+                className="text-sm font-medium text-gray-500 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
       </div>
 
       {/* PASSWORD */}
@@ -221,41 +317,64 @@ export default function AccountEditor({ initialFullName, email, initialMarketing
         )}
       </div>
 
-      {/* NAME */}
-      <form onSubmit={saveName} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <UserIcon className="w-5 h-5 text-brand-600" />
-          <h2 className="font-bold text-gray-900">Your name</h2>
-        </div>
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Full name</label>
-            <input
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className={input}
-              placeholder="Your name"
-            />
+      {/* NAME — collapsed by default, matches the Change email /
+          Change password pattern. */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <UserIcon className="w-5 h-5 text-brand-600" />
+            <h2 className="font-bold text-gray-900">Name</h2>
           </div>
-          {nameError && (
-            <p className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-md px-3 py-2">{nameError}</p>
-          )}
-          <div className="flex items-center gap-3">
+          {!showNamePanel && (
             <button
-              type="submit"
-              disabled={savingName || name === initialFullName}
-              className="btn-primary !py-2 !px-4 !text-sm disabled:opacity-50"
+              type="button"
+              onClick={() => setShowNamePanel(true)}
+              className="text-sm font-semibold text-brand-700 hover:text-brand-800"
             >
-              {savingName ? (<><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>) : 'Save name'}
+              Change name
             </button>
-            {nameSaved && (
-              <span className="inline-flex items-center gap-1 text-sm font-medium text-brand-700">
-                <Check className="w-4 h-4" /> Saved
-              </span>
-            )}
-          </div>
+          )}
         </div>
-      </form>
+        <p className="text-sm text-gray-700">{initialFullName || <span className="italic text-gray-400">Not set yet</span>}</p>
+
+        {showNamePanel && (
+          <form onSubmit={saveName} className="space-y-3 mt-5 pt-5 border-t border-gray-100">
+            <div>
+              <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Full name</label>
+              <input
+                value={name}
+                onChange={e => setName(e.target.value)}
+                className={input}
+                placeholder="Your name"
+              />
+            </div>
+            {nameError && (
+              <p className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-md px-3 py-2">{nameError}</p>
+            )}
+            <div className="flex items-center gap-3 flex-wrap">
+              <button
+                type="submit"
+                disabled={savingName || name === initialFullName}
+                className="btn-primary !py-2 !px-4 !text-sm disabled:opacity-50"
+              >
+                {savingName ? (<><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>) : 'Save name'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowNamePanel(false); setName(initialFullName); setNameError(null) }}
+                className="text-sm font-medium text-gray-500 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              {nameSaved && (
+                <span className="inline-flex items-center gap-1 text-sm font-medium text-brand-700">
+                  <Check className="w-4 h-4" /> Saved
+                </span>
+              )}
+            </div>
+          </form>
+        )}
+      </div>
 
       {/* MARKETING EMAILS */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">

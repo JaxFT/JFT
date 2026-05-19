@@ -69,6 +69,7 @@ export default async function ChildDetailPage({
     slug: p.slug,
     country: p.country,
     flag: p.flag,
+    iso2: p.iso2,
     status: p.status,
     continent: p.continent,
   }))

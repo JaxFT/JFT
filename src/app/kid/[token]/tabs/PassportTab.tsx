@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Stamp as StampIcon, Globe, Trophy, ArrowRight, Check, Compass, ChevronDown } from 'lucide-react'
 import PassportPage from '@/components/passport/PassportPage'
 import PassportStamp from '@/components/passport/PassportStamp'
+import CountryFlag from '@/components/CountryFlag'
 import { getPackMeta } from '@/lib/adventurePackData'
 import { SECTION_KEYS } from '@/lib/adventurePackTypes'
 import type { StampRow, KidStats, AssignedPackRow } from '@/lib/passport-kid-db'
@@ -100,7 +101,7 @@ export default function PassportTab({
                       className="block bg-white/10 hover:bg-white/15 backdrop-blur-sm rounded-2xl p-4 transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="text-3xl leading-none" aria-hidden>{meta.flag}</span>
+                        <CountryFlag iso2={meta.iso2} country={meta.country} ariaHidden size="xl" />
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-white">{meta.country}</p>
                           <p className="text-xs text-white/60 inline-flex items-center gap-1.5">

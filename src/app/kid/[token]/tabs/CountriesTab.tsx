@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight, Stamp as StampIcon, Trophy, Home } from 'lucide-react'
 import PassportPage from '@/components/passport/PassportPage'
+import CountryFlag from '@/components/CountryFlag'
 import { getPackMeta } from '@/lib/adventurePackData'
 import { SECTION_KEYS } from '@/lib/adventurePackTypes'
 import type {
@@ -93,7 +94,7 @@ export default function CountriesTab({
                     style={{ color: '#3a2810' }}
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-4xl leading-none" aria-hidden>{meta.flag}</span>
+                      <CountryFlag iso2={meta.iso2} country={meta.country} ariaHidden size="2xl" />
                       <div className="flex-1 min-w-0">
                         <p className="font-bold inline-flex items-center gap-2">
                           {meta.country}
@@ -150,7 +151,7 @@ export default function CountriesTab({
                       className="flex items-center gap-3 py-2.5 px-3 rounded-lg bg-white/20"
                       style={{ color: '#3a2810' }}
                     >
-                      <span className="text-2xl leading-none" aria-hidden>{meta.flag}</span>
+                      <CountryFlag iso2={meta.iso2} country={meta.country} ariaHidden size="lg" />
                       <p className="flex-1 font-semibold">{meta.country}</p>
                       <p className="text-xs opacity-70">Pack ready</p>
                     </li>

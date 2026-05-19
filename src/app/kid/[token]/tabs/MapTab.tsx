@@ -1,5 +1,6 @@
 import PassportPage from '@/components/passport/PassportPage'
 import WorldMap from '@/components/passport/WorldMap'
+import CountryFlag from '@/components/CountryFlag'
 import { getPackMeta } from '@/lib/adventurePackData'
 import type { CountryVisitRow } from '@/lib/passport-kid-db'
 
@@ -74,7 +75,7 @@ export default function MapTab({
                   className="inline-flex items-center gap-1.5 bg-white/40 hover:bg-white/60 rounded-full px-2 py-1 text-xs"
                   style={{ color: '#3a2810' }}
                 >
-                  <span className="text-base leading-none">{meta.flag}</span>
+                  <CountryFlag iso2={meta.iso2} country={meta.country} ariaHidden size="sm" />
                   <span className="font-semibold">{meta.country}</span>
                 </a>
               )

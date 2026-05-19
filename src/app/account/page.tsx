@@ -61,13 +61,10 @@ export default async function AccountPage() {
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* HEADER — no longer surfaces the user's name as the H1, which
-            looked strange. The name is editable in the "Your name" card
-            further down; the page heading is just "Account". */}
         <div className="mb-10 flex items-start justify-between gap-4 flex-wrap">
           <div>
             <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Your account</p>
-            <h1 className="text-4xl font-bold text-gray-900">Account</h1>
+            <h1 className="text-4xl font-bold text-gray-900">{profile?.full_name || 'Hello'}</h1>
             <p className="text-sm text-gray-500 mt-2 inline-flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5" /> Member since {memberSince}
             </p>
@@ -132,37 +129,59 @@ export default async function AccountPage() {
           />
         </div>
 
-        {/* 4 ── YOUR PURCHASES ──────────────────────────────────── */}
+        {/* 4 ── YOUR PURCHASES ───────────────────────────────────
+            Premium members see "You have access to everything" by
+            default, since Premium IS the access. Standalone one-off
+            purchases (a guide bought separately, for example) still
+            list below if they exist. Free users see the list as
+            before, or the empty CTA if they've never bought anything. */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <div className="flex items-center gap-2 mb-4">
             <ShoppingBag className="w-5 h-5 text-gray-400" />
             <h2 className="text-lg font-bold text-gray-900">Your purchases</h2>
           </div>
 
-          {purchases.length === 0 ? (
-            <div className="text-center py-10">
-              <p className="text-gray-500 text-sm mb-5">You haven&apos;t bought anything yet.</p>
-              <Link href="/guides" className="btn-outline !py-2 !px-4 !text-sm">
-                Browse guides <ArrowRight className="w-4 h-4" />
-              </Link>
+          {isPremium && (
+            <div className="bg-brand-50 border border-brand-100 rounded-xl p-4 mb-4 inline-flex items-center gap-3">
+              <Crown className="w-5 h-5 text-brand-700 shrink-0" />
+              <p className="text-sm text-brand-900">
+                <span className="font-semibold">You have access to everything.</span>{' '}
+                Premium covers every guide, every Adventure Pack, every premium blog post, and the Family Passport.
+              </p>
             </div>
+          )}
+
+          {purchases.length === 0 ? (
+            !isPremium && (
+              <div className="text-center py-10">
+                <p className="text-gray-500 text-sm mb-5">You haven&apos;t bought anything yet.</p>
+                <Link href="/guides" className="btn-outline !py-2 !px-4 !text-sm">
+                  Browse guides <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            )
           ) : (
-            <ul className="divide-y divide-gray-100">
-              {purchases.map(p => (
-                <li key={p.id} className="py-4 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm">{p.products?.name ?? 'Unknown item'}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {new Date(p.purchased_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      {p.products?.type && <> · {p.products.type}</>}
-                    </p>
-                  </div>
-                  <span className="text-sm font-semibold text-gray-700 shrink-0">
-                    £{(p.amount_pence / 100).toFixed(2)}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <>
+              {isPremium && (
+                <p className="text-xs text-gray-500 mb-2">One-off purchases you made before Premium (or for items not included):</p>
+              )}
+              <ul className="divide-y divide-gray-100">
+                {purchases.map(p => (
+                  <li key={p.id} className="py-4 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="font-semibold text-gray-900 text-sm">{p.products?.name ?? 'Unknown item'}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {new Date(p.purchased_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {p.products?.type && <> · {p.products.type}</>}
+                      </p>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-700 shrink-0">
+                      £{(p.amount_pence / 100).toFixed(2)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </div>
 

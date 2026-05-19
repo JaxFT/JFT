@@ -6,13 +6,14 @@ import { ArrowRight, ChevronLeft, ChevronRight, Award } from 'lucide-react'
 import PassportPage from '@/components/passport/PassportPage'
 import PassportStamp from '@/components/passport/PassportStamp'
 import MilestoneStamp from '@/components/passport/MilestoneStamp'
+import CountryFlag from '@/components/CountryFlag'
 import { getPackMeta } from '@/lib/adventurePackData'
 import { computeMilestones, type MilestoneStamp as Milestone } from '@/lib/passport-milestones'
 import type { StampRow, CountryVisitRow } from '@/lib/passport-kid-db'
 
 type Page =
   | { kind: 'traveler'; milestones: Milestone[] }
-  | { kind: 'country'; countrySlug: string | null; countryName: string; flag: string; stamps: StampRow[] }
+  | { kind: 'country'; countrySlug: string | null; countryName: string; flag: string; iso2: string | null; stamps: StampRow[] }
 
 export default function StampsTab({
   token,
@@ -183,7 +184,9 @@ function CountryPage({ group, token }: {
         style={{ borderBottom: '1px dashed rgba(120,80,30,0.25)', color: '#5a3a12' }}
       >
         <div className="inline-flex items-center gap-2">
-          <span className="text-2xl leading-none" aria-hidden>{group.flag}</span>
+          {group.iso2
+            ? <CountryFlag iso2={group.iso2} country={group.countryName} ariaHidden size="lg" />
+            : <span className="text-2xl leading-none" aria-hidden>{group.flag}</span>}
           <h3 className="text-base font-extrabold uppercase tracking-[0.18em]">{group.countryName}</h3>
         </div>
         {group.countrySlug && (
@@ -239,6 +242,7 @@ function buildPages(stamps: StampRow[], visits: CountryVisitRow[], homeCountrySl
         countrySlug: s.country_slug ?? null,
         countryName: meta?.country ?? '✈️ Travel',
         flag: meta?.flag ?? '✈️',
+        iso2: meta?.iso2 ?? null,
         stamps: [],
       })
     }

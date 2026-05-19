@@ -39,7 +39,7 @@ export default function TermsPage() {
 
           <h2>3. Your account</h2>
           <p>You must be 18 or over to create an account. You&apos;re responsible for keeping your login credentials secure and for any activity on your account. Tell us if you think your account has been compromised.</p>
-          <p>You can delete your account at any time by emailing us. We&apos;ll process the deletion within 30 days, subject to any data we&apos;re legally required to keep (see our <Link href="/privacy">Privacy Policy</Link>).</p>
+          <p>You can delete your account and all your data at any time from your <Link href="/account">account page</Link>. Deletion is immediate, subject to any data we&apos;re legally required to keep (see our <Link href="/privacy">Privacy Policy</Link>).</p>
 
           <h2>4. Premium subscription</h2>
           <p>The premium subscription gives you access to all premium content on the Site for one year from the date of purchase. At the end of that year, your access ends unless you renew.</p>

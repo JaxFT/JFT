@@ -131,7 +131,7 @@ export default function ImportForm() {
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-3 mt-5">
+          <div className="flex flex-wrap items-center justify-end gap-3 mt-5">
             <Link href="/admin/blog" className="text-sm font-medium text-gray-600 hover:text-gray-900">
               Cancel
             </Link>

@@ -901,52 +901,56 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="flex items-center border-b border-gray-100 gap-2">
-            <button
-              onClick={() => setView('edit')}
-              className={`flex-1 sm:flex-none px-5 py-3 text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors ${
-                view === 'edit' ? 'text-brand-700 border-b-2 border-brand-600 -mb-px' : 'text-gray-500 hover:text-gray-900'
-              }`}
-            >
-              <FileEdit className="w-4 h-4" /> Markdown
-            </button>
-            <button
-              onClick={() => setView('preview')}
-              className={`flex-1 sm:flex-none px-5 py-3 text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors ${
-                view === 'preview' ? 'text-brand-700 border-b-2 border-brand-600 -mb-px' : 'text-gray-500 hover:text-gray-900'
-              }`}
-            >
-              <Eye className="w-4 h-4" /> Preview
-            </button>
-            <div className="flex-1" />
-            {/* Insert image at cursor, only meaningful when editing markdown */}
-            <input
-              ref={bodyFileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={e => {
-                const f = e.target.files?.[0]
-                if (f) insertBodyImageAtCursor(f)
-                e.target.value = ''
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => bodyFileInputRef.current?.click()}
-              disabled={insertingBodyImage || view !== 'edit'}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 mr-2 rounded-md disabled:opacity-50"
-              title={view !== 'edit' ? 'Switch to Markdown to insert at cursor' : 'Upload a photo and drop it at your cursor position'}
-            >
-              {insertingBodyImage
-                ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading…</>
-                : <><ImageIcon className="w-3.5 h-3.5" /> Insert image</>}
-            </button>
-            {/* Pick one of the saved links and drop it as a proper
-                markdown link at the cursor — useful when the AI
-                forgot to weave one in, or you added a link after the
-                fact. Disabled when the post has no saved links. */}
-            <div className="mr-3">
+          {/* Body toolbar: tabs on the left, action buttons on the
+              right. On narrow phones the action buttons wrap to a
+              second row below the tabs instead of disappearing off
+              the right edge of the screen. */}
+          <div className="flex flex-wrap items-stretch border-b border-gray-100">
+            <div className="flex flex-1 sm:flex-none">
+              <button
+                onClick={() => setView('edit')}
+                className={`flex-1 sm:flex-none px-5 py-3 text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors ${
+                  view === 'edit' ? 'text-brand-700 border-b-2 border-brand-600 -mb-px' : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                <FileEdit className="w-4 h-4" /> Markdown
+              </button>
+              <button
+                onClick={() => setView('preview')}
+                className={`flex-1 sm:flex-none px-5 py-3 text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors ${
+                  view === 'preview' ? 'text-brand-700 border-b-2 border-brand-600 -mb-px' : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                <Eye className="w-4 h-4" /> Preview
+              </button>
+            </div>
+
+            <div className="w-full sm:w-auto flex items-center gap-2 px-3 py-2 sm:ml-auto sm:py-0 border-t sm:border-t-0 border-gray-100">
+              {/* Insert image at cursor, only meaningful when editing markdown */}
+              <input
+                ref={bodyFileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => {
+                  const f = e.target.files?.[0]
+                  if (f) insertBodyImageAtCursor(f)
+                  e.target.value = ''
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => bodyFileInputRef.current?.click()}
+                disabled={insertingBodyImage || view !== 'edit'}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-md disabled:opacity-50"
+                title={view !== 'edit' ? 'Switch to Markdown to insert at cursor' : 'Upload a photo and drop it at your cursor position'}
+              >
+                {insertingBodyImage
+                  ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading…</>
+                  : <><ImageIcon className="w-3.5 h-3.5" /> Insert image</>}
+              </button>
+              {/* Insert a fresh [text](url) at the cursor, or pick a
+                  saved link from the post's Links section as a chip. */}
               <InsertLinkButton
                 links={links.map(l => ({ url: l.url, label: l.label }))}
                 textareaRef={bodyTextareaRef}

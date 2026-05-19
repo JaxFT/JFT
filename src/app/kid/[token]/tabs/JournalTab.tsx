@@ -146,11 +146,13 @@ export default function JournalTab({
         type="button"
         onClick={() => turn('prev')}
         disabled={safePage <= 0}
-        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-        aria-label="Previous page"
+        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
+        aria-label={safePage > 0 ? `Previous page: ${groups[safePage - 1].countryName}` : 'Previous page'}
       >
         <ChevronLeft className="w-4 h-4" />
-        <span className="uppercase tracking-widest text-xs">
+        {/* Country labels hidden on phones (the dots show position;
+            screen readers still get the name via aria-label). */}
+        <span className="hidden sm:inline uppercase tracking-widest text-xs truncate max-w-[10rem]">
           {safePage > 0 ? groups[safePage - 1].countryName : 'Prev'}
         </span>
       </button>
@@ -176,10 +178,10 @@ export default function JournalTab({
         type="button"
         onClick={() => turn('next')}
         disabled={safePage >= groups.length - 1}
-        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-        aria-label="Next page"
+        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
+        aria-label={safePage < groups.length - 1 ? `Next page: ${groups[safePage + 1].countryName}` : 'Next page'}
       >
-        <span className="uppercase tracking-widest text-xs">
+        <span className="hidden sm:inline uppercase tracking-widest text-xs truncate max-w-[10rem]">
           {safePage < groups.length - 1 ? groups[safePage + 1].countryName : 'Next'}
         </span>
         <ChevronRight className="w-4 h-4" />

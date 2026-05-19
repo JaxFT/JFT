@@ -60,11 +60,15 @@ export default function StampsTab({
         type="button"
         onClick={() => turn('prev')}
         disabled={!hasPrev}
-        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-        aria-label="Previous page"
+        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
+        aria-label={hasPrev ? `Previous page: ${pageLabel(pages[pageIndex - 1])}` : 'Previous page'}
       >
         <ChevronLeft className="w-4 h-4" />
-        <span className="uppercase tracking-widest text-xs">{hasPrev ? pageLabel(pages[pageIndex - 1]) : 'Prev'}</span>
+        {/* Country labels can be long ("United Arab Emirates") and
+            squeezed the row off the right edge on narrow phones.
+            Hidden below sm; the dots still show position and the
+            aria-label still names the page for screen readers. */}
+        <span className="hidden sm:inline uppercase tracking-widest text-xs truncate max-w-[10rem]">{hasPrev ? pageLabel(pages[pageIndex - 1]) : 'Prev'}</span>
       </button>
       <div className="flex items-center gap-1">
         {pages.map((p, i) => (
@@ -88,10 +92,10 @@ export default function StampsTab({
         type="button"
         onClick={() => turn('next')}
         disabled={!hasNext}
-        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-        aria-label="Next page"
+        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
+        aria-label={hasNext ? `Next page: ${pageLabel(pages[pageIndex + 1])}` : 'Next page'}
       >
-        <span className="uppercase tracking-widest text-xs">{hasNext ? pageLabel(pages[pageIndex + 1]) : 'Next'}</span>
+        <span className="hidden sm:inline uppercase tracking-widest text-xs truncate max-w-[10rem]">{hasNext ? pageLabel(pages[pageIndex + 1]) : 'Next'}</span>
         <ChevronRight className="w-4 h-4" />
       </button>
     </div>

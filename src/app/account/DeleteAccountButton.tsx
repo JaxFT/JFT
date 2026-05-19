@@ -101,7 +101,7 @@ export default function DeleteAccountButton({ hasActiveSubscription }: { hasActi
             {error && (
               <p className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-md px-3 py-2 mt-3">{error}</p>
             )}
-            <div className="mt-5 flex items-center justify-end gap-3">
+            <div className="mt-5 flex flex-wrap items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={close}

@@ -46,6 +46,10 @@ export default function Navbar({ initialUserId, initialUserEmail }: Props) {
   const supabase = useMemo(() => createClient(), [])
 
   const isHome = pathname === '/'
+  // Kid passport pages run in an isolated chrome — when someone scans
+  // a child's QR code we don't want them able to navigate out into the
+  // rest of the site.
+  const isKidRoute = pathname?.startsWith('/kid/') ?? false
 
   useEffect(() => {
     // Subscribe to auth changes so the Navbar updates when the user signs
@@ -73,6 +77,8 @@ export default function Navbar({ initialUserId, initialUserEmail }: Props) {
 
   const transparent = isHome && !scrolled
   const isAdmin = isAdminEmail(user?.email)
+
+  if (isKidRoute) return null
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 print:hidden ${

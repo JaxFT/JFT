@@ -1,3 +1,6 @@
+'use client'
+
+import { usePathname } from 'next/navigation'
 import Logo from '@/components/branding/Logo'
 
 // Plain <a> throughout (not next/link). Same reasoning as the Navbar:
@@ -5,6 +8,11 @@ import Logo from '@/components/branding/Logo'
 // full reloads eliminate the flash.
 
 export default function Footer() {
+  // Kid passport pages should not show the site footer — strangers
+  // who scan the QR should only see their own passport.
+  const pathname = usePathname()
+  if (pathname?.startsWith('/kid/')) return null
+
   return (
     <footer className="bg-brand-950 text-white/70 print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

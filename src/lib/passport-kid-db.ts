@@ -112,6 +112,43 @@ export type AssignedPackRow = {
   completed_at: string | null
 }
 
+// Country-scoped stamps for a child (only this country's stamps, only
+// awarded). Used on the country passport page.
+export async function listStampsForChildCountry(childId: string, countrySlug: string): Promise<StampRow[]> {
+  const { data, error } = await admin()
+    .from('stamps')
+    .select('*')
+    .eq('child_id', childId)
+    .eq('status', 'awarded')
+    .eq('country_slug', countrySlug)
+    .order('earned_at', { ascending: false })
+
+  if (error) {
+    console.error('[passport] listStampsForChildCountry', error)
+    return []
+  }
+  return (data ?? []) as StampRow[]
+}
+
+// Has the child completed the pack for this country? Used to render
+// the "Pack complete!" badge on the country page.
+export async function getKidPackProgress(childId: string, countrySlug: string): Promise<{
+  missionsComplete: string[]
+  completedAt: string | null
+} | null> {
+  const { data, error } = await admin()
+    .from('kid_adventure_pack_sessions')
+    .select('missions_complete, completed_at')
+    .eq('child_id', childId)
+    .eq('country_slug', countrySlug)
+    .maybeSingle()
+  if (error || !data) return null
+  return {
+    missionsComplete: (data.missions_complete as string[]) ?? [],
+    completedAt: (data.completed_at as string) ?? null,
+  }
+}
+
 export async function listAssignedPacksForChild(childId: string): Promise<AssignedPackRow[]> {
   const sb = admin()
   const [assignmentsRes, sessionsRes] = await Promise.all([

@@ -88,10 +88,10 @@ export default function KidShell({
       {/* PANEL */}
       <main className="max-w-3xl mx-auto px-4 pt-6 pb-20">
         {tab === 'passport'  && <PassportTab token={token} child={child} stats={stats} stamps={stamps} assignedPacks={assignedPacks} />}
-        {tab === 'map'       && <MapTab visits={visits} />}
-        {tab === 'countries' && <CountriesTab visits={visits} />}
+        {tab === 'map'       && <MapTab token={token} visits={visits} />}
+        {tab === 'countries' && <CountriesTab token={token} visits={visits} />}
         {tab === 'journal'   && <JournalTab childName={child.name} permissionMode={child.permission_mode} />}
-        {tab === 'stamps'    && <StampsTab stamps={stamps} />}
+        {tab === 'stamps'    && <StampsTab token={token} stamps={stamps} />}
       </main>
     </div>
   )

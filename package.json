@@ -16,6 +16,7 @@
     "@supabase/ssr": "^0.5.1",
     "@supabase/supabase-js": "^2.45.0",
     "@tailwindcss/typography": "^0.5.19",
+    "@types/react-simple-maps": "^3.0.6",
     "date-fns": "^3.6.0",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.400.0",
@@ -25,6 +26,7 @@
     "react": "^18",
     "react-dom": "^18",
     "react-markdown": "^9.0.1",
+    "react-simple-maps": "^3.0.0",
     "remark-gfm": "^4.0.0",
     "resend": "^6.12.3",
     "stripe": "^16.0.0"

@@ -2,12 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { Loader2, X } from 'lucide-react'
 
 export default function PremiumCancelButton() {
   const router = useRouter()
-  const supabase = createClient()
   const [open, setOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -16,13 +14,9 @@ export default function PremiumCancelButton() {
     setSubmitting(true)
     setError(null)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not signed in')
-      const { error: e } = await supabase
-        .from('profiles')
-        .update({ cancellation_requested_at: new Date().toISOString() })
-        .eq('id', user.id)
-      if (e) throw new Error(e.message)
+      const res = await fetch('/api/stripe/cancel', { method: 'POST' })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`)
       setOpen(false)
       router.refresh()
     } catch (e) {

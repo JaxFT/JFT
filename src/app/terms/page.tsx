@@ -31,7 +31,7 @@ export default function TermsPage() {
           <p>The Site provides:</p>
           <ul>
             <li>Free content (blog posts, the public previews of guides, and the I Want To Travel decision tool for signed-in members)</li>
-            <li>A premium subscription (currently £25 per year) that unlocks all guides, premium blog posts, and adventure packs</li>
+            <li>A premium subscription (currently £49.99 per year) that unlocks all guides, premium blog posts, and adventure packs</li>
             <li>Individual guides for one-off purchase</li>
             <li>One-to-one consultation calls with us, booked through the Work With Us page</li>
           </ul>

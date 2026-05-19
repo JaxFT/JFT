@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Crown, Lock, Map, ListOrdered } from 'lucide-react'
 import GuideMarkdown from './GuideMarkdown'
+import UpgradeButton from '@/components/billing/UpgradeButton'
 import type { GuideRow, GuideContentBlock } from '@/lib/guide-types'
 import { truncateMarkdownToPercent, extractMarkdownToc } from '@/lib/guide-types'
 import type { AutoLinkPhrase } from '@/lib/blog-links'
@@ -333,13 +334,11 @@ function Paywall({
         </span>
         <h3 className="text-2xl sm:text-3xl font-bold mb-3">Keep reading with Premium</h3>
         <p className="text-white/70 leading-relaxed max-w-md mx-auto mb-6">
-          A year of access to every premium blog post, every guide, and every adventure pack. £25, cancel any time.
+          A year of access to every premium blog post, every guide, and every adventure pack. £49.99, cancel any time.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
           {isLoggedIn ? (
-            <Link href="/account" className="btn-primary text-base px-7 py-3">
-              Upgrade to Premium <ArrowRight className="w-4 h-4" />
-            </Link>
+            <UpgradeButton className="btn-primary text-base px-7 py-3" />
           ) : (
             <>
               <Link href={`/signup?next=/guides/${slug}`} className="btn-primary text-base px-7 py-3">

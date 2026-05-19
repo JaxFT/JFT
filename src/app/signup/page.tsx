@@ -61,7 +61,7 @@ export default function SignupPage() {
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Create your account</h1>
-          <p className="text-sm text-gray-500 mb-6">Free to join, premium access from £25/year</p>
+          <p className="text-sm text-gray-500 mb-6">Free to join, premium access from £49.99/year</p>
 
           <form onSubmit={handleSignup} className="space-y-4">
             <div>

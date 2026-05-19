@@ -12,6 +12,7 @@ import { getAutoLinkPhrases } from '@/lib/blog-links-server'
 import WebGuideView from '@/components/guide/WebGuideView'
 import GuideViewer from './GuideViewer'
 import BuyButton from './BuyButton'
+import UpgradeButton from '@/components/billing/UpgradeButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -217,12 +218,10 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
                 <Crown className="w-5 h-5 text-brand-300" />
                 <p className="text-xs font-bold tracking-widest uppercase text-brand-300">Or unlock everything</p>
               </div>
-              <h3 className="text-2xl font-bold mb-1">£25 / year</h3>
+              <h3 className="text-2xl font-bold mb-1">£49.99 / year</h3>
               <p className="text-sm text-white/70 mb-5 flex-1">A year of access to every premium blog post, every guide, and every adventure pack.</p>
               {user ? (
-                <Link href="/account" className="btn-primary w-full justify-center !text-sm">
-                  Upgrade to Premium <ArrowRight className="w-4 h-4" />
-                </Link>
+                <UpgradeButton className="btn-primary w-full justify-center !text-sm" />
               ) : (
                 <Link href={`/signup?next=/guides/${guide.slug}`} className="btn-primary w-full justify-center !text-sm">
                   Sign up, get Premium <ArrowRight className="w-4 h-4" />

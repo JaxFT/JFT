@@ -5,6 +5,7 @@ import HeroBlogStack from '@/components/blog/HeroBlogStack'
 import { createClient } from '@/lib/supabase/server'
 import { ArrowRight, Map, BookOpen, Compass, Crown, Sparkles } from 'lucide-react'
 import { isPremiumTier } from '@/lib/profile'
+import UpgradeButton from '@/components/billing/UpgradeButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -175,13 +176,17 @@ export default async function HomePage() {
           ) : (
             <>
               <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-4">Premium membership</p>
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4">Everything, for £25 a year</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">Everything, for £49.99 a year</h2>
               <p className="text-white/70 text-lg mb-8 leading-relaxed">
                 A year of access to every premium blog post, every guide, and every adventure pack. Cancel any time.
               </p>
-              <Link href={user ? '/account' : '/signup'} className="btn-primary text-base px-8 py-3.5">
-                {user ? 'Upgrade to Premium' : 'Get started'} <ArrowRight className="w-4 h-4" />
-              </Link>
+              {user ? (
+                <UpgradeButton className="btn-primary text-base px-8 py-3.5" />
+              ) : (
+                <Link href="/signup" className="btn-primary text-base px-8 py-3.5">
+                  Get started <ArrowRight className="w-4 h-4" />
+                </Link>
+              )}
               <p className="mt-4 text-sm text-white/40">Or buy individual guides separately.</p>
             </>
           )}

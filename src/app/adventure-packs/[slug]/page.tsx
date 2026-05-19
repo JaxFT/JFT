@@ -1,12 +1,13 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Crown, Lock, ArrowRight, ArrowLeft } from 'lucide-react'
+import { Lock, ArrowRight, ArrowLeft } from 'lucide-react'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { checkAdventurePackAccess } from '@/lib/adventure-pack-access'
 import { getPackData, getPackMeta } from '@/lib/adventurePackData'
 import PackShell from '@/components/adventure-packs/PackShell'
 import FlagBanner from '@/components/adventure-packs/FlagBanner'
+import UpgradeButton from '@/components/billing/UpgradeButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -87,11 +88,12 @@ export default async function AdventurePackPage({
             <Lock className="w-7 h-7 text-brand-600 mx-auto mb-3" />
             <h2 className="text-xl font-bold text-gray-900 mb-2">This pack is for Premium members</h2>
             <p className="text-sm text-gray-500 leading-relaxed mb-5">
-              France is free for every member. All other country packs are included with Premium: £25 a year for everything on the site.
+              France is free for every member. All other country packs are included with Premium: £49.99 a year for everything on the site.
             </p>
-            <Link href="/account" className="btn-primary w-full justify-center !py-2.5 !text-sm">
-              <Crown className="w-4 h-4" /> Upgrade to Premium <ArrowRight className="w-4 h-4" />
-            </Link>
+            <UpgradeButton
+              className="btn-primary w-full justify-center !py-2.5 !text-sm"
+              withCrown
+            />
           </div>
         </div>
       </div>

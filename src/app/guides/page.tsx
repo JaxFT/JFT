@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
 import { listActiveGuides, formatPrice } from '@/lib/guides-db'
 import { listPublishedWebGuides } from '@/lib/guides-content-db'
+import UpgradeButton from '@/components/billing/UpgradeButton'
 
 export const metadata: Metadata = { title: 'Guides' }
 export const dynamic = 'force-dynamic'
@@ -84,14 +85,20 @@ export default async function GuidesPage() {
         ) : (
           <div className="bg-brand-950 text-white rounded-2xl p-6 mb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
-              <p className="font-bold text-lg">Premium, £25/year</p>
+              <p className="font-bold text-lg">Premium, £49.99/year</p>
               <p className="text-white/60 text-sm">
                 A year of access to every premium blog post, every guide, and every adventure pack. View on the site, no downloads.
               </p>
             </div>
-            <Link href="/signup?next=/account" className="btn-primary shrink-0">
-              Go Premium <ArrowRight className="w-4 h-4" />
-            </Link>
+            {user ? (
+              <div className="shrink-0">
+                <UpgradeButton label="Go Premium" />
+              </div>
+            ) : (
+              <Link href="/signup?next=/account" className="btn-primary shrink-0">
+                Go Premium <ArrowRight className="w-4 h-4" />
+              </Link>
+            )}
           </div>
         )}
 

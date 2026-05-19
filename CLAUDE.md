@@ -4,7 +4,7 @@
 - **Framework**: Next.js 14 (App Router, TypeScript)
 - **Styling**: Tailwind CSS, brand colour `brand-600` = `#2d6b4f`
 - **Auth + DB**: Supabase, `https://wjpmdwugnwuydomdmetf.supabase.co`
-- **Payments**: Stripe (one-off purchases + £25/year premium subscription)
+- **Payments**: Stripe (one-off purchases + £49.99/year premium subscription)
 - **Hosting**: Cloudflare Pages, domain `jaxfamilytravels.com`
 - **Repo**: `https://github.com/JaxFT/JFT.git`
 
@@ -53,7 +53,7 @@ Supabase Auth handles users. Profile is auto-created via trigger on signup.
 ## Pricing Model
 - Individual guides: ~£4.99 each (one-off Stripe payment)
 - I Want To Travel tool: ~£2.99 one-off or included in premium
-- Premium annual: £25/year (Stripe subscription), includes everything
+- Premium annual: £49.99/year (Stripe subscription), includes everything
 
 ## Key Components
 - `Navbar`, transparent on homepage hero, white when scrolled or on other pages. Shows login/account state.

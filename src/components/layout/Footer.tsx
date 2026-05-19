@@ -1,6 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import { Instagram } from 'lucide-react'
 import Logo from '@/components/branding/Logo'
 
 // Plain <a> throughout (not next/link). Same reasoning as the Navbar:
@@ -21,29 +22,49 @@ export default function Footer() {
             <a href="/" className="inline-flex items-center mb-4">
               <Logo height={36} variant="onDark" ariaLabel="Jax | Family Travels, home" />
             </a>
-            <p className="text-sm leading-relaxed max-w-xs">
+            <p className="text-sm leading-relaxed max-w-xs mb-4">
               Honest guides, practical tools, and what actually worked for our family.
             </p>
+            <a
+              href="https://instagram.com/jax.familytravels"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/80 hover:text-white"
+              aria-label="Follow @jax.familytravels on Instagram"
+            >
+              <Instagram className="w-4 h-4" /> @jax.familytravels
+            </a>
           </div>
 
           <div>
             <h4 className="text-white font-semibold text-sm mb-3 uppercase tracking-wide">Explore</h4>
             <ul className="space-y-2 text-sm">
+              <li><a href="/about" className="hover:text-white transition-colors">About</a></li>
               <li><a href="/blog" className="hover:text-white transition-colors">Blog</a></li>
               <li><a href="/guides" className="hover:text-white transition-colors">Guides</a></li>
-              <li><a href="/i-want-to-travel" className="hover:text-white transition-colors">I Want To Travel</a></li>
               <li><a href="/adventure-packs" className="hover:text-white transition-colors">Adventure Packs</a></li>
-              <li><a href="/passports" className="hover:text-white transition-colors">Passports</a></li>
-              <li><a href="/learning" className="hover:text-white transition-colors">Learning Resources</a></li>
+              <li><a href="/passports" className="hover:text-white transition-colors">Family Passport</a></li>
+              <li><a href="/learning" className="hover:text-white transition-colors">Worldschooling</a></li>
+              <li><a href="/work-with-us" className="hover:text-white transition-colors">Work With Us</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-white font-semibold text-sm mb-3 uppercase tracking-wide">Account</h4>
+            <h4 className="text-white font-semibold text-sm mb-3 uppercase tracking-wide">More</h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="/login" className="hover:text-white transition-colors">Log In</a></li>
-              <li><a href="/signup" className="hover:text-white transition-colors">Sign Up</a></li>
-              <li><a href="/account" className="hover:text-white transition-colors">My Account</a></li>
+              <li>
+                <a
+                  href="https://waystaq.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  Waystaq — trip &amp; expense tracker
+                </a>
+              </li>
+              <li><a href="/login" className="hover:text-white transition-colors">Log in</a></li>
+              <li><a href="/signup" className="hover:text-white transition-colors">Sign up</a></li>
+              <li><a href="/account" className="hover:text-white transition-colors">My account</a></li>
             </ul>
           </div>
         </div>

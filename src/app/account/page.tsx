@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Crown, ShoppingBag, ArrowRight, Calendar, ShieldCheck, FileText, Mail } from 'lucide-react'
+import { Crown, ShoppingBag, ArrowRight, Calendar, ShieldCheck, FileText, Mail, Wallet } from 'lucide-react'
 import type { Metadata } from 'next'
 import SignOutButton from './SignOutButton'
 import AccountEditor from './AccountEditor'
@@ -183,6 +183,31 @@ export default async function AccountPage() {
               </ul>
             </>
           )}
+        </div>
+
+        {/* 4.5 ── WAYSTAQ CROSS-PROMO ────────────────────────────
+            Soft pitch for our sister product. Coming soon: tier-aware
+            copy ("Your Waystaq Premium discount") once the bundle
+            pricing is wired up. */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mt-6">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="bg-brand-50 text-brand-700 rounded-xl p-3 shrink-0">
+              <Wallet className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-[14rem]">
+              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-1">Our other product</p>
+              <p className="font-bold text-gray-900">Waystaq — trip planner &amp; expense tracker</p>
+              <p className="text-sm text-gray-500 mt-0.5">Track flights, visas, tasks and spending across the whole trip. We built it for our own family travel.</p>
+            </div>
+            <a
+              href="https://waystaq.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm font-bold text-brand-700 hover:text-brand-800 shrink-0"
+            >
+              Open Waystaq <ArrowRight className="w-3.5 h-3.5" />
+            </a>
+          </div>
         </div>
 
         {/* 5 ── HELP & LEGAL ────────────────────────────────────── */}

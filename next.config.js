@@ -6,6 +6,14 @@ const nextConfig = {
       { protocol: 'https', hostname: 'images.unsplash.com' },
     ],
   },
+  async redirects() {
+    return [
+      // /i-want-to-travel is folded into /work-with-us — same funnel
+      // (readiness quiz + 1:1 calls). Permanent so search engines
+      // transfer the link equity over.
+      { source: '/i-want-to-travel', destination: '/work-with-us', permanent: true },
+    ]
+  },
   async headers() {
     return [
       {

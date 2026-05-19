@@ -3,7 +3,7 @@ import { listPublishedPosts, rowToView } from '@/lib/blog-db'
 import BlogCard from '@/components/blog/BlogCard'
 import HeroBlogStack from '@/components/blog/HeroBlogStack'
 import { createClient } from '@/lib/supabase/server'
-import { ArrowRight, Map, BookOpen, Compass, Crown, Sparkles } from 'lucide-react'
+import { ArrowRight, Map, BookOpen, Compass, Crown, Sparkles, Wallet } from 'lucide-react'
 import { isPremiumTier } from '@/lib/profile'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 
@@ -66,8 +66,8 @@ export default async function HomePage() {
                 Real family travel without filters or overcomplication. Practical guidance, honest planning tools, and real experience to help your family save, plan, and make long-term travel possible in a realistic way. Clear steps, real costs, and what we actually did so you can figure out how to do it for your own family.
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
-                <Link href="/i-want-to-travel" className="btn-primary text-base px-7 py-3.5">
-                  I Want To Travel <ArrowRight className="w-4 h-4" />
+                <Link href="/work-with-us" className="btn-primary text-base px-7 py-3.5">
+                  Work with us <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link href="/blog" className="inline-flex items-center gap-2 text-white/80 hover:text-white font-medium transition-colors">
                   Read the blog <ArrowRight className="w-4 h-4" />
@@ -190,6 +190,32 @@ export default async function HomePage() {
               <p className="mt-4 text-sm text-white/40">Or buy individual guides separately.</p>
             </>
           )}
+        </div>
+      </section>
+
+      {/* Waystaq cross-promo. Soft pitch — sister product, not a
+          hard sell. When we ship the bundle pricing this card
+          gets a "Premium members get X% off" badge. */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-sand-50 border-t border-gray-100">
+        <div className="max-w-3xl mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 flex items-center gap-5 flex-wrap">
+          <div className="bg-brand-50 text-brand-700 rounded-2xl p-4 shrink-0">
+            <Wallet className="w-7 h-7" />
+          </div>
+          <div className="flex-1 min-w-[14rem]">
+            <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-1.5">Our other product</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1.5">Waystaq</h2>
+            <p className="text-gray-600 leading-relaxed text-sm mb-3">
+              The trip planner, task list and expense tracker we built for our own family travel. Track every flight, every visa, every dinner — across the whole trip.
+            </p>
+            <a
+              href="https://waystaq.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm font-bold text-brand-700 hover:text-brand-800"
+            >
+              Open Waystaq <ArrowRight className="w-3.5 h-3.5" />
+            </a>
+          </div>
         </div>
       </section>
     </>

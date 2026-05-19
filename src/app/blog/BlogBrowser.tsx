@@ -9,7 +9,7 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { Search, ChevronDown, X, Globe } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 import BlogCard from '@/components/blog/BlogCard'
 import type { BlogPostView } from '@/lib/blog-db'
 import {
@@ -19,7 +19,6 @@ import {
 } from '@/lib/blog-meta'
 import { PACK_META } from '@/lib/adventurePackData'
 import { CONTINENT_ORDER, type Continent } from '@/lib/adventurePackTypes'
-import CountryFlag from '@/components/CountryFlag'
 
 const DESTINATION_GENERAL = '__none'
 
@@ -34,8 +33,6 @@ export default function BlogBrowser({ posts }: { posts: BlogPostView[] }) {
   const q = searchParams.get('q') ?? ''
 
   const [query, setQuery] = useState(q)
-  const [destOpen, setDestOpen] = useState(false)
-  const [destContinentOpen, setDestContinentOpen] = useState<Set<Continent>>(new Set())
 
   const setParam = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -120,84 +117,24 @@ export default function BlogBrowser({ posts }: { posts: BlogPostView[] }) {
           ))}
         </select>
 
-        {/* Destination — custom continent-grouped picker */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setDestOpen(o => !o)}
-            className="inline-flex items-center gap-1.5 text-sm bg-gray-50 border border-gray-200 rounded-md px-3 py-2 hover:bg-gray-100"
-          >
-            {destination
-              ? <span className="font-semibold text-gray-900 max-w-[10rem] truncate">{destinationLabel}</span>
-              : <span className="text-gray-700">All destinations</span>}
-            <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${destOpen ? 'rotate-180' : ''}`} />
-          </button>
-          {destOpen && (
-            <div className="absolute z-30 mt-1 right-0 w-72 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden">
-              <button
-                type="button"
-                onClick={() => { setParam('destination', null); setDestOpen(false) }}
-                className={`w-full text-left px-3 py-2 text-sm border-b border-gray-100 ${
-                  destination === null ? 'bg-brand-50 text-brand-800 font-semibold' : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                All destinations
-              </button>
-              <button
-                type="button"
-                onClick={() => { setParam('destination', DESTINATION_GENERAL); setDestOpen(false) }}
-                className={`w-full text-left px-3 py-2 text-sm border-b border-gray-100 inline-flex items-center gap-2 ${
-                  destination === DESTINATION_GENERAL ? 'bg-brand-50 text-brand-800 font-semibold' : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <Globe className="w-4 h-4 text-gray-500" />
-                No specific destination
-              </button>
-              <div className="max-h-72 overflow-y-auto">
-                {groupedDestinations.map(({ continent, packs }) => {
-                  const isOpen = destContinentOpen.has(continent)
-                  return (
-                    <div key={continent} className="border-b border-gray-100 last:border-b-0">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setDestContinentOpen(prev => {
-                            const next = new Set(prev)
-                            if (next.has(continent)) next.delete(continent)
-                            else next.add(continent)
-                            return next
-                          })
-                        }}
-                        className="w-full flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-left"
-                      >
-                        <span className="text-sm font-semibold text-gray-800">{continent}</span>
-                        <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
-                      </button>
-                      {isOpen && (
-                        <ul className="py-1">
-                          {packs.map(p => (
-                            <li key={p.slug}>
-                              <button
-                                type="button"
-                                onClick={() => { setParam('destination', p.slug); setDestOpen(false) }}
-                                className={`w-full inline-flex items-center gap-2 px-3 py-1.5 text-sm text-left ${
-                                  destination === p.slug ? 'bg-brand-50 text-brand-800 font-semibold' : 'text-gray-700 hover:bg-gray-50'
-                                }`}
-                              >
-                                <CountryFlag iso2={p.iso2} country={p.country} ariaHidden size="sm" />
-                                {p.country}
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Destination — native <select> with <optgroup> per continent
+            for visual consistency with the Stage + Topic dropdowns and
+            so it always fits on small screens. */}
+        <select
+          value={destination ?? ''}
+          onChange={e => setParam('destination', e.target.value || null)}
+          className="text-sm bg-gray-50 border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-300 max-w-full"
+        >
+          <option value="">All destinations</option>
+          <option value={DESTINATION_GENERAL}>No specific destination</option>
+          {groupedDestinations.map(({ continent, packs }) => (
+            <optgroup key={continent} label={continent}>
+              {packs.map(p => (
+                <option key={p.slug} value={p.slug}>{p.country}</option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
 
         {/* Topic */}
         <select

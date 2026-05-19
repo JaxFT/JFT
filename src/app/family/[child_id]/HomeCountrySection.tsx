@@ -65,13 +65,18 @@ export default function HomeCountrySection({
         treat every country as new.
       </p>
 
-      <div className="flex gap-2">
+      {/* Native selects on iOS Safari can refuse to shrink below the
+          intrinsic width of their widest <option>, which pushed the
+          Save button off the right edge of the screen. `min-w-0` lets
+          the flex item shrink past that intrinsic width; the short
+          placeholder copy below also helps. */}
+      <div className="flex gap-2 flex-wrap sm:flex-nowrap">
         <select
           value={slug}
           onChange={e => setSlug(e.target.value)}
-          className="flex-1 px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
+          className="flex-1 min-w-0 w-full sm:w-auto px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
         >
-          <option value="">— No home set, every country counts as new —</option>
+          <option value="">— No home set —</option>
           {allPacks.map(p => (
             <option key={p.slug} value={p.slug}>{p.flag} {p.country}</option>
           ))}
@@ -80,7 +85,7 @@ export default function HomeCountrySection({
           type="button"
           onClick={save}
           disabled={!dirty || saving}
-          className="btn-primary !py-2.5 !px-5 !text-sm disabled:opacity-60"
+          className="btn-primary !py-2.5 !px-5 !text-sm disabled:opacity-60 shrink-0"
         >
           {saving
             ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>

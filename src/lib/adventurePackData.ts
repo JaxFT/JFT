@@ -3089,7 +3089,7 @@ export const GERMANY_DATA: AdventurePackData = {
     { question: 'Punctuality is sacred here. What\'s been the most "German" thing about how things run?' },
     { question: 'What\'s been the biggest castle, cathedral or town hall you have seen?' },
     { question: 'Bikes are everywhere in some cities. Have you ridden one yet?' },
-    { question: 'Castles, cars, music or food — what part of Germany has surprised you most?', olderOnly: true },
+    { question: 'Germany teaches its Nazi-era history in every school. Should every country teach its worst moments that openly?', olderOnly: true },
   ],
 }
 

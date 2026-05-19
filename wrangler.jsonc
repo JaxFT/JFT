@@ -9,5 +9,15 @@
   },
   "observability": {
     "enabled": true
+  },
+  // Plaintext env vars (non-secrets). Wrangler wipes any dashboard-set
+  // plaintext vars on deploy and uses ONLY what's here, so add them
+  // here, not in the dashboard. Secrets (sk_, whsec_, service role,
+  // anthropic key) stay in the dashboard, wrangler preserves those.
+  "vars": {
+    "STRIPE_PRICE_PREMIUM_ANNUAL": "price_1TYcwmBedsajl023wYj7iJIJ",
+    "NEXT_PUBLIC_SITE_URL": "https://jaxfamilytravels.com",
+    "NEXT_PUBLIC_SUPABASE_URL": "https://wjpmdwugnwuydomdmetf.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqcG1kd3Vnbnd1eWRvbWRtZXRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MDA5NTEsImV4cCI6MjA5NDQ3Njk1MX0.gzFMj1nzt2JmhnaYBnj54q-6n5G3TuwEqdxWBQkLOgk"
   }
 }

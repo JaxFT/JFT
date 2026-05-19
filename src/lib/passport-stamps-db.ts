@@ -32,6 +32,10 @@ export type AwardInput = {
   // timestamp so a stamp can be backdated to when the event actually
   // happened. Auto-system awards omit this and default to now().
   earnedAt?: string
+  // Some auto-stamps SHOULD be allowed to repeat — e.g. each flight
+  // earns a BRAVE_TRAVELLER, not just the first one. Setting this
+  // true skips the per-(child, type, country) dedupe.
+  skipDedupe?: boolean
 }
 
 export type AwardResult =
@@ -56,8 +60,8 @@ export async function awardOrSuggestStamp(input: AwardInput): Promise<AwardResul
   if (childErr) return { ok: false, error: childErr.message }
   if (!child) return { ok: false, error: 'Child not found' }
 
-  // Dedupe system awards only.
-  if (input.awardedBy === 'system') {
+  // Dedupe system awards unless caller opted out.
+  if (input.awardedBy === 'system' && !input.skipDedupe) {
     let q = sb
       .from('stamps')
       .select('id, status')

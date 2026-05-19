@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Crown, Users, ArrowRight, Plus, Stamp, MapPin, Trophy } from 'lucide-react'
+import { Crown, Users, ArrowRight, Plus, Stamp, MapPin, Trophy, Plane } from 'lucide-react'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
@@ -130,6 +130,23 @@ export default async function FamilyPage() {
                 <AddChildForm />
               </div>
             </details>
+
+            {/* Flight log — family-wide, every flight earns Brave Traveller for every child */}
+            <Link
+              href="/family/flights"
+              className="mt-4 block bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:border-brand-200 hover:shadow transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <div className="bg-brand-50 text-brand-700 rounded-xl p-2.5">
+                  <Plane className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-gray-900">Family flights</p>
+                  <p className="text-sm text-gray-500">Log every flight you take. Each one earns a Brave Traveller stamp for every child.</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-gray-400" />
+              </div>
+            </Link>
           </>
         )}
       </div>

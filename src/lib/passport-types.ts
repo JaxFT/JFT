@@ -58,55 +58,68 @@ export const AUTO_STAMP_TYPES: StampType[] = [
 
 // Human-facing copy for every stamp type. Used on the stamps page,
 // the manual-award picker, and the stamp-earned celebration.
-export const STAMP_META: Record<StampType, { emoji: string; label: string; description: string }> = {
+// The `ink` colour is what the passport-stamp graphic uses for its
+// double ring + text, so different stamp categories feel like they
+// were inked with different official pads.
+export const STAMP_META: Record<StampType, { emoji: string; label: string; description: string; ink: string }> = {
   BRAVE_EATER: {
     emoji: '🍜',
     label: 'Brave Eater',
     description: 'Tried a local food.',
+    ink: '#9c2516', // deep red
   },
   LOCAL_LINGO: {
     emoji: '🗣️',
     label: 'Local Lingo',
     description: 'Attempted the local language.',
+    ink: '#5b21b6', // royal purple
   },
   STEP_CHAMP: {
     emoji: '👟',
     label: 'Step Champ',
     description: 'Walked 10,000+ steps in a day.',
+    ink: '#0f3a2a', // brand dark green
   },
   ADVENTURE_PACK_COMPLETE: {
     emoji: '🏆',
     label: 'Pack Complete',
     description: 'Finished every mission in an Adventure Pack.',
+    ink: '#0f3a2a', // brand dark green
   },
   EXPLORER_DAY: {
     emoji: '🗺️',
     label: 'Explorer Day',
     description: 'Visited 3+ different places in one day.',
+    ink: '#1e3a8a', // navy
   },
   CULTURE_SPOTTER: {
     emoji: '🏛️',
     label: 'Culture Spotter',
     description: 'Visited a museum, temple, or heritage site.',
+    ink: '#5b21b6', // royal purple
   },
   NATURE_LOVER: {
     emoji: '🌿',
     label: 'Nature Lover',
     description: 'Spent the day outdoors in nature.',
+    ink: '#15803d', // emerald
   },
   BRAVE_TRAVELLER: {
     emoji: '✈️',
     label: 'Brave Traveller',
     description: 'Took a flight.',
+    ink: '#1e3a8a', // navy
   },
   WATER_ADVENTURER: {
     emoji: '🌊',
     label: 'Water Adventurer',
     description: 'Swam, snorkelled, paddled, or surfed.',
+    ink: '#1e3a8a', // navy
   },
   EARLY_BIRD: {
     emoji: '🌅',
     label: 'Early Bird',
     description: 'Started a travel day before sunrise.',
+    ink: '#9c2516', // deep red
   },
 }

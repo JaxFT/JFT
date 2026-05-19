@@ -7,6 +7,8 @@ import {
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
 import UpgradeButton from '@/components/billing/UpgradeButton'
+import PassportPage from '@/components/passport/PassportPage'
+import PassportStamp from '@/components/passport/PassportStamp'
 
 export const metadata: Metadata = {
   title: 'Family Passports',
@@ -89,18 +91,14 @@ export default async function PassportsLanding() {
                   </div>
                 </div>
                 <p className="text-xs uppercase tracking-widest text-white/60 mb-2">Latest stamps</p>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { e: '🍜', l: 'Brave Eater' },
-                    { e: '🗣️', l: 'Local Lingo' },
-                    { e: '🏆', l: 'Pack Complete' },
-                    { e: '✈️', l: 'Brave Traveller' },
-                  ].map(s => (
-                    <div key={s.l} className="bg-white text-brand-900 rounded-full px-2.5 py-1 text-xs font-semibold inline-flex items-center gap-1">
-                      <span>{s.e}</span> {s.l}
-                    </div>
-                  ))}
-                </div>
+                <PassportPage className="p-4">
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <PassportStamp type="BRAVE_EATER" country="Japan" date="2026-05-14" size="sm" />
+                    <PassportStamp type="LOCAL_LINGO" country="Japan" date="2026-05-14" size="sm" />
+                    <PassportStamp type="ADVENTURE_PACK_COMPLETE" country="Japan" date="2026-05-15" size="sm" />
+                    <PassportStamp type="BRAVE_TRAVELLER" date="2026-05-12" size="sm" />
+                  </div>
+                </PassportPage>
               </div>
               <p className="text-xs text-white/60 mt-5 text-center">Accessed via QR code, no login needed.</p>
             </div>

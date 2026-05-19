@@ -1,0 +1,104 @@
+// Server-side data access for the KID view of the passport.
+//
+// Kids are unauthenticated — they reach the app via /kid/{token} only,
+// where the URL itself is the bearer credential. RLS policies are
+// parent-scoped (auth.uid() = children.parent_id), so kid reads can't
+// go through the cookie client. We use the service role instead and
+// always look the kid up by qr_token first, never by id from the URL.
+
+import { createClient as createSbClient } from '@supabase/supabase-js'
+import type { ChildRow, StampStatus, StampType } from './passport-types'
+
+function admin() {
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceKey) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set.')
+  }
+  return createSbClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    serviceKey,
+    { auth: { persistSession: false, autoRefreshToken: false } },
+  )
+}
+
+export async function getChildByToken(token: string): Promise<ChildRow | null> {
+  if (!token || token.length < 8) return null
+  const { data, error } = await admin()
+    .from('children')
+    .select('*')
+    .eq('qr_token', token)
+    .maybeSingle()
+
+  if (error) {
+    console.error('[passport] getChildByToken', error)
+    return null
+  }
+  return (data as ChildRow) ?? null
+}
+
+export type StampRow = {
+  id: string
+  child_id: string
+  type: StampType
+  country_slug: string | null
+  note: string | null
+  awarded_by: 'system' | 'parent' | 'self'
+  status: StampStatus
+  earned_at: string
+  decided_at: string | null
+  created_at: string
+}
+
+export async function listAwardedStampsForChild(childId: string): Promise<StampRow[]> {
+  const { data, error } = await admin()
+    .from('stamps')
+    .select('*')
+    .eq('child_id', childId)
+    .eq('status', 'awarded')
+    .order('earned_at', { ascending: false })
+
+  if (error) {
+    console.error('[passport] listAwardedStampsForChild', error)
+    return []
+  }
+  return (data ?? []) as StampRow[]
+}
+
+export type KidStats = {
+  stampCount: number
+  countriesUnlocked: number
+  packsCompleted: number
+}
+
+export async function getKidStats(childId: string): Promise<KidStats> {
+  const sb = admin()
+  const [stampsRes, visitsRes, packsRes] = await Promise.all([
+    sb.from('stamps').select('id', { count: 'exact', head: true }).eq('child_id', childId).eq('status', 'awarded'),
+    sb.from('child_country_visits').select('id', { count: 'exact', head: true }).eq('child_id', childId),
+    sb.from('kid_adventure_pack_sessions').select('id', { count: 'exact', head: true }).eq('child_id', childId).not('completed_at', 'is', null),
+  ])
+  return {
+    stampCount: stampsRes.count ?? 0,
+    countriesUnlocked: visitsRes.count ?? 0,
+    packsCompleted: packsRes.count ?? 0,
+  }
+}
+
+export type CountryVisitRow = {
+  country_slug: string
+  first_visit_date: string
+}
+
+export async function listCountryVisitsForChild(childId: string): Promise<CountryVisitRow[]> {
+  const { data, error } = await admin()
+    .from('child_country_visits')
+    .select('country_slug, first_visit_date')
+    .eq('child_id', childId)
+    .order('first_visit_date', { ascending: true })
+
+  if (error) {
+    console.error('[passport] listCountryVisitsForChild', error)
+    return []
+  }
+  return (data ?? []) as CountryVisitRow[]
+}

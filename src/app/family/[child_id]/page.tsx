@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ExternalLink } from 'lucide-react'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
@@ -65,14 +65,22 @@ export default async function ChildDetailPage({
           <ArrowLeft className="w-4 h-4" /> All children
         </Link>
 
-        <div className="mb-8 flex items-center gap-4">
+        <div className="mb-8 flex items-center gap-4 flex-wrap">
           <div className="text-5xl leading-none">{child.avatar}</div>
-          <div>
+          <div className="flex-1 min-w-0">
             <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-1">
               {PERMISSION_LABELS[child.permission_mode]}
             </p>
             <h1 className="text-4xl font-bold text-gray-900">{child.name}</h1>
           </div>
+          <a
+            href={`/kid/${child.qr_token}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-3 py-2 rounded-md shrink-0"
+          >
+            Preview as {child.name} <ExternalLink className="w-3.5 h-3.5" />
+          </a>
         </div>
 
         <div className="space-y-5">

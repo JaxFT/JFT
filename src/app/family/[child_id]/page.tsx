@@ -8,6 +8,7 @@ import {
   getChildById, listChildPackAssignments, listCountryVisitsForChildParent,
   listStampsForChildParent,
 } from '@/lib/passport-db'
+import { listJournalEntriesForChildParent } from '@/lib/passport-journal-db'
 import { PERMISSION_LABELS } from '@/lib/passport-types'
 import { PACK_META } from '@/lib/adventurePackData'
 import EditProfileSection from './EditProfileSection'
@@ -16,6 +17,7 @@ import QRSection from './QRSection'
 import PackAssignmentSection from './PackAssignmentSection'
 import CountryVisitsSection from './CountryVisitsSection'
 import StampsManagementSection from './StampsManagementSection'
+import JournalSection from './JournalSection'
 import DeleteChildButton from './DeleteChildButton'
 
 export const dynamic = 'force-dynamic'
@@ -52,10 +54,11 @@ export default async function ChildDetailPage({
   const child = await getChildById(child_id)
   if (!child) notFound()
 
-  const [assignments, visits, stamps] = await Promise.all([
+  const [assignments, visits, stamps, journal] = await Promise.all([
     listChildPackAssignments(child_id),
     listCountryVisitsForChildParent(child_id),
     listStampsForChildParent(child_id),
+    listJournalEntriesForChildParent(child_id),
   ])
 
   // Strip PACK_META down to the lite shape the sections need — slug,
@@ -115,6 +118,12 @@ export default async function ChildDetailPage({
             childId={child.id}
             childName={child.name}
             initialStamps={stamps}
+            allPacks={allPacks.map(p => ({ slug: p.slug, country: p.country, flag: p.flag }))}
+          />
+
+          <JournalSection
+            childId={child.id}
+            initialEntries={journal}
             allPacks={allPacks.map(p => ({ slug: p.slug, country: p.country, flag: p.flag }))}
           />
 

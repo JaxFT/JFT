@@ -7,6 +7,7 @@ import {
   listCountryVisitsForChild,
   listAssignedPacksForChild,
 } from '@/lib/passport-kid-db'
+import { listJournalEntriesForChild } from '@/lib/passport-journal-db'
 import KidShell from './KidShell'
 
 export const dynamic = 'force-dynamic'
@@ -35,11 +36,12 @@ export default async function KidLandingPage({
   const child = await getChildByToken(token)
   if (!child) notFound()
 
-  const [stats, stamps, visits, assignedPacks] = await Promise.all([
+  const [stats, stamps, visits, assignedPacks, journal] = await Promise.all([
     getKidStats(child.id),
     listAwardedStampsForChild(child.id),
     listCountryVisitsForChild(child.id),
     listAssignedPacksForChild(child.id),
+    listJournalEntriesForChild(child.id),
   ])
 
   return (
@@ -55,6 +57,7 @@ export default async function KidLandingPage({
       stamps={stamps}
       visits={visits}
       assignedPacks={assignedPacks}
+      journal={journal}
     />
   )
 }

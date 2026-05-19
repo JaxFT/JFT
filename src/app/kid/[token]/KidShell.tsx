@@ -6,6 +6,7 @@ import type { PermissionMode } from '@/lib/passport-types'
 import type {
   StampRow, KidStats, CountryVisitRow, AssignedPackRow,
 } from '@/lib/passport-kid-db'
+import type { JournalEntryRow } from '@/lib/passport-journal-db'
 import PassportTab from './tabs/PassportTab'
 import StampsTab from './tabs/StampsTab'
 import MapTab from './tabs/MapTab'
@@ -36,6 +37,7 @@ export default function KidShell({
   stamps,
   visits,
   assignedPacks,
+  journal,
 }: {
   token: string
   child: Child
@@ -43,6 +45,7 @@ export default function KidShell({
   stamps: StampRow[]
   visits: CountryVisitRow[]
   assignedPacks: AssignedPackRow[]
+  journal: JournalEntryRow[]
 }) {
   const [tab, setTab] = useState<Tab>('passport')
 
@@ -90,7 +93,7 @@ export default function KidShell({
         {tab === 'passport'  && <PassportTab token={token} child={child} stats={stats} stamps={stamps} assignedPacks={assignedPacks} />}
         {tab === 'map'       && <MapTab token={token} visits={visits} />}
         {tab === 'countries' && <CountriesTab token={token} visits={visits} />}
-        {tab === 'journal'   && <JournalTab childName={child.name} permissionMode={child.permission_mode} />}
+        {tab === 'journal'   && <JournalTab token={token} childName={child.name} permissionMode={child.permission_mode} entries={journal} />}
         {tab === 'stamps'    && <StampsTab token={token} stamps={stamps} />}
       </main>
     </div>

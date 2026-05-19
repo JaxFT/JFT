@@ -8,6 +8,7 @@ import {
   listStampsForChildCountry,
   getKidPackProgress,
 } from '@/lib/passport-kid-db'
+import { listJournalEntriesForChildCountry } from '@/lib/passport-journal-db'
 import { getPackMeta } from '@/lib/adventurePackData'
 import { SECTION_KEYS } from '@/lib/adventurePackTypes'
 import PassportPage from '@/components/passport/PassportPage'
@@ -41,10 +42,11 @@ export default async function KidCountryPage({
   const child = await getChildByToken(token)
   if (!child) notFound()
 
-  const [visits, stamps, progress] = await Promise.all([
+  const [visits, stamps, progress, journal] = await Promise.all([
     listCountryVisitsForChild(child.id),
     listStampsForChildCountry(child.id, slug),
     getKidPackProgress(child.id, slug),
+    listJournalEntriesForChildCountry(child.id, slug),
   ])
 
   // The country must actually be in the child's passport, otherwise
@@ -168,6 +170,42 @@ export default async function KidCountryPage({
               </div>
             )}
           </section>
+
+          {/* JOURNAL ENTRIES tied to this country */}
+          {journal.length > 0 && (
+            <section className="mt-7">
+              <div
+                className="flex items-baseline justify-between mb-3"
+                style={{ color: '#5a3a12' }}
+              >
+                <p className="text-xs font-extrabold uppercase tracking-[0.2em]">From the journal</p>
+                <p className="text-xs uppercase tracking-widest opacity-60">
+                  {journal.length} {journal.length === 1 ? 'entry' : 'entries'}
+                </p>
+              </div>
+              <ul className="space-y-3">
+                {journal.map(e => {
+                  const [maybePrompt, ...rest] = (e.text ?? '').split('\n\n')
+                  const body = rest.length > 0 ? rest.join('\n\n') : (e.text ?? '')
+                  const prompt = rest.length > 0 ? maybePrompt : null
+                  return (
+                    <li
+                      key={e.id}
+                      className="bg-white/50 rounded-xl p-4"
+                      style={{ color: '#3a2810' }}
+                    >
+                      <div className="flex items-baseline gap-2 mb-1.5 text-xs">
+                        <span className="opacity-50">{formatDate(e.created_at)}</span>
+                        {e.emoji_rating && <span className="text-base ml-auto">{e.emoji_rating}</span>}
+                      </div>
+                      {prompt && <p className="text-xs font-bold italic mb-1 opacity-80">{prompt}</p>}
+                      {body && <p className="text-sm leading-relaxed whitespace-pre-wrap">{body}</p>}
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          )}
 
           {/* PAGE-TURN FOOTER: prev / next country, like flipping pages */}
           <footer

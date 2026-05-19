@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Crown, ShoppingBag, ArrowRight, Calendar, ShieldCheck, FileText, Mail, Users } from 'lucide-react'
+import { Crown, ShoppingBag, ArrowRight, Calendar, ShieldCheck, FileText, Mail } from 'lucide-react'
 import type { Metadata } from 'next'
 import SignOutButton from './SignOutButton'
 import AccountEditor from './AccountEditor'
@@ -9,10 +9,13 @@ import PremiumCancelButton from './PremiumCancelButton'
 import ResumeMembershipButton from './ResumeMembershipButton'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 import ManageBillingButton from '@/components/billing/ManageBillingButton'
+import FamilyPassportSection from './FamilyPassportSection'
+import DeleteAccountButton from './DeleteAccountButton'
 import { isPremiumTier } from '@/lib/profile'
 import { ensureProfile } from '@/lib/ensure-profile'
 
 export const metadata: Metadata = { title: 'Account' }
+export const dynamic = 'force-dynamic'
 
 type PurchaseRow = {
   id: string
@@ -47,6 +50,10 @@ export default async function AccountPage() {
 
   const purchases = (purchasesData ?? []) as unknown as PurchaseRow[]
   const isPremium = isPremiumTier(profile?.subscription_tier)
+  // An active subscription means we have a paid tier AND there is no
+  // cancellation already in flight. Used by the delete-account modal
+  // to warn the user before they wipe their account.
+  const hasActiveSubscription = isPremium && !profile?.cancellation_requested_at
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
     : 'recently'
@@ -54,10 +61,13 @@ export default async function AccountPage() {
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* HEADER — no longer surfaces the user's name as the H1, which
+            looked strange. The name is editable in the "Your name" card
+            further down; the page heading is just "Account". */}
         <div className="mb-10 flex items-start justify-between gap-4 flex-wrap">
           <div>
             <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Your account</p>
-            <h1 className="text-4xl font-bold text-gray-900">{profile?.full_name || 'Hello'}</h1>
+            <h1 className="text-4xl font-bold text-gray-900">Account</h1>
             <p className="text-sm text-gray-500 mt-2 inline-flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5" /> Member since {memberSince}
             </p>
@@ -65,16 +75,7 @@ export default async function AccountPage() {
           <SignOutButton />
         </div>
 
-        {/* Editable profile + password */}
-        <div className="mb-6">
-          <AccountEditor
-            initialFullName={profile?.full_name ?? ''}
-            email={user.email ?? ''}
-            initialMarketingOptIn={!!profile?.marketing_opt_in}
-          />
-        </div>
-
-        {/* Subscription */}
+        {/* 1 ── SUBSCRIPTION / TIER STATUS ─────────────────────── */}
         <div className={`rounded-2xl p-6 mb-6 ${isPremium ? 'bg-brand-950 text-white' : 'bg-white border border-gray-100 shadow-sm'}`}>
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
@@ -89,8 +90,8 @@ export default async function AccountPage() {
               </h2>
               <p className={`mt-2 text-sm leading-relaxed max-w-md ${isPremium ? 'text-white/70' : 'text-gray-500'}`}>
                 {isPremium
-                  ? 'Every premium blog post, every guide, and every adventure pack are included.'
-                  : 'A year of access to every premium blog post, every guide, and every adventure pack, £49.99/year.'}
+                  ? 'Every premium blog post, every guide, every Adventure Pack, and the full Family Passport are included.'
+                  : 'A year of access to every premium blog post, every guide, every Adventure Pack, and the Family Passport, £49.99/year.'}
               </p>
               {isPremium && profile?.cancellation_requested_at && (
                 <p className="mt-3 text-xs text-amber-200 bg-amber-950/30 border border-amber-700/40 rounded-md px-3 py-2 inline-block">
@@ -115,26 +116,23 @@ export default async function AccountPage() {
           </div>
         </div>
 
-        {/* Family Passport, premium-only */}
+        {/* 2 ── FAMILY PASSPORT (premium-only) ──────────────────── */}
         {isPremium && (
-          <Link
-            href="/family"
-            className="block bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6 hover:border-brand-200 hover:shadow transition-all"
-          >
-            <div className="flex items-center gap-3">
-              <div className="bg-brand-50 text-brand-700 rounded-xl p-3">
-                <Users className="w-5 h-5" />
-              </div>
-              <div className="flex-1">
-                <p className="font-bold text-gray-900">Family Passport</p>
-                <p className="text-sm text-gray-500">Manage children, assign Adventure Packs, view QR codes.</p>
-              </div>
-              <ArrowRight className="w-4 h-4 text-gray-400" />
-            </div>
-          </Link>
+          <div className="mb-6">
+            <FamilyPassportSection />
+          </div>
         )}
 
-        {/* Purchases */}
+        {/* 3 ── DETAILS (email / password / name) + EMAIL PREFS ── */}
+        <div className="mb-6">
+          <AccountEditor
+            initialFullName={profile?.full_name ?? ''}
+            email={user.email ?? ''}
+            initialMarketingOptIn={!!profile?.marketing_opt_in}
+          />
+        </div>
+
+        {/* 4 ── YOUR PURCHASES ──────────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <div className="flex items-center gap-2 mb-4">
             <ShoppingBag className="w-5 h-5 text-gray-400" />
@@ -143,7 +141,7 @@ export default async function AccountPage() {
 
           {purchases.length === 0 ? (
             <div className="text-center py-10">
-              <p className="text-gray-500 text-sm mb-5">You haven't bought anything yet.</p>
+              <p className="text-gray-500 text-sm mb-5">You haven&apos;t bought anything yet.</p>
               <Link href="/guides" className="btn-outline !py-2 !px-4 !text-sm">
                 Browse guides <ArrowRight className="w-4 h-4" />
               </Link>
@@ -168,7 +166,7 @@ export default async function AccountPage() {
           )}
         </div>
 
-        {/* Help & legal */}
+        {/* 5 ── HELP & LEGAL ────────────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mt-6">
           <h2 className="text-sm font-bold tracking-widest uppercase text-gray-500 mb-4">Help &amp; legal</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -193,10 +191,10 @@ export default async function AccountPage() {
               <Mail className="w-4 h-4 text-gray-400" /> Email us
             </a>
           </div>
-          <p className="text-xs text-gray-400 mt-3 leading-relaxed">
-            Need to update your email or request your data? Email us and we&apos;ll sort it within a few working days.
-          </p>
         </div>
+
+        {/* 6 ── DELETE ACCOUNT ──────────────────────────────────── */}
+        <DeleteAccountButton hasActiveSubscription={hasActiveSubscription} />
       </div>
     </div>
   )

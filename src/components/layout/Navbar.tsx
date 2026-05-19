@@ -10,7 +10,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { isAdminEmail } from '@/lib/admin'
-import { Menu, X, User, LogOut, ShieldCheck } from 'lucide-react'
+import { Menu, X, User, LogOut, ShieldCheck, Users } from 'lucide-react'
 import Logo from '@/components/branding/Logo'
 
 const navLinks = [
@@ -128,6 +128,12 @@ export default function Navbar({ initialUserId, initialUserEmail }: Props) {
                     Admin
                   </a>
                 )}
+                <a href="/family" className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                  transparent ? 'text-white/80 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                }`}>
+                  <Users className="w-4 h-4" />
+                  Family
+                </a>
                 <a href="/account" className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
                   transparent ? 'text-white/80 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                 }`}>
@@ -183,6 +189,7 @@ export default function Navbar({ initialUserId, initialUserEmail }: Props) {
                   {isAdmin && (
                     <a href="/admin" className="block px-3 py-2 text-sm font-semibold text-brand-600">Admin</a>
                   )}
+                  <a href="/family" className="block px-3 py-2 text-sm text-gray-700">Family</a>
                   <a href="/account" className="block px-3 py-2 text-sm text-gray-700">Account</a>
                   <button onClick={handleSignOut} className="block w-full text-left px-3 py-2 text-sm text-gray-500">Sign out</button>
                 </div>

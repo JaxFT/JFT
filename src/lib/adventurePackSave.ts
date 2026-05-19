@@ -35,6 +35,10 @@ export async function saveSection(
 // ── LOAD ────────────────────────────────────────────────────────
 export type LoadedPack = {
   ageMode: AgeMode
+  // True if a session row already existed (so ageMode came from the DB).
+  // False on first open of this pack, letting the caller fall back to a
+  // local preference instead of the 'younger' default.
+  hasSession: boolean
   missionsComplete: string[]
   expiresAt: string | null
   answersBySection: Record<string, SectionAnswers>
@@ -65,6 +69,7 @@ export async function loadPack(userId: string, countrySlug: string): Promise<Loa
   const s = sessionRes.data
   return {
     ageMode: ((s?.age_mode as AgeMode) ?? 'younger'),
+    hasSession: !!s,
     missionsComplete: (s?.missions_complete as string[]) ?? [],
     expiresAt: (s?.expires_at as string) ?? null,
     answersBySection,

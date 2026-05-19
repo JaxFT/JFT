@@ -32,6 +32,30 @@ export type UseAdventurePackResult = {
 
 const SAVE_DEBOUNCE_MS = 1000
 
+// Sticky cross-pack age-mode preference. Stored only in this browser,
+// so it survives between packs without needing a profile-level setting.
+// Per-pack saved sessions always win over this fallback.
+const AGE_MODE_PREF_KEY = 'jft.adventure-pack.ageMode'
+
+function readAgeModePref(): AgeMode | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const v = window.localStorage.getItem(AGE_MODE_PREF_KEY)
+    return v === 'older' || v === 'younger' ? v : null
+  } catch {
+    return null
+  }
+}
+
+function writeAgeModePref(mode: AgeMode) {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(AGE_MODE_PREF_KEY, mode)
+  } catch {
+    // private mode or storage disabled; nothing to do
+  }
+}
+
 export function useAdventurePack(
   userId: string,
   countrySlug: string,
@@ -54,7 +78,13 @@ export function useAdventurePack(
     let mounted = true
     loadPack(userId, countrySlug).then(loaded => {
       if (!mounted) return
-      setAgeMode(loaded.ageMode)
+      // First time opening this pack: defer to the user's last-used age
+      // mode across packs (localStorage), if any. Packs with an existing
+      // session keep their own saved mode.
+      const initialMode = loaded.hasSession
+        ? loaded.ageMode
+        : (readAgeModePref() ?? loaded.ageMode)
+      setAgeMode(initialMode)
       setMissionsComplete(loaded.missionsComplete)
       setAnswers(loaded.answersBySection)
       latestAnswers.current = loaded.answersBySection
@@ -111,6 +141,7 @@ export function useAdventurePack(
 
   const changeAgeMode = useCallback((mode: AgeMode) => {
     setAgeMode(mode)
+    writeAgeModePref(mode)
     saveSession(userId, countrySlug, mode, missionsComplete)
       .then(exp => exp && setExpiresAt(exp))
       .catch(() => null)

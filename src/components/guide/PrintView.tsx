@@ -206,12 +206,13 @@ export default function PrintView({ guide }: Props) {
           page-break-inside: avoid;
           break-inside: avoid;
         }
-        /* Cap image height so a tall portrait photo doesn't take an
-           entire page. They render up to 110mm tall (about 40% of an
-           A4 page) which keeps text on the same page in most cases. */
+        /* Image sizing. The writer picks one of four sizes per image
+           in the PDF builder; each maps to a max-height that gives a
+           sensible amount of A4 real estate. Default (no size in the
+           markdown image title) renders as "medium". */
         .print-body img {
           max-width: 100%;
-          max-height: 110mm;
+          max-height: 100mm;
           width: auto;
           height: auto;
           display: block;
@@ -220,6 +221,10 @@ export default function PrintView({ guide }: Props) {
           break-inside: avoid;
           object-fit: contain;
         }
+        .print-body img.img-small  { max-height: 50mm; }
+        .print-body img.img-medium { max-height: 100mm; }
+        .print-body img.img-large  { max-height: 160mm; }
+        .print-body img.img-full   { max-height: 230mm; }
         /* Writer-controlled forced page break. A "---" in the markdown
            renders as <hr>; in print we treat it as an invisible page
            break, so the writer can manually steer the break wherever

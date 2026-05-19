@@ -105,15 +105,13 @@ export default async function AdminGuidesListPage() {
                           View <ExternalLink className="w-3 h-3" />
                         </Link>
                       )}
-                      <a
-                        href={`/admin/guides/${g.id}/print`}
-                        target="_blank"
-                        rel="noreferrer"
+                      <Link
+                        href={`/admin/guides/${g.id}/pdf-builder`}
                         className="inline-flex items-center gap-1 text-xs font-semibold text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md border border-gray-200 hover:bg-white"
-                        title="Open the print view, then choose Save as PDF in the browser dialog"
+                        title="Open the PDF builder — set image sizes and page breaks, then print to PDF"
                       >
                         <Download className="w-3 h-3" /> PDF
-                      </a>
+                      </Link>
                       <Link
                         href={`/admin/guides/${g.id}/edit`}
                         className="text-xs font-semibold text-brand-600 hover:text-brand-700 px-3 py-2 rounded-md border border-brand-200 hover:bg-brand-50"

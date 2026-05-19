@@ -228,6 +228,32 @@ export default function PrintView({ guide }: Props) {
         .print-body img.img-medium { max-height: 100mm; }
         .print-body img.img-large  { max-height: 160mm; }
         .print-body img.img-full   { max-height: 230mm; }
+        /* Alignment: when an image is floated, the surrounding text
+           wraps around it. Float images keep a sensible max-width so
+           the body copy still has room to flow. */
+        .print-body img.img-align-center { margin: 12pt auto; }
+        .print-body img.img-align-left {
+          float: left;
+          margin: 4pt 14pt 8pt 0;
+          max-width: 55%;
+        }
+        .print-body img.img-align-right {
+          float: right;
+          margin: 4pt 0 8pt 14pt;
+          max-width: 55%;
+        }
+        /* Crop: force a target aspect ratio + object-fit cover to
+           crop the image to fit that ratio, rather than letting the
+           natural ratio dictate the box. */
+        .print-body img.img-crop-square { aspect-ratio: 1 / 1;  object-fit: cover; }
+        .print-body img.img-crop-wide   { aspect-ratio: 16 / 9; object-fit: cover; }
+        .print-body img.img-crop-tall   { aspect-ratio: 3 / 4;  object-fit: cover; }
+        .print-body img.img-crop-square,
+        .print-body img.img-crop-wide,
+        .print-body img.img-crop-tall { width: auto; }
+        /* Headings always clear any floated image above so a new
+           section starts fresh on the page. */
+        .print-body h2, .print-body h3 { clear: both; }
         /* Writer-controlled forced page break. A "---" in the markdown
            renders as <hr>; in print we treat it as an invisible page
            break, so the writer can manually steer the break wherever

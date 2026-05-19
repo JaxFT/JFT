@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { resolveKidPack, saveKidSession } from '@/lib/passport-kid-pack-db'
+import { awardOrSuggestStamp } from '@/lib/passport-stamps-db'
 import { SECTION_KEYS } from '@/lib/adventurePackTypes'
 import type { AgeMode } from '@/lib/adventurePackTypes'
 
@@ -10,7 +11,8 @@ export const runtime = 'nodejs'
 // Body: { age_mode: 'younger'|'older', missions_complete: string[] }
 // Upserts the session row. May also insert a child_country_visits row
 // (on first interaction) and set completed_at (on the run where all
-// 9 missions are first complete).
+// 9 missions are first complete). On first completion, fires the
+// ADVENTURE_PACK_COMPLETE stamp through the stamp engine.
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ token: string; slug: string }> },
@@ -40,6 +42,17 @@ export async function PUT(
     missions,
     SECTION_KEYS.length,
   )
+
+  // The stamp engine dedupes on (child, type, country) so this is
+  // safe to call on every completion ping — only the first hits.
+  if (result.firstCompletion) {
+    await awardOrSuggestStamp({
+      childId: resolved.child.id,
+      type: 'ADVENTURE_PACK_COMPLETE',
+      countrySlug: slug,
+      awardedBy: 'system',
+    })
+  }
 
   return NextResponse.json({ ok: true, ...result })
 }

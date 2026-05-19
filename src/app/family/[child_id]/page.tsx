@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
 import {
   getChildById, listChildPackAssignments, listCountryVisitsForChildParent,
+  listStampsForChildParent,
 } from '@/lib/passport-db'
 import { PERMISSION_LABELS } from '@/lib/passport-types'
 import { PACK_META } from '@/lib/adventurePackData'
@@ -14,6 +15,7 @@ import PermissionSection from './PermissionSection'
 import QRSection from './QRSection'
 import PackAssignmentSection from './PackAssignmentSection'
 import CountryVisitsSection from './CountryVisitsSection'
+import StampsManagementSection from './StampsManagementSection'
 import DeleteChildButton from './DeleteChildButton'
 
 export const dynamic = 'force-dynamic'
@@ -50,9 +52,10 @@ export default async function ChildDetailPage({
   const child = await getChildById(child_id)
   if (!child) notFound()
 
-  const [assignments, visits] = await Promise.all([
+  const [assignments, visits, stamps] = await Promise.all([
     listChildPackAssignments(child_id),
     listCountryVisitsForChildParent(child_id),
+    listStampsForChildParent(child_id),
   ])
 
   // Strip PACK_META down to the lite shape the sections need — slug,
@@ -105,6 +108,13 @@ export default async function ChildDetailPage({
           <CountryVisitsSection
             childId={child.id}
             initialVisits={visits}
+            allPacks={allPacks.map(p => ({ slug: p.slug, country: p.country, flag: p.flag }))}
+          />
+
+          <StampsManagementSection
+            childId={child.id}
+            childName={child.name}
+            initialStamps={stamps}
             allPacks={allPacks.map(p => ({ slug: p.slug, country: p.country, flag: p.flag }))}
           />
 

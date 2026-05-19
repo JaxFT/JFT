@@ -3,7 +3,7 @@
 // scoped to "children where parent_id = auth.uid()", no manual checks.
 
 import { createClient } from '@/lib/supabase/server'
-import type { ChildRow } from './passport-types'
+import type { ChildRow, StampStatus, StampType } from './passport-types'
 
 export async function listChildPackAssignments(childId: string): Promise<string[]> {
   const supabase = await createClient()
@@ -23,6 +23,34 @@ export async function listChildPackAssignments(childId: string): Promise<string[
 export type ChildCountryVisitRow = {
   country_slug: string
   first_visit_date: string // YYYY-MM-DD
+}
+
+export type ParentStampRow = {
+  id: string
+  type: StampType
+  country_slug: string | null
+  note: string | null
+  awarded_by: 'system' | 'parent' | 'self'
+  status: StampStatus
+  earned_at: string
+  decided_at: string | null
+}
+
+// All stamps for a child, regardless of status, newest first. Used
+// for the parent's stamp management section + approval queue.
+export async function listStampsForChildParent(childId: string): Promise<ParentStampRow[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('stamps')
+    .select('id, type, country_slug, note, awarded_by, status, earned_at, decided_at')
+    .eq('child_id', childId)
+    .order('earned_at', { ascending: false })
+
+  if (error) {
+    console.error('[passport] listStampsForChildParent', error)
+    return []
+  }
+  return (data ?? []) as ParentStampRow[]
 }
 
 // Parent-scoped list of a child's country visits, ordered by date so

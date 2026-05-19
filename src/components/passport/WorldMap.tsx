@@ -33,11 +33,34 @@ const SLUG_TO_NUMERIC: Record<string, string> = {
   'egypt':           '818',
 }
 
+// Approximate centre [longitude, latitude] for each pack country.
+// Used to focus the map's initial view on the kid's home country.
+const SLUG_TO_CENTER: Record<string, [number, number]> = {
+  'france':          [2,   47],
+  'morocco':         [-7,  32],
+  'indonesia':       [114, -3],
+  'thailand':        [101, 15],
+  'malaysia':        [102, 4],
+  'spain':           [-4,  40],
+  'portugal':        [-8,  39],
+  'united-kingdom':  [-3,  54],
+  'japan':           [138, 36],
+  'vietnam':         [108, 16],
+  'cambodia':        [105, 12],
+  'china':           [105, 35],
+  'india':           [79,  22],
+  'sri-lanka':       [81,  8],
+  'nepal':           [84,  28],
+  'turkey':          [35,  39],
+  'egypt':           [30,  26],
+}
+
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
 
 const MIN_ZOOM = 1
 const MAX_ZOOM = 40
-const INITIAL_CENTER: [number, number] = [10, 20]
+const DEFAULT_CENTER: [number, number] = [10, 20]
+const HOME_ZOOM = 4 // ~ continent-level when there's a home country
 
 type SelectedCountry = {
   name: string
@@ -48,13 +71,20 @@ type SelectedCountry = {
 
 type Props = {
   unlockedSlugs: string[]
+  // If set, the map opens centred on this country at HOME_ZOOM.
+  homeCountrySlug?: string | null
   hrefForSlug: (slug: string) => string
 }
 
-export default function WorldMap({ unlockedSlugs, hrefForSlug }: Props) {
+export default function WorldMap({ unlockedSlugs, hrefForSlug, homeCountrySlug }: Props) {
   const router = useRouter()
-  const [zoom, setZoom] = useState(1)
-  const [center, setCenter] = useState<[number, number]>(INITIAL_CENTER)
+  // Start zoomed-in on the kid's home country if one is set; otherwise
+  // a comfortable global view. The kid can pinch back out any time.
+  const homeCenter = homeCountrySlug ? SLUG_TO_CENTER[homeCountrySlug] : undefined
+  const initialZoom = homeCenter ? HOME_ZOOM : 1
+  const initialCenter = homeCenter ?? DEFAULT_CENTER
+  const [zoom, setZoom] = useState(initialZoom)
+  const [center, setCenter] = useState<[number, number]>(initialCenter)
   const [selected, setSelected] = useState<SelectedCountry | null>(null)
 
   const numericToSlug = useMemo(() => {
@@ -68,7 +98,7 @@ export default function WorldMap({ unlockedSlugs, hrefForSlug }: Props) {
 
   const zoomIn   = () => setZoom(z => Math.min(z * 1.5, MAX_ZOOM))
   const zoomOut  = () => setZoom(z => Math.max(z / 1.5, MIN_ZOOM))
-  const resetView = () => { setZoom(1); setCenter(INITIAL_CENTER) }
+  const resetView = () => { setZoom(initialZoom); setCenter(initialCenter) }
 
   return (
     <div

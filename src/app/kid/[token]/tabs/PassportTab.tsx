@@ -1,5 +1,8 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
-import { Stamp as StampIcon, Globe, Trophy, ArrowRight, Check, Compass } from 'lucide-react'
+import { Stamp as StampIcon, Globe, Trophy, ArrowRight, Check, Compass, ChevronDown } from 'lucide-react'
 import PassportPage from '@/components/passport/PassportPage'
 import PassportStamp from '@/components/passport/PassportStamp'
 import { getPackMeta } from '@/lib/adventurePackData'
@@ -22,80 +25,106 @@ export default function PassportTab({
 }) {
   const recent = stamps.slice(0, 6)
   const totalSections = SECTION_KEYS.length
+  const [packsOpen, setPacksOpen] = useState(true)
 
   return (
     <div className="space-y-5">
-      {/* Stats */}
+      {/* Stats — each tile jumps to the matching tab / section */}
       <div className="grid grid-cols-3 gap-2">
-        {[
-          { label: 'Stamps', value: stats.stampCount, Icon: StampIcon },
-          { label: 'Countries', value: stats.countriesUnlocked, Icon: Globe },
-          { label: 'Packs', value: stats.packsCompleted, Icon: Trophy },
-        ].map(s => (
-          <div key={s.label} className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center">
-            <s.Icon className="w-4 h-4 text-brand-300 mx-auto mb-1" />
-            <p className="text-3xl font-bold leading-none mb-1">{s.value}</p>
-            <p className="text-[10px] uppercase tracking-widest text-white/60">{s.label}</p>
-          </div>
-        ))}
+        <Link
+          href={`/kid/${token}?tab=stamps`}
+          className="bg-white/10 hover:bg-white/15 backdrop-blur-sm rounded-2xl p-4 text-center transition-colors"
+        >
+          <StampIcon className="w-4 h-4 text-brand-300 mx-auto mb-1" />
+          <p className="text-3xl font-bold leading-none mb-1">{stats.stampCount}</p>
+          <p className="text-[10px] uppercase tracking-widest text-white/60">Stamps</p>
+        </Link>
+        <Link
+          href={`/kid/${token}?tab=countries`}
+          className="bg-white/10 hover:bg-white/15 backdrop-blur-sm rounded-2xl p-4 text-center transition-colors"
+        >
+          <Globe className="w-4 h-4 text-brand-300 mx-auto mb-1" />
+          <p className="text-3xl font-bold leading-none mb-1">{stats.countriesUnlocked}</p>
+          <p className="text-[10px] uppercase tracking-widest text-white/60">Countries</p>
+        </Link>
+        <button
+          type="button"
+          onClick={() => setPacksOpen(o => !o)}
+          className="bg-white/10 hover:bg-white/15 backdrop-blur-sm rounded-2xl p-4 text-center transition-colors"
+          aria-label="Show adventure packs"
+        >
+          <Trophy className="w-4 h-4 text-brand-300 mx-auto mb-1" />
+          <p className="text-3xl font-bold leading-none mb-1">{stats.packsCompleted}</p>
+          <p className="text-[10px] uppercase tracking-widest text-white/60">Packs</p>
+        </button>
       </div>
 
-      {/* Adventure Packs — assigned packs the kid can open. Ordered:
-          in progress first (most exciting), then unstarted, then
-          completed. Each card cascades indented from the heading to
-          read like a list flowing from the words. */}
+      {/* Adventure Packs — collapsible. Tap the header to open/close.
+          Cards cascade indented under the heading on a brand rail. */}
       <section className="relative">
-        <div className="flex items-center gap-2 mb-3 pl-1">
+        <button
+          type="button"
+          onClick={() => setPacksOpen(o => !o)}
+          className="w-full flex items-center gap-2 mb-3 pl-1"
+          aria-expanded={packsOpen}
+        >
           <Compass className="w-4 h-4 text-brand-300" />
           <h2 className="text-xs font-extrabold uppercase tracking-[0.2em] text-white">Adventure Packs</h2>
-        </div>
+          <span className="ml-2 text-[10px] uppercase tracking-widest text-white/40">
+            {assignedPacks.length}
+          </span>
+          <ChevronDown
+            className={`w-4 h-4 text-white/60 ml-auto transition-transform ${packsOpen ? '' : '-rotate-90'}`}
+          />
+        </button>
 
-        {assignedPacks.length === 0 ? (
-          <div className="ml-5 bg-white/5 border border-white/10 rounded-2xl p-5 text-center text-sm text-white/70">
-            <p>Ask a grown-up to add an Adventure Pack for you to start.</p>
-          </div>
-        ) : (
-          <ul className="ml-5 border-l-2 border-brand-300/40 pl-4 space-y-2">
-            {sortPacks(assignedPacks).map(p => {
-              const meta = getPackMeta(p.country_slug)
-              if (!meta) return null
-              const done = p.missions_complete.length
-              const isComplete = !!p.completed_at
-              const isStarted = done > 0
-              return (
-                <li key={p.country_slug}>
-                  <Link
-                    href={`/kid/${token}/pack/${p.country_slug}`}
-                    className="block bg-white/10 hover:bg-white/15 backdrop-blur-sm rounded-2xl p-4 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl leading-none" aria-hidden>{meta.flag}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-white">{meta.country}</p>
-                        <p className="text-xs text-white/60 inline-flex items-center gap-1.5">
-                          {isComplete
-                            ? <><Check className="w-3 h-3" /> All missions complete</>
-                            : isStarted
-                              ? <>{done} of {totalSections} missions done</>
-                              : <>Tap to start</>}
-                        </p>
+        {packsOpen && (
+          assignedPacks.length === 0 ? (
+            <div className="ml-5 bg-white/5 border border-white/10 rounded-2xl p-5 text-center text-sm text-white/70">
+              <p>Ask a grown-up to add an Adventure Pack for you to start.</p>
+            </div>
+          ) : (
+            <ul className="ml-5 border-l-2 border-brand-300/40 pl-4 space-y-2">
+              {sortPacks(assignedPacks).map(p => {
+                const meta = getPackMeta(p.country_slug)
+                if (!meta) return null
+                const done = p.missions_complete.length
+                const isComplete = !!p.completed_at
+                const isStarted = done > 0
+                return (
+                  <li key={p.country_slug}>
+                    <Link
+                      href={`/kid/${token}/pack/${p.country_slug}`}
+                      className="block bg-white/10 hover:bg-white/15 backdrop-blur-sm rounded-2xl p-4 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl leading-none" aria-hidden>{meta.flag}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-white">{meta.country}</p>
+                          <p className="text-xs text-white/60 inline-flex items-center gap-1.5">
+                            {isComplete
+                              ? <><Check className="w-3 h-3" /> All missions complete</>
+                              : isStarted
+                                ? <>{done} of {totalSections} missions done</>
+                                : <>Tap to start</>}
+                          </p>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-white/50" />
                       </div>
-                      <ArrowRight className="w-4 h-4 text-white/50" />
-                    </div>
-                    {/* Tiny progress bar */}
-                    {isStarted && !isComplete && (
-                      <div className="mt-3 h-1 bg-white/10 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-brand-300 transition-all"
-                          style={{ width: `${Math.min(100, (done / totalSections) * 100)}%` }}
-                        />
-                      </div>
-                    )}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
+                      {isStarted && !isComplete && (
+                        <div className="mt-3 h-1 bg-white/10 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-brand-300 transition-all"
+                            style={{ width: `${Math.min(100, (done / totalSections) * 100)}%` }}
+                          />
+                        </div>
+                      )}
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          )
         )}
       </section>
 
@@ -123,7 +152,7 @@ export default function PassportTab({
           >
             <p className="mb-2 text-lg">Your first stamp will land here.</p>
             <p className="text-xs uppercase tracking-widest opacity-70">
-              Try a food or learn a phrase in an Adventure Pack
+              Try 3 foods or 3 phrases in an Adventure Pack
             </p>
           </div>
         ) : (
@@ -144,9 +173,6 @@ export default function PassportTab({
   )
 }
 
-// In progress first (kid wants to keep going), then unstarted (new
-// adventures), then completed (the trophy shelf). Within each bucket
-// keep the original assignment order.
 function sortPacks(packs: AssignedPackRow[]): AssignedPackRow[] {
   const inProgress: AssignedPackRow[] = []
   const unstarted: AssignedPackRow[] = []

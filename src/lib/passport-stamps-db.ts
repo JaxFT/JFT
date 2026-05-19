@@ -107,6 +107,12 @@ export async function awardOrSuggestStamp(input: AwardInput): Promise<AwardResul
   return { ok: true, created: true, id: data.id, status }
 }
 
+// Stamps that require a minimum number of interactions before firing,
+// so a kid has to actually engage with the section rather than just
+// open it.
+const FOOD_THRESHOLD = 3
+const LANGUAGE_THRESHOLD = 3
+
 // Detect which auto-stamps a section save should fire. Reads the
 // stored answers and returns the stamp types triggered. Idempotent —
 // the dedupe in awardOrSuggestStamp handles repeat calls.
@@ -115,29 +121,29 @@ export function autoStampsForSection(
   answers: SectionAnswers,
 ): StampType[] {
   const out: StampType[] = []
-  // FoodSection keys: tried-{name}: boolean. ANY truthy means at
-  // least one local food has been tried.
+  // Food: BRAVE_EATER fires after tasting 3+ local foods.
   if (section === 'food') {
-    const triedSomething = Object.entries(answers).some(([k, v]) => k.startsWith('tried-') && !!v)
-    if (triedSomething) out.push('BRAVE_EATER')
+    const tried = Object.entries(answers).filter(([k, v]) => k.startsWith('tried-') && !!v).length
+    if (tried >= FOOD_THRESHOLD) out.push('BRAVE_EATER')
   }
-  // LanguageSection keys: used-{english}: truthy when the phrase has
-  // been marked used. ANY truthy means a local phrase was attempted.
+  // Language: LOCAL_LINGO fires after attempting 3+ phrases.
   if (section === 'language') {
-    const usedSomething = Object.entries(answers).some(([k, v]) => k.startsWith('used-') && !!v)
-    if (usedSomething) out.push('LOCAL_LINGO')
+    const used = Object.entries(answers).filter(([k, v]) => k.startsWith('used-') && !!v).length
+    if (used >= LANGUAGE_THRESHOLD) out.push('LOCAL_LINGO')
   }
   return out
 }
 
-// One stamp per Adventure Pack section. Marking a mission complete
-// awards the matching stamp. Dedupe (in awardOrSuggestStamp) makes
-// repeat fires safe.
+// Most section completions earn a single stamp the moment the mission
+// is marked complete. Food and language are different: they go
+// through autoStampsForSection above with an interaction threshold
+// (3+ foods tried / 3+ phrases used) so kids actually have to engage
+// rather than tick "complete" without doing anything.
 const SECTION_STAMPS: Record<SectionKey, StampType[]> = {
   map:       ['MAP_READER'],
-  language:  ['LOCAL_LINGO'],
+  language:  [], // gated by 3+ used-* in autoStampsForSection
   money:     ['MONEY_CHANGER'],
-  food:      ['BRAVE_EATER'],
+  food:      [], // gated by 3+ tried-* in autoStampsForSection
   geography: ['GEOGRAPHY_GENIUS'],
   scavenger: ['SCAVENGER_HUNTER'],
   senses:    ['SENSE_SEEKER'],

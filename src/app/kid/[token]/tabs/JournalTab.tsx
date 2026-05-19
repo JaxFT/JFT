@@ -255,13 +255,13 @@ export default function JournalTab({
               <textarea
                 value={text}
                 onChange={e => setText(e.target.value.slice(0, 4000))}
-                rows={permissionMode === 'creator' ? 6 : 4}
+                rows={permissionMode === 'creator' ? 10 : 7}
                 placeholder={
                   permissionMode === 'creator'
                     ? 'Tell us about your day…'
                     : 'Type your answer here…'
                 }
-                className="w-full bg-transparent border-b-2 border-amber-900/20 focus:border-amber-900/40 outline-none resize-none placeholder:text-amber-900/40 text-sm leading-relaxed"
+                className="w-full bg-transparent border-b-2 border-amber-900/20 focus:border-amber-900/40 outline-none resize-none placeholder:text-amber-900/40 text-base leading-relaxed"
               />
 
               {/* Where? — country + place */}

@@ -154,23 +154,19 @@ function TravelerPage({ milestones, empty }: { milestones: Milestone[]; empty: b
           Open an Adventure Pack or log a flight to begin.
         </p>
       ) : (
-        // Negative gaps so the stamps occasionally overlap — feels
-        // like they were stamped on the page in real time, not laid
-        // out on a grid.
-        <div className="flex flex-wrap items-start justify-center -mx-3 -my-1 py-2">
+        <ScatteredStamps count={milestones.length}>
           {milestones.map(m => (
-            <div key={m.id} className="-mx-2 -my-1">
-              <MilestoneStamp
-                emoji={m.emoji}
-                label={m.label}
-                ink={m.ink}
-                date={m.earnedAt}
-                shape={m.shape}
-                size="md"
-              />
-            </div>
+            <MilestoneStamp
+              key={m.id}
+              emoji={m.emoji}
+              label={m.label}
+              ink={m.ink}
+              date={m.earnedAt}
+              shape={m.shape}
+              size="md"
+            />
           ))}
-        </div>
+        </ScatteredStamps>
       )}
     </section>
   )
@@ -199,20 +195,32 @@ function CountryPage({ group, token }: {
           </Link>
         )}
       </div>
-      {/* Overlap negative gaps so the stamps jostle on the page. */}
-      <div className="flex flex-wrap items-start justify-center -mx-3 -my-1 py-2">
+      <ScatteredStamps count={group.stamps.length}>
         {group.stamps.map(s => (
-          <div key={s.id} className="-mx-2 -my-1">
-            <PassportStamp
-              type={s.type}
-              country={group.countryName === '✈️ Travel' ? null : group.countryName}
-              date={s.earned_at}
-              size="md"
-            />
-          </div>
+          <PassportStamp
+            key={s.id}
+            type={s.type}
+            country={group.countryName === '✈️ Travel' ? null : group.countryName}
+            date={s.earned_at}
+            size="md"
+          />
         ))}
-      </div>
+      </ScatteredStamps>
     </section>
+  )
+}
+
+// Wraps stamp graphics so they sit with comfortable space between
+// them by default, but once you've collected 12+ on one page they
+// start to overlap — like a real well-used passport page where new
+// stamps end up pressed on top of old ones.
+function ScatteredStamps({ count, children }: { count: number; children: React.ReactNode }) {
+  // count → gap scale. Tight overlap once we cross 12 stamps.
+  const overlap = count >= 18 ? '-mx-5 -my-3' : count >= 12 ? '-mx-3 -my-2' : 'gap-x-3 gap-y-3 mx-0 my-0'
+  return (
+    <div className={`flex flex-wrap items-start justify-center py-3 ${overlap}`}>
+      {children}
+    </div>
   )
 }
 

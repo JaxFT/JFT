@@ -20,6 +20,7 @@ const navLinks = [
   { label: 'Planning',           href: '/planning' },
   { label: 'I Want To Travel',   href: '/i-want-to-travel' },
   { label: 'Adventure Packs',    href: '/adventure-packs' },
+  { label: 'Passports',          href: '/passports' },
   { label: 'Learning Resources', href: '/learning' },
 ]
 

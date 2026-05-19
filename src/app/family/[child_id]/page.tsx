@@ -90,8 +90,9 @@ export default async function ChildDetailPage({
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-3 py-2 rounded-md shrink-0"
+            title={`Opens ${child.name}'s passport in a new tab — fully functional, not read-only`}
           >
-            Preview as {child.name} <ExternalLink className="w-3.5 h-3.5" />
+            Open {child.name}&apos;s passport <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>
 

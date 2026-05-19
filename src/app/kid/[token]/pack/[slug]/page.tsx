@@ -7,6 +7,7 @@ import { getChildByToken } from '@/lib/passport-kid-db'
 import { getPackData, getPackMeta } from '@/lib/adventurePackData'
 import KidPackShell from '@/components/adventure-packs/KidPackShell'
 import FlagBanner from '@/components/adventure-packs/FlagBanner'
+import KidBackButton from '@/components/passport/KidBackButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -61,9 +62,9 @@ export default async function KidPackPage({
     return (
       <div className="min-h-screen bg-sand-50 pt-20 pb-20">
         <div className="max-w-md mx-auto px-4 sm:px-6 text-center">
-          <Link href={`/kid/${token}`} className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-700 mb-6">
-            <ArrowLeft className="w-4 h-4" /> Back to my passport
-          </Link>
+          <div className="mb-6">
+            <KidBackButton fallbackHref={`/kid/${token}`} label="Back" variant="onPaper" />
+          </div>
           <FlagBanner
             iso2={meta.iso2}
             country={meta.country}

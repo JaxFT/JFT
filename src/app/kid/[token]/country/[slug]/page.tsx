@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Check, Compass } from 'lucide-react'
 import type { Metadata } from 'next'
+import KidBackButton from '@/components/passport/KidBackButton'
 import {
   getChildByToken,
   listCountryVisitsForChild,
@@ -67,12 +68,9 @@ export default async function KidCountryPage({
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-900 to-brand-950 text-white pt-6 pb-12">
       <div className="max-w-3xl mx-auto px-4">
-        <Link
-          href={`/kid/${token}`}
-          className="inline-flex items-center gap-1.5 text-sm text-white/70 hover:text-white mb-4"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to my passport
-        </Link>
+        <div className="mb-4">
+          <KidBackButton fallbackHref={`/kid/${token}`} label="Back" variant="onDark" />
+        </div>
 
         <PassportPage className="p-6 sm:p-10">
           {/* PAGE HEADER: flag banner + first visit date */}

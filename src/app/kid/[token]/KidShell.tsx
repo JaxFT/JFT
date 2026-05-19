@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Stamp, Map, Globe, BookOpen, Star } from 'lucide-react'
 import type { PermissionMode } from '@/lib/passport-types'
 import type {
@@ -47,7 +47,18 @@ export default function KidShell({
   assignedPacks: AssignedPackRow[]
   journal: JournalEntryRow[]
 }) {
-  const [tab, setTab] = useState<Tab>('passport')
+  // Tab state lives in the URL (?tab=stamps etc) so the browser back
+  // button takes the kid back to whichever tab they were on, rather
+  // than always defaulting to Passport.
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const rawTab = searchParams.get('tab')
+  const tab: Tab = (TABS.find(t => t.id === rawTab)?.id) ?? 'passport'
+
+  const goToTab = (id: Tab) => {
+    if (id === tab) return
+    router.push(`/kid/${token}?tab=${id}`, { scroll: false })
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-900 to-brand-950 text-white">
@@ -71,7 +82,7 @@ export default function KidShell({
                 <button
                   key={t.id}
                   type="button"
-                  onClick={() => setTab(t.id)}
+                  onClick={() => goToTab(t.id)}
                   className={`flex-1 inline-flex flex-col items-center gap-1 py-3 transition-colors text-xs font-semibold uppercase tracking-widest ${
                     active
                       ? 'text-white border-b-2 border-brand-300'

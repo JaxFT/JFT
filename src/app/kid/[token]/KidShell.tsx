@@ -28,6 +28,7 @@ type Child = {
   name: string
   avatar: string
   permission_mode: PermissionMode
+  home_country_slug: string | null
 }
 
 export default function KidShell({
@@ -105,7 +106,7 @@ export default function KidShell({
         {tab === 'map'       && <MapTab token={token} visits={visits} />}
         {tab === 'countries' && <CountriesTab token={token} visits={visits} />}
         {tab === 'journal'   && <JournalTab token={token} childName={child.name} permissionMode={child.permission_mode} entries={journal} />}
-        {tab === 'stamps'    && <StampsTab token={token} stamps={stamps} visits={visits} />}
+        {tab === 'stamps'    && <StampsTab token={token} stamps={stamps} visits={visits} homeCountrySlug={child.home_country_slug} />}
       </main>
     </div>
   )

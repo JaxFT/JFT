@@ -23,6 +23,9 @@ export type ChildRow = {
   qr_token: string
   permission_mode: PermissionMode
   stamp_auto_approve: boolean
+  // The country slug the kid lives in. Excluded from "new countries
+  // explored" travel stats but kept in the country list / map.
+  home_country_slug: string | null
   created_at: string
   updated_at: string
 }

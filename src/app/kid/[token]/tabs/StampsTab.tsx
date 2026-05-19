@@ -18,12 +18,14 @@ export default function StampsTab({
   token,
   stamps,
   visits,
+  homeCountrySlug,
 }: {
   token: string
   stamps: StampRow[]
   visits: CountryVisitRow[]
+  homeCountrySlug: string | null
 }) {
-  const pages = useMemo(() => buildPages(stamps, visits), [stamps, visits])
+  const pages = useMemo(() => buildPages(stamps, visits, homeCountrySlug), [stamps, visits, homeCountrySlug])
   const [pageIndex, setPageIndex] = useState(0)
   const [direction, setDirection] = useState<'next' | 'prev'>('next')
   const [animKey, setAnimKey] = useState(0)
@@ -49,7 +51,7 @@ export default function StampsTab({
   const countryPageCount = pages.length - 1
 
   return (
-    <PassportPage className="p-6 sm:p-8 min-h-[60vh]">
+    <PassportPage className="p-6 sm:p-8" book>
       <div className="flex items-baseline justify-between mb-5">
         <div>
           <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: '#5a3a12' }}>
@@ -152,16 +154,21 @@ function TravelerPage({ milestones, empty }: { milestones: Milestone[]; empty: b
           Open an Adventure Pack or log a flight to begin.
         </p>
       ) : (
-        <div className="flex flex-wrap items-start justify-center gap-x-5 gap-y-6 py-3">
+        // Negative gaps so the stamps occasionally overlap — feels
+        // like they were stamped on the page in real time, not laid
+        // out on a grid.
+        <div className="flex flex-wrap items-start justify-center -mx-3 -my-1 py-2">
           {milestones.map(m => (
-            <MilestoneStamp
-              key={m.id}
-              emoji={m.emoji}
-              label={m.label}
-              ink={m.ink}
-              date={m.earnedAt}
-              size="md"
-            />
+            <div key={m.id} className="-mx-2 -my-1">
+              <MilestoneStamp
+                emoji={m.emoji}
+                label={m.label}
+                ink={m.ink}
+                date={m.earnedAt}
+                shape={m.shape}
+                size="md"
+              />
+            </div>
           ))}
         </div>
       )}
@@ -192,24 +199,26 @@ function CountryPage({ group, token }: {
           </Link>
         )}
       </div>
-      <div className="flex flex-wrap items-start justify-center gap-x-4 gap-y-6 py-3">
+      {/* Overlap negative gaps so the stamps jostle on the page. */}
+      <div className="flex flex-wrap items-start justify-center -mx-3 -my-1 py-2">
         {group.stamps.map(s => (
-          <PassportStamp
-            key={s.id}
-            type={s.type}
-            country={group.countryName === '✈️ Travel' ? null : group.countryName}
-            date={s.earned_at}
-            size="md"
-          />
+          <div key={s.id} className="-mx-2 -my-1">
+            <PassportStamp
+              type={s.type}
+              country={group.countryName === '✈️ Travel' ? null : group.countryName}
+              date={s.earned_at}
+              size="md"
+            />
+          </div>
         ))}
       </div>
     </section>
   )
 }
 
-function buildPages(stamps: StampRow[], visits: CountryVisitRow[]): Page[] {
+function buildPages(stamps: StampRow[], visits: CountryVisitRow[], homeCountrySlug: string | null): Page[] {
   // Always lead with the Traveler page
-  const milestones = computeMilestones(visits, stamps)
+  const milestones = computeMilestones(visits, stamps, homeCountrySlug)
 
   // Group country stamps
   const byCountry = new Map<string, Extract<Page, { kind: 'country' }>>()

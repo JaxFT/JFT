@@ -18,6 +18,7 @@ import PackAssignmentSection from './PackAssignmentSection'
 import CountryVisitsSection from './CountryVisitsSection'
 import StampsManagementSection from './StampsManagementSection'
 import JournalSection from './JournalSection'
+import HomeCountrySection from './HomeCountrySection'
 import DeleteChildButton from './DeleteChildButton'
 
 export const dynamic = 'force-dynamic'
@@ -101,6 +102,13 @@ export default async function ChildDetailPage({
             childId={child.id}
             childName={child.name}
             initialToken={child.qr_token}
+          />
+
+          <HomeCountrySection
+            childId={child.id}
+            childName={child.name}
+            initialHomeSlug={child.home_country_slug}
+            allPacks={allPacks.map(p => ({ slug: p.slug, country: p.country, flag: p.flag }))}
           />
 
           <PackAssignmentSection

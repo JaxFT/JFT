@@ -1,14 +1,17 @@
 // Derived "Traveler" milestones — virtual stamps the kid earns by
 // crossing thresholds (visited 5 countries, tried food in 10, etc.).
-// They aren't stored in the DB; we compute them at render time from
-// the underlying visits + stamps. When the kid crosses a threshold,
-// the lower-tier stamp is replaced by the higher tier.
+// Not stored in the DB; computed at render time. Higher tiers REPLACE
+// lower ones — crossing 10 makes the 5-tier badge disappear.
+//
+// Home country (if set) is excluded from "new countries explored"
+// stats so a kid completing the pack for the country they live in
+// gets the section stamps but no travel-milestone credit.
 
+import { getPackMeta } from './adventurePackData'
 import type { CountryVisitRow, StampRow } from './passport-kid-db'
 
-// Which continent each pack country sits on. Future packs add entries
-// here. Turkey is split E/W in real life; we put it on Europe to
-// emphasize the bridge that it is in many of its stories.
+// Continent each pack country sits on. Turkey is split E/W in real
+// life; we lean Europe here.
 export const CONTINENT_BY_SLUG: Record<string, string> = {
   france:           'Europe',
   morocco:          'Africa',
@@ -47,23 +50,24 @@ const CONTINENT_INK: Record<string, string> = {
   Antarctica:    '#5a3a12',
 }
 
-// One stamp earned, drawn passport-stamp style on the Traveler page.
+// Visual variety: each milestone picks a stamp shape so the
+// Traveller page doesn't feel like a wall of identical circles.
+export type StampShape = 'circle' | 'oval' | 'rounded' | 'shield' | 'star' | 'flag'
+
 export type MilestoneStamp = {
-  // Unique id (used only for React keys)
   id: string
   emoji: string
   label: string
   description: string
   ink: string
-  // Date the milestone was first reached (oldest qualifying event).
   earnedAt: string | null
+  shape: StampShape
 }
 
-const COUNTRY_THRESHOLDS = [1, 5, 10, 15, 20, 30, 50]
-const FOOD_THRESHOLDS    = [5, 10, 15, 20]
-const CONTINENT_THRESHOLDS = [2, 3, 4, 5, 6, 7]
+const COUNTRY_THRESHOLDS    = [1, 5, 10, 15, 20, 30, 50]
+const FOOD_THRESHOLDS       = [5, 10, 15, 20]
+const CONTINENT_THRESHOLDS  = [2, 3, 4, 5, 6, 7]
 
-// Pick the highest threshold the kid has crossed.
 function highestThreshold(count: number, thresholds: number[]): number | null {
   let best: number | null = null
   for (const t of thresholds) {
@@ -72,7 +76,6 @@ function highestThreshold(count: number, thresholds: number[]): number | null {
   return best
 }
 
-// Date the kid hit the Nth value of a sorted list of timestamps.
 function dateOfNth(timestamps: string[], n: number): string | null {
   if (n <= 0 || n > timestamps.length) return null
   const sorted = [...timestamps].sort()
@@ -82,31 +85,51 @@ function dateOfNth(timestamps: string[], n: number): string | null {
 export function computeMilestones(
   visits: CountryVisitRow[],
   stamps: StampRow[],
+  homeCountrySlug: string | null,
 ): MilestoneStamp[] {
   const out: MilestoneStamp[] = []
 
-  // ── Countries visited (progressive — only highest tier shown)
-  const visitDates = visits.map(v => v.first_visit_date)
-  const countryCount = visits.length
-  const countryTier = highestThreshold(countryCount, COUNTRY_THRESHOLDS)
-  if (countryTier) {
+  // Strip the home country from "new countries explored" data.
+  const travelVisits = homeCountrySlug
+    ? visits.filter(v => v.country_slug !== homeCountrySlug)
+    : visits
+
+  // ── First-country milestone is special: it uses the actual
+  // country's flag and name. Only fires at exactly the 1-tier; higher
+  // tiers fall through to the generic "X countries" badge.
+  const visitsSorted = [...travelVisits].sort((a, b) =>
+    a.first_visit_date < b.first_visit_date ? -1 : 1)
+  const firstVisit = visitsSorted[0]
+  const countryTier = highestThreshold(travelVisits.length, COUNTRY_THRESHOLDS)
+
+  if (countryTier === 1 && firstVisit) {
+    const meta = getPackMeta(firstVisit.country_slug)
+    out.push({
+      id: `first-country-${firstVisit.country_slug}`,
+      emoji: meta?.flag ?? '🌍',
+      label: meta ? `First new country · ${meta.country}` : 'First new country',
+      description: 'Your very first stamp in the explorer\'s book.',
+      ink: '#0f3a2a',
+      earnedAt: firstVisit.first_visit_date,
+      shape: 'flag',
+    })
+  } else if (countryTier && countryTier > 1) {
     out.push({
       id: `countries-${countryTier}`,
       emoji: '🌍',
-      label: countryTier === 1 ? 'First country!' : `${countryTier} countries`,
-      description: countryTier === 1
-        ? 'You unlocked your very first country.'
-        : `You’ve visited ${countryTier} different countries.`,
+      label: `${countryTier} countries`,
+      description: `You've explored ${countryTier} different countries.`,
       ink: '#0f3a2a',
-      earnedAt: dateOfNth(visitDates, countryTier),
+      earnedAt: dateOfNth(visitsSorted.map(v => v.first_visit_date), countryTier),
+      shape: countryTier >= 20 ? 'star' : countryTier >= 10 ? 'shield' : 'oval',
     })
   }
 
-  // ── Tried food in N countries (progressive)
-  // A country counts if there's a BRAVE_EATER stamp tied to it.
-  const foodByCountry = new Map<string, string>() // slug → earliest earned_at
+  // ── Tried food in N countries — also excludes home.
+  const foodByCountry = new Map<string, string>()
   for (const s of stamps) {
     if (s.type !== 'BRAVE_EATER' || !s.country_slug) continue
+    if (homeCountrySlug && s.country_slug === homeCountrySlug) continue
     const prev = foodByCountry.get(s.country_slug)
     if (!prev || s.earned_at < prev) foodByCountry.set(s.country_slug, s.earned_at)
   }
@@ -117,14 +140,16 @@ export function computeMilestones(
       id: `food-${foodTier}`,
       emoji: '🍜',
       label: `Brave eater · ${foodTier} countries`,
-      description: `You’ve tried the local food in ${foodTier} countries.`,
+      description: `You've tried the local food in ${foodTier} different countries.`,
       ink: '#9c2516',
       earnedAt: dateOfNth(Array.from(foodByCountry.values()), foodTier),
+      shape: foodTier >= 15 ? 'shield' : 'rounded',
     })
   }
 
-  // ── Continents visited (one stamp per continent, plus a progressive total)
-  const continentDates = new Map<string, string>() // continent → earliest visit date
+  // ── Continent stamps and continent total: include home (the kid
+  // physically lives on that continent, so it's been visited).
+  const continentDates = new Map<string, string>()
   for (const v of visits) {
     const c = CONTINENT_BY_SLUG[v.country_slug]
     if (!c) continue
@@ -136,23 +161,22 @@ export function computeMilestones(
       id: `continent-${continent}`,
       emoji: CONTINENT_EMOJI[continent] ?? '🌍',
       label: `${continent} explorer`,
-      description: `You’ve been to ${continent}.`,
+      description: `You've been to ${continent}.`,
       ink: CONTINENT_INK[continent] ?? '#5a3a12',
       earnedAt: date,
+      shape: 'shield',
     })
   }
-
-  // ── Continent count milestone (progressive)
-  const continentCount = continentDates.size
-  const continentTier = highestThreshold(continentCount, CONTINENT_THRESHOLDS)
+  const continentTier = highestThreshold(continentDates.size, CONTINENT_THRESHOLDS)
   if (continentTier) {
     out.push({
       id: `continents-${continentTier}`,
       emoji: '🌎',
       label: `${continentTier} continents`,
-      description: `You’ve been to ${continentTier} different continents.`,
+      description: `You've been to ${continentTier} different continents.`,
       ink: '#5b21b6',
       earnedAt: dateOfNth(Array.from(continentDates.values()), continentTier),
+      shape: 'star',
     })
   }
 

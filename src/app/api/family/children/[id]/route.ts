@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import type { PermissionMode } from '@/lib/passport-types'
+import { getPackMeta } from '@/lib/adventurePackData'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -26,6 +27,7 @@ export async function PATCH(
     avatar?: string
     permission_mode?: string
     stamp_auto_approve?: boolean
+    home_country_slug?: string | null
   } = {}
   try { body = await request.json() } catch {}
 
@@ -46,6 +48,14 @@ export async function PATCH(
   }
   if (typeof body.stamp_auto_approve === 'boolean') {
     update.stamp_auto_approve = body.stamp_auto_approve
+  }
+  if (body.home_country_slug === null || body.home_country_slug === '') {
+    update.home_country_slug = null
+  } else if (typeof body.home_country_slug === 'string') {
+    if (!getPackMeta(body.home_country_slug)) {
+      return NextResponse.json({ error: 'Unknown home country.' }, { status: 400 })
+    }
+    update.home_country_slug = body.home_country_slug
   }
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: 'Nothing to update.' }, { status: 400 })

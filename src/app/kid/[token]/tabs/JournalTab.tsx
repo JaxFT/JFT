@@ -136,7 +136,7 @@ export default function JournalTab({
   const current = groups[safePage]
 
   return (
-    <PassportPage className="p-6 sm:p-8 min-h-[60vh]">
+    <PassportPage className="p-6 sm:p-8" book>
       <div className="flex items-baseline justify-between mb-5">
         <div>
           <p

@@ -40,9 +40,8 @@ export async function POST() {
     return NextResponse.json({ ok: true, already: true })
   }
 
-  const stripe = stripeClient()
-
   try {
+    const stripe = stripeClient()
     await stripe.subscriptions.update(profile.stripe_subscription_id, {
       cancel_at_period_end: true,
     })

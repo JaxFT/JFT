@@ -43,9 +43,9 @@ export async function POST(request: Request) {
   }
 
   const origin = new URL(request.url).origin
-  const stripe = stripeClient()
 
   try {
+    const stripe = stripeClient()
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],

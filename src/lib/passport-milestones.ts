@@ -52,7 +52,12 @@ const CONTINENT_INK: Record<string, string> = {
 
 // Visual variety: each milestone picks a stamp shape so the
 // Traveller page doesn't feel like a wall of identical circles.
-export type StampShape = 'circle' | 'oval' | 'rounded' | 'shield' | 'star' | 'flag'
+// Continent-specific shapes (africa, europe, asia, americas, oceania,
+// antarctica) are continent silhouettes — Africa is recognisably
+// Africa-shaped; the others are distinctive forms.
+export type StampShape =
+  | 'circle' | 'oval' | 'rounded' | 'shield' | 'star' | 'flag'
+  | 'africa' | 'europe' | 'asia' | 'americas' | 'oceania' | 'antarctica'
 
 export type MilestoneStamp = {
   id: string
@@ -156,6 +161,16 @@ export function computeMilestones(
     const prev = continentDates.get(c)
     if (!prev || v.first_visit_date < prev) continentDates.set(c, v.first_visit_date)
   }
+  // Each continent gets its own silhouette-ish shape so the badges
+  // are visually distinct even when there are several.
+  const CONTINENT_SHAPE: Record<string, StampShape> = {
+    Africa:     'africa',
+    Europe:     'europe',
+    Asia:       'asia',
+    Americas:   'americas',
+    Oceania:    'oceania',
+    Antarctica: 'antarctica',
+  }
   for (const [continent, date] of continentDates) {
     out.push({
       id: `continent-${continent}`,
@@ -164,7 +179,7 @@ export function computeMilestones(
       description: `You've been to ${continent}.`,
       ink: CONTINENT_INK[continent] ?? '#5a3a12',
       earnedAt: date,
-      shape: 'shield',
+      shape: CONTINENT_SHAPE[continent] ?? 'shield',
     })
   }
   const continentTier = highestThreshold(continentDates.size, CONTINENT_THRESHOLDS)

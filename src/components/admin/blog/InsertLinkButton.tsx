@@ -40,7 +40,6 @@ export default function InsertLinkButton({
   // collapse the selection before we get to insert. Without this the
   // splice would always land at offset 0.
   const selectionRef = useRef<{ start: number; end: number; selected: string } | null>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
   const urlInputRef = useRef<HTMLInputElement>(null)
 
   // Snapshot selection + reset fields when opening.
@@ -62,17 +61,8 @@ export default function InsertLinkButton({
     requestAnimationFrame(() => urlInputRef.current?.focus())
   }, [open, textareaRef, value])
 
-  // Close on outside click.
-  useEffect(() => {
-    if (!open) return
-    const onDown = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    window.addEventListener('mousedown', onDown)
-    return () => window.removeEventListener('mousedown', onDown)
-  }, [open])
+  // The modal handles its own outside-click via the backdrop's
+  // onMouseDown; no global listener needed.
 
   // Close on Escape.
   useEffect(() => {
@@ -114,7 +104,7 @@ export default function InsertLinkButton({
   }
 
   return (
-    <div ref={containerRef} className={`relative inline-block ${className}`}>
+    <div className={`inline-block ${className}`}>
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
@@ -127,16 +117,29 @@ export default function InsertLinkButton({
       </button>
 
       {open && (
-        <div className="absolute right-0 z-30 mt-1.5 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-2xl border border-gray-200 p-3">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Insert link</p>
+        // Fixed full-screen overlay + centered modal panel. Lives at
+        // the viewport root so it can't be clipped by any parent's
+        // overflow-hidden (the toolbar wrapper has one).
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px] px-4"
+          onMouseDown={e => {
+            // Click on the backdrop closes; clicks inside the panel
+            // don't propagate up.
+            if (e.target === e.currentTarget) setOpen(false)
+          }}
+        >
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-500 inline-flex items-center gap-1.5">
+              <LinkIcon className="w-3.5 h-3.5" /> Insert link
+            </p>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="text-gray-400 hover:text-gray-700 p-0.5"
+              className="text-gray-400 hover:text-gray-700 p-1"
               aria-label="Close"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
 
@@ -214,6 +217,7 @@ export default function InsertLinkButton({
               <Check className="w-3.5 h-3.5" /> Insert
             </button>
           </div>
+        </div>
         </div>
       )}
     </div>

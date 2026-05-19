@@ -30,17 +30,12 @@ function rotationFor(label: string): number {
 
 function dimsFor(shape: StampShape, size: 'sm' | 'md') {
   const base = size === 'md' ? 124 : 88
-  if (shape === 'oval')       return { w: base * 1.35, h: base * 0.85 }
-  if (shape === 'rounded')    return { w: base * 1.2,  h: base * 0.9 }
-  if (shape === 'flag')       return { w: base * 1.1,  h: base }
-  if (shape === 'shield')     return { w: base * 0.95, h: base * 1.05 }
-  if (shape === 'star')       return { w: base * 1.05, h: base * 1.05 }
-  if (shape === 'africa')     return { w: base * 0.85, h: base * 1.1 }
-  if (shape === 'europe')     return { w: base * 1.1,  h: base * 0.9 }
-  if (shape === 'asia')       return { w: base * 1.15, h: base * 0.95 }
-  if (shape === 'americas')   return { w: base * 0.75, h: base * 1.2 }
-  if (shape === 'oceania')    return { w: base * 1.05, h: base * 0.8 }
-  if (shape === 'antarctica') return { w: base * 1.2,  h: base * 0.55 }
+  if (shape === 'oval')    return { w: base * 1.35, h: base * 0.85 }
+  if (shape === 'rounded') return { w: base * 1.2,  h: base * 0.9 }
+  if (shape === 'flag')    return { w: base * 1.1,  h: base }
+  if (shape === 'shield')  return { w: base * 0.95, h: base * 1.05 }
+  if (shape === 'star')    return { w: base * 1.05, h: base * 1.05 }
+  if (shape === 'hexagon') return { w: base * 1.1,  h: base * 0.95 }
   return { w: base, h: base }
 }
 

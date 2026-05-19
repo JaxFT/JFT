@@ -23,17 +23,9 @@ type Props = {
 // the line weight (strokes are scaled to the smaller axis via
 // vector-effect="non-scaling-stroke").
 const SHAPE_PATHS: Record<string, string> = {
-  shield:    'M50 4 L94 18 L94 60 Q94 75 75 86 L50 96 L25 86 Q6 75 6 60 L6 18 Z',
-  star:      'M50 4 L62 38 L96 38 L68 58 L78 92 L50 72 L22 92 L32 58 L4 38 L38 38 Z',
-  // Rough Africa silhouette — recognisable shape without being
-  // cartographically perfect.
-  africa:    'M55 6 C68 7 78 16 80 28 C82 38 80 47 76 53 C75 60 71 68 70 75 C66 88 56 96 47 94 C38 92 31 84 28 75 C24 64 24 55 27 45 C29 35 31 26 36 17 C42 9 48 5 55 6 Z',
-  // Distinct (not literal) silhouettes for the other continents.
-  europe:    'M18 22 L34 14 L52 18 L70 12 L88 22 L86 48 L92 60 L78 70 L68 78 L54 84 L42 84 L28 78 L16 70 L20 56 L12 48 L18 22 Z',
-  asia:      'M12 30 L40 10 L70 14 L92 24 L94 46 L86 60 L74 76 L58 88 L40 88 L24 78 L14 60 L8 50 L12 30 Z',
-  americas:  'M46 6 L62 12 L60 22 L68 32 L62 46 L70 60 L62 76 L54 92 L46 96 L38 88 L46 76 L36 66 L34 54 L26 44 L36 36 L36 22 L46 6 Z',
-  oceania:   'M30 36 L48 30 L70 34 L82 50 L78 68 L60 76 L40 72 L24 60 L20 48 L30 36 Z',
-  antarctica:'M10 50 L24 44 L40 46 L60 44 L78 46 L92 50 L88 60 L74 66 L60 68 L42 68 L24 64 L12 60 L10 50 Z',
+  shield:  'M50 4 L94 18 L94 60 Q94 75 75 86 L50 96 L25 86 Q6 75 6 60 L6 18 Z',
+  star:    'M50 4 L62 38 L96 38 L68 58 L78 92 L50 72 L22 92 L32 58 L4 38 L38 38 Z',
+  hexagon: 'M50 4 L92 26 L92 74 L50 96 L8 74 L8 26 Z',
 }
 
 const DOUBLE_BORDER_SHAPES = new Set<StampShape>(['circle', 'oval', 'rounded', 'flag'])

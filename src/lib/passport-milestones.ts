@@ -52,12 +52,11 @@ const CONTINENT_INK: Record<string, string> = {
 
 // Visual variety: each milestone picks a stamp shape so the
 // Traveller page doesn't feel like a wall of identical circles.
-// Continent-specific shapes (africa, europe, asia, americas, oceania,
-// antarctica) are continent silhouettes — Africa is recognisably
-// Africa-shaped; the others are distinctive forms.
+// We stick to clean geometric shapes — hand-rolled continent
+// silhouettes never quite read right at stamp size, so each
+// continent gets one of these shapes instead.
 export type StampShape =
-  | 'circle' | 'oval' | 'rounded' | 'shield' | 'star' | 'flag'
-  | 'africa' | 'europe' | 'asia' | 'americas' | 'oceania' | 'antarctica'
+  | 'circle' | 'oval' | 'rounded' | 'shield' | 'star' | 'flag' | 'hexagon'
 
 export type MilestoneStamp = {
   id: string
@@ -161,15 +160,15 @@ export function computeMilestones(
     const prev = continentDates.get(c)
     if (!prev || v.first_visit_date < prev) continentDates.set(c, v.first_visit_date)
   }
-  // Each continent gets its own silhouette-ish shape so the badges
-  // are visually distinct even when there are several.
+  // Each continent gets its own clean geometric shape so the badges
+  // are visually distinct even when several show up side by side.
   const CONTINENT_SHAPE: Record<string, StampShape> = {
-    Africa:     'africa',
-    Europe:     'europe',
-    Asia:       'asia',
-    Americas:   'americas',
-    Oceania:    'oceania',
-    Antarctica: 'antarctica',
+    Africa:     'shield',   // downward-tapered, the closest "geographic" feel
+    Europe:     'oval',
+    Asia:       'rounded',
+    Americas:   'flag',
+    Oceania:    'circle',
+    Antarctica: 'hexagon',
   }
   for (const [continent, date] of continentDates) {
     out.push({

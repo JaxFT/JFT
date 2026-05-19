@@ -5,13 +5,13 @@
 // break" button. The writer iterates until the preview looks right,
 // saves, then prints to PDF (existing /print route).
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft, Save, Printer, Scissors, Loader2, Check, X,
 } from 'lucide-react'
-import GuideMarkdown, { type ImageSize } from '@/components/guide/GuideMarkdown'
+import GuideMarkdown, { type ImageSize, type ImageAnchor } from '@/components/guide/GuideMarkdown'
 
 const PRINT_CSS = `
   /* Styles shared with PrintView so the live preview matches the
@@ -45,7 +45,9 @@ const PRINT_CSS = `
   .pdf-cover-image {
     flex: 1;
     min-height: 60%;
-    object-fit: cover;
+    /* contain (not cover) so the full image shows with green bands on
+       whichever sides need them, matching the web guide cover. */
+    object-fit: contain;
     width: 100%;
     display: block;
   }
@@ -134,29 +136,68 @@ const PRINT_CSS = `
   .pdf-body img.img-medium { max-height: 100mm; }
   .pdf-body img.img-large  { max-height: 160mm; }
   .pdf-body img.img-full   { max-height: 230mm; }
-  /* Page-break indicator. The hr renders invisibly in actual print
-     but here in the builder we make it visible as a dashed "page
-     break" line so the writer sees where their forced breaks are. */
+  /* The preview splits the markdown by "---" into separate A4 pages,
+     so any hr that ends up inside a chunk is treated as a normal
+     horizontal rule (which in the actual print becomes the invisible
+     page-break trick — see PrintView). */
   .pdf-body hr {
     border: none;
-    border-top: 2pt dashed #2D5240;
+    border-top: 1pt solid #d8d3c8;
     margin: 16pt 0;
-    height: 0;
-    position: relative;
   }
-  .pdf-body hr::after {
-    content: "Page break";
-    position: absolute;
-    top: -8pt;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #fdf8ed;
-    padding: 0 6pt;
-    font-size: 8pt;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
+
+  /* Between two chunks (manual page break the writer inserted). */
+  .pdf-manual-break {
+    width: 210mm;
+    margin: -4px auto -4px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     color: #2D5240;
+  }
+  .pdf-manual-break .line {
+    flex: 1;
+    height: 0;
+    border-top: 2px solid #2D5240;
+  }
+  .pdf-manual-break .pill {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    background: #2D5240;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  /* The natural-pagination indicator drawn inside a chunk that is
+     taller than one A4. Rough guide, not exact — the print engine
+     may shift the break slightly to avoid splitting a paragraph. */
+  .pdf-auto-break {
+    position: absolute;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+    border-top: 1.5px dashed #c8a85a;
+    z-index: 5;
+  }
+  .pdf-auto-break .label {
+    position: absolute;
+    right: 12px;
+    top: -10px;
+    background: #fdf8ed;
+    border: 1px solid #c8a85a;
+    color: #8a6d22;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 9px;
     font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   }
 `
@@ -224,18 +265,13 @@ export default function PdfBuilder({
     }, 0)
   }
 
-  // Image click handler: find the click coordinates and pop a size
-  // picker near the image.
-  const onImageClick = (src: string) => {
-    // Use the most recent click event's coordinates via window event;
-    // ReactMarkdown's custom img only exposes the src. Position the
-    // popover near the cursor with a fixed offset so the writer can
-    // see it regardless of where the image sits.
-    setPopover({
-      src,
-      x: window.scrollX + window.innerWidth / 2,
-      y: window.scrollY + 120,
-    })
+  // Image click handler: open the size popover anchored just below the
+  // clicked image. The popover sits inside a `fixed inset-0` overlay so
+  // its inner `top/left` are viewport-relative — we feed it the click's
+  // viewport coords (from getBoundingClientRect in the GuideMarkdown img
+  // button) so it always lands in the visible area regardless of scroll.
+  const onImageClick = (src: string, anchor: ImageAnchor) => {
+    setPopover({ src, x: anchor.x, y: anchor.y })
   }
 
   const applySize = (size: ImageSize) => {
@@ -252,11 +288,15 @@ export default function PdfBuilder({
     setPopover(null)
   }
 
-  // Memoise the preview body so it doesn't re-render on every editor
-  // keystroke unrelated to the displayed content.
-  const previewBody = useMemo(() => (
-    <GuideMarkdown markdown={markdown} onImageClick={onImageClick} />
-  ), [markdown])
+  // Split the markdown into one chunk per manual page break ("---" on
+  // its own line). Each chunk renders as a separate A4 sheet so the
+  // writer sees exactly which content lands on which page. Empty
+  // chunks (between consecutive breaks) are dropped.
+  const chunks = useMemo(() => {
+    const parts = markdown.split(/^[ \t]*---[ \t]*$/m).map(c => c.trim())
+    const filtered = parts.filter(c => c.length > 0)
+    return filtered.length > 0 ? filtered : ['']
+  }, [markdown])
 
   return (
     <>
@@ -348,17 +388,27 @@ export default function PdfBuilder({
                 </div>
               </div>
 
-              {/* BODY (rendered into a single big page; browser-print
-                  paginates this into multiple actual pages). */}
-              <div className="pdf-page pdf-body">
-                {previewBody}
-              </div>
+              {/* BODY — one A4 sheet per "---" chunk, with auto-break
+                  guides inside any chunk that overflows a single page. */}
+              {chunks.map((chunk, i) => (
+                <div key={i}>
+                  {i > 0 && (
+                    <div className="pdf-manual-break" aria-hidden>
+                      <span className="line" />
+                      <span className="pill">Manual page break</span>
+                      <span className="line" />
+                    </div>
+                  )}
+                  <ChunkPage markdown={chunk} onImageClick={onImageClick} />
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* IMAGE SIZE POPOVER */}
+      {/* IMAGE SIZE POPOVER. Anchored to the click point (viewport
+          coords), clamped to stay in the visible area. */}
       {popover && (
         <div
           className="fixed inset-0 z-40"
@@ -367,8 +417,8 @@ export default function PdfBuilder({
           <div
             className="absolute bg-white rounded-2xl shadow-2xl border border-gray-200 p-3"
             style={{
-              left: Math.min(popover.x, window.innerWidth - 280) - 0,
-              top: popover.y,
+              left: Math.max(8, Math.min(popover.x - 130, window.innerWidth - 268)),
+              top: Math.max(8, Math.min(popover.y, window.innerHeight - 220)),
               width: 260,
             }}
             onClick={e => e.stopPropagation()}
@@ -402,6 +452,61 @@ export default function PdfBuilder({
         </div>
       )}
     </>
+  )
+}
+
+// One A4 sheet for a single chunk of body markdown. If the chunk's
+// content is taller than one A4's content area, draws a dashed
+// "auto break" line at each natural-page boundary inside the sheet
+// so the writer can see roughly where Chrome's print engine is
+// going to split the page — and add a manual "---" break (or resize
+// an image) if the auto split happens somewhere ugly.
+function ChunkPage({
+  markdown,
+  onImageClick,
+}: {
+  markdown: string
+  onImageClick: (src: string, anchor: ImageAnchor) => void
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [autoBreaks, setAutoBreaks] = useState<number[]>([])
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const compute = () => {
+      // 1mm = 96/25.4 px at 96 DPI (screen baseline). The actual print
+      // engine uses its own DPI, but this is close enough for a rough
+      // guide line.
+      const pxPerMm = 96 / 25.4
+      const pageTotalPx = 297 * pxPerMm
+      const padPx = 20 * pxPerMm
+      const contentAreaPx = pageTotalPx - 2 * padPx
+      const totalH = el.scrollHeight
+      const innerH = totalH - 2 * padPx
+      const lines: number[] = []
+      let pos = contentAreaPx
+      while (pos < innerH - 4) {
+        lines.push(padPx + pos)
+        pos += contentAreaPx
+      }
+      setAutoBreaks(lines)
+    }
+    compute()
+    const ro = new ResizeObserver(compute)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [markdown])
+
+  return (
+    <div ref={ref} className="pdf-page pdf-body" style={{ position: 'relative' }}>
+      <GuideMarkdown markdown={markdown} onImageClick={onImageClick} />
+      {autoBreaks.map((y, i) => (
+        <div key={i} className="pdf-auto-break" style={{ top: y }}>
+          <span className="label">Page would break here</span>
+        </div>
+      ))}
+    </div>
   )
 }
 

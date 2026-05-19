@@ -109,7 +109,10 @@ export default function PrintView({ guide }: Props) {
         .print-cover-image {
           flex: 1;
           min-height: 60%;
-          object-fit: cover;
+          /* contain (not cover) so the image is shown in full with
+             green bands on whichever sides need them, instead of being
+             cropped to fill the box. */
+          object-fit: contain;
           width: 100%;
           display: block;
         }

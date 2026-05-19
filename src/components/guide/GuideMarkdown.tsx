@@ -50,9 +50,13 @@ function stripLeadingToken(children: ReactNode): ReactNode {
   return arr
 }
 
+export type ImageAnchor = { x: number; y: number }
+
 // Build the components map. When onImageClick is provided we wire up
 // click + visual highlight so the PDF builder can pop a size-picker.
-function buildComponents(onImageClick?: (src: string) => void): Components {
+// The anchor is the viewport-relative point we want the popover to
+// open from (bottom-centre of the clicked image).
+function buildComponents(onImageClick?: (src: string, anchor: ImageAnchor) => void): Components {
   return {
   // Detect callout patterns at the start of a paragraph.
   p({ children }) {
@@ -98,14 +102,20 @@ function buildComponents(onImageClick?: (src: string) => void): Components {
       return (
         <button
           type="button"
-          onClick={() => onImageClick(src)}
+          onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect()
+            onImageClick(src, {
+              x: rect.left + rect.width / 2,
+              y: rect.bottom + 4,
+            })
+          }}
           className="block w-full p-0 m-0 border-0 bg-transparent cursor-pointer relative group"
           aria-label={`Resize image ${alt ?? ''}`}
         >
           { /* eslint-disable-next-line @next/next/no-img-element */ }
-          <img src={src} alt={alt ?? ''} title={title ?? undefined} className={`${cls} ring-2 ring-transparent group-hover:ring-brand-300 transition-shadow`} />
-          <span className="absolute top-2 right-2 text-[10px] uppercase tracking-widest bg-brand-700 text-white px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-            {size}
+          <img src={src} alt={alt ?? ''} title={title ?? undefined} className={`${cls} ring-2 ring-brand-200/60 hover:ring-brand-500 transition-shadow`} />
+          <span className="absolute top-2 right-2 text-[10px] uppercase tracking-widest bg-brand-700 text-white px-2 py-0.5 rounded shadow-sm">
+            {size} · click to resize
           </span>
         </button>
       )
@@ -127,8 +137,10 @@ export default function GuideMarkdown({
   markdown: string
   autoLinkPhrases?: AutoLinkPhrase[]
   // Builder mode: when provided, images become clickable so the
-  // PDF builder can show a size picker.
-  onImageClick?: (src: string) => void
+  // PDF builder can show a size picker. The anchor is the viewport-
+  // relative point the popover should open from (bottom-centre of
+  // the clicked image).
+  onImageClick?: (src: string, anchor: ImageAnchor) => void
 }) {
   const plugins = autoLinkPhrases && autoLinkPhrases.length > 0
     ? [remarkGfm, remarkAutoLink(autoLinkPhrases)]

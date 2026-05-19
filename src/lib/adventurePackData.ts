@@ -3654,6 +3654,225 @@ export const PAKISTAN_DATA: AdventurePackData = {
   ],
 }
 
+// ── BANGLADESH (premium, live) ───────────────────────────────────
+export const BANGLADESH_DATA: AdventurePackData = {
+  slug: 'bangladesh',
+  country: 'Bangladesh',
+  flag: '🇧🇩',
+  iso2: 'bd',
+  isFree: false,
+  heroColour: 'bg-teal-900',
+  currency: {
+    code: 'BDT',
+    name: 'Bangladeshi Taka',
+    symbol: '৳',
+    recommendedBudget: 200,
+    budgetNote: 'Recommended: 200 BDT',
+  },
+  mapQuestions: [
+    { question: 'Which part of the world is Bangladesh in?', answer: 'South Asia. Bangladesh sits on the Bay of Bengal, almost completely surrounded by India, with a small border with Myanmar 🌏' },
+    { question: 'What is the capital of Bangladesh?', answer: 'Dhaka, on the banks of the Buriganga River. It is one of the most densely populated cities in the world — around 22 million people in the metro area.' },
+    { question: 'What huge river system runs through Bangladesh?', answer: 'The Ganges-Brahmaputra-Meghna delta — the biggest river delta on Earth. Most of Bangladesh is flat, low-lying land created by these rivers over thousands of years.' },
+    { question: 'How densely populated is Bangladesh?', answer: 'Around 170 million people in an area smaller than England. It is one of the most densely populated countries on Earth.', olderOnly: true },
+    { question: 'What is the largest mangrove forest in the world?', answer: 'The Sundarbans, shared with India, on Bangladesh\'s southern coast. Home to one of the last populations of Bengal tigers, and a maze of tidal rivers.', olderOnly: true },
+  ],
+  phrases: [
+    { english: 'Hello / how are you', nativeScript: 'নমস্কার / আসসালামু আলাইকুম', nativeLatin: 'Nomoshkar / Salam aleikum', phonetic: 'no-mosh-KAR / sa-LAM a-LAY-koom', lang: 'bn' },
+    { english: 'Thank you', nativeScript: 'ধন্যবাদ', nativeLatin: 'Dhonnobad', phonetic: 'don-no-BAHD', lang: 'bn' },
+    { english: 'How much?', nativeScript: 'কত?', nativeLatin: 'Koto?', phonetic: 'KOH-toh', lang: 'bn' },
+    { english: 'Very beautiful', nativeScript: 'খুব সুন্দর', nativeLatin: 'Khub shundor', phonetic: 'KOOB SHOON-dor', lang: 'bn' },
+    { english: 'Delicious!', nativeScript: 'অনেক স্বাদ', nativeLatin: 'Onek shaad', phonetic: 'OH-nek SHAHD', lang: 'bn' },
+    { english: 'Goodbye (Muslim)', nativeScript: 'খোদা হাফেজ', nativeLatin: 'Khoda hafiz', phonetic: 'khoh-DA HAH-fez', lang: 'bn' },
+    { english: 'What is your name?', nativeScript: 'আপনার নাম কি?', nativeLatin: 'Apnar nam ki?', phonetic: 'AP-nar NAHM ki', lang: 'bn', olderOnly: true },
+    { english: 'Tea / a cup of tea', nativeScript: 'চা', nativeLatin: 'Cha', phonetic: 'CHA', lang: 'bn', olderOnly: true },
+  ],
+  foods: [
+    { emoji: '🐟', name: 'Hilsa fish', description: 'The national fish, called "ilish" in Bengali. Silvery, oily, with hundreds of fine bones. Cooked in mustard-seed gravy, smoked, or wrapped in banana leaves. A bit of an obsession in Bangladesh.' },
+    { emoji: '🍛', name: 'Bhuna khichuri', description: 'Spiced rice and lentils slow-cooked with onions, ginger and garam masala, until thick and golden. The classic monsoon dish, eaten when the rain pounds down outside.' },
+    { emoji: '🍩', name: 'Roshogolla', description: 'Soft white cheese balls boiled in a sugary rose-scented syrup. Squeeze one and a stream of syrup pours out. The most beloved sweet in Bangladesh and West Bengal.' },
+    { emoji: '🥞', name: 'Pitha', description: 'Sweet rice-flour cakes filled with palm sugar, coconut and sometimes date molasses. Eaten especially around winter. Every Bengali grandmother has her own variety.' },
+    { emoji: '🥛', name: 'Mishti doi', description: 'Sweet yogurt set in earthenware pots until thick and caramel-coloured. Eaten cold as the end of a meal. The clay pots add an earthy flavour you cannot fake.' },
+    { emoji: '🍵', name: 'Cha', description: 'Hot black tea boiled in milk, sugar, and sometimes cardamom or ginger. Sold from tiny corner stalls in clay cups. Bangladeshis can drink 8+ cups a day, no problem.' },
+  ],
+  scavengerItems: [
+    { emoji: '🚲', label: 'A cycle-rickshaw, hand-painted with bright designs' },
+    { emoji: '⛵', label: 'A wooden river boat on a brown muddy waterway' },
+    { emoji: '🏏', label: 'Kids playing cricket in a street or muddy field' },
+    { emoji: '👘', label: 'A woman in a colourful sari' },
+    { emoji: '🐟', label: 'A silvery hilsa fish on a market display, or being grilled' },
+    { emoji: '🌾', label: 'A flooded green rice paddy stretching to the horizon' },
+    { emoji: '🥭', label: 'A pile of fresh ripe mangoes at a market' },
+    { emoji: '🕌', label: 'A mosque with a white or pale-green dome' },
+    { emoji: '🔤', label: 'A road or shop sign in Bengali script (looping curved letters)' },
+    { emoji: '🌳', label: 'The Sundarbans mangrove forest or a banyan tree wider than a house', olderOnly: true },
+    { emoji: '🪔', label: 'A Shaheed Minar (the Martyr Monument), or any other independence-era memorial', olderOnly: true },
+    { emoji: '🧵', label: 'A weaver working at a wooden handloom on the ground floor of a house', olderOnly: true },
+  ],
+  geoMatches: [
+    { place: 'Dhaka',            emoji: '🏙️', description: 'The capital. Around a million cycle-rickshaws, more than anywhere else on Earth. Crowded, energetic, with a fascinating Old Dhaka full of Mughal-era buildings, mosques and food stalls.' },
+    { place: 'Cox\'s Bazar',     emoji: '🏖️', description: 'On the south-east coast. The longest natural sandy beach in the world, 120 km of unbroken sand on the Bay of Bengal. Quiet by Asian beach standards.' },
+    { place: 'The Sundarbans',   emoji: '🐅', description: 'The largest mangrove forest on Earth, shared with India, on the south coast. Home to around 100 Bengal tigers, plus crocodiles, river dolphins and the world\'s only mangrove-dwelling big cat population.' },
+    { place: 'Sylhet',           emoji: '🍃', description: 'In the north-east. Rolling tea plantations covering green hills, monsoon rivers, and the cultural connection to most of London\'s "Bangladeshi" community (most of whom are from Sylhet).' },
+    { place: 'Chittagong',       emoji: '⚓', description: 'The biggest port city, in the south-east. Hills, the Karnaphuli River, and the world\'s biggest ship-breaking yards where giant cargo ships are dismantled by hand.' },
+    { place: 'Sajek Valley',     emoji: '🏔️', description: 'In the Chittagong Hill Tracts in the south-east. Bamboo huts on hilltops, indigenous tribes, cloud-covered hills, very different from the flat delta further west.' },
+  ],
+  senses: {
+    smell: 'Mustard oil cooking on a fire, fresh hilsa being grilled, jasmine in temple gardens, monsoon rain on hot pavement, ripe Bangladeshi mango at a market, jute drying in the sun…',
+    hear:  'Bengali (a flowing musical language), rickshaw bells, the call to prayer five times a day, cricket commentary in Bengali, cha stalls hissing, monsoon rain pounding on tin roofs…',
+    taste: 'Spicy biryani, sweet roshogolla bursting with syrup, salty grilled hilsa, sweet caramel-coloured mishti doi, juicy Himshagor mango, milky cardamom cha…',
+    feel:  'Tropical humid heat, the slap of monsoon rain, soft sari silk, cool yogurt in a clay pot on a hot day, river spray off the bow of a wooden boat, sticky red soil…',
+    see:   'What is the most incredible thing right in front of you right now…',
+  },
+  stories: [
+    {
+      location: '📍 Dhaka',
+      question: 'Why are there a million rickshaws in Dhaka?',
+      body: 'Dhaka has more cycle-rickshaws than any other city on Earth — over a million by some counts. Drivers pedal passengers through the narrow streets, weaving between buses, cars, motorbikes and the occasional cow. Each rickshaw is hand-painted with bright, individual designs — Bollywood film scenes, peacocks, tigers, religious symbols, lotus flowers. Most drivers do not own their rickshaw and rent one from a fleet daily, pedalling 12+ hours to earn enough for the rent and a tiny profit. Dhaka traffic is famously among the slowest in the world (average speed around 7 km/h in some areas). Rickshaws remain the cheapest and often fastest way to move through the city.',
+    },
+    {
+      location: '📍 The Sundarbans',
+      question: 'Why do fishermen wear masks on the back of their heads?',
+      body: 'The Sundarbans is the largest mangrove forest on Earth, spreading across the southern coast of Bangladesh and India. It is one of the last homes of the Royal Bengal tiger, with around 100 living on the Bangladeshi side. Sundarbans tigers are unusual: they are strong swimmers, hunt in dense salty mangroves, and unlike most tigers they sometimes attack people. Local fishermen who work the mangrove rivers wear a face mask on the BACK of their head, because tigers nearly always attack from behind, and a face on the back can confuse them long enough to escape. The Sundarbans is also home to crocodiles, monkeys, deer, and rare river dolphins.',
+      thinkingQuestion: 'Wearing a face on the back of your head sounds funny, but in the Sundarbans it actually saves lives. What other clever local tricks could a child invent?',
+    },
+    {
+      location: '📍 Every April 14',
+      question: 'What is Pohela Boishakh?',
+      body: 'Pohela Boishakh is the Bengali New Year, celebrated every 14 April. The whole country comes out wearing red and white. The biggest celebration is in Dhaka, with the Mongol Shobhajatra parade — a procession of giant papier-mâché figures (tigers, owls, fish, mythological creatures) winding through the streets. UNESCO has put it on its world heritage list. Families eat traditional foods like panta bhat (fermented rice with green chillies, onion, and salted hilsa) for breakfast. Schools and businesses close. The tradition is over 1,500 years old, going back long before Bangladesh existed as a country. It is a Bengali festival, celebrated equally by Muslims and Hindus.',
+    },
+    {
+      location: '📍 1971',
+      question: 'How did Bangladesh become a country?',
+      body: 'For 24 years (1947–1971), what is now Bangladesh was part of Pakistan as "East Pakistan", even though it was geographically separated by 2,000 km of Indian territory and culturally and linguistically distinct from West Pakistan. In 1971, after Pakistan refused to accept the election victory of a Bengali leader, the West Pakistani military attacked Dhaka. A brutal 9-month war followed. Up to 3 million Bengalis were killed, and around 10 million fled to India as refugees in one of the largest displacement events of the 20th century. Indian forces eventually joined the war on the Bengali side. Pakistan surrendered on 16 December 1971. Bangladesh became independent. The horrors of that war shaped modern Bangladesh and are still remembered every year on "Victory Day".',
+      olderOnly: true,
+    },
+    {
+      location: '📍 The coast',
+      question: 'How does a country live with the sea rising?',
+      body: 'Bangladesh is one of the most vulnerable countries on Earth to climate change. Most of the country is a low-lying river delta, only a few metres above sea level. Rising seas threaten to flood huge areas. Tropical cyclones (hurricanes) hit the coast every year and are getting stronger. Bangladesh has become a world leader in disaster preparedness — cyclone shelters in every coastal village, warning systems that can evacuate millions of people in 48 hours, and floating schools that keep teaching during floods. Bangladeshi engineers have invented some of the cleverest "water-resilient" architecture in the world. But the long-term reality is harder: by 2050, around 18 million Bangladeshis may need to move because of rising seas. The country has done very little to cause climate change, and is paying the highest price.',
+      olderOnly: true,
+      thinkingQuestion: 'If a country is bearing the cost of a problem it didn\'t cause, who should help it adapt?',
+    },
+  ],
+  convoQuestions: [
+    { question: 'Best Bangladeshi food you have eaten so far?' },
+    { question: 'Have you ridden in a cycle-rickshaw yet? What did the driver paint on it?' },
+    { question: 'Bengali is a flowing, musical language. Can you spot a sign in Bengali script and trace the letters?' },
+    { question: 'River boats, rickshaws, mosques, mangroves — which side of Bangladesh has surprised you the most?' },
+    { question: 'It rains HARD in monsoon season. Have you been caught in a really big downpour yet?' },
+    { question: 'Bangladesh has 170 million people in a country smaller than England. What does "crowded" really mean once you have been here?', olderOnly: true },
+  ],
+}
+
+// ── LAOS (premium, live) ─────────────────────────────────────────
+export const LAOS_DATA: AdventurePackData = {
+  slug: 'laos',
+  country: 'Laos',
+  flag: '🇱🇦',
+  iso2: 'la',
+  isFree: false,
+  heroColour: 'bg-rose-900',
+  currency: {
+    code: 'LAK',
+    name: 'Lao Kip',
+    symbol: '₭',
+    recommendedBudget: 100000,
+    budgetNote: 'Recommended: 100,000 LAK',
+  },
+  mapQuestions: [
+    { question: 'Which part of the world is Laos in?', answer: 'South-East Asia. Laos sits on mainland South-East Asia, surrounded by China, Vietnam, Cambodia, Thailand and Myanmar 🌏' },
+    { question: 'What is the capital of Laos?', answer: 'Vientiane, on the Mekong River, right across the border from Thailand. It is one of the smallest, sleepiest capital cities in Asia.' },
+    { question: 'What is the only landlocked country in South-East Asia?', answer: 'Laos. Every other South-East Asian country has a coastline — Laos is the only one with no ocean at all.' },
+    { question: 'What great river runs the length of Laos?', answer: 'The Mekong. It flows nearly 1,900 km through Laos — more than any other country it touches.', olderOnly: true },
+    { question: 'How much of Laos is forest or mountains?', answer: 'Around 70% of the country is forested or mountainous. The flat parts are mostly along the Mekong, where the rice grows.', olderOnly: true },
+  ],
+  phrases: [
+    { english: 'Hello', nativeScript: 'ສະບາຍດີ', nativeLatin: 'Sabaidee', phonetic: 'sa-bye-DEE', lang: 'lo' },
+    { english: 'Thank you', nativeScript: 'ຂອບໃຈ', nativeLatin: 'Khop chai', phonetic: 'KOHP JAI', lang: 'lo' },
+    { english: 'How much?', nativeScript: 'ເທົ່າໃດ?', nativeLatin: 'Tao dai?', phonetic: 'TAO DYE', lang: 'lo' },
+    { english: 'Delicious!', nativeScript: 'ແຊບ', nativeLatin: 'Saep', phonetic: 'SAEP', lang: 'lo' },
+    { english: 'Relaxed / comfortable', nativeScript: 'ສະບາຍ', nativeLatin: 'Sabai', phonetic: 'sah-BYE', lang: 'lo' },
+    { english: 'Yes', nativeScript: 'ແມ່ນ', nativeLatin: 'Maen', phonetic: 'MAEN', lang: 'lo' },
+    { english: 'Goodbye / see you later', nativeScript: 'ລາກ່ອນ', nativeLatin: 'La kon', phonetic: 'LA KON', lang: 'lo', olderOnly: true },
+    { english: 'Slowly / take your time', nativeScript: 'ຄ່ອຍໆ', nativeLatin: 'Khoy khoy', phonetic: 'KOY KOY', lang: 'lo', olderOnly: true },
+  ],
+  foods: [
+    { emoji: '🥗', name: 'Larb', description: 'The national dish: chopped meat (chicken, pork or beef) cooked with lime juice, fish sauce, toasted rice powder, mint, coriander and chillies. Served warm or cool with sticky rice.' },
+    { emoji: '🍙', name: 'Khao niaw (sticky rice)', description: 'Steamed glutinous rice eaten with the hands. Roll a small ball, dip it in your dish, eat. Laotians eat more sticky rice per person than anyone else on Earth.' },
+    { emoji: '🥗', name: 'Tam mak houng', description: 'Green papaya salad: shredded unripe papaya pounded in a wooden mortar with lime, garlic, chillies, fish sauce and tomato. Spicy, sour, salty, sweet all at once.' },
+    { emoji: '🥖', name: 'Khao jee paté', description: 'A toasted Lao baguette stuffed with paté, pickled carrots, herbs and chilli — a leftover from 60 years of French colonial influence. Sold from carts at the side of the road.' },
+    { emoji: '🍲', name: 'Or lam', description: 'A Luang Prabang speciality: a hearty stew of buffalo or beef, lemongrass, dill and aubergine, often containing "sakhan" — a peppery vine root that numbs your tongue slightly.' },
+    { emoji: '☕', name: 'Lao coffee', description: 'Strong dark coffee grown in the cool Bolaven Plateau, often brewed in a sock filter and served with sweet condensed milk at the bottom of the glass. Stir before drinking.' },
+  ],
+  scavengerItems: [
+    { emoji: '🧎', label: 'A monk in saffron-orange robes walking with a begging bowl at dawn' },
+    { emoji: '🥖', label: 'A Lao baguette being eaten in the street (a French colonial leftover)' },
+    { emoji: '🍙', label: 'A bamboo basket of sticky rice being passed at a table' },
+    { emoji: '🌊', label: 'The brown muddy Mekong River, with longtail boats on it' },
+    { emoji: '🪵', label: 'A bamboo bridge crossing a stream or a paddy' },
+    { emoji: '🛕', label: 'A wat (Buddhist temple) with carved wooden doors and a gilded roof' },
+    { emoji: '🐂', label: 'A buffalo (or two) wading through a rice paddy' },
+    { emoji: '🧵', label: 'A woman weaving silk on a wooden loom under her stilt-house' },
+    { emoji: '🍃', label: 'Mist hanging in the mountains around Vang Vieng or Luang Prabang' },
+    { emoji: '💧', label: 'A turquoise waterfall (Kuang Si is the most famous)', olderOnly: true },
+    { emoji: '🚫', label: 'A "Beware of UXO" (unexploded ordnance) sign in the countryside', olderOnly: true },
+    { emoji: '🛺', label: 'A "jumbo" three-wheel tuk-tuk loaded with people, fruit, or chickens', olderOnly: true },
+  ],
+  geoMatches: [
+    { place: 'Vientiane',         emoji: '🛕', description: 'The capital, on the Mekong opposite Thailand. Tree-lined boulevards, sleepy by Asian standards. The towering golden Pha That Luang stupa is the national symbol.' },
+    { place: 'Luang Prabang',     emoji: '🧎', description: 'A UNESCO-listed town where two rivers meet, ringed by misty mountains. Saffron-robed monks collect alms at dawn, French colonial buildings line the streets.' },
+    { place: 'Plain of Jars',     emoji: '🏺', description: 'In Xieng Khouang province. Thousands of mysterious ancient stone jars, some 3 metres tall, scattered across fields. Around 2,500 years old. Nobody fully knows why they were carved.' },
+    { place: 'Vang Vieng',        emoji: '🏔️', description: 'A small town in central Laos surrounded by jagged karst limestone mountains. Rivers run through caves, kayakers and tubers float through paddies, hot-air balloons rise at dawn.' },
+    { place: 'Bolaven Plateau',   emoji: '☕', description: 'A high cool plateau in the south. Coffee plantations, tea, waterfalls cascading off the edge, and indigenous Mon-Khmer villages.' },
+    { place: '4,000 Islands',     emoji: '🐬', description: 'In the far south, where the Mekong braids out into a maze of small islands before flowing into Cambodia. Some of the last Irrawaddy river dolphins live here.' },
+  ],
+  senses: {
+    smell: 'Sticky rice steaming in bamboo baskets, smoking fish on roadside grills, frangipani flowers in temple courtyards, Mekong river mist at dawn, fresh-roasted Lao coffee, woodsmoke from stilt houses…',
+    hear:  'Lao (very similar to Thai), gentle Buddhist chanting at dawn and dusk, "Sabaidee!", roosters everywhere, motorbike horns, slow river boats, drums from a temple festival…',
+    taste: 'Sweet sticky rice rolled into a ball, fiery larb with toasted rice, sharp-spicy-sour papaya salad, salty grilled river fish, dark Lao coffee with condensed milk pooling at the bottom…',
+    feel:  'Tropical humidity, cool blue waterfall water on hot skin, warm temple stones underfoot, soft sticky rice in your hand, gentle monsoon rain, fine river spray on the boat…',
+    see:   'What is the most incredible thing right in front of you right now…',
+  },
+  stories: [
+    {
+      location: '📍 Luang Prabang, before dawn',
+      question: 'What is the alms ceremony?',
+      body: 'Every morning before sunrise in Luang Prabang, hundreds of orange-robed Buddhist monks walk silently through the streets in long single files, carrying their begging bowls. Local Buddhists kneel quietly on mats along the road and place small balls of sticky rice or other offerings into each bowl. The monks do not make eye contact, do not say thank you — they simply receive. It is a 700-year-old tradition still alive today. Tourists are welcome to watch quietly, sometimes participate (with respect: dress modestly, don\'t use flash, kneel below the monks). The monks eat only what they receive in alms, and only before noon — they don\'t eat at all for the rest of the day.',
+    },
+    {
+      location: '📍 At every meal',
+      question: 'Why is sticky rice such a big deal?',
+      body: 'Lao people eat more sticky rice per person than anyone else on Earth — around 145 kg per person per year. It is served in little woven bamboo baskets at every meal. The proper way to eat it: take a small handful with your right hand, press it into a ball, dip it into the dish (larb, jeow, soup), then eat. Sticky rice is not just food in Laos — it is part of religious ceremonies, weddings, and offerings. "Khao tom" (sticky rice in banana leaves) is left at temples and given to children as blessings. Lao people will tell you they "miss sticky rice" when they travel abroad, the way other people miss bread.',
+    },
+    {
+      location: '📍 Along the Mekong',
+      question: 'Why is the Mekong River so important?',
+      body: 'The Mekong is one of the world\'s great rivers, and it runs the length of Laos for nearly 1,900 km. It is the country\'s lifeline: fish for food (the Mekong has more fish species than any river except the Amazon, around 1,200), transport, water for rice paddies, and rich silt deposited every monsoon to make the farmland fertile. The river floods predictably every year — Lao people plan their lives around it. Building hydropower dams on the Mekong (in China upstream, and now in Laos itself) is one of the biggest controversies of modern South-East Asia, affecting fishing communities and rice farmers thousands of miles downstream in Cambodia and Vietnam.',
+      thinkingQuestion: 'If one country builds a dam that helps its own people but hurts farmers downstream in other countries, who should decide?',
+    },
+    {
+      location: '📍 Across rural Laos',
+      question: 'Why are there warning signs about unexploded bombs?',
+      body: 'From 1964 to 1973, during the Vietnam War, the United States secretly dropped more bombs on tiny Laos than were dropped on all of Europe in the whole of World War 2. The "Secret War" was never formally declared and was kept hidden from the American public for years. The US was trying to disrupt the Ho Chi Minh Trail, used by North Vietnam to move troops and supplies through Laos. Over 2 million tonnes of bombs were dropped — the equivalent of one planeload of bombs every 8 minutes, 24 hours a day, for 9 years. Around 30% of those bombs failed to explode at the time and still lie buried in the ground. They kill or maim around 50 Laotians every year, mostly farmers digging fields and children playing. Clearing them all will take generations. Laos is now the most-bombed country per person in history.',
+      olderOnly: true,
+    },
+    {
+      location: '📍 Across Laos',
+      question: 'How did a 600-year-old kingdom become a communist state?',
+      body: 'Laos was a kingdom for over 600 years, with its capital usually at Luang Prabang. The French colonised it in 1893 and ruled for 60 years, leaving behind baguettes, paté, croissants and the curving tarmac roads. After World War 2, the kingdom drifted into civil war. In 1975, after the end of the Vietnam War, the communist Pathet Lao movement took over the country, abolished the monarchy, and established the "Lao People\'s Democratic Republic" — still its official name. The king and royal family were sent to "re-education camps" where they died. Today Laos is one of the last remaining one-party communist states. Day-to-day life, though, is more about Buddhism, sticky rice, the Mekong and family than politics.',
+      olderOnly: true,
+    },
+  ],
+  convoQuestions: [
+    { question: 'Best Lao food you have tried so far?' },
+    { question: 'Have you been brave enough to eat sticky rice with your hands? How did it go?' },
+    { question: 'Did you catch the dawn alms ceremony? What did you make of the silence?' },
+    { question: 'Mountains, river, monasteries or the slow countryside — which has felt most "Laos"?' },
+    { question: 'Laos is famously the most chilled-out country in South-East Asia. Have you felt that pace?' },
+    { question: '75+ million unexploded bombs are still in the ground here. How do you live with that as a country?', olderOnly: true },
+  ],
+}
+
 // ── COUNTRY REGISTRY ────────────────────────────────────────────
 // One entry per country. The listing page sorts these into live vs
 // coming-soon based on `status`.
@@ -3691,6 +3910,8 @@ export const PACK_META: AdventurePackMeta[] = [
   { slug: 'uae',            country: 'United Arab Emirates', flag: '🇦🇪', iso2: 'ae', isFree: false, heroColour: 'bg-yellow-800', status: 'live' },
   { slug: 'south-africa',   country: 'South Africa',   flag: '🇿🇦', iso2: 'za', isFree: false, heroColour: 'bg-orange-900',  status: 'live' },
   { slug: 'pakistan',       country: 'Pakistan',       flag: '🇵🇰', iso2: 'pk', isFree: false, heroColour: 'bg-green-900',   status: 'live' },
+  { slug: 'bangladesh',     country: 'Bangladesh',     flag: '🇧🇩', iso2: 'bd', isFree: false, heroColour: 'bg-teal-900',    status: 'live' },
+  { slug: 'laos',           country: 'Laos',           flag: '🇱🇦', iso2: 'la', isFree: false, heroColour: 'bg-rose-900',    status: 'live' },
 ]
 
 // Lookup table for fully-built packs.
@@ -3728,6 +3949,8 @@ const FULL_DATA: Record<string, AdventurePackData> = {
   uae:              UAE_DATA,
   'south-africa':   SOUTH_AFRICA_DATA,
   pakistan:         PAKISTAN_DATA,
+  bangladesh:       BANGLADESH_DATA,
+  laos:             LAOS_DATA,
 }
 
 export function getPackData(slug: string): AdventurePackData | null {

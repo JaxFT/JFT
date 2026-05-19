@@ -1,32 +1,37 @@
 import type { ReactNode } from 'react'
 
-// A cream-paper wrapper that everything passport-y sits on — kid
-// Stamps tab, country pages, journal pages, etc.
+// A cream-paper wrapper that everything passport-y sits on.
 //
-// `book` mode pins the page to a fixed height with internal scroll,
-// adds a dark vertical "spine" on the left edge, and stops content
-// expanding into an infinite scroll — pages stay the same size and
-// the kid scrolls within each page like flicking through a book.
+// `book` mode:
+//   - Fixed height (~88dvh on phones, more on tablets) so pages stay
+//     the same size across the tab
+//   - Internal vertical scroll on the content area
+//   - Optional `footer` prop pins to the bottom of the page (used for
+//     the prev/next pagination bar on Stamps and Journal)
+//   - Dark stitched spine down the left edge for the bound-book feel
 
 export default function PassportPage({
   children,
+  footer,
   className = '',
   book = false,
 }: {
   children: ReactNode
+  // Pinned to the bottom of the page in book mode. Not part of the
+  // scrollable content.
+  footer?: ReactNode
   className?: string
-  // When true: fixed height, internal scroll, left-side spine.
   book?: boolean
 }) {
   return (
     <div
-      className={`relative rounded-2xl border border-amber-100 shadow-md ${book ? 'h-[70dvh] min-h-[320px] sm:min-h-[420px]' : ''} ${className}`}
+      className={`relative rounded-2xl border border-amber-100 shadow-md ${
+        book ? 'h-[88dvh] min-h-[460px]' : ''
+      } ${className}`}
       style={{
         background:
           'radial-gradient(ellipse at center, #fdf8ed 0%, #f5ead0 100%), linear-gradient(180deg, #fdf8ed, #f0e3c2)',
         backgroundBlendMode: 'multiply',
-        // Hide overflow on the outer container so the spine and curl
-        // stay clipped to the page edge.
         overflow: 'hidden',
       }}
     >
@@ -50,8 +55,7 @@ export default function PassportPage({
         }}
       />
 
-      {/* Book spine on the left edge — a dark stitched binding shadow
-          gives the page a "part of a bound book" feel. */}
+      {/* Book spine on the left edge */}
       {book && (
         <>
           <div
@@ -62,7 +66,6 @@ export default function PassportPage({
                 'linear-gradient(90deg, rgba(50,30,10,0.30) 0%, rgba(80,40,10,0.15) 60%, transparent 100%)',
             }}
           />
-          {/* Stitching dashes along the spine */}
           <div
             aria-hidden
             className="absolute inset-y-3 left-2 w-px pointer-events-none"
@@ -101,13 +104,23 @@ export default function PassportPage({
         </svg>
       </div>
 
-      {/* Inner scroll container in book mode, fully indented past the
-          spine on the left so content doesn't sit under it. */}
-      <div
-        className={book ? 'relative h-full overflow-y-auto pl-6' : 'relative'}
-      >
-        {children}
-      </div>
+      {/* Content layout. Book mode = flex column with scrollable
+          middle and pinned footer. Non-book = static block. */}
+      {book ? (
+        <div className="relative h-full flex flex-col pl-6">
+          <div className="flex-1 overflow-y-auto min-h-0">{children}</div>
+          {footer && (
+            <div
+              className="shrink-0 px-1 py-3 mt-auto"
+              style={{ borderTop: '1px dashed rgba(120,80,30,0.3)' }}
+            >
+              {footer}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="relative">{children}</div>
+      )}
     </div>
   )
 }

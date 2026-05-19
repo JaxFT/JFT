@@ -63,13 +63,18 @@ export default function KidShell({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-900 to-brand-950 text-white">
-      {/* HEADER: avatar greeting */}
-      <header className="pt-12 pb-6 px-4 text-center">
-        <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white/10 backdrop-blur-sm text-6xl leading-none shadow-lg mb-4">
-          <span aria-hidden>{child.avatar}</span>
+      {/* HEADER: avatar on the left, two lines of greeting on the
+          right. Compact so the book pages below get more room. */}
+      <header className="pt-6 pb-4 px-4 flex justify-center">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm text-3xl leading-none shadow-md shrink-0">
+            <span aria-hidden>{child.avatar}</span>
+          </div>
+          <div className="leading-tight">
+            <p className="text-[11px] uppercase tracking-widest text-brand-300">Welcome back</p>
+            <h1 className="text-xl font-bold">{child.name}</h1>
+          </div>
         </div>
-        <p className="text-xs uppercase tracking-widest text-brand-300 mb-1">Welcome back</p>
-        <h1 className="text-3xl font-bold">{child.name} <span aria-hidden>✈️</span></h1>
       </header>
 
       {/* TAB BAR */}

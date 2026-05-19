@@ -50,8 +50,54 @@ export default function StampsTab({
   const totalStamps = stamps.length
   const countryPageCount = pages.length - 1
 
+  const footerEl = pages.length > 1 ? (
+    <div
+      className="flex items-center justify-between gap-3 text-sm px-2"
+      style={{ color: '#5a3a12' }}
+    >
+      <button
+        type="button"
+        onClick={() => turn('prev')}
+        disabled={!hasPrev}
+        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        aria-label="Previous page"
+      >
+        <ChevronLeft className="w-4 h-4" />
+        <span className="uppercase tracking-widest text-xs">{hasPrev ? pageLabel(pages[pageIndex - 1]) : 'Prev'}</span>
+      </button>
+      <div className="flex items-center gap-1">
+        {pages.map((p, i) => (
+          <button
+            key={pageKey(p, i)}
+            type="button"
+            onClick={() => {
+              if (i === pageIndex) return
+              setDirection(i > pageIndex ? 'next' : 'prev')
+              setPageIndex(i)
+              setAnimKey(k => k + 1)
+            }}
+            className={`w-2 h-2 rounded-full transition-all ${
+              i === pageIndex ? 'bg-amber-800 w-4' : 'bg-amber-800/30 hover:bg-amber-800/50'
+            }`}
+            aria-label={`Go to ${pageLabel(p)} page`}
+          />
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => turn('next')}
+        disabled={!hasNext}
+        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        aria-label="Next page"
+      >
+        <span className="uppercase tracking-widest text-xs">{hasNext ? pageLabel(pages[pageIndex + 1]) : 'Next'}</span>
+        <ChevronRight className="w-4 h-4" />
+      </button>
+    </div>
+  ) : null
+
   return (
-    <PassportPage className="p-6 sm:p-8" book>
+    <PassportPage className="p-6 sm:p-8" book footer={footerEl}>
       <div className="flex items-baseline justify-between mb-5">
         <div>
           <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: '#5a3a12' }}>
@@ -78,52 +124,6 @@ export default function StampsTab({
           ? <TravelerPage milestones={current.milestones} empty={onlyTravelerEmpty} />
           : <CountryPage group={current} token={token} />}
       </div>
-
-      {pages.length > 1 && (
-        <footer
-          className="mt-8 pt-4 flex items-center justify-between gap-3 text-sm"
-          style={{ borderTop: '1px dashed rgba(120,80,30,0.25)', color: '#5a3a12' }}
-        >
-          <button
-            type="button"
-            onClick={() => turn('prev')}
-            disabled={!hasPrev}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            aria-label="Previous page"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span className="uppercase tracking-widest text-xs">{hasPrev ? pageLabel(pages[pageIndex - 1]) : 'Prev'}</span>
-          </button>
-          <div className="flex items-center gap-1">
-            {pages.map((p, i) => (
-              <button
-                key={pageKey(p, i)}
-                type="button"
-                onClick={() => {
-                  if (i === pageIndex) return
-                  setDirection(i > pageIndex ? 'next' : 'prev')
-                  setPageIndex(i)
-                  setAnimKey(k => k + 1)
-                }}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  i === pageIndex ? 'bg-amber-800 w-4' : 'bg-amber-800/30 hover:bg-amber-800/50'
-                }`}
-                aria-label={`Go to ${pageLabel(p)} page`}
-              />
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => turn('next')}
-            disabled={!hasNext}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            aria-label="Next page"
-          >
-            <span className="uppercase tracking-widest text-xs">{hasNext ? pageLabel(pages[pageIndex + 1]) : 'Next'}</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </footer>
-      )}
     </PassportPage>
   )
 }

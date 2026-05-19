@@ -135,8 +135,58 @@ export default function JournalTab({
 
   const current = groups[safePage]
 
+  const footerEl = groups.length > 1 ? (
+    <div
+      className="flex items-center justify-between gap-3 text-sm px-2"
+      style={{ color: '#5a3a12' }}
+    >
+      <button
+        type="button"
+        onClick={() => turn('prev')}
+        disabled={safePage <= 0}
+        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        aria-label="Previous page"
+      >
+        <ChevronLeft className="w-4 h-4" />
+        <span className="uppercase tracking-widest text-xs">
+          {safePage > 0 ? groups[safePage - 1].countryName : 'Prev'}
+        </span>
+      </button>
+      <div className="flex items-center gap-1">
+        {groups.map((g, i) => (
+          <button
+            key={g.countrySlug ?? '__none__'}
+            type="button"
+            onClick={() => {
+              if (i === safePage) return
+              setDirection(i > safePage ? 'next' : 'prev')
+              setPageIndex(i)
+              setAnimKey(k => k + 1)
+            }}
+            className={`w-2 h-2 rounded-full transition-all ${
+              i === safePage ? 'bg-amber-800 w-4' : 'bg-amber-800/30 hover:bg-amber-800/50'
+            }`}
+            aria-label={`Go to ${g.countryName} page`}
+          />
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => turn('next')}
+        disabled={safePage >= groups.length - 1}
+        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        aria-label="Next page"
+      >
+        <span className="uppercase tracking-widest text-xs">
+          {safePage < groups.length - 1 ? groups[safePage + 1].countryName : 'Next'}
+        </span>
+        <ChevronRight className="w-4 h-4" />
+      </button>
+    </div>
+  ) : null
+
   return (
-    <PassportPage className="p-6 sm:p-8" book>
+    <PassportPage className="p-6 sm:p-8" book footer={footerEl}>
       <div className="flex items-baseline justify-between mb-5">
         <div>
           <p
@@ -329,55 +379,6 @@ export default function JournalTab({
               {current && <CountryJournalPage group={current} />}
             </div>
 
-            {groups.length > 1 && (
-              <footer
-                className="mt-6 pt-4 flex items-center justify-between gap-3 text-sm"
-                style={{ borderTop: '1px dashed rgba(120,80,30,0.25)', color: '#5a3a12' }}
-              >
-                <button
-                  type="button"
-                  onClick={() => turn('prev')}
-                  disabled={safePage <= 0}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  aria-label="Previous page"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  <span className="uppercase tracking-widest text-xs">
-                    {safePage > 0 ? groups[safePage - 1].countryName : 'Prev'}
-                  </span>
-                </button>
-                <div className="flex items-center gap-1">
-                  {groups.map((g, i) => (
-                    <button
-                      key={g.countrySlug ?? '__none__'}
-                      type="button"
-                      onClick={() => {
-                        if (i === safePage) return
-                        setDirection(i > safePage ? 'next' : 'prev')
-                        setPageIndex(i)
-                        setAnimKey(k => k + 1)
-                      }}
-                      className={`w-2 h-2 rounded-full transition-all ${
-                        i === safePage ? 'bg-amber-800 w-4' : 'bg-amber-800/30 hover:bg-amber-800/50'
-                      }`}
-                      aria-label={`Go to ${g.countryName} page`}
-                    />
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => turn('next')}
-                  disabled={safePage >= groups.length - 1}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  aria-label="Next page"
-                >
-                  <span className="uppercase tracking-widest text-xs">
-                    {safePage < groups.length - 1 ? groups[safePage + 1].countryName : 'Next'}
-                  </span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </footer>
-            )}
           </>
         )}
       </section>

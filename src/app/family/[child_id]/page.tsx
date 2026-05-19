@@ -4,7 +4,14 @@ import { ArrowLeft } from 'lucide-react'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
-import { getChildById } from '@/lib/passport-db'
+import { getChildById, listChildPackAssignments } from '@/lib/passport-db'
+import { PERMISSION_LABELS } from '@/lib/passport-types'
+import { PACK_META } from '@/lib/adventurePackData'
+import EditProfileSection from './EditProfileSection'
+import PermissionSection from './PermissionSection'
+import QRSection from './QRSection'
+import PackAssignmentSection from './PackAssignmentSection'
+import DeleteChildButton from './DeleteChildButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,6 +47,17 @@ export default async function ChildDetailPage({
   const child = await getChildById(child_id)
   if (!child) notFound()
 
+  const assignments = await listChildPackAssignments(child_id)
+
+  // Strip PACK_META down to the lite shape the assignment section needs
+  // — slug, country, flag, status. Everything else stays on the server.
+  const allPacks = PACK_META.map(p => ({
+    slug: p.slug,
+    country: p.country,
+    flag: p.flag,
+    status: p.status,
+  }))
+
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -50,20 +68,42 @@ export default async function ChildDetailPage({
         <div className="mb-8 flex items-center gap-4">
           <div className="text-5xl leading-none">{child.avatar}</div>
           <div>
-            <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-1">Child profile</p>
+            <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-1">
+              {PERMISSION_LABELS[child.permission_mode]}
+            </p>
             <h1 className="text-4xl font-bold text-gray-900">{child.name}</h1>
           </div>
         </div>
 
-        {/* Placeholder. The full management UI (rename, avatar, permission
-            toggle, QR code, pack assignment, stamp history, journal review)
-            lands in the next phase of the build. */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-sm text-gray-500">
-          <p className="font-semibold text-gray-900 mb-2">More controls coming next</p>
-          <p>
-            QR code, pack assignment, permission tweaks, manual stamp award, journal review — all of that lands in the next phase.
-            For now this page just confirms the child was created and is owned by you.
-          </p>
+        <div className="space-y-5">
+          <QRSection
+            childId={child.id}
+            childName={child.name}
+            initialToken={child.qr_token}
+          />
+
+          <PackAssignmentSection
+            childId={child.id}
+            initialAssigned={assignments}
+            allPacks={allPacks}
+          />
+
+          <EditProfileSection
+            childId={child.id}
+            initialName={child.name}
+            initialAvatar={child.avatar}
+          />
+
+          <PermissionSection
+            childId={child.id}
+            initialMode={child.permission_mode}
+            initialAutoApprove={child.stamp_auto_approve}
+          />
+
+          <DeleteChildButton
+            childId={child.id}
+            childName={child.name}
+          />
         </div>
       </div>
     </div>

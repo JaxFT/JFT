@@ -5,6 +5,21 @@
 import { createClient } from '@/lib/supabase/server'
 import type { ChildRow } from './passport-types'
 
+export async function listChildPackAssignments(childId: string): Promise<string[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('child_pack_assignments')
+    .select('country_slug')
+    .eq('child_id', childId)
+    .order('assigned_at', { ascending: true })
+
+  if (error) {
+    console.error('[passport] listChildPackAssignments', error)
+    return []
+  }
+  return (data ?? []).map(r => r.country_slug as string)
+}
+
 export async function listChildrenForParent(): Promise<ChildRow[]> {
   const supabase = await createClient()
   const { data, error } = await supabase

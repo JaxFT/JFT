@@ -6,6 +6,7 @@ import type { Metadata } from 'next'
 import SignOutButton from './SignOutButton'
 import AccountEditor from './AccountEditor'
 import PremiumCancelButton from './PremiumCancelButton'
+import ResumeMembershipButton from './ResumeMembershipButton'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 import ManageBillingButton from '@/components/billing/ManageBillingButton'
 import { isPremiumTier } from '@/lib/profile'
@@ -106,7 +107,9 @@ export default async function AccountPage() {
             {isPremium && (
               <div className="shrink-0 flex flex-col items-end gap-2">
                 <ManageBillingButton />
-                {!profile?.cancellation_requested_at && <PremiumCancelButton />}
+                {profile?.cancellation_requested_at
+                  ? <ResumeMembershipButton />
+                  : <PremiumCancelButton />}
               </div>
             )}
           </div>

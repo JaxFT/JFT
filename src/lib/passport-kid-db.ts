@@ -102,3 +102,45 @@ export async function listCountryVisitsForChild(childId: string): Promise<Countr
   }
   return (data ?? []) as CountryVisitRow[]
 }
+
+// Adventures the parent has assigned to this child, with a hint of
+// how far through each one the kid is. Drives the Adventures section
+// on the kid's Passport tab.
+export type AssignedPackRow = {
+  country_slug: string
+  missions_complete: string[]
+  completed_at: string | null
+}
+
+export async function listAssignedPacksForChild(childId: string): Promise<AssignedPackRow[]> {
+  const sb = admin()
+  const [assignmentsRes, sessionsRes] = await Promise.all([
+    sb
+      .from('child_pack_assignments')
+      .select('country_slug')
+      .eq('child_id', childId)
+      .order('assigned_at', { ascending: true }),
+    sb
+      .from('kid_adventure_pack_sessions')
+      .select('country_slug, missions_complete, completed_at')
+      .eq('child_id', childId),
+  ])
+
+  const progress = new Map<string, { missions_complete: string[]; completed_at: string | null }>()
+  for (const s of sessionsRes.data ?? []) {
+    progress.set(s.country_slug as string, {
+      missions_complete: (s.missions_complete as string[]) ?? [],
+      completed_at: (s.completed_at as string) ?? null,
+    })
+  }
+
+  return (assignmentsRes.data ?? []).map(a => {
+    const slug = a.country_slug as string
+    const p = progress.get(slug)
+    return {
+      country_slug: slug,
+      missions_complete: p?.missions_complete ?? [],
+      completed_at: p?.completed_at ?? null,
+    }
+  })
+}

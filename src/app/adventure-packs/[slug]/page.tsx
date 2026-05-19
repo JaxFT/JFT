@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { checkAdventurePackAccess } from '@/lib/adventure-pack-access'
 import { getPackData, getPackMeta } from '@/lib/adventurePackData'
-import PackShell from '@/components/adventure-packs/PackShell'
+import UserPackShell from '@/components/adventure-packs/UserPackShell'
 import FlagBanner from '@/components/adventure-packs/FlagBanner'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 
@@ -109,5 +109,5 @@ export default async function AdventurePackPage({
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect(`/login?next=/adventure-packs/${slug}`)
 
-  return <PackShell userId={user.id} data={data} />
+  return <UserPackShell userId={user.id} data={data} />
 }

@@ -19,9 +19,18 @@ import ClearDataModal from './ClearDataModal'
 import PackSection from './PackSection'
 import FlagBanner from './FlagBanner'
 
+// PackShell is the pure UI for a pack. Both the user (adult) flow and
+// the kid flow render the same shell — they differ only in where the
+// data comes from. Each entry-point constructs the right hook and
+// passes its result in.
 type Props = {
-  userId: string
+  pack: ReturnType<typeof useAdventurePack>
   data: AdventurePackData
+  // Where the "back" link points and what it says. Defaults match the
+  // adult flow (back to the listing). Kid mode passes /kid/{token} +
+  // "Back to my passport".
+  backHref?: string
+  backLabel?: string
 }
 
 function formatExpiry(iso: string | null): string | null {
@@ -31,8 +40,12 @@ function formatExpiry(iso: string | null): string | null {
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-export default function PackShell({ userId, data }: Props) {
-  const pack = useAdventurePack(userId, data.slug)
+export default function PackShell({
+  pack,
+  data,
+  backHref = '/adventure-packs',
+  backLabel = 'All adventure packs',
+}: Props) {
   const [showClear, setShowClear] = useState(false)
   const [showAgeBanner, setShowAgeBanner] = useState<string | null>(null)
   // Currently-selected mission. Defaults to the first; flips to the
@@ -79,8 +92,8 @@ export default function PackShell({ userId, data }: Props) {
     <div className="min-h-screen bg-sand-50 pt-20 pb-20">
       <div className="max-w-3xl mx-auto px-4 sm:px-6">
 
-        <Link href="/adventure-packs" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-700 mb-4">
-          <ArrowLeft className="w-4 h-4" /> All adventure packs
+        <Link href={backHref} className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-700 mb-4">
+          <ArrowLeft className="w-4 h-4" /> {backLabel}
         </Link>
 
         {/* HERO */}

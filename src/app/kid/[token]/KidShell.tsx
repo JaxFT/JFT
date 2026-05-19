@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import { Stamp, Map, Globe, BookOpen, Star } from 'lucide-react'
 import type { PermissionMode } from '@/lib/passport-types'
-import type { StampRow, KidStats, CountryVisitRow } from '@/lib/passport-kid-db'
+import type {
+  StampRow, KidStats, CountryVisitRow, AssignedPackRow,
+} from '@/lib/passport-kid-db'
 import PassportTab from './tabs/PassportTab'
 import StampsTab from './tabs/StampsTab'
 import MapTab from './tabs/MapTab'
@@ -28,15 +30,19 @@ type Child = {
 }
 
 export default function KidShell({
+  token,
   child,
   stats,
   stamps,
   visits,
+  assignedPacks,
 }: {
+  token: string
   child: Child
   stats: KidStats
   stamps: StampRow[]
   visits: CountryVisitRow[]
+  assignedPacks: AssignedPackRow[]
 }) {
   const [tab, setTab] = useState<Tab>('passport')
 
@@ -81,7 +87,7 @@ export default function KidShell({
 
       {/* PANEL */}
       <main className="max-w-3xl mx-auto px-4 pt-6 pb-20">
-        {tab === 'passport'  && <PassportTab child={child} stats={stats} stamps={stamps} />}
+        {tab === 'passport'  && <PassportTab token={token} child={child} stats={stats} stamps={stamps} assignedPacks={assignedPacks} />}
         {tab === 'map'       && <MapTab visits={visits} />}
         {tab === 'countries' && <CountriesTab visits={visits} />}
         {tab === 'journal'   && <JournalTab childName={child.name} permissionMode={child.permission_mode} />}

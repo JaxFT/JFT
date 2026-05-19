@@ -5,6 +5,7 @@ import {
   getKidStats,
   listAwardedStampsForChild,
   listCountryVisitsForChild,
+  listAssignedPacksForChild,
 } from '@/lib/passport-kid-db'
 import KidShell from './KidShell'
 
@@ -34,14 +35,16 @@ export default async function KidLandingPage({
   const child = await getChildByToken(token)
   if (!child) notFound()
 
-  const [stats, stamps, visits] = await Promise.all([
+  const [stats, stamps, visits, assignedPacks] = await Promise.all([
     getKidStats(child.id),
     listAwardedStampsForChild(child.id),
     listCountryVisitsForChild(child.id),
+    listAssignedPacksForChild(child.id),
   ])
 
   return (
     <KidShell
+      token={token}
       child={{
         id: child.id,
         name: child.name,
@@ -51,6 +54,7 @@ export default async function KidLandingPage({
       stats={stats}
       stamps={stamps}
       visits={visits}
+      assignedPacks={assignedPacks}
     />
   )
 }

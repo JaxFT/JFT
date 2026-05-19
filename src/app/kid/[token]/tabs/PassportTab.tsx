@@ -1,24 +1,31 @@
-import { Stamp as StampIcon, Globe, Trophy } from 'lucide-react'
+import Link from 'next/link'
+import { Stamp as StampIcon, Globe, Trophy, ArrowRight, Check, Compass } from 'lucide-react'
 import PassportPage from '@/components/passport/PassportPage'
 import PassportStamp from '@/components/passport/PassportStamp'
 import { getPackMeta } from '@/lib/adventurePackData'
-import type { StampRow, KidStats } from '@/lib/passport-kid-db'
+import { SECTION_KEYS } from '@/lib/adventurePackTypes'
+import type { StampRow, KidStats, AssignedPackRow } from '@/lib/passport-kid-db'
 import type { PermissionMode } from '@/lib/passport-types'
 
 export default function PassportTab({
+  token,
   child,
   stats,
   stamps,
+  assignedPacks,
 }: {
+  token: string
   child: { name: string; avatar: string; permission_mode: PermissionMode }
   stats: KidStats
   stamps: StampRow[]
+  assignedPacks: AssignedPackRow[]
 }) {
   const recent = stamps.slice(0, 6)
+  const totalSections = SECTION_KEYS.length
 
   return (
     <div className="space-y-5">
-      {/* Stats — a row of three "ticket stubs" with brand-accent numbers */}
+      {/* Stats */}
       <div className="grid grid-cols-3 gap-2">
         {[
           { label: 'Stamps', value: stats.stampCount, Icon: StampIcon },
@@ -32,6 +39,63 @@ export default function PassportTab({
           </div>
         ))}
       </div>
+
+      {/* Adventures — assigned packs the kid can open. Ordered: in
+          progress first (most exciting), then unstarted, then completed. */}
+      <section>
+        <div className="flex items-center gap-2 mb-3 px-1">
+          <Compass className="w-4 h-4 text-brand-300" />
+          <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-white">Adventures</p>
+        </div>
+
+        {assignedPacks.length === 0 ? (
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center text-sm text-white/70">
+            <p>Ask a grown-up to add an Adventure Pack for you to start.</p>
+          </div>
+        ) : (
+          <ul className="space-y-2">
+            {sortPacks(assignedPacks).map(p => {
+              const meta = getPackMeta(p.country_slug)
+              if (!meta) return null
+              const done = p.missions_complete.length
+              const isComplete = !!p.completed_at
+              const isStarted = done > 0
+              return (
+                <li key={p.country_slug}>
+                  <Link
+                    href={`/kid/${token}/pack/${p.country_slug}`}
+                    className="block bg-white/10 hover:bg-white/15 backdrop-blur-sm rounded-2xl p-4 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl leading-none" aria-hidden>{meta.flag}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-white">{meta.country}</p>
+                        <p className="text-xs text-white/60 inline-flex items-center gap-1.5">
+                          {isComplete
+                            ? <><Check className="w-3 h-3" /> All missions complete</>
+                            : isStarted
+                              ? <>{done} of {totalSections} missions done</>
+                              : <>Tap to start</>}
+                        </p>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-white/50" />
+                    </div>
+                    {/* Tiny progress bar */}
+                    {isStarted && !isComplete && (
+                      <div className="mt-3 h-1 bg-white/10 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-brand-300 transition-all"
+                          style={{ width: `${Math.min(100, (done / totalSections) * 100)}%` }}
+                        />
+                      </div>
+                    )}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </section>
 
       {/* Recent stamps preview on a cream book page */}
       <PassportPage className="p-6 sm:p-8">
@@ -76,4 +140,19 @@ export default function PassportTab({
       </PassportPage>
     </div>
   )
+}
+
+// In progress first (kid wants to keep going), then unstarted (new
+// adventures), then completed (the trophy shelf). Within each bucket
+// keep the original assignment order.
+function sortPacks(packs: AssignedPackRow[]): AssignedPackRow[] {
+  const inProgress: AssignedPackRow[] = []
+  const unstarted: AssignedPackRow[] = []
+  const completed: AssignedPackRow[] = []
+  for (const p of packs) {
+    if (p.completed_at) completed.push(p)
+    else if (p.missions_complete.length > 0) inProgress.push(p)
+    else unstarted.push(p)
+  }
+  return [...inProgress, ...unstarted, ...completed]
 }

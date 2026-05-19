@@ -3,10 +3,8 @@ import WorldMap from '@/components/passport/WorldMap'
 import { getPackMeta } from '@/lib/adventurePackData'
 import type { CountryVisitRow } from '@/lib/passport-kid-db'
 
-// Roughly the count of sovereign countries on earth. Used for the
-// "X% of the world" stat — we want kids to see how much more there
-// is to explore, not that they've already done 100% by unlocking
-// our 17 packs.
+// Roughly the count of sovereign countries on earth — denominator for
+// the "X% of the world" stat.
 const WORLD_COUNTRY_COUNT = 195
 
 export default function MapTab({
@@ -22,57 +20,45 @@ export default function MapTab({
     : Math.max(1, Math.round((visits.length / WORLD_COUNTRY_COUNT) * 100))
 
   return (
-    <PassportPage className="p-5 sm:p-8 min-h-[60vh]">
-      <div className="mb-4">
-        <p
-          className="text-xs font-extrabold uppercase tracking-[0.2em]"
-          style={{ color: '#5a3a12' }}
-        >
-          World map
-        </p>
-        <p
-          className="text-xs uppercase tracking-widest mt-0.5"
-          style={{ color: '#5a3a12', opacity: 0.6 }}
-        >
-          {visits.length === 0 ? 'Nothing unlocked yet' : `${visits.length} ${visits.length === 1 ? 'country' : 'countries'} unlocked`}
-        </p>
-      </div>
-
-      {/* Hero stat: % of the world */}
-      <div
-        className="flex items-baseline justify-between gap-3 mb-5 pb-4 px-1"
-        style={{ borderBottom: '1px dashed rgba(120,80,30,0.25)', color: '#5a3a12' }}
-      >
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.2em] opacity-60">Of the world</p>
-          <p className="text-4xl font-extrabold leading-none mt-1">
-            {percent}<span className="text-2xl opacity-60">%</span>
+    <PassportPage className="p-4 sm:p-5">
+      {/* Compact header strip — pushes the map to dominate. */}
+      <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+        <div className="flex items-baseline gap-3 flex-wrap">
+          <p
+            className="text-xs font-extrabold uppercase tracking-[0.2em]"
+            style={{ color: '#5a3a12' }}
+          >
+            World map
+          </p>
+          <p className="text-xs uppercase tracking-widest" style={{ color: '#5a3a12', opacity: 0.6 }}>
+            {visits.length === 0 ? 'Nothing unlocked' : `${visits.length} unlocked`}
           </p>
         </div>
         <p
-          className="text-[11px] uppercase tracking-widest text-right max-w-[180px]"
-          style={{ opacity: 0.6 }}
+          className="text-xs uppercase tracking-widest"
+          style={{ color: '#5a3a12', opacity: 0.85 }}
         >
-          {visits.length === 0
-            ? 'Open an Adventure Pack to unlock your first country'
-            : `${WORLD_COUNTRY_COUNT - visits.length} countries left to explore`}
+          <span className="font-extrabold text-lg" style={{ color: '#3a2810' }}>{percent}%</span>{' '}
+          of the world
         </p>
       </div>
 
-      {/* The map */}
+      {/* The big interactive map */}
       <WorldMap
         unlockedSlugs={unlockedSlugs}
         hrefForSlug={slug => `/kid/${token}/country/${slug}`}
       />
 
-      {/* Flag legend — handy on mobile where individual countries are tap-tiny */}
+      {/* Compact flag chip strip below — tap to open a country, mainly
+          useful on mobile where small countries are hard to tap on the
+          zoomed-out map. */}
       {visits.length > 0 && (
-        <div className="mt-6 pt-4" style={{ borderTop: '1px dashed rgba(120,80,30,0.25)' }}>
+        <div className="mt-4 pt-3" style={{ borderTop: '1px dashed rgba(120,80,30,0.25)' }}>
           <p
             className="text-[11px] uppercase tracking-widest mb-2"
             style={{ color: '#5a3a12', opacity: 0.7 }}
           >
-            Tap a country to open its page
+            Tap to open a country
           </p>
           <div className="flex flex-wrap gap-1.5">
             {visits.map(v => {
@@ -92,6 +78,15 @@ export default function MapTab({
             })}
           </div>
         </div>
+      )}
+
+      {visits.length === 0 && (
+        <p
+          className="text-center text-xs uppercase tracking-widest mt-4"
+          style={{ color: '#5a3a12', opacity: 0.7 }}
+        >
+          Open an Adventure Pack or log a flight to unlock your first country
+        </p>
       )}
     </PassportPage>
   )

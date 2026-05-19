@@ -72,7 +72,7 @@ export default function WorldMap({ unlockedSlugs, hrefForSlug }: Props) {
 
   return (
     <div
-      className="relative w-full h-[80vh] min-h-[420px] bg-amber-50 rounded-2xl overflow-hidden border border-amber-200 shadow-inner"
+      className="relative w-full h-[80dvh] min-h-[320px] sm:min-h-[420px] bg-amber-50 rounded-2xl overflow-hidden border border-amber-200 shadow-inner"
       style={{ touchAction: 'none' }}
     >
       <ComposableMap

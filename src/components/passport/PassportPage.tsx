@@ -20,7 +20,7 @@ export default function PassportPage({
 }) {
   return (
     <div
-      className={`relative rounded-2xl border border-amber-100 shadow-md ${book ? 'h-[70vh] min-h-[420px]' : ''} ${className}`}
+      className={`relative rounded-2xl border border-amber-100 shadow-md ${book ? 'h-[70dvh] min-h-[320px] sm:min-h-[420px]' : ''} ${className}`}
       style={{
         background:
           'radial-gradient(ellipse at center, #fdf8ed 0%, #f5ead0 100%), linear-gradient(180deg, #fdf8ed, #f0e3c2)',

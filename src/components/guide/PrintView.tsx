@@ -164,19 +164,25 @@ export default function PrintView({ guide }: Props) {
           font-size: 11pt;
           line-height: 1.55;
         }
+        /* H2 no longer forces a new page. Instead it stays with the
+           next paragraph (break-after: avoid) so headings never end up
+           orphaned at the bottom of a page, but short sections don't
+           waste a page on blank space. If the writer DOES want a fresh
+           page before a section, they can add a "---" horizontal rule
+           in the markdown above it — see the .print-body hr rule
+           further down. */
         .print-body h2 {
-          page-break-before: always;
-          break-before: page;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
           font-size: 20pt;
           font-weight: 800;
           color: #2D5240;
-          margin: 0 0 14pt 0;
+          margin: 24pt 0 14pt 0;
           padding-bottom: 8pt;
           border-bottom: 1pt solid #2D5240;
           page-break-after: avoid;
+          break-after: avoid;
         }
-        .print-body h2:first-of-type { page-break-before: avoid; break-before: auto; }
+        .print-body h2:first-of-type { margin-top: 0; }
         .print-body h3 {
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
           font-size: 13pt;
@@ -184,10 +190,11 @@ export default function PrintView({ guide }: Props) {
           color: #1a1a18;
           margin: 16pt 0 8pt 0;
           page-break-after: avoid;
+          break-after: avoid;
         }
         .print-body p { margin: 0 0 8pt 0; orphans: 3; widows: 3; }
         .print-body ul, .print-body ol { margin: 0 0 8pt 0; padding-left: 18pt; }
-        .print-body li { margin-bottom: 4pt; }
+        .print-body li { margin-bottom: 4pt; orphans: 2; widows: 2; }
         .print-body strong { font-weight: 700; color: #1a1a18; }
         .print-body em { font-style: italic; }
         .print-body blockquote {
@@ -196,14 +203,36 @@ export default function PrintView({ guide }: Props) {
           border-left: 2pt solid #2D5240;
           color: #5a5a52;
           font-style: italic;
+          page-break-inside: avoid;
+          break-inside: avoid;
         }
+        /* Cap image height so a tall portrait photo doesn't take an
+           entire page. They render up to 110mm tall (about 40% of an
+           A4 page) which keeps text on the same page in most cases. */
         .print-body img {
           max-width: 100%;
+          max-height: 110mm;
+          width: auto;
           height: auto;
           display: block;
           margin: 12pt auto;
           page-break-inside: avoid;
           break-inside: avoid;
+          object-fit: contain;
+        }
+        /* Writer-controlled forced page break. A "---" in the markdown
+           renders as <hr>; in print we treat it as an invisible page
+           break, so the writer can manually steer the break wherever
+           the automatic flow looks ugly. The horizontal rule itself
+           doesn't render. */
+        .print-body hr {
+          visibility: hidden;
+          height: 0;
+          margin: 0;
+          padding: 0;
+          border: none;
+          page-break-after: always;
+          break-after: page;
         }
         .print-body a {
           color: #2D5240;

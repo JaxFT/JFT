@@ -27,14 +27,16 @@ export default function AboutPage() {
           </p>
         </header>
 
-        {/* Hero photo */}
-        <div className="relative aspect-[4/3] sm:aspect-[16/10] rounded-2xl overflow-hidden mb-10 bg-gray-100 shadow-sm border border-gray-200">
+        {/* Hero photo — square crop, top-anchored so Jax appears in
+            frame (the earlier 16:10 was centring the crop on the
+            adults and cutting him off the bottom). */}
+        <div className="relative aspect-square rounded-2xl overflow-hidden mb-10 bg-gray-100 shadow-sm border border-gray-200">
           <Image
             src="/images/us/bec-oli-jax.jpeg"
             alt="Bec, Oli and Jax — the family behind Jax Family Travels"
             fill
             sizes="(max-width: 768px) 100vw, 672px"
-            className="object-cover"
+            className="object-cover object-top"
             priority
           />
         </div>

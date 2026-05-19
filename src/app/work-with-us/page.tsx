@@ -112,12 +112,37 @@ export default function WorkWithUsPage() {
       </section>
 
       {/* FORM */}
-      <section className="pb-20 px-4 sm:px-6 lg:px-8">
+      <section className="pb-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-1">Tell us about you</h2>
             <p className="text-sm text-gray-500 mb-6">No commitment yet, we'll reply with availability and pricing.</p>
             <CallRequestForm />
+          </div>
+        </div>
+      </section>
+
+      {/* COLLAB / UGC CARD — different intent to the consult form,
+          so it sits below as its own block with a clear mailto CTA.
+          Once the affiliate + UGC programmes are fleshed out properly
+          we'll replace the mailto with a dedicated form. */}
+      <section className="pb-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-brand-950 text-white rounded-2xl p-6 sm:p-8">
+            <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-2 inline-flex items-center gap-1.5">
+              <Mail className="w-3.5 h-3.5" /> Brands &amp; creators
+            </p>
+            <h2 className="text-2xl font-bold mb-2">Collaboration, UGC &amp; affiliate work</h2>
+            <p className="text-white/80 leading-relaxed text-sm sm:text-base mb-5 max-w-lg">
+              We work with brands that fit how we actually travel — places we&apos;d stay, gear our family really uses,
+              learning tools we&apos;d recommend to friends. If that sounds like you, we&apos;d love to hear from you.
+            </p>
+            <a
+              href="mailto:hello@jaxfamilytravels.com?subject=Collaboration%20%2F%20UGC%20enquiry"
+              className="inline-flex items-center gap-1.5 bg-white text-gray-900 hover:bg-gray-100 font-bold text-sm px-5 py-2.5 rounded-md"
+            >
+              <Mail className="w-4 h-4" /> Contact us about a collab
+            </a>
           </div>
         </div>
       </section>

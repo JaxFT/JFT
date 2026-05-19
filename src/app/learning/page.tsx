@@ -85,22 +85,8 @@ export default async function LearningPage() {
           <p className="text-gray-500 mt-2 text-lg">Sites we actually use and trust for families on the road.</p>
         </div>
 
-        {/* ADVENTURE PACKS PROMO */}
-        <section className="mb-16">
-          <Link
-            href="/adventure-packs"
-            className="block bg-gradient-to-br from-brand-700 to-brand-900 text-white rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow"
-          >
-            <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-2">Adventure Packs</p>
-            <h2 className="text-2xl sm:text-3xl font-bold mb-2">Country-specific missions for your family</h2>
-            <p className="text-white/80 text-sm sm:text-base leading-relaxed max-w-2xl">
-              Interactive packs covering language, food, geography, history, scavenger hunts and family chat cards, to do on the ground as you travel.
-              France is free for every member. <span className="text-white font-semibold">Browse all packs <ArrowRight className="w-4 h-4 inline -mt-0.5" /></span>
-            </p>
-          </Link>
-        </section>
-
-        {/* RECOMMENDED SITES (public) */}
+        {/* RECOMMENDED SITES (public) — the people we trust go first;
+            our own Adventure Packs sit underneath. */}
         <section className="mb-16">
           <p className="text-xs font-bold tracking-widest uppercase text-gray-500 mb-5">Recommended sites</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -148,8 +134,21 @@ export default async function LearningPage() {
           </p>
         </section>
 
-        {/* (Premium Learning Packs section removed, superseded by Adventure Packs,
-            which have their own top-level page and promo card above.) */}
+        {/* ADVENTURE PACKS PROMO — sits below the people we recommend,
+            as our own contribution to the worldschooling ecosystem. */}
+        <section className="mb-4">
+          <Link
+            href="/adventure-packs"
+            className="block bg-gradient-to-br from-brand-700 to-brand-900 text-white rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow"
+          >
+            <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-2">Adventure Packs</p>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2">Country-specific missions for your family</h2>
+            <p className="text-white/80 text-sm sm:text-base leading-relaxed max-w-2xl">
+              Interactive packs covering language, food, geography, history, scavenger hunts and family chat cards, to do on the ground as you travel.
+              France is free for every member. <span className="text-white font-semibold">Browse all packs <ArrowRight className="w-4 h-4 inline -mt-0.5" /></span>
+            </p>
+          </Link>
+        </section>
       </div>
     </div>
   )

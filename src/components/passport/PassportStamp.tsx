@@ -1,14 +1,15 @@
 // Passport-stamp graphic for the 17 system stamp types.
 //
-// Rendering strategy: the shape is a stroked SVG outline (no fill,
-// no inner background) rendered absolutely behind the content. The
-// label + emoji + date sit on top in normal flow and are free to
-// overflow the shape edges — important for stars and shields where
-// the wider text doesn't fit inside the geometric outline.
+// Outline is a clean SVG stroke (no wobble) — the "old stamp" feel
+// comes from faded ink, not jittery lines. Mix-blend-mode multiply
+// makes the colour soak into whatever paper is behind it.
 //
-// Heavy distress: lower opacity, lower contrast, ink-bleed text
-// shadow, SVG turbulence on the outline. Looks like real ink on a
-// passport page rather than a clean digital badge.
+// Text is laid out inside the stamp's bounding box and wraps if
+// needed. For regular shapes (circle/oval/rounded/flag) it always
+// fits inside. For star / shield / continent silhouettes the text
+// may extend past the visible outline because the shape's concave
+// parts leave the bounding box unfilled — which is exactly how real
+// stamps over-press onto a passport page.
 
 import { STAMP_META, type StampType } from '@/lib/passport-types'
 import StampOutline from './StampOutline'
@@ -57,10 +58,10 @@ function formatStampDate(s?: string | null): string | null {
 
 // Different shapes look balanced at different W/H ratios.
 function dimsFor(shape: StampShape, size: 'sm' | 'md') {
-  const base = size === 'md' ? 116 : 80
-  if (shape === 'oval')       return { w: base * 1.4,  h: base * 0.85 }
-  if (shape === 'rounded')    return { w: base * 1.25, h: base * 0.9 }
-  if (shape === 'flag')       return { w: base * 1.15, h: base * 1.05 }
+  const base = size === 'md' ? 124 : 88
+  if (shape === 'oval')       return { w: base * 1.35, h: base * 0.85 }
+  if (shape === 'rounded')    return { w: base * 1.2,  h: base * 0.9 }
+  if (shape === 'flag')       return { w: base * 1.1,  h: base }
   if (shape === 'shield')     return { w: base * 0.95, h: base * 1.05 }
   if (shape === 'star')       return { w: base * 1.05, h: base * 1.05 }
   if (shape === 'africa')     return { w: base * 0.85, h: base * 1.1 }
@@ -83,53 +84,49 @@ export default function PassportStamp({
   const shape = SHAPE_FOR_TYPE[type] ?? 'circle'
   const angle = rotate ?? rotationFor(type)
   const { w, h } = dimsFor(shape, size)
-  const containerDim = Math.max(w, h) + 18
   const emojiSize = size === 'md' ? 'text-3xl' : 'text-xl'
   const labelSize = size === 'md' ? 'text-[10px]' : 'text-[8px]'
-  const captionSize = size === 'md' ? 'text-[9px]' : 'text-[7px]'
+  const captionSize = size === 'md' ? 'text-[8.5px]' : 'text-[7px]'
 
   return (
     <div
       className="relative inline-flex items-center justify-center select-none"
       style={{
-        width: containerDim,
-        height: containerDim,
+        width: w,
+        height: h,
         transform: `rotate(${angle}deg)`,
-        // Real distressed look: aggressive opacity reduction + lower
-        // contrast so it reads as faded ink, not a vibrant badge.
-        opacity: 0.72,
-        filter: 'contrast(0.88) saturate(0.9)',
+        // Faded ink: lower opacity + multiply makes the stamp colour
+        // soak into the cream paper underneath rather than sit on top.
+        opacity: 0.78,
+        mixBlendMode: 'multiply',
       }}
     >
-      {/* SVG outline sits behind the text */}
-      <div
-        className="absolute pointer-events-none"
-        style={{ width: w, height: h, top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
-      >
-        <StampOutline shape={shape} ink={meta.ink} w={w} h={h} />
-      </div>
+      {/* SVG outline (clean, crisp) sits behind the content */}
+      <StampOutline shape={shape} ink={meta.ink} w={w} h={h} />
 
-      {/* Content layer — free to overflow the outline */}
+      {/* Content layer — sits inside the stamp's bounding box. Text
+          wraps if it doesn't fit. For irregular shapes (star, shield,
+          continents) it may visually extend past the outline at the
+          shape's concave edges — that's the desired effect. */}
       <div
-        className="relative z-10 flex flex-col items-center justify-center text-center"
+        className="relative z-10 flex flex-col items-center justify-center text-center px-3"
         style={{
           color: meta.ink,
-          // Ink-bleed: tiny same-colour shadow doubles the strokes,
-          // reading as ink soaked into paper.
-          textShadow: '0 0 0.5px currentColor, 0 0 1.2px currentColor',
+          width: '100%',
+          maxWidth: w - 14,
         }}
       >
         <span className={`${emojiSize} leading-none mb-0.5`} aria-hidden>{meta.emoji}</span>
         <span
-          className={`${labelSize} font-extrabold uppercase tracking-[0.14em] leading-tight whitespace-nowrap px-1`}
+          className={`${labelSize} font-extrabold uppercase tracking-[0.1em] leading-tight`}
           style={{ color: meta.ink }}
         >
           {meta.label}
         </span>
         {(country || date) && (
           <span
-            className={`${captionSize} uppercase tracking-[0.10em] leading-tight mt-0.5 whitespace-nowrap px-1`}
-            style={{ color: meta.ink, opacity: 0.75 }}
+            className={`${captionSize} uppercase tracking-[0.06em] leading-tight mt-0.5`}
+            style={{ color: meta.ink, opacity: 0.78 }}
           >
             {country?.toUpperCase()}
             {country && date ? ' · ' : ''}

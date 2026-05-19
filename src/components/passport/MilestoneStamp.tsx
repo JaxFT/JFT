@@ -1,7 +1,6 @@
-// Passport-stamp graphic for a derived milestone. Same rendering
-// strategy as <PassportStamp/>: stroked SVG outline behind the
-// content, content free to overflow the shape edges. No fill, no
-// inner background — text reads "stamped over" the outline.
+// Passport-stamp graphic for a derived milestone. Same render
+// strategy as <PassportStamp/>: clean SVG outline, content sized to
+// fit inside, occasional natural overflow on irregular shapes.
 
 import StampOutline from './StampOutline'
 import type { StampShape } from '@/lib/passport-milestones'
@@ -30,10 +29,10 @@ function rotationFor(label: string): number {
 }
 
 function dimsFor(shape: StampShape, size: 'sm' | 'md') {
-  const base = size === 'md' ? 116 : 80
-  if (shape === 'oval')       return { w: base * 1.4,  h: base * 0.85 }
-  if (shape === 'rounded')    return { w: base * 1.25, h: base * 0.9 }
-  if (shape === 'flag')       return { w: base * 1.15, h: base * 1.05 }
+  const base = size === 'md' ? 124 : 88
+  if (shape === 'oval')       return { w: base * 1.35, h: base * 0.85 }
+  if (shape === 'rounded')    return { w: base * 1.2,  h: base * 0.9 }
+  if (shape === 'flag')       return { w: base * 1.1,  h: base }
   if (shape === 'shield')     return { w: base * 0.95, h: base * 1.05 }
   if (shape === 'star')       return { w: base * 1.05, h: base * 1.05 }
   if (shape === 'africa')     return { w: base * 0.85, h: base * 1.1 }
@@ -56,46 +55,37 @@ export default function MilestoneStamp({
 }: Props) {
   const angle = rotate ?? rotationFor(label)
   const { w, h } = dimsFor(shape, size)
-  const containerDim = Math.max(w, h) + 18
   const emojiSize = size === 'md' ? 'text-3xl' : 'text-xl'
   const labelSize = size === 'md' ? 'text-[10px]' : 'text-[8px]'
-  const captionSize = size === 'md' ? 'text-[9px]' : 'text-[7px]'
+  const captionSize = size === 'md' ? 'text-[8.5px]' : 'text-[7px]'
 
   return (
     <div
       className="relative inline-flex items-center justify-center select-none"
       style={{
-        width: containerDim,
-        height: containerDim,
+        width: w,
+        height: h,
         transform: `rotate(${angle}deg)`,
-        opacity: 0.72,
-        filter: 'contrast(0.88) saturate(0.9)',
+        opacity: 0.78,
+        mixBlendMode: 'multiply',
       }}
     >
-      <div
-        className="absolute pointer-events-none"
-        style={{ width: w, height: h, top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
-      >
-        <StampOutline shape={shape} ink={ink} w={w} h={h} />
-      </div>
+      <StampOutline shape={shape} ink={ink} w={w} h={h} />
 
       <div
-        className="relative z-10 flex flex-col items-center justify-center text-center"
-        style={{
-          color: ink,
-          textShadow: '0 0 0.5px currentColor, 0 0 1.2px currentColor',
-        }}
+        className="relative z-10 flex flex-col items-center justify-center text-center px-3"
+        style={{ color: ink, width: '100%', maxWidth: w - 14 }}
       >
         <span className={`${emojiSize} leading-none mb-0.5`} aria-hidden>{emoji}</span>
         <span
-          className={`${labelSize} font-extrabold uppercase tracking-[0.12em] leading-tight whitespace-nowrap px-1`}
+          className={`${labelSize} font-extrabold uppercase tracking-[0.08em] leading-tight`}
           style={{ color: ink }}
         >
           {label}
         </span>
         {date && (
           <span
-            className={`${captionSize} uppercase tracking-[0.10em] leading-tight mt-0.5 whitespace-nowrap px-1`}
+            className={`${captionSize} uppercase tracking-[0.06em] leading-tight mt-0.5`}
             style={{ color: ink, opacity: 0.7 }}
           >
             {formatStampDate(date)}

@@ -56,7 +56,22 @@ export default function AddChildForm() {
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Avatar</label>
-        <div className="grid grid-cols-9 gap-2">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="text-4xl leading-none w-12 h-12 flex items-center justify-center bg-brand-50 rounded-lg shrink-0">
+            {avatar || '🧒'}
+          </div>
+          <input
+            type="text"
+            value={avatar}
+            onChange={e => setAvatar(e.target.value.slice(0, 16))}
+            maxLength={16}
+            placeholder="Type any emoji"
+            className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-transparent text-lg"
+            aria-label="Avatar emoji"
+          />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <span className="text-xs text-gray-500 self-center mr-1">Or pick:</span>
           {AVATAR_OPTIONS.map(emoji => (
             <button
               key={emoji}
@@ -67,13 +82,16 @@ export default function AddChildForm() {
                   ? 'bg-brand-100 ring-2 ring-brand-600'
                   : 'bg-gray-50 hover:bg-gray-100'
               }`}
-              aria-label={`Pick avatar ${emoji}`}
+              aria-label={`Pick ${emoji}`}
               aria-pressed={avatar === emoji}
             >
               {emoji}
             </button>
           ))}
         </div>
+        <p className="text-xs text-gray-400 mt-2">
+          Tip: bring up your emoji keyboard with <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Cmd+Ctrl+Space</kbd> on Mac or <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Win+.</kbd> on Windows.
+        </p>
       </div>
 
       <div>

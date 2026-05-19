@@ -27,12 +27,10 @@ export type ChildRow = {
   updated_at: string
 }
 
-// Curated avatar emojis a parent can pick when creating a child. Kept
-// small and friendly. Add more here if you want a wider library.
+// A small set of friendly quick-pick avatars. The avatar input also
+// accepts any emoji a parent types — these are just one-tap shortcuts.
 export const AVATAR_OPTIONS = [
-  '🧒', '👦', '👧', '👶', '🧑', '🦸',
-  '🦋', '🐶', '🐱', '🦊', '🐻', '🐯',
-  '🦁', '🦄', '🐧', '🦉', '🦒', '🐰',
+  '🐶', '🐱', '🦊', '🐻', '🦁', '🦄', '🐧', '🐯',
 ] as const
 
 export type StampType =

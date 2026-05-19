@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
 import { PACK_META } from '@/lib/adventurePackMeta'
 import AdventurePackBrowser from './AdventurePackBrowser'
+import FrancePackHero from './FrancePackHero'
 import CountryFlag from '@/components/CountryFlag'
 
 export const metadata: Metadata = {
@@ -29,6 +30,9 @@ export default async function AdventurePacksListing() {
 
   const livePacks   = PACK_META.filter(p => p.status === 'live')
   const upcomingPacks = PACK_META.filter(p => p.status === 'coming-soon')
+  // France gets its own featured block at the top, so exclude it
+  // from the continent cascade to avoid duplicating the card.
+  const premiumPacks = livePacks.filter(p => p.slug !== 'france')
 
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
@@ -39,7 +43,7 @@ export default async function AdventurePacksListing() {
           </p>
           <h1 className="text-4xl font-bold text-gray-900">Missions for your family on the road</h1>
           <p className="text-gray-500 mt-2 text-lg leading-relaxed">
-            Interactive packs for worldschooling families: language, food, geography, history, scavenger hunts and family chat cards. Do them on the ground, in the moment.
+            Country-specific packs for worldschooling families. Language, food, geography, history, scavenger hunts, animal spotters, conversation cards — built to do on the ground, in the moment.
           </p>
         </div>
 
@@ -52,8 +56,19 @@ export default async function AdventurePacksListing() {
           </div>
         )}
 
+        {/* The free France pack gets its own hero block above the
+            continent cascade — visual taste of what's in every pack. */}
+        <FrancePackHero signedIn={!!user} />
+
+        <div className="mb-5 flex items-baseline justify-between gap-3 flex-wrap">
+          <h2 className="text-xl font-bold text-gray-900">All countries</h2>
+          <p className="text-sm text-gray-500">
+            {premiumPacks.length} premium packs · search or browse by continent
+          </p>
+        </div>
+
         <AdventurePackBrowser
-          packs={livePacks.map(p => ({
+          packs={premiumPacks.map(p => ({
             slug: p.slug,
             country: p.country,
             flag: p.flag,

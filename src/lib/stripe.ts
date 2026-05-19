@@ -13,6 +13,10 @@ export function stripeClient(): Stripe {
   _stripe = new Stripe(key, {
     // Pin the API version so future Stripe upgrades don't change behaviour silently.
     apiVersion: '2024-06-20',
+    // Cloudflare Workers: force the SDK to use fetch instead of its default
+    // Node http transport, which hangs forever under nodejs_compat. Without
+    // this, every Stripe call times out at 80s with no response.
+    httpClient: Stripe.createFetchHttpClient(),
   })
   return _stripe
 }

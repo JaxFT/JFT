@@ -39,6 +39,7 @@ export default function JournalSection({
   const [addText, setAddText] = useState('')
   const [addEmoji, setAddEmoji] = useState('')
   const [addCountry, setAddCountry] = useState('')
+  const [addPlace, setAddPlace] = useState('')
   const [addDate, setAddDate] = useState(today())
   const [addSubmitting, setAddSubmitting] = useState(false)
 
@@ -58,6 +59,7 @@ export default function JournalSection({
           text: addText.trim() || null,
           emoji_rating: addEmoji || null,
           country_slug: addCountry || null,
+          place: addPlace.trim() || null,
           created_at: addDate,
         }),
       })
@@ -67,6 +69,7 @@ export default function JournalSection({
         id: body.id ?? `tmp-${Date.now()}`,
         child_id: childId,
         country_slug: addCountry || null,
+        place: addPlace.trim() || null,
         text: addText.trim() || null,
         emoji_rating: addEmoji || null,
         created_by: 'parent',
@@ -77,6 +80,7 @@ export default function JournalSection({
       setAddText('')
       setAddEmoji('')
       setAddCountry('')
+      setAddPlace('')
       setAddDate(today())
       setAdding(false)
       router.refresh()
@@ -140,17 +144,24 @@ export default function JournalSection({
               >{e}</button>
             ))}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <select
               value={addCountry}
               onChange={e => setAddCountry(e.target.value)}
               className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
             >
-              <option value="">No country (general)</option>
+              <option value="">No country</option>
               {allPacks.map(p => (
                 <option key={p.slug} value={p.slug}>{p.flag} {p.country}</option>
               ))}
             </select>
+            <input
+              type="text"
+              value={addPlace}
+              onChange={e => setAddPlace(e.target.value.slice(0, 100))}
+              placeholder="Place (e.g. Tokyo)"
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
+            />
             <input
               type="date"
               value={addDate}
@@ -243,6 +254,8 @@ function EntryRow({
   const [text, setText] = useState(entry.text ?? '')
   const [emoji, setEmoji] = useState(entry.emoji_rating ?? '')
   const [country, setCountry] = useState(entry.country_slug ?? '')
+  const [place, setPlace] = useState(entry.place ?? '')
+  const [date, setDate] = useState(toDateInput(entry.created_at))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -259,6 +272,8 @@ function EntryRow({
           text: text.trim() || null,
           emoji_rating: emoji || null,
           country_slug: country || null,
+          place: place.trim() || null,
+          created_at: date,
         }),
       })
       const body = await res.json().catch(() => ({}))
@@ -268,6 +283,8 @@ function EntryRow({
         text: text.trim() || null,
         emoji_rating: emoji || null,
         country_slug: country || null,
+        place: place.trim() || null,
+        created_at: new Date(date + 'T12:00:00Z').toISOString(),
         parent_edited: entry.created_by === 'kid' ? true : entry.parent_edited,
         updated_at: new Date().toISOString(),
       })
@@ -300,16 +317,32 @@ function EntryRow({
             >{e}</button>
           ))}
         </div>
-        <select
-          value={country}
-          onChange={e => setCountry(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
-        >
-          <option value="">No country (general)</option>
-          {allPacks.map(p => (
-            <option key={p.slug} value={p.slug}>{p.flag} {p.country}</option>
-          ))}
-        </select>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <select
+            value={country}
+            onChange={e => setCountry(e.target.value)}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
+          >
+            <option value="">No country</option>
+            {allPacks.map(p => (
+              <option key={p.slug} value={p.slug}>{p.flag} {p.country}</option>
+            ))}
+          </select>
+          <input
+            type="text"
+            value={place}
+            onChange={e => setPlace(e.target.value.slice(0, 100))}
+            placeholder="Place (e.g. Tokyo)"
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
+          />
+          <input
+            type="date"
+            value={date}
+            max={today()}
+            onChange={e => setDate(e.target.value)}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
+          />
+        </div>
         {error && (
           <p className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-md px-3 py-2">{error}</p>
         )}
@@ -348,7 +381,10 @@ function EntryRow({
             <span className="font-semibold">{meta.country}</span>
           </span>
         )}
-        <span className="text-gray-500">{formatDate(entry.created_at)}</span>
+        {entry.place && (
+          <span className="text-gray-600 font-medium">· {entry.place}</span>
+        )}
+        <span className="text-gray-500">· {formatDate(entry.created_at)}</span>
         <span className="text-gray-400 ml-auto inline-flex items-center gap-2">
           {entry.emoji_rating && <span className="text-base">{entry.emoji_rating}</span>}
           <span className="text-[10px] uppercase tracking-widest">
@@ -387,6 +423,16 @@ function today(): string {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+// Convert any ISO timestamp string into YYYY-MM-DD for an <input type="date">
+function toDateInput(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return today()
+  const y = d.getUTCFullYear()
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(d.getUTCDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
 }
 

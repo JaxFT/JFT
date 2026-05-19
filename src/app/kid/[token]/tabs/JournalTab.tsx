@@ -1,19 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, Pencil, X, Check } from 'lucide-react'
+import {
+  Loader2, Pencil, X, Check, ChevronLeft, ChevronRight, MapPin,
+} from 'lucide-react'
 import PassportPage from '@/components/passport/PassportPage'
-import { getPackMeta } from '@/lib/adventurePackData'
+import { getPackMeta, PACK_META } from '@/lib/adventurePackData'
 import type { PermissionMode } from '@/lib/passport-types'
 import type { JournalEntryRow } from '@/lib/passport-journal-db'
 
-// Five emoji feelings for the rating selector. Keeping it small and
-// kid-friendly. Order: best → worst.
 const EMOJI_FEELINGS = ['😍', '😊', '😐', '😕', '😴'] as const
 
-// Guided-mode prompts. Six is enough to feel varied without being a
-// wall of choices. They're tuned for travel and family memory.
 const GUIDED_PROMPTS = [
   { emoji: '👀', label: 'Best thing I saw today' },
   { emoji: '😂', label: 'Something funny that happened' },
@@ -22,6 +20,13 @@ const GUIDED_PROMPTS = [
   { emoji: '🤔', label: 'Most surprising thing today' },
   { emoji: '💛', label: 'Someone I will remember' },
 ]
+
+type Group = {
+  countrySlug: string | null
+  countryName: string
+  flag: string
+  entries: JournalEntryRow[]
+}
 
 export default function JournalTab({
   token,
@@ -37,15 +42,24 @@ export default function JournalTab({
   const router = useRouter()
   const [entries, setEntries] = useState<JournalEntryRow[]>(initialEntries)
 
-  // Composer state. activePrompt is null when no prompt has been
-  // tapped yet (Guided) or when in Creator mode (always open).
+  // Composer state
   const [activePrompt, setActivePrompt] = useState<string | null>(
     permissionMode === 'creator' ? '' : null,
   )
   const [text, setText] = useState('')
   const [emoji, setEmoji] = useState<string>('')
+  const [countrySlug, setCountrySlug] = useState<string>('')
+  const [place, setPlace] = useState<string>('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Pagination state for the entry pages
+  const groups = useMemo(() => groupByCountry(entries), [entries])
+  const [pageIndex, setPageIndex] = useState(0)
+  const [direction, setDirection] = useState<'next' | 'prev'>('next')
+  const [animKey, setAnimKey] = useState(0)
+  // Keep pageIndex valid when entries change (e.g. after a new add)
+  const safePage = Math.min(pageIndex, Math.max(0, groups.length - 1))
 
   const canWrite = permissionMode !== 'view'
 
@@ -71,9 +85,6 @@ export default function JournalTab({
     setSubmitting(true)
     setError(null)
     try {
-      // Combine the prompt and the answer into the stored text so it
-      // reads back like a real journal page later. Guided saves get
-      // "Prompt label\n\nAnswer". Creator saves just store the body.
       const combined = activePrompt
         ? `${activePrompt}\n\n${text.trim()}`
         : text.trim()
@@ -83,16 +94,17 @@ export default function JournalTab({
         body: JSON.stringify({
           text: combined || null,
           emoji_rating: emoji || null,
+          country_slug: countrySlug || null,
+          place: place.trim() || null,
         }),
       })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`)
-      // Optimistically insert the new entry at the top of the list
-      // so the kid immediately sees their entry land in the book.
       setEntries(prev => [{
         id: body.id ?? `tmp-${Date.now()}`,
         child_id: '',
-        country_slug: null,
+        country_slug: countrySlug || null,
+        place: place.trim() || null,
         text: combined || null,
         emoji_rating: emoji || null,
         created_by: 'kid',
@@ -101,6 +113,8 @@ export default function JournalTab({
         updated_at: new Date().toISOString(),
       }, ...prev])
       cancel()
+      setCountrySlug('')
+      setPlace('')
       router.refresh()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save')
@@ -108,6 +122,18 @@ export default function JournalTab({
       setSubmitting(false)
     }
   }
+
+  const turn = (dir: 'next' | 'prev') => {
+    const hasPrev = safePage > 0
+    const hasNext = safePage < groups.length - 1
+    if (dir === 'next' && !hasNext) return
+    if (dir === 'prev' && !hasPrev) return
+    setDirection(dir)
+    setPageIndex(safePage + (dir === 'next' ? 1 : -1))
+    setAnimKey(k => k + 1)
+  }
+
+  const current = groups[safePage]
 
   return (
     <PassportPage className="p-6 sm:p-8 min-h-[60vh]">
@@ -126,10 +152,15 @@ export default function JournalTab({
             {childName}&apos;s entries
           </p>
         </div>
+        {groups.length > 1 && (
+          <p className="text-xs uppercase tracking-widest" style={{ color: '#5a3a12', opacity: 0.6 }}>
+            Page {safePage + 1} of {groups.length}
+          </p>
+        )}
       </div>
 
-      {/* COMPOSER — guided / creator only */}
-      {canWrite && (
+      {/* COMPOSER */}
+      {canWrite ? (
         <section className="mb-6">
           <p
             className="text-sm font-bold mb-3"
@@ -138,7 +169,7 @@ export default function JournalTab({
             What do you want to remember about today?
           </p>
 
-          {permissionMode === 'guided' && activePrompt === null && (
+          {permissionMode === 'guided' && activePrompt === null ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {GUIDED_PROMPTS.map(p => (
                 <button
@@ -153,9 +184,7 @@ export default function JournalTab({
                 </button>
               ))}
             </div>
-          )}
-
-          {(permissionMode === 'creator' || activePrompt !== null) && (
+          ) : (
             <div
               className="bg-white/70 rounded-xl p-4"
               style={{ color: '#3a2810' }}
@@ -184,6 +213,31 @@ export default function JournalTab({
                 }
                 className="w-full bg-transparent border-b-2 border-amber-900/20 focus:border-amber-900/40 outline-none resize-none placeholder:text-amber-900/40 text-sm leading-relaxed"
               />
+
+              {/* Where? — country + place */}
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <select
+                  value={countrySlug}
+                  onChange={e => setCountrySlug(e.target.value)}
+                  className="px-3 py-2 bg-white/60 border border-amber-900/15 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-amber-700/30"
+                  style={{ color: '#3a2810' }}
+                  aria-label="Country"
+                >
+                  <option value="">No country (general)</option>
+                  {PACK_META.map(p => (
+                    <option key={p.slug} value={p.slug}>{p.flag} {p.country}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  value={place}
+                  onChange={e => setPlace(e.target.value.slice(0, 100))}
+                  placeholder="Place (e.g. Tokyo, Eiffel Tower)"
+                  className="px-3 py-2 bg-white/60 border border-amber-900/15 rounded-md text-xs placeholder:text-amber-900/40 focus:outline-none focus:ring-2 focus:ring-amber-700/30"
+                  style={{ color: '#3a2810' }}
+                  aria-label="Place"
+                />
+              </div>
 
               <div className="mt-3">
                 <p
@@ -242,10 +296,7 @@ export default function JournalTab({
             </div>
           )}
         </section>
-      )}
-
-      {/* READ-ONLY message for view-only kids */}
-      {!canWrite && (
+      ) : (
         <div
           className="bg-white/50 rounded-xl p-4 mb-6 text-sm"
           style={{ color: '#5a3a12' }}
@@ -257,15 +308,11 @@ export default function JournalTab({
         </div>
       )}
 
-      {/* ENTRIES */}
-      <section>
-        <p
-          className="text-xs font-extrabold uppercase tracking-[0.2em] mb-3 pb-2"
-          style={{ color: '#5a3a12', borderBottom: '1px dashed rgba(120,80,30,0.25)' }}
-        >
-          Past entries ({entries.length})
-        </p>
-
+      {/* PAGINATED ENTRY PAGES */}
+      <section
+        className="pt-5"
+        style={{ borderTop: '1px dashed rgba(120,80,30,0.25)' }}
+      >
         {entries.length === 0 ? (
           <p
             className="text-center text-xs uppercase tracking-widest py-8"
@@ -274,19 +321,93 @@ export default function JournalTab({
             No entries yet
           </p>
         ) : (
-          <ul className="space-y-4">
-            {entries.map(e => <JournalEntryCard key={e.id} entry={e} />)}
-          </ul>
+          <>
+            <div
+              key={animKey}
+              className={direction === 'next' ? 'animate-page-turn-next' : 'animate-page-turn-prev'}
+            >
+              {current && <CountryJournalPage group={current} />}
+            </div>
+
+            {groups.length > 1 && (
+              <footer
+                className="mt-6 pt-4 flex items-center justify-between gap-3 text-sm"
+                style={{ borderTop: '1px dashed rgba(120,80,30,0.25)', color: '#5a3a12' }}
+              >
+                <button
+                  type="button"
+                  onClick={() => turn('prev')}
+                  disabled={safePage <= 0}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span className="uppercase tracking-widest text-xs">
+                    {safePage > 0 ? groups[safePage - 1].countryName : 'Prev'}
+                  </span>
+                </button>
+                <div className="flex items-center gap-1">
+                  {groups.map((g, i) => (
+                    <button
+                      key={g.countrySlug ?? '__none__'}
+                      type="button"
+                      onClick={() => {
+                        if (i === safePage) return
+                        setDirection(i > safePage ? 'next' : 'prev')
+                        setPageIndex(i)
+                        setAnimKey(k => k + 1)
+                      }}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        i === safePage ? 'bg-amber-800 w-4' : 'bg-amber-800/30 hover:bg-amber-800/50'
+                      }`}
+                      aria-label={`Go to ${g.countryName} page`}
+                    />
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => turn('next')}
+                  disabled={safePage >= groups.length - 1}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Next page"
+                >
+                  <span className="uppercase tracking-widest text-xs">
+                    {safePage < groups.length - 1 ? groups[safePage + 1].countryName : 'Next'}
+                  </span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </footer>
+            )}
+          </>
         )}
       </section>
     </PassportPage>
   )
 }
 
+function CountryJournalPage({ group }: { group: Group }) {
+  return (
+    <section>
+      <div
+        className="flex items-baseline justify-between gap-3 mb-4 pb-2"
+        style={{ borderBottom: '1px dashed rgba(120,80,30,0.25)', color: '#5a3a12' }}
+      >
+        <div className="inline-flex items-center gap-2">
+          <span className="text-2xl leading-none" aria-hidden>{group.flag}</span>
+          <h3 className="text-base font-extrabold uppercase tracking-[0.18em]">{group.countryName}</h3>
+        </div>
+        <p className="text-xs uppercase tracking-widest opacity-60">
+          {group.entries.length} {group.entries.length === 1 ? 'entry' : 'entries'}
+        </p>
+      </div>
+      <ul className="space-y-3">
+        {group.entries.map(e => <JournalEntryCard key={e.id} entry={e} />)}
+      </ul>
+    </section>
+  )
+}
+
 function JournalEntryCard({ entry }: { entry: JournalEntryRow }) {
-  const meta = entry.country_slug ? getPackMeta(entry.country_slug) : null
-  // Split prompt from answer if the text was stored as
-  // "Prompt label\n\nAnswer" by the guided composer.
   const [maybePrompt, ...rest] = (entry.text ?? '').split('\n\n')
   const body = rest.length > 0 ? rest.join('\n\n') : (entry.text ?? '')
   const prompt = rest.length > 0 ? maybePrompt : null
@@ -296,11 +417,10 @@ function JournalEntryCard({ entry }: { entry: JournalEntryRow }) {
       className="bg-white/50 rounded-xl p-4"
       style={{ color: '#3a2810' }}
     >
-      <div className="flex items-baseline gap-2 mb-2 text-xs">
-        {meta && (
-          <span className="inline-flex items-center gap-1">
-            <span className="text-base leading-none">{meta.flag}</span>
-            <span className="font-semibold">{meta.country}</span>
+      <div className="flex items-baseline gap-2 mb-2 text-xs flex-wrap">
+        {entry.place && (
+          <span className="inline-flex items-center gap-1 font-semibold">
+            <MapPin className="w-3 h-3 opacity-60" /> {entry.place}
           </span>
         )}
         <span className="opacity-50">
@@ -323,6 +443,33 @@ function JournalEntryCard({ entry }: { entry: JournalEntryRow }) {
       </div>
     </li>
   )
+}
+
+function groupByCountry(entries: JournalEntryRow[]): Group[] {
+  const byCountry = new Map<string, Group>()
+  for (const e of entries) {
+    const key = e.country_slug ?? '__none__'
+    const meta = e.country_slug ? getPackMeta(e.country_slug) : null
+    if (!byCountry.has(key)) {
+      byCountry.set(key, {
+        countrySlug: e.country_slug ?? null,
+        countryName: meta?.country ?? 'Other entries',
+        flag: meta?.flag ?? '📓',
+        entries: [],
+      })
+    }
+    byCountry.get(key)!.entries.push(e)
+  }
+  const groups = Array.from(byCountry.values())
+  for (const g of groups) {
+    g.entries.sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+  }
+  groups.sort((a, b) => {
+    const aLatest = a.entries[0]?.created_at ?? ''
+    const bLatest = b.entries[0]?.created_at ?? ''
+    return aLatest < bLatest ? 1 : -1
+  })
+  return groups
 }
 
 function formatDate(s: string): string {

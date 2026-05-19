@@ -19,6 +19,7 @@ export type JournalEntryRow = {
   id: string
   child_id: string
   country_slug: string | null
+  place: string | null
   text: string | null
   emoji_rating: string | null
   created_by: 'kid' | 'parent'
@@ -79,6 +80,7 @@ export async function listJournalEntriesForChildParent(childId: string): Promise
 export async function createKidJournalEntry(input: {
   childId: string
   countrySlug?: string | null
+  place?: string | null
   text?: string | null
   emojiRating?: string | null
 }): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
@@ -90,6 +92,7 @@ export async function createKidJournalEntry(input: {
     .insert({
       child_id: input.childId,
       country_slug: input.countrySlug ?? null,
+      place: input.place?.trim() ? input.place.trim().slice(0, 100) : null,
       text: input.text?.trim() ? input.text.trim().slice(0, 5000) : null,
       emoji_rating: input.emojiRating ? input.emojiRating.slice(0, 16) : null,
       created_by: 'kid',

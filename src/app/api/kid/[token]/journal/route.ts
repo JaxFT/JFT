@@ -26,7 +26,10 @@ export async function POST(
     )
   }
 
-  let body: { text?: string; emoji_rating?: string; country_slug?: string | null } = {}
+  let body: {
+    text?: string; emoji_rating?: string;
+    country_slug?: string | null; place?: string | null
+  } = {}
   try { body = await request.json() } catch {}
 
   let countrySlug: string | null = null
@@ -40,6 +43,7 @@ export async function POST(
   const result = await createKidJournalEntry({
     childId: child.id,
     countrySlug,
+    place: body.place ?? null,
     text: body.text,
     emojiRating: body.emoji_rating,
   })

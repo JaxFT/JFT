@@ -19,7 +19,8 @@ export async function PATCH(
 
   let body: {
     text?: string; emoji_rating?: string;
-    country_slug?: string | null
+    country_slug?: string | null; place?: string | null;
+    created_at?: string
   } = {}
   try { body = await request.json() } catch {}
 
@@ -50,6 +51,23 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unknown country.' }, { status: 400 })
     }
     update.country_slug = body.country_slug
+  }
+  if (body.place === null) {
+    update.place = null
+  } else if (typeof body.place === 'string') {
+    update.place = body.place.trim().slice(0, 100) || null
+  }
+  // Parent can edit the entry date (backdating, fixing a typo, etc.)
+  if (typeof body.created_at === 'string' && body.created_at) {
+    let createdAt: string | undefined
+    if (/^\d{4}-\d{2}-\d{2}$/.test(body.created_at)) {
+      const d = new Date(body.created_at + 'T12:00:00Z')
+      if (!Number.isNaN(d.getTime())) createdAt = d.toISOString()
+    } else {
+      const d = new Date(body.created_at)
+      if (!Number.isNaN(d.getTime())) createdAt = d.toISOString()
+    }
+    if (createdAt) update.created_at = createdAt
   }
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: 'Nothing to update.' }, { status: 400 })

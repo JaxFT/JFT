@@ -21,7 +21,8 @@ export async function POST(
 
   let body: {
     text?: string; emoji_rating?: string;
-    country_slug?: string | null; created_at?: string
+    country_slug?: string | null; place?: string | null;
+    created_at?: string
   } = {}
   try { body = await request.json() } catch {}
 
@@ -39,6 +40,8 @@ export async function POST(
     countrySlug = body.country_slug
   }
 
+  const place = body.place?.trim() ? body.place.trim().slice(0, 100) : null
+
   // Allow backdated created_at if it parses as a real date.
   let createdAt: string | undefined
   if (body.created_at) {
@@ -54,6 +57,7 @@ export async function POST(
   const insert: Record<string, unknown> = {
     child_id: id,
     country_slug: countrySlug,
+    place,
     text,
     emoji_rating: emoji,
     created_by: 'parent',

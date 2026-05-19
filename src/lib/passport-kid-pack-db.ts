@@ -160,6 +160,23 @@ export async function saveKidSession(
   return { firstCompletion, firstVisit }
 }
 
+// Stamps that come from interacting with an Adventure Pack section
+// or completing the whole pack. Manual parent awards and flight-
+// derived BRAVE_TRAVELLER stamps live alongside these but stay put
+// on a pack restart.
+const PACK_DERIVED_STAMP_TYPES = [
+  'BRAVE_EATER',
+  'LOCAL_LINGO',
+  'MAP_READER',
+  'MONEY_CHANGER',
+  'GEOGRAPHY_GENIUS',
+  'SCAVENGER_HUNTER',
+  'SENSE_SEEKER',
+  'STORY_KEEPER',
+  'FAMILY_CHATTERBOX',
+  'ADVENTURE_PACK_COMPLETE',
+]
+
 export async function clearKidPack(childId: string, countrySlug: string): Promise<void> {
   const sb = admin()
   await sb
@@ -172,6 +189,16 @@ export async function clearKidPack(childId: string, countrySlug: string): Promis
     .delete()
     .eq('child_id', childId)
     .eq('country_slug', countrySlug)
+  // Wipe stamps earned from this pack so a restart feels like a true
+  // restart. Flight-derived BRAVE_TRAVELLER stamps and any manually
+  // parent-awarded stamps for the same country are left alone.
+  await sb
+    .from('stamps')
+    .delete()
+    .eq('child_id', childId)
+    .eq('country_slug', countrySlug)
+    .eq('awarded_by', 'system')
+    .in('type', PACK_DERIVED_STAMP_TYPES)
   // Note: we intentionally do NOT delete the country_visit row — kids
   // shouldn't be able to wipe their own travel history.
 }

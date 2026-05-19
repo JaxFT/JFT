@@ -193,7 +193,10 @@ export default async function KidCountryPage({
                       style={{ color: '#3a2810' }}
                     >
                       <div className="flex items-baseline gap-2 mb-1.5 text-xs">
-                        <span className="opacity-50">{formatDate(e.created_at)}</span>
+                        {e.place && (
+                          <span className="font-semibold">{e.place}</span>
+                        )}
+                        <span className="opacity-50">{e.place ? '· ' : ''}{formatDate(e.created_at)}</span>
                         {e.emoji_rating && <span className="text-base ml-auto">{e.emoji_rating}</span>}
                       </div>
                       {prompt && <p className="text-xs font-bold italic mb-1 opacity-80">{prompt}</p>}

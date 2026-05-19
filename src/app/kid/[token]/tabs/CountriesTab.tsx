@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ArrowRight, Stamp as StampIcon, Trophy, Home } from 'lucide-react'
 import PassportPage from '@/components/passport/PassportPage'
 import CountryFlag from '@/components/CountryFlag'
-import { getPackMeta } from '@/lib/adventurePackMeta'
+import { getPackMeta, getPackByIso2 } from '@/lib/adventurePackMeta'
 import { SECTION_KEYS } from '@/lib/adventurePackTypes'
 import type {
   CountryVisitRow, StampRow, AssignedPackRow,
@@ -13,14 +13,21 @@ export default function CountriesTab({
   visits,
   stamps,
   assignedPacks,
-  homeCountrySlug,
+  homeCountryIso2,
 }: {
   token: string
   visits: CountryVisitRow[]
   stamps: StampRow[]
   assignedPacks: AssignedPackRow[]
-  homeCountrySlug: string | null
+  homeCountryIso2: string | null
 }) {
+  // Home country may or may not be one of our 35 packs. If it is,
+  // its pack slug is how we'll flag visits as "home"; if not, the
+  // kid simply won't see a home flag (their home country isn't on
+  // the visited list either since there's no pack for it).
+  const homePackSlug = homeCountryIso2
+    ? (getPackByIso2(homeCountryIso2)?.slug ?? null)
+    : null
   // Pre-compute per-country counts so each card can show its own
   // little summary.
   const stampsBySlug = new Map<string, number>()
@@ -82,7 +89,7 @@ export default function CountriesTab({
               const pack = packsBySlug.get(v.country_slug)
               const missionsDone = pack?.missions_complete?.length ?? 0
               const isComplete = !!pack?.completed_at
-              const isHome = homeCountrySlug === v.country_slug
+              const isHome = homePackSlug === v.country_slug
               const formatted = new Date(v.first_visit_date).toLocaleDateString('en-GB', {
                 day: 'numeric', month: 'long', year: 'numeric',
               })

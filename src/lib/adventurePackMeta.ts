@@ -55,3 +55,14 @@ export const PACK_META: AdventurePackMeta[] = [
 export function getPackMeta(slug: string): AdventurePackMeta | null {
   return PACK_META.find(p => p.slug === slug) ?? null
 }
+
+// Look up a pack by its ISO 3166-1 alpha-2 country code. Used to
+// bridge the kid's home_country_iso2 (any country) to the optional
+// pack we have for that country (if any). Returns null if the country
+// isn't one of the 35 packs — entirely normal for families living in
+// e.g. Switzerland or Norway.
+export function getPackByIso2(iso2: string | null | undefined): AdventurePackMeta | null {
+  if (!iso2) return null
+  const lower = iso2.toLowerCase()
+  return PACK_META.find(p => p.iso2 === lower) ?? null
+}

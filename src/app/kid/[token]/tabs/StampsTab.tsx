@@ -19,14 +19,14 @@ export default function StampsTab({
   token,
   stamps,
   visits,
-  homeCountrySlug,
+  homeCountryIso2,
 }: {
   token: string
   stamps: StampRow[]
   visits: CountryVisitRow[]
-  homeCountrySlug: string | null
+  homeCountryIso2: string | null
 }) {
-  const pages = useMemo(() => buildPages(stamps, visits, homeCountrySlug), [stamps, visits, homeCountrySlug])
+  const pages = useMemo(() => buildPages(stamps, visits, homeCountryIso2), [stamps, visits, homeCountryIso2])
   const [pageIndex, setPageIndex] = useState(0)
   const [direction, setDirection] = useState<'next' | 'prev'>('next')
   const [animKey, setAnimKey] = useState(0)
@@ -227,9 +227,9 @@ function ScatteredStamps({ count, children }: { count: number; children: React.R
   )
 }
 
-function buildPages(stamps: StampRow[], visits: CountryVisitRow[], homeCountrySlug: string | null): Page[] {
+function buildPages(stamps: StampRow[], visits: CountryVisitRow[], homeCountryIso2: string | null): Page[] {
   // Always lead with the Traveler page
-  const milestones = computeMilestones(visits, stamps, homeCountrySlug)
+  const milestones = computeMilestones(visits, stamps, homeCountryIso2)
 
   // Group country stamps
   const byCountry = new Map<string, Extract<Page, { kind: 'country' }>>()

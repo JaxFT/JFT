@@ -9,6 +9,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Minus, Maximize2, X, ArrowRight } from 'lucide-react'
+import { PACK_META } from '@/lib/adventurePackMeta'
 import {
   ComposableMap, Geographies, Geography, ZoomableGroup,
 } from 'react-simple-maps'
@@ -71,16 +72,26 @@ type SelectedCountry = {
 
 type Props = {
   unlockedSlugs: string[]
-  // If set, the map opens centred on this country at HOME_ZOOM.
-  homeCountrySlug?: string | null
+  // ISO 3166-1 alpha-2 code of the kid's home country (any country,
+  // not just one of the 35 packs). If it matches a pack country we
+  // zoom the map to it on first load; otherwise we leave the global
+  // view and the home-country highlight just doesn't apply.
+  homeCountryIso2?: string | null
   hrefForSlug: (slug: string) => string
 }
 
-export default function WorldMap({ unlockedSlugs, hrefForSlug, homeCountrySlug }: Props) {
+export default function WorldMap({ unlockedSlugs, hrefForSlug, homeCountryIso2 }: Props) {
   const router = useRouter()
-  // Start zoomed-in on the kid's home country if one is set; otherwise
-  // a comfortable global view. The kid can pinch back out any time.
-  const homeCenter = homeCountrySlug ? SLUG_TO_CENTER[homeCountrySlug] : undefined
+  // Map the iso2 to a pack slug (if any) so we can look up the centre
+  // coords in SLUG_TO_CENTER. Non-pack home countries fall through to
+  // the default global view.
+  const homePackSlug = homeCountryIso2
+    ? PACK_META.find(p => p.iso2 === homeCountryIso2.toLowerCase())?.slug ?? null
+    : null
+  // Start zoomed-in on the kid's home country if it's a pack country;
+  // otherwise show a comfortable global view. The kid can pinch back
+  // out any time.
+  const homeCenter = homePackSlug ? SLUG_TO_CENTER[homePackSlug] : undefined
   const initialZoom = homeCenter ? HOME_ZOOM : 1
   const initialCenter = homeCenter ?? DEFAULT_CENTER
   const [zoom, setZoom] = useState(initialZoom)

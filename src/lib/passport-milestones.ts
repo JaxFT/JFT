@@ -7,7 +7,7 @@
 // stats so a kid completing the pack for the country they live in
 // gets the section stamps but no travel-milestone credit.
 
-import { getPackMeta } from './adventurePackData'
+import { getPackMeta, getPackByIso2 } from './adventurePackMeta'
 import type { CountryVisitRow, StampRow } from './passport-kid-db'
 
 // Continent each pack country sits on. Turkey is split E/W in real
@@ -89,13 +89,19 @@ function dateOfNth(timestamps: string[], n: number): string | null {
 export function computeMilestones(
   visits: CountryVisitRow[],
   stamps: StampRow[],
-  homeCountrySlug: string | null,
+  homeCountryIso2: string | null,
 ): MilestoneStamp[] {
   const out: MilestoneStamp[] = []
 
+  // Map the kid's home ISO 3166-1 code to a pack slug (if their home
+  // country happens to be one of our 35 packs). If it isn't, every
+  // visit counts as a new-country milestone — eg. a kid in Switzerland
+  // visiting Morocco is a real trip away from home.
+  const homePackSlug = getPackByIso2(homeCountryIso2)?.slug ?? null
+
   // Strip the home country from "new countries explored" data.
-  const travelVisits = homeCountrySlug
-    ? visits.filter(v => v.country_slug !== homeCountrySlug)
+  const travelVisits = homePackSlug
+    ? visits.filter(v => v.country_slug !== homePackSlug)
     : visits
 
   // ── First-country milestone is special: it uses the actual
@@ -133,7 +139,7 @@ export function computeMilestones(
   const foodByCountry = new Map<string, string>()
   for (const s of stamps) {
     if (s.type !== 'BRAVE_EATER' || !s.country_slug) continue
-    if (homeCountrySlug && s.country_slug === homeCountrySlug) continue
+    if (homePackSlug && s.country_slug === homePackSlug) continue
     const prev = foodByCountry.get(s.country_slug)
     if (!prev || s.earned_at < prev) foodByCountry.set(s.country_slug, s.earned_at)
   }

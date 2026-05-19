@@ -52,7 +52,7 @@ export default async function KidLandingPage({
         name: child.name,
         avatar: child.avatar,
         permission_mode: child.permission_mode,
-        home_country_slug: child.home_country_slug,
+        home_country_iso2: child.home_country_iso2,
       }}
       stats={stats}
       stamps={stamps}

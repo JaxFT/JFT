@@ -11,11 +11,11 @@ const WORLD_COUNTRY_COUNT = 195
 export default function MapTab({
   token,
   visits,
-  homeCountrySlug,
+  homeCountryIso2,
 }: {
   token: string
   visits: CountryVisitRow[]
-  homeCountrySlug: string | null
+  homeCountryIso2: string | null
 }) {
   const unlockedSlugs = visits.map(v => v.country_slug)
   const percent = visits.length === 0
@@ -50,7 +50,7 @@ export default function MapTab({
       <WorldMap
         unlockedSlugs={unlockedSlugs}
         hrefForSlug={slug => `/kid/${token}/country/${slug}`}
-        homeCountrySlug={homeCountrySlug}
+        homeCountryIso2={homeCountryIso2}
       />
 
       {/* Compact flag chip strip below — tap to open a country, mainly

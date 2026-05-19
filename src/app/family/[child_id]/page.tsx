@@ -110,8 +110,7 @@ export default async function ChildDetailPage({
           <HomeCountrySection
             childId={child.id}
             childName={child.name}
-            initialHomeSlug={child.home_country_slug}
-            allPacks={allPacks.map(p => ({ slug: p.slug, country: p.country, flag: p.flag }))}
+            initialHomeIso2={child.home_country_iso2}
           />
 
           <PackAssignmentSection

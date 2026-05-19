@@ -4,31 +4,62 @@
 // "new countries explored" travel stats so a kid who lives in (say)
 // the UK can still complete the UK pack and earn its section stamps
 // without the UK counting toward their travel milestones.
+//
+// Accepts ANY ISO 3166-1 country (not just the 35 Adventure Pack
+// countries). Picker is a simple type-to-search scrollable list —
+// faster than a continent drill-down for a list this long, since
+// the parent already knows the country name.
 
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Home, Loader2, Check } from 'lucide-react'
+import { Home, Loader2, Check, Search, ChevronDown } from 'lucide-react'
+import { COUNTRIES, getCountryByIso2 } from '@/lib/countries'
+import CountryFlag from '@/components/CountryFlag'
 
-type PackMetaLite = { slug: string; country: string; flag: string }
+// Antarctica is excluded — nobody's marking that as home.
+const PICKABLE_COUNTRIES = COUNTRIES
+  .filter(c => c.continent !== 'Antarctica')
+  .slice()
+  .sort((a, b) => a.name.localeCompare(b.name))
 
 export default function HomeCountrySection({
   childId,
   childName,
-  initialHomeSlug,
-  allPacks,
+  initialHomeIso2,
 }: {
   childId: string
   childName: string
-  initialHomeSlug: string | null
-  allPacks: PackMetaLite[]
+  initialHomeIso2: string | null
 }) {
   const router = useRouter()
-  const [slug, setSlug] = useState<string>(initialHomeSlug ?? '')
+  const [iso2, setIso2] = useState<string | null>(initialHomeIso2)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const dirty = (slug || null) !== (initialHomeSlug || null)
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  const dirty = (iso2 || null) !== (initialHomeIso2 || null)
+  const selected = getCountryByIso2(iso2)
+
+  // Auto-focus the search box when the picker opens. Saves a tap on
+  // mobile and means you can start typing immediately.
+  useEffect(() => {
+    if (open) {
+      requestAnimationFrame(() => searchInputRef.current?.focus())
+    } else {
+      setQuery('')
+    }
+  }, [open])
+
+  // Simple includes-match. Searches the country name only.
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return PICKABLE_COUNTRIES
+    return PICKABLE_COUNTRIES.filter(c => c.name.toLowerCase().includes(q))
+  }, [query])
 
   const save = async () => {
     setSaving(true)
@@ -38,7 +69,7 @@ export default function HomeCountrySection({
       const res = await fetch(`/api/family/children/${childId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ home_country_slug: slug || null }),
+        body: JSON.stringify({ home_country_iso2: iso2 || null }),
       })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`)
@@ -60,27 +91,28 @@ export default function HomeCountrySection({
       </div>
 
       <p className="text-sm text-gray-500 mb-5">
-        Where {childName} lives. They can still do this country&apos;s Adventure Pack and earn its section
-        stamps, but it won&apos;t count toward &quot;new countries explored&quot; travel stats. Leave blank to
-        treat every country as new.
+        Where {childName} lives. They can still do this country&apos;s Adventure Pack (if we have one)
+        and earn its stamps, but it won&apos;t count toward &quot;new countries explored&quot; travel stats.
       </p>
 
-      {/* Native selects on iOS Safari can refuse to shrink below the
-          intrinsic width of their widest <option>, which pushed the
-          Save button off the right edge of the screen. `min-w-0` lets
-          the flex item shrink past that intrinsic width; the short
-          placeholder copy below also helps. */}
       <div className="flex gap-2 flex-wrap sm:flex-nowrap">
-        <select
-          value={slug}
-          onChange={e => setSlug(e.target.value)}
-          className="flex-1 min-w-0 w-full sm:w-auto px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
+        <button
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          className="flex-1 min-w-0 w-full sm:w-auto inline-flex items-center justify-between gap-2 px-3 py-2.5 border border-gray-200 rounded-lg text-sm hover:border-brand-300 text-left bg-white"
         >
-          <option value="">— No home set —</option>
-          {allPacks.map(p => (
-            <option key={p.slug} value={p.slug}>{p.flag} {p.country}</option>
-          ))}
-        </select>
+          <span className="inline-flex items-center gap-2 min-w-0">
+            {selected ? (
+              <>
+                <CountryFlag iso2={selected.iso2} country={selected.name} ariaHidden size="sm" />
+                <span className="font-semibold text-gray-900 truncate">{selected.name}</span>
+              </>
+            ) : (
+              <span className="text-gray-700">— No home set —</span>
+            )}
+          </span>
+          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`} />
+        </button>
         <button
           type="button"
           onClick={save}
@@ -94,6 +126,59 @@ export default function HomeCountrySection({
               : 'Save'}
         </button>
       </div>
+
+      {open && (
+        <div className="mt-3 border border-gray-200 rounded-xl bg-white overflow-hidden">
+          {/* Type-to-search */}
+          <div className="relative p-2 border-b border-gray-100">
+            <Search className="absolute top-1/2 left-4 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+            <input
+              ref={searchInputRef}
+              type="search"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Type to search…"
+              className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
+            />
+          </div>
+
+          {/* "Clear home" pinned to the top */}
+          <button
+            type="button"
+            onClick={() => { setIso2(null); setOpen(false) }}
+            className={`w-full text-left px-3 py-2 text-sm border-b border-gray-100 ${
+              iso2 === null ? 'bg-brand-50 text-brand-800 font-semibold' : 'text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            — No home set —
+          </button>
+
+          {filtered.length === 0 ? (
+            <p className="px-3 py-4 text-sm text-gray-500 italic">No countries match &quot;{query}&quot;.</p>
+          ) : (
+            <ul className="max-h-80 overflow-y-auto">
+              {filtered.map(c => {
+                const isCurrent = c.iso2 === iso2
+                return (
+                  <li key={c.iso2}>
+                    <button
+                      type="button"
+                      onClick={() => { setIso2(c.iso2); setOpen(false) }}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left ${
+                        isCurrent ? 'bg-brand-50 text-brand-800 font-semibold' : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <CountryFlag iso2={c.iso2} country={c.name} ariaHidden size="sm" />
+                      {c.name}
+                      {isCurrent && <Check className="w-3.5 h-3.5 ml-auto" />}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+      )}
 
       {error && (
         <p className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-md px-3 py-2 mt-3">{error}</p>

@@ -23,9 +23,12 @@ export type ChildRow = {
   qr_token: string
   permission_mode: PermissionMode
   stamp_auto_approve: boolean
-  // The country slug the kid lives in. Excluded from "new countries
-  // explored" travel stats but kept in the country list / map.
-  home_country_slug: string | null
+  // The ISO 3166-1 alpha-2 code of the country the kid lives in
+  // (eg. 'gb' for the UK, 'ch' for Switzerland). Excluded from
+  // "new countries explored" travel stats. Switched from the old
+  // pack-slug field so families living outside the 35 pack countries
+  // can still record where home is.
+  home_country_iso2: string | null
   created_at: string
   updated_at: string
 }

@@ -28,7 +28,7 @@ type Child = {
   name: string
   avatar: string
   permission_mode: PermissionMode
-  home_country_slug: string | null
+  home_country_iso2: string | null
 }
 
 export default function KidShell({
@@ -108,10 +108,10 @@ export default function KidShell({
       {/* PANEL */}
       <main className="max-w-3xl mx-auto px-4 pt-6 pb-20">
         {tab === 'passport'  && <PassportTab token={token} child={child} stats={stats} stamps={stamps} assignedPacks={assignedPacks} />}
-        {tab === 'map'       && <MapTab token={token} visits={visits} homeCountrySlug={child.home_country_slug} />}
-        {tab === 'countries' && <CountriesTab token={token} visits={visits} stamps={stamps} assignedPacks={assignedPacks} homeCountrySlug={child.home_country_slug} />}
+        {tab === 'map'       && <MapTab token={token} visits={visits} homeCountryIso2={child.home_country_iso2} />}
+        {tab === 'countries' && <CountriesTab token={token} visits={visits} stamps={stamps} assignedPacks={assignedPacks} homeCountryIso2={child.home_country_iso2} />}
         {tab === 'journal'   && <JournalTab token={token} childName={child.name} permissionMode={child.permission_mode} entries={journal} />}
-        {tab === 'stamps'    && <StampsTab token={token} stamps={stamps} visits={visits} homeCountrySlug={child.home_country_slug} />}
+        {tab === 'stamps'    && <StampsTab token={token} stamps={stamps} visits={visits} homeCountryIso2={child.home_country_iso2} />}
       </main>
     </div>
   )

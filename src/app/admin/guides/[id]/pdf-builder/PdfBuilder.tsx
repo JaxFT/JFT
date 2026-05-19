@@ -308,7 +308,12 @@ export default function PdfBuilder({
 
   const setOpt = <K extends keyof ImageOpts>(key: K, value: ImageOpts[K]) => {
     if (!popover) return
-    setMarkdown(setImageOpt(markdown, popover.src, key, value))
+    setMarkdown(patchImageOpts(markdown, popover.src, { [key]: value } as Partial<ImageOpts>))
+  }
+
+  const setFocus = (fx: number, fy: number) => {
+    if (!popover) return
+    setMarkdown(patchImageOpts(markdown, popover.src, { focusX: fx, focusY: fy }))
   }
 
   const resetOpts = () => {
@@ -480,6 +485,14 @@ export default function PdfBuilder({
               hint="Crops the image to fit the chosen aspect ratio."
             />
 
+            <FocusPicker
+              src={popover.src}
+              x={currentOpts.focusX}
+              y={currentOpts.focusY}
+              onChange={setFocus}
+              active={currentOpts.crop !== 'none'}
+            />
+
             <button
               type="button"
               onClick={resetOpts}
@@ -607,25 +620,28 @@ function OptRow<V extends string>({
 
 const IMG_RE = /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g
 
-// Strip the size/align/crop tokens from a title, returning anything
-// else the writer typed (eg. a caption) so we don't destroy it.
+// Strip the size/align/crop/focus tokens from a title, returning
+// anything else the writer typed (e.g. a caption) so we don't destroy
+// it on a round-trip through the builder.
 function stripOptTokens(title: string | undefined | null): string {
   if (!title) return ''
   return title
     .replace(/\bsize\s*[:=]\s*\w+/gi, '')
     .replace(/\balign\s*[:=]\s*\w+/gi, '')
     .replace(/\bcrop\s*[:=]\s*\w+/gi, '')
+    .replace(/\bfocus\s*[:=]\s*\d{1,3}%?\s*[,/x]\s*\d{1,3}%?/gi, '')
     .replace(/\s+/g, ' ')
     .trim()
 }
 
 // Build a title string from opts + any preserved caption. Defaults
-// are omitted to keep markdown clean.
+// are omitted to keep the markdown clean.
 function buildTitle(opts: ImageOpts, caption: string): string {
   const parts: string[] = []
   if (opts.size !== 'medium') parts.push(`size:${opts.size}`)
   if (opts.align !== 'center') parts.push(`align:${opts.align}`)
   if (opts.crop !== 'none') parts.push(`crop:${opts.crop}`)
+  if (opts.focusX !== 50 || opts.focusY !== 50) parts.push(`focus:${opts.focusX},${opts.focusY}`)
   if (caption) parts.push(caption)
   return parts.join(' ')
 }
@@ -640,18 +656,17 @@ function readOpts(markdown: string, src: string): ImageOpts {
   return { ...DEFAULT_IMAGE_OPTS }
 }
 
-// Set a single option (size / align / crop) on a specific image,
-// preserving any non-opt caption text in the title.
-function setImageOpt<K extends keyof ImageOpts>(
+// Patch one or more options on a specific image, preserving any
+// non-opt caption text in the title. Takes a partial so axes can be
+// updated atomically (e.g. focus X+Y together).
+function patchImageOpts(
   markdown: string,
   src: string,
-  key: K,
-  value: ImageOpts[K],
+  patch: Partial<ImageOpts>,
 ): string {
   return markdown.replace(IMG_RE, (full, alt: string, mdSrc: string, title?: string) => {
     if (mdSrc !== src) return full
-    const opts = parseImageOpts(title)
-    opts[key] = value
+    const opts: ImageOpts = { ...parseImageOpts(title), ...patch }
     const caption = stripOptTokens(title)
     const newTitle = buildTitle(opts, caption)
     return newTitle
@@ -670,4 +685,92 @@ function clearImageOpts(markdown: string, src: string): string {
       ? `![${alt}](${mdSrc} "${caption}")`
       : `![${alt}](${mdSrc})`
   })
+}
+
+// Click/drag-to-set focal point on a thumbnail of the image. The
+// thumbnail matches the natural aspect ratio so the crosshair maps
+// directly to image coordinates (no letterbox bands).
+function FocusPicker({
+  src, x, y, onChange, active,
+}: {
+  src: string
+  x: number
+  y: number
+  onChange: (x: number, y: number) => void
+  active: boolean
+}) {
+  const [ratio, setRatio] = useState<number | null>(null)
+  const dragging = useRef(false)
+
+  const update = (clientX: number, clientY: number, rect: DOMRect) => {
+    const nx = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
+    const ny = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100))
+    onChange(Math.round(nx), Math.round(ny))
+  }
+
+  return (
+    <div className="mt-3">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5">
+        Focus point
+      </p>
+      <p className="text-[10px] text-gray-400 mb-1.5 leading-snug">
+        {active
+          ? 'Click or drag the dot to choose the part of the picture that stays in frame.'
+          : 'Pick a crop above (Square / Wide / Tall) to see this take effect.'}
+      </p>
+      <div
+        className="relative mx-auto rounded-md overflow-hidden bg-gray-100 cursor-crosshair select-none touch-none"
+        style={{
+          aspectRatio: ratio ?? 16 / 10,
+          maxHeight: 170,
+          maxWidth: '100%',
+        }}
+        onPointerDown={e => {
+          dragging.current = true
+          e.currentTarget.setPointerCapture(e.pointerId)
+          update(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        }}
+        onPointerMove={e => {
+          if (!dragging.current) return
+          update(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        }}
+        onPointerUp={e => {
+          dragging.current = false
+          try { e.currentTarget.releasePointerCapture(e.pointerId) } catch { /* ok */ }
+        }}
+        onPointerCancel={() => { dragging.current = false }}
+      >
+        { /* eslint-disable-next-line @next/next/no-img-element */ }
+        <img
+          src={src}
+          alt=""
+          draggable={false}
+          onLoad={e => {
+            const img = e.currentTarget
+            if (img.naturalWidth && img.naturalHeight) {
+              setRatio(img.naturalWidth / img.naturalHeight)
+            }
+          }}
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+        />
+        <div
+          aria-hidden
+          className="absolute w-5 h-5 rounded-full bg-brand-600 ring-2 ring-white shadow-lg pointer-events-none"
+          style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}
+        />
+      </div>
+      <div className="flex items-center justify-between mt-1">
+        <p className="text-[10px] text-gray-400">X: {x}%  ·  Y: {y}%</p>
+        {(x !== 50 || y !== 50) && (
+          <button
+            type="button"
+            onClick={() => onChange(50, 50)}
+            className="text-[10px] text-gray-400 hover:text-gray-700 uppercase tracking-widest"
+          >
+            Centre
+          </button>
+        )}
+      </div>
+    </div>
+  )
 }

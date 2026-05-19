@@ -12,16 +12,23 @@ export type ImageOpts = {
   size: ImageSize
   align: ImageAlign
   crop: ImageCrop
+  // 0–100, percentage from the top-left of the source image. Used as
+  // CSS `object-position` so the writer can pick what stays in frame
+  // when the image is cropped.
+  focusX: number
+  focusY: number
 }
 
 export const DEFAULT_IMAGE_OPTS: ImageOpts = {
   size: 'medium',
   align: 'center',
   crop: 'none',
+  focusX: 50,
+  focusY: 50,
 }
 
-// Read size / align / crop tokens out of a markdown image title:
-//   ![alt](url "size:large align:left crop:square")
+// Read size / align / crop / focus tokens out of a markdown image title:
+//   ![alt](url "size:large align:left crop:square focus:30,70")
 // Any token can be omitted and falls back to its default. Tokens can
 // appear in any order, separated by whitespace. Anything else in the
 // title is treated as a caption and preserved on write.
@@ -31,13 +38,22 @@ export function parseImageOpts(title: string | null | undefined): ImageOpts {
   const sz = title.match(/size\s*[:=]\s*(small|medium|large|full)/i)
   const al = title.match(/align\s*[:=]\s*(center|centre|left|right)/i)
   const cr = title.match(/crop\s*[:=]\s*(none|square|wide|tall)/i)
+  const fc = title.match(/focus\s*[:=]\s*(\d{1,3})%?\s*[,/x]\s*(\d{1,3})%?/i)
   if (sz) out.size = sz[1].toLowerCase() as ImageSize
   if (al) {
     const v = al[1].toLowerCase()
     out.align = (v === 'centre' ? 'center' : v) as ImageAlign
   }
   if (cr) out.crop = cr[1].toLowerCase() as ImageCrop
+  if (fc) {
+    out.focusX = clamp(parseInt(fc[1], 10), 0, 100)
+    out.focusY = clamp(parseInt(fc[2], 10), 0, 100)
+  }
   return out
+}
+
+function clamp(n: number, lo: number, hi: number): number {
+  return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : 50
 }
 
 // Back-compat for older callers that only need the size.
@@ -128,6 +144,13 @@ function buildComponents(onImageClick?: (src: string, anchor: ImageAnchor) => vo
     if (typeof src !== 'string') return null
     const opts = parseImageOpts(title)
     const cls = `img-${opts.size} img-align-${opts.align} img-crop-${opts.crop}`
+    // object-position only matters when there's something to crop/fit
+    // around, but it's safe to always set — for object-fit: contain
+    // (no crop) the image just sits at that position inside its box.
+    const style: React.CSSProperties =
+      (opts.focusX !== 50 || opts.focusY !== 50)
+        ? { objectPosition: `${opts.focusX}% ${opts.focusY}%` }
+        : {}
     const badge = [
       opts.size,
       opts.align !== 'center' ? opts.align : null,
@@ -148,7 +171,7 @@ function buildComponents(onImageClick?: (src: string, anchor: ImageAnchor) => vo
           aria-label={`Edit image ${alt ?? ''}`}
         >
           { /* eslint-disable-next-line @next/next/no-img-element */ }
-          <img src={src} alt={alt ?? ''} title={title ?? undefined} className={`${cls} ring-2 ring-brand-200/60 hover:ring-brand-500 transition-shadow`} />
+          <img src={src} alt={alt ?? ''} title={title ?? undefined} style={style} className={`${cls} ring-2 ring-brand-200/60 hover:ring-brand-500 transition-shadow`} />
           <span className="absolute top-2 right-2 text-[10px] uppercase tracking-widest bg-brand-700 text-white px-2 py-0.5 rounded shadow-sm">
             {badge} · click to edit
           </span>
@@ -156,7 +179,7 @@ function buildComponents(onImageClick?: (src: string, anchor: ImageAnchor) => vo
       )
     }
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt ?? ''} title={title ?? undefined} className={cls} />
+    return <img src={src} alt={alt ?? ''} title={title ?? undefined} style={style} className={cls} />
   },
   }
 }

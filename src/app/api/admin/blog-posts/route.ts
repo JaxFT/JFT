@@ -6,7 +6,7 @@ import { slugify, type BlogCategory, type BlogLink } from '@/lib/blog-db'
 import {
   sanitizeTravelStages, sanitizeBlogTopics, sanitizeDestinationCountry,
 } from '@/lib/blog-meta'
-import { PACK_META } from '@/lib/adventurePackData'
+import { PACK_META } from '@/lib/adventurePackMeta'
 
 const VALID_CATEGORIES: BlogCategory[] = ['accommodation', 'restaurant', 'bar', 'activity', 'general']
 const VALID_DESTINATION_SLUGS = PACK_META.map(p => p.slug)

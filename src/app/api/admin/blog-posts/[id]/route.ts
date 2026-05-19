@@ -5,7 +5,7 @@ import { slugify, type BlogCategory, type BlogLink } from '@/lib/blog-db'
 import {
   sanitizeTravelStages, sanitizeBlogTopics, sanitizeDestinationCountry,
 } from '@/lib/blog-meta'
-import { PACK_META } from '@/lib/adventurePackData'
+import { PACK_META } from '@/lib/adventurePackMeta'
 
 export const dynamic = 'force-dynamic'
 

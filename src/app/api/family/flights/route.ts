@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient as createSbClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { awardOrSuggestStamp } from '@/lib/passport-stamps-db'
-import { getPackMeta } from '@/lib/adventurePackData'
+import { getPackMeta } from '@/lib/adventurePackMeta'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'

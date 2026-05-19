@@ -15,7 +15,7 @@ import {
 import { VOICE_PROFILE } from '@/lib/voice-profile'
 import { resizeImageIfLarge } from '@/lib/image-resize'
 import TaggingFields from '@/components/admin/blog/TaggingFields'
-import { getPackMeta } from '@/lib/adventurePackData'
+import { getPackMeta } from '@/lib/adventurePackMeta'
 
 type Photo = {
   id: string

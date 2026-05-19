@@ -10,7 +10,7 @@ import { useEffect } from 'react'
 import { Sparkles, X } from 'lucide-react'
 import PassportStamp from './PassportStamp'
 import { STAMP_META, type StampType } from '@/lib/passport-types'
-import { getPackMeta } from '@/lib/adventurePackData'
+import { getPackMeta } from '@/lib/adventurePackMeta'
 
 type Props = {
   // The stamp just earned. When null, the component renders nothing.

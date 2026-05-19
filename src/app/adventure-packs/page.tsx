@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Compass } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
-import { PACK_META } from '@/lib/adventurePackData'
+import { PACK_META } from '@/lib/adventurePackMeta'
 import AdventurePackBrowser from './AdventurePackBrowser'
 import CountryFlag from '@/components/CountryFlag'
 

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getChildByToken } from '@/lib/passport-kid-db'
 import { createKidJournalEntry } from '@/lib/passport-journal-db'
-import { getPackMeta } from '@/lib/adventurePackData'
+import { getPackMeta } from '@/lib/adventurePackMeta'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'

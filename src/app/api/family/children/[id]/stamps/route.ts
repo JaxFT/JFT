@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { awardOrSuggestStamp } from '@/lib/passport-stamps-db'
-import { getPackMeta } from '@/lib/adventurePackData'
+import { getPackMeta } from '@/lib/adventurePackMeta'
 import type { StampType } from '@/lib/passport-types'
 
 export const dynamic = 'force-dynamic'

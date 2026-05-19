@@ -10,7 +10,7 @@ import {
   getKidPackProgress,
 } from '@/lib/passport-kid-db'
 import { listJournalEntriesForChildCountry } from '@/lib/passport-journal-db'
-import { getPackMeta } from '@/lib/adventurePackData'
+import { getPackMeta } from '@/lib/adventurePackMeta'
 import { SECTION_KEYS } from '@/lib/adventurePackTypes'
 import PassportPage from '@/components/passport/PassportPage'
 import PassportStamp from '@/components/passport/PassportStamp'

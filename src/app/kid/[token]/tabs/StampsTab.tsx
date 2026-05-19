@@ -7,7 +7,7 @@ import PassportPage from '@/components/passport/PassportPage'
 import PassportStamp from '@/components/passport/PassportStamp'
 import MilestoneStamp from '@/components/passport/MilestoneStamp'
 import CountryFlag from '@/components/CountryFlag'
-import { getPackMeta } from '@/lib/adventurePackData'
+import { getPackMeta } from '@/lib/adventurePackMeta'
 import { computeMilestones, type MilestoneStamp as Milestone } from '@/lib/passport-milestones'
 import type { StampRow, CountryVisitRow } from '@/lib/passport-kid-db'
 

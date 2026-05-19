@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ArrowRight, Stamp as StampIcon, Trophy, Home } from 'lucide-react'
 import PassportPage from '@/components/passport/PassportPage'
 import CountryFlag from '@/components/CountryFlag'
-import { getPackMeta } from '@/lib/adventurePackData'
+import { getPackMeta } from '@/lib/adventurePackMeta'
 import { SECTION_KEYS } from '@/lib/adventurePackTypes'
 import type {
   CountryVisitRow, StampRow, AssignedPackRow,

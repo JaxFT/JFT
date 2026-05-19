@@ -17,7 +17,7 @@ import {
   TRAVEL_STAGE_LABEL, BLOG_TOPIC_LABEL,
   type TravelStage, type BlogTopic,
 } from '@/lib/blog-meta'
-import { PACK_META } from '@/lib/adventurePackData'
+import { PACK_META } from '@/lib/adventurePackMeta'
 import { CONTINENT_ORDER, type Continent } from '@/lib/adventurePackTypes'
 
 const DESTINATION_GENERAL = '__none'

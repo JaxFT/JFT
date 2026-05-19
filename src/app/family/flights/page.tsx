@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
 import { listFlightsForParent, listChildrenForParent } from '@/lib/passport-db'
-import { PACK_META } from '@/lib/adventurePackData'
+import { PACK_META } from '@/lib/adventurePackMeta'
 import FlightLog from './FlightLog'
 
 export const metadata: Metadata = { title: 'Family flights' }

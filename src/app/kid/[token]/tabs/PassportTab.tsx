@@ -6,7 +6,7 @@ import { Stamp as StampIcon, Globe, Trophy, ArrowRight, Check, Compass, ChevronD
 import PassportPage from '@/components/passport/PassportPage'
 import PassportStamp from '@/components/passport/PassportStamp'
 import CountryFlag from '@/components/CountryFlag'
-import { getPackMeta } from '@/lib/adventurePackData'
+import { getPackMeta } from '@/lib/adventurePackMeta'
 import { SECTION_KEYS } from '@/lib/adventurePackTypes'
 import type { StampRow, KidStats, AssignedPackRow } from '@/lib/passport-kid-db'
 import type { PermissionMode } from '@/lib/passport-types'

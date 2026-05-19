@@ -1,7 +1,7 @@
 import PassportPage from '@/components/passport/PassportPage'
 import WorldMap from '@/components/passport/WorldMap'
 import CountryFlag from '@/components/CountryFlag'
-import { getPackMeta } from '@/lib/adventurePackData'
+import { getPackMeta } from '@/lib/adventurePackMeta'
 import type { CountryVisitRow } from '@/lib/passport-kid-db'
 
 // Roughly the count of sovereign countries on earth — denominator for

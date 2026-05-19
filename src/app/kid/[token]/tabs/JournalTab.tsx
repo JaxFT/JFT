@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import PassportPage from '@/components/passport/PassportPage'
 import CountryFlag from '@/components/CountryFlag'
-import { getPackMeta, PACK_META } from '@/lib/adventurePackData'
+import { getPackMeta, PACK_META } from '@/lib/adventurePackMeta'
 import type { PermissionMode } from '@/lib/passport-types'
 import type { JournalEntryRow } from '@/lib/passport-journal-db'
 

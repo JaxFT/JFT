@@ -21,7 +21,7 @@ import {
   type TravelStage, type BlogTopic,
 } from '@/lib/blog-meta'
 import { CONTINENT_ORDER, type Continent } from '@/lib/adventurePackTypes'
-import { PACK_META } from '@/lib/adventurePackData'
+import { PACK_META } from '@/lib/adventurePackMeta'
 import CountryFlag from '@/components/CountryFlag'
 
 type Props = {

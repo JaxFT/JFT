@@ -10,7 +10,7 @@ import {
 } from '@/lib/passport-db'
 import { listJournalEntriesForChildParent } from '@/lib/passport-journal-db'
 import { PERMISSION_LABELS } from '@/lib/passport-types'
-import { PACK_META } from '@/lib/adventurePackData'
+import { PACK_META } from '@/lib/adventurePackMeta'
 import EditProfileSection from './EditProfileSection'
 import PermissionSection from './PermissionSection'
 import QRSection from './QRSection'

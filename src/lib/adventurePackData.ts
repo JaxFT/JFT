@@ -1,14 +1,22 @@
-// Adventure Pack content registry.
+// Adventure Pack content registry — the full per-country content.
 //
-// FRANCE_DATA is fully populated. This is the free pack and acts as
-// the quality reference for every other country pack. Other countries
-// have meta entries only (so they show on the listing as "Coming soon")
-// until we write their content.
+// PACK_META and getPackMeta live in the sibling `adventurePackMeta.ts`
+// file so that routes which only need the lightweight metadata (the
+// blog filter, parent picker, kid tabs, the dozen API routes that
+// just want a country label) don't pull this 4000-line file into
+// their Cloudflare Worker bundle. This file is only imported by the
+// two routes that actually need full content (`/adventure-packs/[slug]`
+// and `/kid/[token]/pack/[slug]`).
+//
+// We re-export PACK_META + getPackMeta below for back-compat with
+// existing import sites — but the migration target is for callers to
+// import those directly from '@/lib/adventurePackMeta' instead.
 
-import type {
-  AdventurePackData, AdventurePackMeta,
-} from './adventurePackTypes'
+import type { AdventurePackData } from './adventurePackTypes'
 import { ANIMALS_BY_SLUG } from './adventurePackAnimals'
+
+// Re-exports for any caller still importing from this file.
+export { PACK_META, getPackMeta } from './adventurePackMeta'
 
 // ── FRANCE (live + free) ─────────────────────────────────────────
 export const FRANCE_DATA: AdventurePackData = {
@@ -3861,47 +3869,6 @@ export const LAOS_DATA: AdventurePackData = {
   ],
 }
 
-// ── COUNTRY REGISTRY ────────────────────────────────────────────
-// One entry per country. The listing page sorts these into live vs
-// coming-soon based on `status`.
-export const PACK_META: AdventurePackMeta[] = [
-  { slug: 'france',         country: 'France',         flag: '🇫🇷', iso2: 'fr', isFree: true,  heroColour: 'bg-brand-900',   status: 'live', continent: 'Europe' },
-  { slug: 'morocco',        country: 'Morocco',        flag: '🇲🇦', iso2: 'ma', isFree: false, heroColour: 'bg-amber-900',   status: 'live', continent: 'Africa' },
-  { slug: 'indonesia',      country: 'Indonesia',      flag: '🇮🇩', iso2: 'id', isFree: false, heroColour: 'bg-rose-700',    status: 'live', continent: 'Asia' },
-  { slug: 'thailand',       country: 'Thailand',       flag: '🇹🇭', iso2: 'th', isFree: false, heroColour: 'bg-fuchsia-700', status: 'live', continent: 'Asia' },
-  { slug: 'malaysia',       country: 'Malaysia',       flag: '🇲🇾', iso2: 'my', isFree: false, heroColour: 'bg-amber-700',   status: 'live', continent: 'Asia' },
-  { slug: 'spain',          country: 'Spain',          flag: '🇪🇸', iso2: 'es', isFree: false, heroColour: 'bg-red-700',     status: 'live', continent: 'Europe' },
-  { slug: 'portugal',       country: 'Portugal',       flag: '🇵🇹', iso2: 'pt', isFree: false, heroColour: 'bg-emerald-800', status: 'live', continent: 'Europe' },
-  { slug: 'united-kingdom', country: 'United Kingdom', flag: '🇬🇧', iso2: 'gb', isFree: false, heroColour: 'bg-blue-900',    status: 'live', continent: 'Europe' },
-  { slug: 'japan',          country: 'Japan',          flag: '🇯🇵', iso2: 'jp', isFree: false, heroColour: 'bg-rose-800',    status: 'live', continent: 'Asia' },
-  { slug: 'vietnam',        country: 'Vietnam',        flag: '🇻🇳', iso2: 'vn', isFree: false, heroColour: 'bg-red-800',     status: 'live', continent: 'Asia' },
-  { slug: 'cambodia',       country: 'Cambodia',       flag: '🇰🇭', iso2: 'kh', isFree: false, heroColour: 'bg-indigo-800',  status: 'live', continent: 'Asia' },
-  { slug: 'china',          country: 'China',          flag: '🇨🇳', iso2: 'cn', isFree: false, heroColour: 'bg-red-900',     status: 'live', continent: 'Asia' },
-  { slug: 'india',          country: 'India',          flag: '🇮🇳', iso2: 'in', isFree: false, heroColour: 'bg-orange-700',  status: 'live', continent: 'Asia' },
-  { slug: 'sri-lanka',      country: 'Sri Lanka',      flag: '🇱🇰', iso2: 'lk', isFree: false, heroColour: 'bg-teal-800',    status: 'live', continent: 'Asia' },
-  { slug: 'nepal',          country: 'Nepal',          flag: '🇳🇵', iso2: 'np', isFree: false, heroColour: 'bg-stone-700',   status: 'live', continent: 'Asia' },
-  { slug: 'turkey',         country: 'Turkey',         flag: '🇹🇷', iso2: 'tr', isFree: false, heroColour: 'bg-red-700',     status: 'live', continent: 'Asia' },
-  { slug: 'egypt',          country: 'Egypt',          flag: '🇪🇬', iso2: 'eg', isFree: false, heroColour: 'bg-yellow-700',  status: 'live', continent: 'Africa' },
-  { slug: 'australia',      country: 'Australia',      flag: '🇦🇺', iso2: 'au', isFree: false, heroColour: 'bg-orange-800',  status: 'live', continent: 'Oceania' },
-  { slug: 'new-zealand',    country: 'New Zealand',    flag: '🇳🇿', iso2: 'nz', isFree: false, heroColour: 'bg-emerald-700', status: 'live', continent: 'Oceania' },
-  { slug: 'canada',         country: 'Canada',         flag: '🇨🇦', iso2: 'ca', isFree: false, heroColour: 'bg-red-600',     status: 'live', continent: 'North America' },
-  { slug: 'usa',            country: 'United States',  flag: '🇺🇸', iso2: 'us', isFree: false, heroColour: 'bg-blue-800',    status: 'live', continent: 'North America' },
-  { slug: 'mexico',         country: 'Mexico',         flag: '🇲🇽', iso2: 'mx', isFree: false, heroColour: 'bg-lime-800',    status: 'live', continent: 'North America' },
-  { slug: 'costa-rica',     country: 'Costa Rica',     flag: '🇨🇷', iso2: 'cr', isFree: false, heroColour: 'bg-emerald-600', status: 'live', continent: 'North America' },
-  { slug: 'jamaica',        country: 'Jamaica',        flag: '🇯🇲', iso2: 'jm', isFree: false, heroColour: 'bg-yellow-600',  status: 'live', continent: 'North America' },
-  { slug: 'brazil',         country: 'Brazil',         flag: '🇧🇷', iso2: 'br', isFree: false, heroColour: 'bg-green-800',   status: 'live', continent: 'South America' },
-  { slug: 'argentina',      country: 'Argentina',      flag: '🇦🇷', iso2: 'ar', isFree: false, heroColour: 'bg-cyan-700',    status: 'live', continent: 'South America' },
-  { slug: 'chile',          country: 'Chile',          flag: '🇨🇱', iso2: 'cl', isFree: false, heroColour: 'bg-sky-800',     status: 'live', continent: 'South America' },
-  { slug: 'germany',        country: 'Germany',        flag: '🇩🇪', iso2: 'de', isFree: false, heroColour: 'bg-zinc-700',    status: 'live', continent: 'Europe' },
-  { slug: 'belgium',        country: 'Belgium',        flag: '🇧🇪', iso2: 'be', isFree: false, heroColour: 'bg-amber-800',   status: 'live', continent: 'Europe' },
-  { slug: 'netherlands',    country: 'Netherlands',    flag: '🇳🇱', iso2: 'nl', isFree: false, heroColour: 'bg-orange-600',  status: 'live', continent: 'Europe' },
-  { slug: 'uae',            country: 'United Arab Emirates', flag: '🇦🇪', iso2: 'ae', isFree: false, heroColour: 'bg-yellow-800', status: 'live', continent: 'Asia' },
-  { slug: 'south-africa',   country: 'South Africa',   flag: '🇿🇦', iso2: 'za', isFree: false, heroColour: 'bg-orange-900',  status: 'live', continent: 'Africa' },
-  { slug: 'pakistan',       country: 'Pakistan',       flag: '🇵🇰', iso2: 'pk', isFree: false, heroColour: 'bg-green-900',   status: 'live', continent: 'Asia' },
-  { slug: 'bangladesh',     country: 'Bangladesh',     flag: '🇧🇩', iso2: 'bd', isFree: false, heroColour: 'bg-teal-900',    status: 'live', continent: 'Asia' },
-  { slug: 'laos',           country: 'Laos',           flag: '🇱🇦', iso2: 'la', isFree: false, heroColour: 'bg-rose-900',    status: 'live', continent: 'Asia' },
-]
-
 // Lookup table for fully-built packs.
 const FULL_DATA: Record<string, AdventurePackData> = {
   france:           FRANCE_DATA,
@@ -3948,8 +3915,4 @@ export function getPackData(slug: string): AdventurePackData | null {
   // individual data blocks don't have to inline 100+ lines of animal
   // content. Falls back to [] if a pack doesn't yet have a list.
   return { ...base, animals: ANIMALS_BY_SLUG[slug] ?? [] }
-}
-
-export function getPackMeta(slug: string): AdventurePackMeta | null {
-  return PACK_META.find(p => p.slug === slug) ?? null
 }

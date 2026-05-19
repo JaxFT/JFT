@@ -125,3 +125,15 @@ export function autoStampsForSection(
   }
   return out
 }
+
+// Detect which auto-stamps the act of MARKING a mission complete
+// should fire. The intent of "Mark food complete" is "I tried local
+// food", same as ticking a food checkbox — so we fire here too,
+// covering the case where a kid presses the button without ticking
+// individual items. Dedupe stops this from double-awarding when both
+// fire (section-save AND mission-complete).
+export function autoStampsForMissionComplete(section: SectionKey): StampType[] {
+  if (section === 'food') return ['BRAVE_EATER']
+  if (section === 'language') return ['LOCAL_LINGO']
+  return []
+}

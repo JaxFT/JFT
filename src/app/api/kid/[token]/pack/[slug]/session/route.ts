@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 import { resolveKidPack, saveKidSession } from '@/lib/passport-kid-pack-db'
-import { awardOrSuggestStamp } from '@/lib/passport-stamps-db'
+import {
+  awardOrSuggestStamp, autoStampsForMissionComplete,
+} from '@/lib/passport-stamps-db'
 import { SECTION_KEYS } from '@/lib/adventurePackTypes'
-import type { AgeMode } from '@/lib/adventurePackTypes'
+import type { AgeMode, SectionKey } from '@/lib/adventurePackTypes'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -43,8 +45,22 @@ export async function PUT(
     SECTION_KEYS.length,
   )
 
-  // The stamp engine dedupes on (child, type, country) so this is
-  // safe to call on every completion ping — only the first hits.
+  // Mission-completion auto-stamps. Fires BRAVE_EATER when the food
+  // mission is now complete, LOCAL_LINGO for language. Dedup makes
+  // this safe to call on every session save.
+  for (const m of missions) {
+    const types = autoStampsForMissionComplete(m as SectionKey)
+    for (const type of types) {
+      await awardOrSuggestStamp({
+        childId: resolved.child.id,
+        type,
+        countrySlug: slug,
+        awardedBy: 'system',
+      })
+    }
+  }
+
+  // Full-pack completion stamp.
   if (result.firstCompletion) {
     await awardOrSuggestStamp({
       childId: resolved.child.id,

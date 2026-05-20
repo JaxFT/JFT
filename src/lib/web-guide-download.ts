@@ -81,9 +81,30 @@ async function fetchAsDataUri(url: string): Promise<string | null> {
 // would 401, or where CORS would block the load). Fetches run in
 // parallel; any image that fails to download stays as its original
 // URL so an online viewer at least sees something.
+// Run async tasks with a concurrency cap. Firing 15 image fetches at
+// once can trip burst protection at edges and rate-limited upstreams;
+// 4-at-a-time is gentle enough for every host and fast enough for an
+// admin pre-gen step.
+async function mapWithLimit<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const out: R[] = new Array(items.length)
+  let cursor = 0
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (true) {
+      const i = cursor++
+      if (i >= items.length) return
+      out[i] = await fn(items[i])
+    }
+  })
+  await Promise.all(workers)
+  return out
+}
+
 async function inlineRemoteImages(html: string): Promise<string> {
   const urls = new Set<string>()
-  // Match both <img …src="…"> AND markdown-rendered srcset variations.
   const re = /<img\b[^>]*?\bsrc=["']([^"']+)["']/gi
   let m: RegExpExecArray | null
   while ((m = re.exec(html))) {
@@ -96,18 +117,13 @@ async function inlineRemoteImages(html: string): Promise<string> {
   }
 
   console.log(`[guide-download] inlining ${urls.size} images…`)
-  // Promise.allSettled so one slow/blocked image doesn't poison the
-  // whole batch. Each entry resolves with [url, dataUri | null].
-  const settled = await Promise.allSettled(
-    Array.from(urls).map(async u => [u, await fetchAsDataUri(u)] as const),
-  )
+  const urlList = Array.from(urls)
+  const results = await mapWithLimit(urlList, 4, async u => [u, await fetchAsDataUri(u)] as const)
 
   let out = html
   let inlined = 0
   let failed = 0
-  for (const result of settled) {
-    if (result.status === 'rejected') { failed++; continue }
-    const [u, data] = result.value
+  for (const [u, data] of results) {
     if (!data) { failed++; continue }
     out = out.split(u).join(data)
     inlined++

@@ -7,6 +7,7 @@ import { isPremiumTier } from '@/lib/profile'
 import { getGuideBySlug, userHasPurchased, formatPrice } from '@/lib/guides-db'
 import { ArticleJsonLd } from '@/components/seo/JsonLd'
 import { getPublishedWebGuideBySlug } from '@/lib/guides-content-db'
+import { userHasPurchasedWebGuide } from '@/lib/web-guide-purchases-db'
 import { getAboutUs } from '@/lib/app-settings'
 import { getAutoLinkPhrases } from '@/lib/blog-links-server'
 import WebGuideView from '@/components/guide/WebGuideView'
@@ -92,13 +93,20 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
   if (webGuide) {
     const { data: { user } } = await supabase.auth.getUser()
     let isPremium = false
+    let hasPurchasedDownload = false
     if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('subscription_tier')
-        .eq('id', user.id)
-        .single()
+      // Profile + download-purchase lookup both need user.id but are
+      // independent — fire them together.
+      const [{ data: profile }, dl] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('subscription_tier')
+          .eq('id', user.id)
+          .single(),
+        userHasPurchasedWebGuide(user.id, webGuide.id),
+      ])
       isPremium = isPremiumTier(profile?.subscription_tier)
+      hasPurchasedDownload = dl
     }
     const canViewFull = isPremium || !webGuide.is_premium
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
@@ -120,6 +128,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
           canViewFull={canViewFull}
           isLoggedIn={!!user}
           isPremium={isPremium}
+          hasPurchasedDownload={hasPurchasedDownload}
         />
       </>
     )

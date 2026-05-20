@@ -1,7 +1,8 @@
 import Link from 'next/link'
-import { ArrowLeft, ArrowRight, Crown, Lock, Map, ListOrdered } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Crown, Download, Lock, Map, ListOrdered } from 'lucide-react'
 import GuideMarkdown from './GuideMarkdown'
 import UpgradeButton from '@/components/billing/UpgradeButton'
+import DownloadButton from '@/app/guides/[slug]/DownloadButton'
 import type { GuideRow, GuideContentBlock } from '@/lib/guide-types'
 import { truncateMarkdownToPercent, extractMarkdownToc } from '@/lib/guide-types'
 import type { AutoLinkPhrase } from '@/lib/blog-links'
@@ -13,6 +14,9 @@ type Props = {
   canViewFull: boolean
   isLoggedIn: boolean
   isPremium: boolean
+  // Whether the current user has bought the offline-download for THIS
+  // guide. Premium does NOT grant download access — it's sold separately.
+  hasPurchasedDownload: boolean
 }
 
 function anchor(s: string): string {
@@ -29,10 +33,14 @@ function blockAnchor(b: GuideContentBlock): string {
 }
 
 export default function WebGuideView({
-  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, isPremium,
+  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, isPremium, hasPurchasedDownload,
 }: Props) {
   const hideAbout = !!guide.sections.hideAbout
   const useSingleDoc = guide.body_markdown.trim().length > 0
+  // Download CTA shows only when the guide has been wired up in Stripe.
+  // Buyers see "Download my copy"; everyone else sees the buy button.
+  const downloadAvailable = !!guide.stripe_price_id
+  const downloadPriceLabel = formatPrice(guide.price_pence)
 
   return (
     <div className="min-h-screen bg-sand-50 pb-20">
@@ -107,6 +115,34 @@ export default function WebGuideView({
             hideAbout={hideAbout}
           />
         )}
+
+      {downloadAvailable && (
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 mt-12">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-7">
+            <div className="flex items-center gap-2 mb-3">
+              <Download className="w-5 h-5 text-brand-600" />
+              <p className="text-xs font-bold tracking-widest uppercase text-brand-600">
+                {hasPurchasedDownload ? 'Your offline copy' : 'Take it with you'}
+              </p>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+              {hasPurchasedDownload
+                ? 'Download your personal copy'
+                : `Download for offline reading — ${downloadPriceLabel}`}
+            </h3>
+            <p className="text-sm text-gray-600 leading-relaxed mb-5">
+              {hasPurchasedDownload
+                ? 'A single self-contained file. Save it anywhere, open it in any browser, read it on a plane.'
+                : 'A single self-contained file with the full guide, watermarked to you. Save it anywhere, open it in any browser, read it on a plane. Pay once, yours forever.'}
+            </p>
+            <DownloadButton
+              slug={guide.slug}
+              hasPurchased={hasPurchasedDownload}
+              priceLabel={downloadPriceLabel}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -20,6 +20,7 @@
     "date-fns": "^3.6.0",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.400.0",
+    "marked": "^18.0.4",
     "next": "15.5.18",
     "pdf-lib": "^1.17.1",
     "qrcode.react": "^4.2.0",

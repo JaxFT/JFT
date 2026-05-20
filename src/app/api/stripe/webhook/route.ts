@@ -93,6 +93,14 @@ async function handleOneOffCheckout(
     return NextResponse.json({ received: true, skipped: 'not paid' })
   }
 
+  // `kind: 'web_guide'` is set by /api/stripe/checkout-web-guide for
+  // downloadable web-guide purchases. Everything else (legacy PDF
+  // guides, future one-offs) stays on the original products/purchases
+  // path.
+  if (session.metadata?.kind === 'web_guide') {
+    return handleWebGuidePurchase(session, admin)
+  }
+
   const userId = session.metadata?.user_id
   const productId = session.metadata?.product_id
   const amount = session.amount_total
@@ -118,6 +126,40 @@ async function handleOneOffCheckout(
     })
 
   // 23505 = unique_violation: Stripe is retrying a previously-recorded purchase.
+  if (error && error.code !== '23505') {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+  return null
+}
+
+async function handleWebGuidePurchase(
+  session: Stripe.Checkout.Session,
+  admin: SupabaseClient,
+): Promise<NextResponse | null> {
+  const userId = session.metadata?.user_id
+  const guideId = session.metadata?.guide_id
+  const amount = session.amount_total
+  const paymentIntent = typeof session.payment_intent === 'string'
+    ? session.payment_intent
+    : session.payment_intent?.id
+
+  if (!userId || !guideId || amount == null) {
+    return NextResponse.json(
+      { error: 'Missing metadata on web-guide checkout session', session: session.id },
+      { status: 400 },
+    )
+  }
+
+  // unique(user_id, guide_id) keeps Stripe retries idempotent.
+  const { error } = await admin
+    .from('web_guide_purchases')
+    .insert({
+      user_id: userId,
+      guide_id: guideId,
+      stripe_payment_intent_id: paymentIntent ?? null,
+      amount_pence: amount,
+    })
+
   if (error && error.code !== '23505') {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }

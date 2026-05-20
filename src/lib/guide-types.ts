@@ -62,6 +62,10 @@ export type GuideRow = {
   // Downloadable PDF version. Storage path in the guide-files bucket
   // (e.g. "web/sri-lanka.pdf"). NULL = no PDF uploaded yet.
   pdf_path: string | null
+  // Stripe Price ID for the offline-HTML download flow. Set per-guide
+  // in the Stripe dashboard, copied here. NULL = downloads disabled
+  // for this guide (the CTA stays hidden).
+  stripe_price_id: string | null
   sections: GuideSections   // legacy blocks model; used when body_markdown is empty
   preview_destinations: number   // legacy; new model uses per-block freePreview
   published_at: string | null

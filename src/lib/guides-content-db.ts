@@ -91,6 +91,7 @@ function normaliseRow(row: unknown): GuideRow {
       ? Math.max(0, Math.min(100, Math.round(r.preview_percent)))
       : 25,
     pdf_path: (r.pdf_path as string | null) ?? null,
+    stripe_price_id: (r.stripe_price_id as string | null) ?? null,
     sections: { blocks, hideAbout: !!rawSections.hideAbout },
     preview_destinations: previewDestinations,
     published_at: (r.published_at as string | null) ?? null,

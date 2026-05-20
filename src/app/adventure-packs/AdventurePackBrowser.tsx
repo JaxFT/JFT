@@ -152,15 +152,15 @@ function PackCard({
         </span>
       </div>
       <div className="p-5 flex-1 flex flex-col">
-        <p className="text-xs text-gray-500 mb-2">{getPackSectionKeys(pack.slug).length} missions · Ages 5–11</p>
-        {/* Mission emoji strip — most packs share the same 10 missions;
-            packs with the bonus word search get an 11th tile. */}
-        <div className="flex flex-wrap gap-1 mb-3 opacity-80">
+        <p className="text-xs text-gray-500 mb-2">{getPackSectionKeys(pack.slug).length} missions to complete</p>
+        {/* Mission emoji strip — 12 mission tiles laid out 6 over 6
+            so the card preview mirrors the picker inside the pack. */}
+        <div className="grid grid-cols-6 gap-1 mb-3 opacity-80">
           {getPackSectionKeys(pack.slug).map(k => (
             <span
               key={k}
               title={SECTION_LABELS[k]}
-              className="text-base leading-none"
+              className="text-base leading-none text-center"
               aria-hidden
             >
               {SECTION_EMOJI[k]}

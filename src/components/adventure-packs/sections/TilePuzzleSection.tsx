@@ -334,6 +334,9 @@ export default function TilePuzzleSection({ data, pack }: { data: AdventurePackD
         className="mx-auto grid select-none touch-manipulation bg-sand-100 p-1.5 rounded-xl border border-gray-200"
         style={{
           gridTemplateColumns: `repeat(${GRID}, minmax(0, 1fr))`,
+          // Lock rows to equal fractions so a tall child (the empty-
+          // slot logo) can't push its row taller than the others.
+          gridTemplateRows: `repeat(${GRID}, minmax(0, 1fr))`,
           gap: '4px',
           maxWidth: 'min(100%, 22rem)',
           aspectRatio: '3 / 2',
@@ -361,13 +364,15 @@ export default function TilePuzzleSection({ data, pack }: { data: AdventurePackD
             }
             // Branded empty slot — JFT logo on a soft mint background
             // so the kid can instantly see which square is the gap.
+            // overflow-hidden + min-h-0 guard against the logo ever
+            // pushing the cell taller than its grid track.
             return (
               <div
                 key={pos}
-                className="rounded-md bg-brand-50 border border-brand-200/60 flex items-center justify-center p-1.5"
+                className="rounded-md bg-brand-50 border border-brand-200/60 flex items-center justify-center p-1.5 overflow-hidden min-h-0 min-w-0"
                 aria-label="Empty space"
               >
-                <Logo variant="mono" height={20} className="opacity-50" ariaLabel="" />
+                <Logo variant="mono" height={18} className="opacity-50 max-h-full w-auto" ariaLabel="" />
               </div>
             )
           }

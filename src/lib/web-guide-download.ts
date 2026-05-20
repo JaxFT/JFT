@@ -46,6 +46,35 @@ async function fetchAsDataUri(url: string): Promise<string | null> {
   }
 }
 
+// Walk every <img src="…"> in the rendered HTML and replace remote
+// URLs with inline base64 data URIs. Lets the downloaded file open
+// fully offline (or from a file:// path where Supabase signed URLs
+// would 401, or where CORS would block the load). Fetches run in
+// parallel; any image that fails to download stays as its original
+// URL so an online viewer at least sees something.
+async function inlineRemoteImages(html: string): Promise<string> {
+  const urls = new Set<string>()
+  const re = /<img\b[^>]*?\bsrc=["']([^"']+)["']/gi
+  let m: RegExpExecArray | null
+  while ((m = re.exec(html))) {
+    const src = m[1]
+    if (/^(?:https?:)?\/\//i.test(src)) urls.add(src)
+  }
+  if (urls.size === 0) return html
+
+  const replacements = await Promise.all(
+    Array.from(urls).map(async u => [u, await fetchAsDataUri(u)] as const),
+  )
+
+  let out = html
+  for (const [u, data] of replacements) {
+    if (!data) continue
+    // Escape special regex chars before splitting on the URL string.
+    out = out.split(u).join(data)
+  }
+  return out
+}
+
 const STYLES = `
   :root {
     color-scheme: light;
@@ -197,7 +226,11 @@ export async function renderGuideHtml(
     }
   }
   const fullMarkdown = parts.join('\n\n---\n\n')
-  const bodyHtml = await marked.parse(fullMarkdown)
+  const rawBodyHtml = await marked.parse(fullMarkdown)
+  // Pull every body image down and embed it base64 so the file is
+  // truly self-contained — opens correctly from Downloads on any
+  // device, even with no internet.
+  const bodyHtml = await inlineRemoteImages(rawBodyHtml)
 
   const watermark = buyerEmail
     ? `<div class="watermark">Personal copy purchased by <strong>${escapeHtml(buyerEmail)}</strong> · <a href="https://jaxfamilytravels.com">jaxfamilytravels.com</a></div>`

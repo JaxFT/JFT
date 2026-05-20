@@ -25,11 +25,31 @@ function escapeHtml(s: string): string {
     .replace(/'/g, '&#39;')
 }
 
+// HTML-encoded ampersands break URL fetches (Supabase signed URLs use
+// query params like `?token=…&expires=…`). Decode the common entities
+// that show up in URL strings before hitting fetch.
+function decodeUrlEntities(s: string): string {
+  return s
+    .replace(/&amp;/g, '&')
+    .replace(/&#x2F;/gi, '/')
+    .replace(/&#39;/g, "'")
+}
+
 async function fetchAsDataUri(url: string): Promise<string | null> {
+  const target = decodeUrlEntities(url)
   try {
-    const r = await fetch(url, { cache: 'no-store' })
-    if (!r.ok) return null
-    const ct = r.headers.get('content-type') ?? 'image/jpeg'
+    const r = await fetch(target, { cache: 'no-store' })
+    if (!r.ok) {
+      console.warn(`[guide-download] image fetch ${r.status} for ${target}`)
+      return null
+    }
+    const ct = r.headers.get('content-type') ?? ''
+    // Defence against embedding a 404 HTML page as an image. If the
+    // upstream returned anything that isn't actually a picture, skip.
+    if (!ct.startsWith('image/')) {
+      console.warn(`[guide-download] non-image content-type "${ct}" for ${target}`)
+      return null
+    }
     const buf = await r.arrayBuffer()
     // btoa on Uint8Array via a chunked loop — Cloudflare workers don't
     // give us Buffer, and the spread-into-fromCharCode trick blows the
@@ -41,7 +61,8 @@ async function fetchAsDataUri(url: string): Promise<string | null> {
       s += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK) as unknown as number[])
     }
     return `data:${ct};base64,${btoa(s)}`
-  } catch {
+  } catch (err) {
+    console.warn(`[guide-download] image fetch failed for ${target}:`, err)
     return null
   }
 }
@@ -67,10 +88,14 @@ async function inlineRemoteImages(html: string): Promise<string> {
   )
 
   let out = html
+  let failed = 0
   for (const [u, data] of replacements) {
-    if (!data) continue
+    if (!data) { failed++; continue }
     // Escape special regex chars before splitting on the URL string.
     out = out.split(u).join(data)
+  }
+  if (failed > 0) {
+    console.warn(`[guide-download] ${failed}/${urls.size} images could not be inlined; downloaded file may show broken icons for those.`)
   }
   return out
 }

@@ -78,10 +78,15 @@ async function fetchAsDataUri(url: string): Promise<string | null> {
 // Wrap every <table>…</table> in a scrollable container so wide
 // tables never push the rest of the page sideways on narrow
 // viewports. Applies to all guides, no per-guide configuration.
-function wrapTables(html: string): string {
-  return html
-    .replace(/<table\b/gi, '<div class="table-wrap"><table')
-    .replace(/<\/table>/gi, '</table></div>')
+// Returns the modified HTML plus a count of tables wrapped, used
+// by the admin pre-gen UI for the post-render summary modal.
+function wrapTables(html: string): { html: string; count: number } {
+  let count = 0
+  const out = html.replace(/<table\b/gi, () => {
+    count++
+    return '<div class="table-wrap"><table'
+  }).replace(/<\/table>/gi, '</table></div>')
+  return { html: out, count }
 }
 
 // Walk every <img src="…"> in the rendered HTML and replace remote
@@ -112,7 +117,15 @@ async function mapWithLimit<T, R>(
   return out
 }
 
-async function inlineRemoteImages(html: string): Promise<string> {
+type InlineResult = {
+  html: string
+  total: number
+  inlined: number
+  failed: number
+  failedUrls: string[]
+}
+
+async function inlineRemoteImages(html: string): Promise<InlineResult> {
   const urls = new Set<string>()
   const re = /<img\b[^>]*?\bsrc=["']([^"']+)["']/gi
   let m: RegExpExecArray | null
@@ -122,7 +135,7 @@ async function inlineRemoteImages(html: string): Promise<string> {
   }
   if (urls.size === 0) {
     console.log('[guide-download] no remote images to inline')
-    return html
+    return { html, total: 0, inlined: 0, failed: 0, failedUrls: [] }
   }
 
   console.log(`[guide-download] inlining ${urls.size} images…`)
@@ -132,13 +145,14 @@ async function inlineRemoteImages(html: string): Promise<string> {
   let out = html
   let inlined = 0
   let failed = 0
+  const failedUrls: string[] = []
   for (const [u, data] of results) {
-    if (!data) { failed++; continue }
+    if (!data) { failed++; failedUrls.push(u); continue }
     out = out.split(u).join(data)
     inlined++
   }
   console.log(`[guide-download] inlined ${inlined}/${urls.size}, ${failed} failed`)
-  return out
+  return { html: out, total: urls.size, inlined, failed, failedUrls }
 }
 
 const STYLES = `
@@ -314,17 +328,33 @@ export function applyWatermark(html: string, buyerEmail: string | null): string 
   return html.split(WATERMARK_PLACEHOLDER).join(escapeHtml(buyerEmail))
 }
 
+// Per-render report surfaced to the admin UI after a "Refresh
+// download file" run — drives the confirmation modal.
+export type RenderReport = {
+  coverInlined: boolean
+  coverPresent: boolean
+  imagesTotal: number
+  imagesInlined: number
+  imagesFailed: number
+  failedImageUrls: string[]
+  tablesWrapped: number
+}
+
+export type RenderResult = { html: string; report: RenderReport }
+
 export async function renderGuideHtml(
   guide: GuideRow,
   buyerEmail: string | null | undefined,
-): Promise<string> {
+): Promise<RenderResult> {
   // Cover image: fetch + base64 once at render time so the file is
   // self-contained for offline viewing.
   let coverImgTag = ''
+  let coverInlined = false
   if (guide.cover_image) {
     const dataUri = await fetchAsDataUri(guide.cover_image)
     if (dataUri) {
       coverImgTag = `<div class="cover"><img src="${dataUri}" alt="${escapeHtml(guide.title)} cover"></div>`
+      coverInlined = true
     }
   }
 
@@ -335,8 +365,7 @@ export async function renderGuideHtml(
   if (guide.intro_markdown.trim()) parts.push(guide.intro_markdown.trim())
   if (guide.body_markdown.trim()) parts.push(guide.body_markdown.trim())
   // If the guide is on the legacy block model with no body_markdown,
-  // fall back to concatenating block bodies in order. New guides use
-  // body_markdown so this is just defensive for old rows.
+  // fall back to concatenating block bodies in order.
   if (parts.length === 0 && guide.sections.blocks?.length) {
     const ordered = [...guide.sections.blocks].sort((a, b) => a.order - b.order)
     for (const b of ordered) {
@@ -346,14 +375,13 @@ export async function renderGuideHtml(
   const fullMarkdown = parts.join('\n\n---\n\n')
   const rawBodyHtml = await marked.parse(fullMarkdown)
   // Wrap every <table> in a horizontally-scrollable div so wide
-  // tables never push the rest of the page sideways on narrow
-  // viewports. Universal — every guide gets this treatment, no
-  // per-guide tweaking required.
-  const wrappedHtml = wrapTables(rawBodyHtml)
-  // Pull every body image down and embed it base64 so the file is
-  // truly self-contained — opens correctly from Downloads on any
-  // device, even with no internet.
-  const bodyHtml = await inlineRemoteImages(wrappedHtml)
+  // tables never push the rest of the page sideways. Universal.
+  const wrappedResult = wrapTables(rawBodyHtml)
+  // Inline every body image as base64 so the file is truly self-
+  // contained — opens correctly from Downloads on any device, even
+  // with no internet.
+  const inlineResult = await inlineRemoteImages(wrappedResult.html)
+  const bodyHtml = inlineResult.html
 
   // Pre-gen path (buyerEmail === undefined): embed a placeholder that
   // the download endpoint substitutes at serve time.
@@ -372,7 +400,7 @@ export async function renderGuideHtml(
     ? `<p class="meta">Downloaded ${escapeHtml(purchasedAt)} · Your personal offline copy.</p>`
     : ''
 
-  return `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -392,6 +420,17 @@ ${watermark}
 </main>
 </body>
 </html>`
+
+  const report: RenderReport = {
+    coverPresent: !!guide.cover_image,
+    coverInlined,
+    imagesTotal: inlineResult.total,
+    imagesInlined: inlineResult.inlined,
+    imagesFailed: inlineResult.failed,
+    failedImageUrls: inlineResult.failedUrls,
+    tablesWrapped: wrappedResult.count,
+  }
+  return { html, report }
 }
 
 // Safe filename for the download. ASCII only — some mail clients mangle

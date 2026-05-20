@@ -8,7 +8,7 @@
 
 'use client'
 
-import { renderGuideHtml } from '@/lib/web-guide-download'
+import { renderGuideHtml, type RenderReport } from '@/lib/web-guide-download'
 import type { GuideRow } from '@/lib/guide-types'
 
 // We deliberately skip the /img/ proxy rewrite in this browser-side
@@ -21,13 +21,18 @@ import type { GuideRow } from '@/lib/guide-types'
 // Origin: *, so the browser can fetch directly from Supabase with
 // no CORS issue. Worker isn't involved, no rate limits hit.
 
-export async function generateAndUploadDownload(guide: GuideRow): Promise<void> {
+export type UploadResult = {
+  bytes: number
+  report: RenderReport
+}
+
+export async function generateAndUploadDownload(guide: GuideRow): Promise<UploadResult> {
   if (typeof window === 'undefined') throw new Error('admin-guide-pregen runs in the browser only')
 
   // Pass undefined as buyerEmail so the watermark area becomes a
   // placeholder string that the download endpoint substitutes per
   // buyer at serve time.
-  const html = await renderGuideHtml(guide, undefined)
+  const { html, report } = await renderGuideHtml(guide, undefined)
 
   const res = await fetch(`/api/admin/guides/${guide.id}/upload-download`, {
     method: 'POST',
@@ -38,4 +43,5 @@ export async function generateAndUploadDownload(guide: GuideRow): Promise<void> 
     const body = await res.json().catch(() => null)
     throw new Error(body?.error ?? `Upload failed (HTTP ${res.status})`)
   }
+  return { bytes: html.length, report }
 }

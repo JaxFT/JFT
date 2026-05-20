@@ -83,28 +83,36 @@ async function fetchAsDataUri(url: string): Promise<string | null> {
 // URL so an online viewer at least sees something.
 async function inlineRemoteImages(html: string): Promise<string> {
   const urls = new Set<string>()
+  // Match both <img …src="…"> AND markdown-rendered srcset variations.
   const re = /<img\b[^>]*?\bsrc=["']([^"']+)["']/gi
   let m: RegExpExecArray | null
   while ((m = re.exec(html))) {
     const src = m[1]
     if (/^(?:https?:)?\/\//i.test(src)) urls.add(src)
   }
-  if (urls.size === 0) return html
+  if (urls.size === 0) {
+    console.log('[guide-download] no remote images to inline')
+    return html
+  }
 
-  const replacements = await Promise.all(
+  console.log(`[guide-download] inlining ${urls.size} images…`)
+  // Promise.allSettled so one slow/blocked image doesn't poison the
+  // whole batch. Each entry resolves with [url, dataUri | null].
+  const settled = await Promise.allSettled(
     Array.from(urls).map(async u => [u, await fetchAsDataUri(u)] as const),
   )
 
   let out = html
+  let inlined = 0
   let failed = 0
-  for (const [u, data] of replacements) {
+  for (const result of settled) {
+    if (result.status === 'rejected') { failed++; continue }
+    const [u, data] = result.value
     if (!data) { failed++; continue }
-    // Escape special regex chars before splitting on the URL string.
     out = out.split(u).join(data)
+    inlined++
   }
-  if (failed > 0) {
-    console.warn(`[guide-download] ${failed}/${urls.size} images could not be inlined; downloaded file may show broken icons for those.`)
-  }
+  console.log(`[guide-download] inlined ${inlined}/${urls.size}, ${failed} failed`)
   return out
 }
 
@@ -209,7 +217,13 @@ const STYLES = `
     padding: 10px 12px;
     border-bottom: 1px solid var(--line);
     vertical-align: top;
-    word-break: break-word;
+    /* overflow-wrap only breaks unbreakable strings (URLs, hashes).
+       word-break: break-word would split normal words letter-by-letter
+       when a column gets crushed in portrait. */
+    overflow-wrap: break-word;
+    word-break: normal;
+    /* Stop short words from being squeezed to letter-stacking width */
+    min-width: 4em;
   }
   th {
     font-weight: 600;

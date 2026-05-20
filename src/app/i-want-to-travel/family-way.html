@@ -1,881 +1,1168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Family Way</title>
-  <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-    :root {
-      --bg: #F5F4F1;
-      --surface: #EEECEA;
-      --white: #FAFAF8;
-      --text: #1A1A18;
-      --text-2: #78776F;
-      --accent: #3B6B4E;
-      --accent-dark: #2D5240;
-      --accent-light: #E4EDEA;
-      --border: #DDDBD7;
-      --amber: #8B6914;
-      --slate: #4A5568;
-      --radius: 8px;
-      --radius-lg: 12px;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.65;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    .screen { display: none; }
-    .screen.active { display: block; }
-
-    /* ── LANDING ── */
-    .landing { min-height: 100vh; display: flex; flex-direction: column; }
-
-    .nav {
-      padding: 24px 40px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .logo {
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--text);
-    }
-
-    .hero {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 80px 24px;
-      max-width: 640px;
-      margin: 0 auto;
-      width: 100%;
-    }
-
-    .eyebrow {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 24px;
-    }
-
-    .hero h1 {
-      font-size: clamp(34px, 5vw, 54px);
-      font-weight: 300;
-      letter-spacing: -0.025em;
-      line-height: 1.1;
-      margin-bottom: 20px;
-    }
-
-    .hero h1 strong { font-weight: 600; }
-
-    .hero p {
-      font-size: 17px;
-      color: var(--text-2);
-      margin-bottom: 40px;
-      max-width: 420px;
-      line-height: 1.7;
-    }
-
-    .hero-ctas { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: center; }
-
-    .btn-primary {
-      display: inline-block;
-      background: var(--accent);
-      color: var(--white);
-      padding: 14px 32px;
-      border-radius: var(--radius);
-      font-size: 15px;
-      font-weight: 500;
-      border: none;
-      cursor: pointer;
-      letter-spacing: 0.01em;
-      transition: background 0.15s;
-    }
-    .btn-primary:hover { background: var(--accent-dark); }
-
-    .btn-text {
-      font-size: 14px;
-      color: var(--text-2);
-      background: none;
-      border: none;
-      cursor: pointer;
-      text-decoration: underline;
-      text-decoration-color: var(--border);
-      text-underline-offset: 3px;
-    }
-    .btn-text:hover { color: var(--text); }
-
-    .how {
-      background: var(--white);
-      border-top: 1px solid var(--border);
-      padding: 72px 24px;
-    }
-
-    .how-inner { max-width: 720px; margin: 0 auto; }
-
-    .section-label {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--text-2);
-      margin-bottom: 40px;
-    }
-
-    .how-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 40px; }
-
-    .how-num {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      color: var(--accent);
-      margin-bottom: 12px;
-    }
-
-    .how-item h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
-    .how-item p { font-size: 14px; color: var(--text-2); line-height: 1.6; }
-
-    /* ── QUESTIONS ── */
-    .questions-screen { min-height: 100vh; display: flex; flex-direction: column; }
-
-    .q-header {
-      padding: 20px 40px;
-      border-bottom: 1px solid var(--border);
-      background: var(--white);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .q-progress-track { flex: 1; max-width: 360px; margin: 0 32px; }
-
-    .q-progress-bar { height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; }
-
-    .q-progress-fill {
-      height: 100%;
-      background: var(--accent);
-      border-radius: 2px;
-      transition: width 0.35s ease;
-    }
-
-    .q-progress-label { font-size: 12px; color: var(--text-2); margin-top: 7px; }
-
-    .btn-exit {
-      font-size: 13px;
-      color: var(--text-2);
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 4px 0;
-    }
-    .btn-exit:hover { color: var(--text); }
-
-    .q-body {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      padding: 56px 24px 40px;
-    }
-
-    .q-section {
-      display: none;
-      max-width: 540px;
-      margin: 0 auto;
-      width: 100%;
-      animation: fadeUp 0.22s ease;
-    }
-    .q-section.active { display: block; }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .q-section-label {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 8px;
-    }
-
-    .q-section-title { font-size: 26px; font-weight: 400; letter-spacing: -0.01em; margin-bottom: 6px; }
-
-    .q-section-desc { font-size: 14px; color: var(--text-2); margin-bottom: 40px; }
-
-    .q-field { margin-bottom: 30px; }
-
-    .q-field label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 12px; }
-
-    .btn-group { display: flex; flex-wrap: wrap; gap: 8px; }
-
-    .btn-option {
-      padding: 10px 18px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 14px;
-      background: var(--white);
-      color: var(--text);
-      cursor: pointer;
-      transition: all 0.12s;
-      line-height: 1.3;
-      font-family: inherit;
-    }
-    .btn-option:hover { border-color: var(--accent); color: var(--accent); }
-    .btn-option.selected { background: var(--accent); border-color: var(--accent); color: var(--white); }
-
-    .slider-wrap { display: flex; flex-direction: column; gap: 10px; }
-    .slider-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-2); }
-
-    input[type="range"] {
-      width: 100%;
-      accent-color: var(--accent);
-      cursor: pointer;
-    }
-
-    .slider-readout { font-size: 32px; font-weight: 300; color: var(--accent); letter-spacing: -0.02em; line-height: 1; }
-
-    textarea {
-      width: 100%;
-      padding: 14px 16px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 14px;
-      font-family: inherit;
-      background: var(--white);
-      color: var(--text);
-      resize: vertical;
-      min-height: 96px;
-      transition: border-color 0.15s;
-    }
-    textarea:focus { outline: none; border-color: var(--accent); }
-
-    .children-expand {
-      margin-top: 16px;
-      padding: 20px;
-      background: var(--accent-light);
-      border-radius: var(--radius);
-    }
-    .children-expand .q-field:last-child { margin-bottom: 0; }
-
-    .q-nav {
-      padding: 20px 40px;
-      border-top: 1px solid var(--border);
-      background: var(--white);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      bottom: 0;
-    }
-
-    .btn-back {
-      background: none;
-      border: none;
-      font-size: 14px;
-      color: var(--text-2);
-      cursor: pointer;
-      font-family: inherit;
-      padding: 8px 0;
-    }
-    .btn-back:hover { color: var(--text); }
-
-    .btn-next {
-      background: var(--accent);
-      color: var(--white);
-      border: none;
-      padding: 12px 28px;
-      border-radius: var(--radius);
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      font-family: inherit;
-      transition: background 0.15s;
-    }
-    .btn-next:hover { background: var(--accent-dark); }
-
-    /* ── RESULTS ── */
-    .r-header {
-      background: var(--white);
-      border-bottom: 1px solid var(--border);
-      padding: 20px 40px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .r-body { max-width: 700px; margin: 0 auto; padding: 56px 24px 80px; }
-
-    .r-page-label {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--text-2);
-      margin-bottom: 20px;
-    }
-
-    .result-card {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 36px;
-      margin-bottom: 16px;
-    }
-
-    .result-level { font-size: 26px; font-weight: 500; letter-spacing: -0.01em; margin-bottom: 28px; }
-    .result-level.high  { color: var(--accent); }
-    .result-level.medium { color: var(--amber); }
-    .result-level.low   { color: var(--slate); }
-
-    .score-row { display: flex; align-items: flex-end; gap: 28px; flex-wrap: wrap; }
-
-    .score-number { font-size: 52px; font-weight: 300; letter-spacing: -0.04em; line-height: 1; }
-    .score-number.high   { color: var(--accent); }
-    .score-number.medium { color: var(--amber); }
-    .score-number.low    { color: var(--slate); }
-
-    .score-label { font-size: 13px; color: var(--text-2); margin-top: 4px; }
-
-    .score-bar-wrap { flex: 1; min-width: 160px; }
-    .score-bar-ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-2); margin-bottom: 8px; }
-    .score-bar { height: 6px; background: var(--border); border-radius: 4px; overflow: hidden; }
-    .score-fill { height: 100%; border-radius: 4px; width: 0%; transition: width 1.1s cubic-bezier(.4,0,.2,1); }
-    .score-fill.high   { background: var(--accent); }
-    .score-fill.medium { background: #D4A017; }
-    .score-fill.low    { background: var(--slate); }
-
-    .r-section {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 32px;
-      margin-bottom: 16px;
-    }
-
-    .r-section-label {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--text-2);
-      margin-bottom: 16px;
-    }
-
-    .r-section h3 { font-size: 17px; font-weight: 500; margin-bottom: 10px; letter-spacing: -0.01em; }
-
-    .r-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-    .r-list li { display: flex; gap: 12px; font-size: 14px; line-height: 1.6; align-items: flex-start; color: var(--text); }
-    .r-list li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; margin-top: 8px; flex-shrink: 0; }
-    .r-list.strengths li::before { background: var(--accent); }
-    .r-list.challenges li::before { background: #C07B2A; }
-
-    .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .profile-item { background: var(--surface); border-radius: var(--radius); padding: 16px 20px; }
-    .profile-item-label { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-2); margin-bottom: 6px; }
-    .profile-item-value { font-size: 14px; color: var(--text); line-height: 1.5; }
-
-    .next-step-card {
-      background: var(--accent);
-      color: var(--white);
-      border-radius: var(--radius-lg);
-      padding: 36px;
-      margin-bottom: 16px;
-    }
-    .next-step-card .r-section-label { color: rgba(255,255,255,0.55); margin-bottom: 12px; }
-    .next-step-card h3 { font-size: 20px; font-weight: 500; margin-bottom: 12px; color: var(--white); }
-    .next-step-card p { font-size: 15px; line-height: 1.7; opacity: 0.88; }
-
-    .call-cta {
-      background: var(--white);
-      border: 1.5px solid var(--accent);
-      border-radius: var(--radius-lg);
-      padding: 32px;
-      margin-bottom: 16px;
-    }
-    .call-cta .r-section-label { color: var(--accent); margin-bottom: 10px; }
-    .call-cta h3 { font-size: 19px; font-weight: 500; margin-bottom: 10px; color: var(--text); }
-    .call-cta p { font-size: 14px; color: var(--text-2); line-height: 1.7; margin-bottom: 18px; }
-    .call-cta-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--accent);
-      color: var(--white);
-      padding: 11px 22px;
-      border-radius: var(--radius);
-      font-size: 14px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: background 0.15s;
-    }
-    .call-cta-btn:hover { background: var(--accent-dark); }
-
-    .coming-soon {
-      background: var(--surface);
-      border-radius: var(--radius-lg);
-      padding: 32px;
-      margin-bottom: 16px;
-    }
-    .coming-soon .r-section-label { color: var(--text-2); }
-    .coming-soon p { font-size: 14px; color: var(--text-2); margin-bottom: 20px; }
-    .coming-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-    .coming-tag {
-      background: var(--border);
-      color: var(--text-2);
-      padding: 6px 14px;
-      border-radius: 100px;
-      font-size: 13px;
-    }
-
-    .btn-restart {
-      background: none;
-      border: 1.5px solid var(--border);
-      color: var(--text-2);
-      padding: 10px 24px;
-      border-radius: var(--radius);
-      font-size: 14px;
-      cursor: pointer;
-      font-family: inherit;
-      transition: all 0.15s;
-    }
-    .btn-restart:hover { border-color: var(--text-2); color: var(--text); }
-
-    .restart-wrap { text-align: center; padding: 32px 0; }
-
-    @media (max-width: 600px) {
-      .nav, .q-header, .q-nav, .r-header { padding: 16px 20px; }
-      .q-progress-track { margin: 0 16px; }
-      .hero { padding: 56px 20px; }
-      .result-card, .r-section, .next-step-card, .coming-soon { padding: 24px; }
-      .profile-grid { grid-template-columns: 1fr; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Family Way</title>
+<style>
+  /* JFT site styling — brand-green (#2d8163) on sand cream, Inter
+     font, white cards with light borders and subtle shadows. Matches
+     the rest of the site so the quiz feels native rather than like
+     a third-party tool dropped in. */
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --ink:        #111827;
+    --ink-soft:   #4b5e5a;
+    --paper:      #fafaf7;   /* sand-50 */
+    --sand-100:   #f5f4f0;
+    --sand-200:   #ebe9e1;
+    --brand-50:   #f4faf7;
+    --brand-100:  #e3f1ea;
+    --brand-200:  #c9e3d2;
+    --brand-500:  #4ea27a;
+    --brand-600:  #2d8163;   /* primary */
+    --brand-700:  #235d4a;
+    --brand-900:  #173b30;
+    --brand-950:  #112b23;
+    --muted:      #6b7280;
+    --border:     #e5e7eb;   /* gray-200 */
+    --border-soft:#f3f4f6;   /* gray-100 */
+    --card:       #ffffff;
+    --amber-700:  #b45309;
+    --rose-700:   #be123c;
+    color-scheme: light;
+  }
+
+  html, body {
+    color-scheme: light;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.65;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .shell {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+
+  /* ── LANDING ── */
+  .landing { text-align: center; padding: 70px 24px 50px; max-width: 600px; margin: 0 auto; }
+  .landing .eyebrow {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--brand-600);
+    margin-bottom: 22px;
+  }
+  .landing h1 {
+    font-size: clamp(28px, 5.5vw, 38px);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    margin-bottom: 18px;
+    color: var(--ink);
+  }
+  .landing .lede {
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 480px;
+    margin: 0 auto 32px;
+    line-height: 1.6;
+  }
+  .start-btn {
+    background: var(--brand-600);
+    color: white;
+    border: none;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 14px 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .start-btn:hover { background: var(--brand-700); }
+  .landing .time {
+    display: block;
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* ── PROGRESS ── */
+  .progress-wrap {
+    position: sticky;
+    top: 0;
+    background: var(--paper);
+    padding: 18px 20px 14px;
+    z-index: 5;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .progress-label {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+  .progress {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--brand-600);
+    border-radius: 2px;
+    transition: width 0.4s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ── SECTIONS ── */
+  .q-section { display: none; padding: 8px 0 0; }
+  .q-section.active { display: block; }
+  .q-section h2 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+    line-height: 1.25;
+    color: var(--ink);
+  }
+  .section-desc {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 28px;
+    line-height: 1.55;
+  }
+
+  /* ── FIELDS ── */
+  .q-field { margin-bottom: 26px; }
+  .q-field > label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--ink);
+    line-height: 1.45;
+  }
+
+  .btn-group { display: grid; gap: 8px; }
+
+  .btn-option {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 13px 16px;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    width: 100%;
+    font-family: inherit;
+    line-height: 1.45;
+  }
+  .btn-option:hover {
+    border-color: var(--brand-200);
+    background: var(--brand-50);
+  }
+  .btn-option.selected {
+    border-color: var(--brand-600);
+    background: var(--brand-50);
+    color: var(--brand-700);
+    font-weight: 600;
+    box-shadow: 0 0 0 1px var(--brand-600) inset;
+  }
+
+  /* Age grid (single child) */
+  .age-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+  }
+  .age-grid .btn-option {
+    text-align: center;
+    padding: 12px 4px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* Slider */
+  .slider-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 20px;
+  }
+  .slider-readout {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--brand-600);
+    text-align: center;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .slider-readout sub {
+    font-size: 16px;
+    color: var(--muted);
+    font-weight: 500;
+    vertical-align: baseline;
+    margin-left: 2px;
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+    margin: 12px 0;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--brand-600);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(45,129,99,0.35);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--brand-600);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 6px rgba(45,129,99,0.35);
+  }
+  .slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* Textarea */
+  textarea {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--ink);
+    resize: vertical;
+    min-height: 90px;
+    outline: none;
+    line-height: 1.55;
+  }
+  textarea:focus { border-color: var(--brand-600); box-shadow: 0 0 0 1px var(--brand-600); }
+
+  /* ── NAV ── */
+  .q-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 36px;
+    gap: 14px;
+  }
+  .btn-back, .btn-next {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .btn-back {
+    background: transparent;
+    color: var(--muted);
+    padding: 12px 18px;
+  }
+  .btn-back:hover { color: var(--ink); }
+  .btn-next {
+    background: var(--brand-600);
+    color: white;
+    font-weight: 600;
+    padding: 13px 24px;
+  }
+  .btn-next:hover { background: var(--brand-700); }
+
+  /* ── RESULTS ── */
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--border-soft);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  .score-hero { text-align: center; padding: 40px 28px 36px; }
+  .score-band {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .score-number {
+    font-size: 76px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .score-out-of {
+    font-size: 22px;
+    color: var(--muted);
+    font-weight: 500;
+    margin-left: 2px;
+  }
+  .score-tagline {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-top: 16px;
+    line-height: 1.4;
+    max-width: 360px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .score-band.high   { color: var(--brand-600); }
+  .score-band.medium { color: var(--amber-700); }
+  .score-band.low    { color: var(--rose-700); }
+  .score-number.high   { color: var(--brand-600); }
+  .score-number.medium { color: var(--amber-700); }
+  .score-number.low    { color: var(--rose-700); }
+
+  /* Family profile (sand background) */
+  .profile-card {
+    background: var(--sand-100);
+    border: 1px solid var(--border-soft);
+    border-radius: 16px;
+    padding: 26px;
+    margin-bottom: 14px;
+  }
+  .profile-card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--ink);
+  }
+  .profile-row {
+    padding: 12px 0;
+    border-bottom: 1px dashed rgba(0,0,0,0.08);
+  }
+  .profile-row:first-of-type { padding-top: 0; }
+  .profile-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .profile-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--brand-600);
+    margin-bottom: 5px;
+  }
+  .profile-value {
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .tag {
+    display: inline-block;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 12px;
+    margin-right: 4px;
+    margin-top: 4px;
+    color: var(--ink);
+  }
+
+  /* Strengths / Challenges grid */
+  .swot-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 600px) {
+    .swot-grid { grid-template-columns: 1fr; }
+  }
+  .swot-card {
+    background: var(--card);
+    border: 1px solid var(--border-soft);
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .swot-card h4 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: var(--ink);
+  }
+  .swot-card ul { list-style: none; }
+  .swot-card li {
+    font-size: 13.5px;
+    line-height: 1.55;
+    padding-left: 22px;
+    position: relative;
+    margin-bottom: 12px;
+    color: var(--ink);
+  }
+  .swot-card li:last-child { margin-bottom: 0; }
+  .swot-card.strengths li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--brand-600);
+    font-weight: 700;
+  }
+  .swot-card.challenges li::before {
+    content: '!';
+    position: absolute;
+    left: 5px;
+    top: 0;
+    color: var(--amber-700);
+    font-weight: 700;
+  }
+
+  /* Actions */
+  .actions-card {
+    background: var(--card);
+    border: 1px solid var(--border-soft);
+    border-radius: 16px;
+    padding: 26px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .actions-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--ink);
+  }
+  .actions-card ul { list-style: none; }
+  .actions-card li {
+    padding-left: 24px;
+    position: relative;
+    margin-bottom: 14px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .actions-card li:last-child { margin-bottom: 0; }
+  .actions-card li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    top: 1px;
+    color: var(--brand-600);
+    font-weight: 700;
+  }
+
+  /* Next step (brand tint) */
+  .next-step {
+    background: var(--brand-50);
+    border: 1px solid var(--brand-200);
+    border-radius: 16px;
+    padding: 26px;
+    margin-bottom: 14px;
+  }
+  .next-step h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--brand-900);
+  }
+  .next-step p {
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--ink);
+  }
+
+  /* CTA (dark brand) */
+  .cta-card {
+    background: var(--brand-950);
+    color: var(--paper);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+  .cta-card .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--brand-200);
+    margin-bottom: 12px;
+  }
+  .cta-card h3 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: white;
+  }
+  .cta-card p {
+    font-size: 14px;
+    line-height: 1.65;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 20px;
+  }
+  .cta-btn {
+    display: inline-block;
+    background: var(--brand-600);
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 12px 22px;
+    border-radius: 8px;
+    font-family: inherit;
+    transition: background 0.15s ease;
+  }
+  .cta-btn:hover { background: var(--brand-700); }
+
+  .restart-link {
+    display: block;
+    text-align: center;
+    margin: 20px auto;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: underline;
+  }
+  .restart-link:hover { color: var(--ink); }
+</style>
 </head>
 <body>
 
 <!-- ═══ LANDING ═══ -->
-<div id="landing" class="screen active">
-  <div class="landing">
-    <nav class="nav">
-      <span class="logo">Family Way</span>
-    </nav>
-
-    <div class="hero">
-      <div class="eyebrow">Family Travel Assessment</div>
-      <h1>Could your family<br><strong>actually do this?</strong></h1>
-      <p>Families don't need more travel ideas. They need clarity. Family Way helps you understand if long-term travel is realistic, for your family, right now.</p>
-      <div class="hero-ctas">
-        <button class="btn-primary" onclick="showScreen('questions')">Start Check</button>
-        <button class="btn-text" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">How it works</button>
-      </div>
-    </div>
-
-    <div class="how" id="how">
-      <div class="how-inner">
-        <div class="section-label">How it works</div>
-        <div class="how-grid">
-          <div class="how-item">
-            <div class="how-num">01</div>
-            <h3>Answer honestly</h3>
-            <p>Questions about your family setup, work situation, and travel preferences.</p>
-          </div>
-          <div class="how-item">
-            <div class="how-num">02</div>
-            <h3>Get your profile</h3>
-            <p>A readiness score, your strengths, your challenges, and a realistic travel approach.</p>
-          </div>
-          <div class="how-item">
-            <div class="how-num">03</div>
-            <h3>Know your next step</h3>
-            <p>A clear recommendation, not inspiration. What to actually do next.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+<div id="landing" class="screen landing active">
+  <span class="eyebrow">Family Way</span>
+  <h1>Could long-term travel actually work for your family?</h1>
+  <p class="lede">An honest readiness check, built for families dreaming about taking the leap. Personal results in 5 minutes.</p>
+  <button class="start-btn" onclick="startQuiz()">Start the quiz →</button>
+  <span class="time">~5 minutes · No sign-up · Free</span>
 </div>
 
-<!-- ═══ QUESTIONS ═══ -->
-<div id="questions" class="screen">
-  <div class="questions-screen">
-    <div class="q-header">
-      <span class="logo">Family Way</span>
-      <div class="q-progress-track">
-        <div class="q-progress-bar">
-          <div class="q-progress-fill" id="progressFill" style="width:20%"></div>
+<!-- ═══ QUIZ ═══ -->
+<div id="quiz" class="screen">
+  <div class="progress-wrap">
+    <div class="progress-label" id="progressLabel">Section 1 of 7</div>
+    <div class="progress"><div class="progress-fill" id="progressFill" style="width:14%"></div></div>
+  </div>
+  <div class="shell">
+
+    <!-- SECTION 1: FAMILY -->
+    <div class="q-section active" id="section-1">
+      <h2>Your Family</h2>
+      <p class="section-desc">Tell us who's travelling.</p>
+
+      <div class="q-field">
+        <label>How many adults are travelling?</label>
+        <div class="btn-group" data-field="adults">
+          <button class="btn-option" data-value="1">1 — Solo parent</button>
+          <button class="btn-option" data-value="2">2 — Couple or partners</button>
+          <button class="btn-option" data-value="3+">3 or more — Extended family</button>
         </div>
-        <div class="q-progress-label" id="progressLabel">Section 1 of 5</div>
       </div>
-      <button class="btn-exit" onclick="showScreen('landing')">Exit</button>
+
+      <div class="q-field">
+        <label>Are you travelling with children?</label>
+        <div class="btn-group" data-field="hasChildren">
+          <button class="btn-option" data-value="yes">Yes</button>
+          <button class="btn-option" data-value="no">No</button>
+        </div>
+      </div>
+
+      <div class="q-field" id="numChildrenField" style="display:none">
+        <label>How many children?</label>
+        <div class="btn-group" data-field="numChildren">
+          <button class="btn-option" data-value="1">1</button>
+          <button class="btn-option" data-value="2">2</button>
+          <button class="btn-option" data-value="3">3</button>
+          <button class="btn-option" data-value="4+">4 or more</button>
+        </div>
+      </div>
+
+      <div class="q-field" id="childAgeExactField" style="display:none">
+        <label>How old are they?</label>
+        <div class="age-grid btn-group" data-field="childExactAge">
+          <button class="btn-option" data-value="0">&lt;1</button>
+          <button class="btn-option" data-value="1">1</button>
+          <button class="btn-option" data-value="2">2</button>
+          <button class="btn-option" data-value="3">3</button>
+          <button class="btn-option" data-value="4">4</button>
+          <button class="btn-option" data-value="5">5</button>
+          <button class="btn-option" data-value="6">6</button>
+          <button class="btn-option" data-value="7">7</button>
+          <button class="btn-option" data-value="8">8</button>
+          <button class="btn-option" data-value="9">9</button>
+          <button class="btn-option" data-value="10">10</button>
+          <button class="btn-option" data-value="11">11</button>
+          <button class="btn-option" data-value="12">12</button>
+          <button class="btn-option" data-value="13">13</button>
+          <button class="btn-option" data-value="14">14</button>
+          <button class="btn-option" data-value="15">15</button>
+          <button class="btn-option" data-value="16">16</button>
+          <button class="btn-option" data-value="17">17</button>
+        </div>
+      </div>
+
+      <div class="q-field" id="childAgesRangeField" style="display:none">
+        <label>What's the age range?</label>
+        <div class="btn-group" data-field="childAges">
+          <button class="btn-option" data-value="all-young">All under 5</button>
+          <button class="btn-option" data-value="mixed">Some young, some older</button>
+          <button class="btn-option" data-value="all-older">All 5 and over</button>
+        </div>
+      </div>
+
+      <div class="q-field">
+        <label>Any long-term travel experience as a family?</label>
+        <div class="btn-group" data-field="experience">
+          <button class="btn-option" data-value="yes">Yes, we've done this before</button>
+          <button class="btn-option" data-value="some">Some — short trips abroad</button>
+          <button class="btn-option" data-value="no">None — this would be new</button>
+        </div>
+      </div>
     </div>
 
-    <div class="q-body">
+    <!-- SECTION 2: INTENTION -->
+    <div class="q-section" id="section-2">
+      <h2>Your Intention</h2>
+      <p class="section-desc">What are you actually hoping to do?</p>
 
-      <!-- S1: FAMILY -->
-      <div class="q-section active" id="section-1">
-        <div class="q-section-label">Section 1</div>
-        <div class="q-section-title">Your family</div>
-        <div class="q-section-desc">Tell us who's travelling.</div>
-
-        <div class="q-field">
-          <label>How many adults are travelling?</label>
-          <div class="btn-group" data-field="adults">
-            <button class="btn-option" data-value="1">1 adult</button>
-            <button class="btn-option" data-value="2">2 adults</button>
-            <button class="btn-option" data-value="3+">3 or more</button>
-          </div>
-        </div>
-
-        <div class="q-field">
-          <label>Are you travelling with children?</label>
-          <div class="btn-group" data-field="hasChildren">
-            <button class="btn-option" data-value="yes">Yes</button>
-            <button class="btn-option" data-value="no">No</button>
-          </div>
-        </div>
-
-        <div class="children-expand" id="childrenExpand" style="display:none">
-          <div class="q-field">
-            <label>How many children?</label>
-            <div class="btn-group" data-field="numChildren">
-              <button class="btn-option" data-value="1">1</button>
-              <button class="btn-option" data-value="2">2</button>
-              <button class="btn-option" data-value="3">3</button>
-              <button class="btn-option" data-value="4+">4+</button>
-            </div>
-          </div>
-          <div class="q-field">
-            <label>What are their ages?</label>
-            <div class="btn-group" data-field="childAges">
-              <button class="btn-option" data-value="all-young">All under 6</button>
-              <button class="btn-option" data-value="mixed">Mix of ages</button>
-              <button class="btn-option" data-value="all-older">All 6 and over</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="q-field">
-          <label>Long-term travel experience?</label>
-          <div class="btn-group" data-field="experience">
-            <button class="btn-option" data-value="yes">Yes, we've done this</button>
-            <button class="btn-option" data-value="some">Some, short trips abroad</button>
-            <button class="btn-option" data-value="no">None, this would be new</button>
-          </div>
+      <div class="q-field">
+        <label>How long do you want to travel for?</label>
+        <div class="btn-group" data-field="duration">
+          <button class="btn-option" data-value="1-3m">1–3 months</button>
+          <button class="btn-option" data-value="3-6m">3–6 months</button>
+          <button class="btn-option" data-value="6-12m">6–12 months</button>
+          <button class="btn-option" data-value="12m+">12 months or more</button>
         </div>
       </div>
 
-      <!-- S2: INTENTION -->
-      <div class="q-section" id="section-2">
-        <div class="q-section-label">Section 2</div>
-        <div class="q-section-title">Your intention</div>
-        <div class="q-section-desc">What are you actually trying to do?</div>
-
-        <div class="q-field">
-          <label>How long do you want to travel?</label>
-          <div class="btn-group" data-field="duration">
-            <button class="btn-option" data-value="1-3m">1–3 months</button>
-            <button class="btn-option" data-value="3-6m">3–6 months</button>
-            <button class="btn-option" data-value="6-12m">6–12 months</button>
-            <button class="btn-option" data-value="12m+">12 months or more</button>
-          </div>
-        </div>
-
-        <div class="q-field">
-          <label>What's your primary goal?</label>
-          <div class="btn-group" data-field="goal">
-            <button class="btn-option" data-value="adventure">Adventure</button>
-            <button class="btn-option" data-value="education">Education</button>
-            <button class="btn-option" data-value="lifestyle">Lifestyle change</button>
-            <button class="btn-option" data-value="test">Testing the idea</button>
-          </div>
+      <div class="q-field">
+        <label>What's driving this dream?</label>
+        <div class="btn-group" data-field="goal">
+          <button class="btn-option" data-value="adventure">Adventure — see the world</button>
+          <button class="btn-option" data-value="education">Education — broaden the kids' horizons</button>
+          <button class="btn-option" data-value="lifestyle">Lifestyle — escape the daily grind</button>
+          <button class="btn-option" data-value="test">Test — see if this life is for us</button>
         </div>
       </div>
 
-      <!-- S3: READINESS -->
-      <div class="q-section" id="section-3">
-        <div class="q-section-label">Section 3</div>
-        <div class="q-section-title">Your readiness</div>
-        <div class="q-section-desc">Be honest. The results are only useful if you are.</div>
-
-        <div class="q-field">
-          <label>Current work situation</label>
-          <div class="btn-group" data-field="work">
-            <button class="btn-option" data-value="remote">Fully remote</button>
-            <button class="btn-option" data-value="partial">Partially remote</button>
-            <button class="btn-option" data-value="planning">Building toward it</button>
-            <button class="btn-option" data-value="none">Not flexible</button>
-          </div>
-        </div>
-
-        <div class="q-field">
-          <label>Comfort with uncertainty, <span id="uncValue" style="color:var(--accent);font-weight:600">5</span> / 10</label>
-          <div class="slider-wrap">
-            <div class="slider-readout" id="uncReadout">5</div>
-            <input type="range" min="1" max="10" value="5" id="uncertaintySlider" oninput="updateSlider(this)">
-            <div class="slider-labels">
-              <span>Low, I need a plan</span>
-              <span>High, I adapt well</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="q-field">
-          <label>How important is daily routine to your family?</label>
-          <div class="btn-group" data-field="routine">
-            <button class="btn-option" data-value="low">Low, we're flexible</button>
-            <button class="btn-option" data-value="medium">Medium, some structure helps</button>
-            <button class="btn-option" data-value="high">High, routine is essential</button>
-          </div>
+      <div class="q-field">
+        <label>When are you realistically hoping to leave?</label>
+        <div class="btn-group" data-field="timeline">
+          <button class="btn-option" data-value="asap">As soon as possible (within 6 months)</button>
+          <button class="btn-option" data-value="1year">In 6–12 months</button>
+          <button class="btn-option" data-value="2year">In 1–2 years</button>
+          <button class="btn-option" data-value="flexible">No fixed timeline — when it's right</button>
         </div>
       </div>
-
-      <!-- S4: TRAVEL STYLE -->
-      <div class="q-section" id="section-4">
-        <div class="q-section-label">Section 4</div>
-        <div class="q-section-title">Your travel style</div>
-        <div class="q-section-desc">How you prefer to move and live while abroad.</div>
-
-        <div class="q-field">
-          <label>Preferred pace</label>
-          <div class="btn-group" data-field="pace">
-            <button class="btn-option" data-value="slow">Slow, weeks or months per place</button>
-            <button class="btn-option" data-value="medium">Medium, 1–3 weeks per place</button>
-            <button class="btn-option" data-value="fast">Fast, a few days per place</button>
-          </div>
-        </div>
-
-        <div class="q-field">
-          <label>Preferred environment</label>
-          <div class="btn-group" data-field="environment">
-            <button class="btn-option" data-value="city">Cities</button>
-            <button class="btn-option" data-value="beach">Beach</button>
-            <button class="btn-option" data-value="nature">Nature</button>
-            <button class="btn-option" data-value="mix">Mix of all</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- S5: DESTINATIONS -->
-      <div class="q-section" id="section-5">
-        <div class="q-section-label">Section 5, Optional</div>
-        <div class="q-section-title">Destinations</div>
-        <div class="q-section-desc">Any regions or countries you're drawn to? This helps personalise your profile output.</div>
-
-        <div class="q-field">
-          <label>Regions or countries in mind</label>
-          <textarea id="destinationsInput" placeholder="e.g. Southeast Asia, Portugal, New Zealand, South America..."></textarea>
-        </div>
-      </div>
-
     </div>
 
+    <!-- SECTION 3: WORK & INCOME -->
+    <div class="q-section" id="section-3">
+      <h2>Work &amp; Income</h2>
+      <p class="section-desc">How money will flow on the road.</p>
+
+      <div class="q-field">
+        <label>How do you work right now?</label>
+        <div class="btn-group" data-field="workNow">
+          <button class="btn-option" data-value="office">Office or site based — I need to be physically present</button>
+          <button class="btn-option" data-value="home-uk">I work from home, but I'm tied to my home country</button>
+          <button class="btn-option" data-value="anywhere">I work remotely and could do this job from anywhere in the world</button>
+          <button class="btn-option" data-value="self-employed">Self-employed / freelance / run my own business</button>
+          <button class="btn-option" data-value="not-working">Not currently working</button>
+        </div>
+      </div>
+
+      <div class="q-field" id="workLocationField" style="display:none">
+        <label>Could your work actually be done from another country?</label>
+        <div class="btn-group" data-field="workLocation">
+          <button class="btn-option" data-value="yes">Yes — fully possible</button>
+          <button class="btn-option" data-value="maybe">Maybe — I'd need to ask</button>
+          <button class="btn-option" data-value="no">No — tied to home</button>
+        </div>
+      </div>
+
+      <div class="q-field" id="workWhenLeaveField" style="display:none">
+        <label>When you leave to travel — what happens with work?</label>
+        <div class="btn-group" data-field="workWhenLeave">
+          <button class="btn-option" data-value="keep-going">I keep working exactly as I do now — my job travels with me</button>
+          <button class="btn-option" data-value="sabbatical">I'd negotiate a sabbatical or career break and return to my job after</button>
+          <button class="btn-option" data-value="reduce">I could go part-time or reduce hours — earn something while travelling</button>
+          <button class="btn-option" data-value="quit">I'd resign — full clean break, no income from this job</button>
+          <button class="btn-option" data-value="new-income">I'd leave and replace this income with something new (freelance, remote job, content, etc.)</button>
+          <button class="btn-option" data-value="unsure">Not sure yet — I haven't figured this part out</button>
+        </div>
+      </div>
+
+      <div class="q-field" id="newIncomeProgressField" style="display:none">
+        <label>How far along are you with building that new income?</label>
+        <div class="btn-group" data-field="newIncomeProgress">
+          <button class="btn-option" data-value="earning">Already earning from it</button>
+          <button class="btn-option" data-value="started">Started building but not yet earning</button>
+          <button class="btn-option" data-value="idea">It's an idea I haven't started yet</button>
+        </div>
+      </div>
+
+      <div class="q-field">
+        <label>Overall — will you have earned income coming in while travelling?</label>
+        <div class="btn-group" data-field="travelIncome">
+          <button class="btn-option" data-value="yes-both">Yes — both adults will be earning</button>
+          <button class="btn-option" data-value="yes-one">Yes — one adult will be earning</button>
+          <button class="btn-option" data-value="building">Building toward it — should be by the time we leave</button>
+          <button class="btn-option" data-value="no">No — we'll be living off savings</button>
+        </div>
+      </div>
+
+      <div class="q-field">
+        <label>Do you have any residual or passive income?</label>
+        <div class="btn-group" data-field="residualIncome">
+          <button class="btn-option" data-value="yes-covers">Yes — covers our home costs (rental income, etc.)</button>
+          <button class="btn-option" data-value="yes-partial">Yes — partially supplements (smaller rental, royalties, etc.)</button>
+          <button class="btn-option" data-value="potential">Potential — we could rent out our home or similar</button>
+          <button class="btn-option" data-value="no">None</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: FINANCES -->
+    <div class="q-section" id="section-4">
+      <h2>Your Finances</h2>
+      <p class="section-desc">Be honest — this shapes what's realistic.</p>
+
+      <div class="q-field">
+        <label>Roughly how much could you save per month right now?</label>
+        <div class="btn-group" data-field="savingsRate">
+          <button class="btn-option" data-value="under50">Under £50</button>
+          <button class="btn-option" data-value="50-250">£50–£250</button>
+          <button class="btn-option" data-value="251-500">£250–£500</button>
+          <button class="btn-option" data-value="501-1000">£500–£1,000</button>
+          <button class="btn-option" data-value="1000+">£1,000+</button>
+        </div>
+      </div>
+
+      <div class="q-field">
+        <label>How long could you keep saving at that rate?</label>
+        <div class="btn-group" data-field="savingsDuration">
+          <button class="btn-option" data-value="under6m">Less than 6 months</button>
+          <button class="btn-option" data-value="6-12m">6–12 months</button>
+          <button class="btn-option" data-value="1-2yr">1–2 years</button>
+          <button class="btn-option" data-value="2yr+">2 years or more</button>
+        </div>
+      </div>
+
+      <div class="q-field">
+        <label>Do you have any savings set aside already?</label>
+        <div class="btn-group" data-field="existingSavings">
+          <button class="btn-option" data-value="yes-strong">Yes — more than £5,000</button>
+          <button class="btn-option" data-value="yes-some">Yes — less than £5,000</button>
+          <button class="btn-option" data-value="no">Nothing set aside yet</button>
+        </div>
+      </div>
+
+      <div class="q-field">
+        <label>Do you have expenses at home you'd need to keep covering while away?</label>
+        <div class="btn-group" data-field="homeExpenses">
+          <button class="btn-option" data-value="yes">Yes — mortgage, bills, subscriptions, storage, etc.</button>
+          <button class="btn-option" data-value="no">No — we'd let the home go, or it's covered</button>
+        </div>
+      </div>
+
+      <div class="q-field">
+        <label>Do you think there's room to cut your current outgoings?</label>
+        <div class="btn-group" data-field="spendingHabits">
+          <button class="btn-option" data-value="lean">We're already lean — not much fat to trim</button>
+          <button class="btn-option" data-value="some-cuts">Some — a few subscriptions / habits could go</button>
+          <button class="btn-option" data-value="lots-of-cuts">Plenty — we could cut significantly if we focused</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 5: EDUCATION -->
+    <div class="q-section" id="section-5">
+      <h2>Education &amp; Worldschooling</h2>
+      <p class="section-desc">How school fits in, or doesn't.</p>
+
+      <div class="q-field">
+        <label>Are your children currently in full-time education?</label>
+        <div class="btn-group" data-field="educationStatus">
+          <button class="btn-option" data-value="fulltime">Yes — full-time school</button>
+          <button class="btn-option" data-value="preschool">Preschool / nursery only</button>
+          <button class="btn-option" data-value="mixed">Some are, some aren't</button>
+          <button class="btn-option" data-value="homeschool">We homeschool already</button>
+          <button class="btn-option" data-value="na">Not applicable</button>
+        </div>
+      </div>
+
+      <div class="q-field">
+        <label>How do you feel about worldschooling?</label>
+        <div class="btn-group" data-field="worldschoolOpen">
+          <button class="btn-option" data-value="all-in">All in — it's a big part of the appeal</button>
+          <button class="btn-option" data-value="open">Open — willing to try and learn</button>
+          <button class="btn-option" data-value="unsure">Unsure — I need to understand it more</button>
+          <button class="btn-option" data-value="concerned">Concerned — worried about gaps in learning</button>
+        </div>
+      </div>
+
+      <div class="q-field" id="schoolAlignmentField" style="display:none">
+        <label>Are you both fully on the same page about taking your child out of school?</label>
+        <div class="btn-group" data-field="schoolAlignment">
+          <button class="btn-option" data-value="yes">Yes — we're aligned</button>
+          <button class="btn-option" data-value="no">Not really — one of us is more hesitant</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 6: MINDSET -->
+    <div class="q-section" id="section-6">
+      <h2>Mindset &amp; Readiness</h2>
+      <p class="section-desc">The bit that doesn't show up on a spreadsheet.</p>
+
+      <div class="q-field">
+        <label>How comfortable are you with uncertainty and plans changing?</label>
+        <div class="slider-wrap">
+          <div class="slider-readout"><span id="uncReadout">5</span><sub>/10</sub></div>
+          <input type="range" min="1" max="10" value="5" id="uncertaintySlider" oninput="updateSlider(this)">
+          <div class="slider-labels">
+            <span>Low — I need a plan</span>
+            <span>High — I roll with it</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="q-field">
+        <label>How important is daily routine to your family?</label>
+        <div class="btn-group" data-field="routine">
+          <button class="btn-option" data-value="low">Low — we're flexible</button>
+          <button class="btn-option" data-value="medium">Medium — some structure helps</button>
+          <button class="btn-option" data-value="high">High — routine is essential</button>
+        </div>
+      </div>
+
+      <div class="q-field">
+        <label>Has your whole family bought into this idea?</label>
+        <div class="btn-group" data-field="familyBuyIn">
+          <button class="btn-option" data-value="all-in">Everyone is genuinely excited</button>
+          <button class="btn-option" data-value="mostly">Mostly — one or two need convincing</button>
+          <button class="btn-option" data-value="split">Split — real differences of opinion</button>
+          <button class="btn-option" data-value="just-me">Just me — selling it to the others</button>
+        </div>
+      </div>
+
+      <div class="q-field">
+        <label>What worries you most about making this happen? (pick up to 2)</label>
+        <div class="btn-group" data-field="biggestFear" data-multi="2">
+          <button class="btn-option" data-value="money">Money — running out</button>
+          <button class="btn-option" data-value="work">Work or career — getting back into it</button>
+          <button class="btn-option" data-value="kids">Kids — education, socialising, missing out</button>
+          <button class="btn-option" data-value="safety">Safety — health, accidents, the unknown</button>
+          <button class="btn-option" data-value="returning">Returning — what life looks like after</button>
+          <button class="btn-option" data-value="none">Honestly? Not much. We're ready.</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 7: TRAVEL STYLE -->
+    <div class="q-section" id="section-7">
+      <h2>Travel Style</h2>
+      <p class="section-desc">How you'd want to actually move and live.</p>
+
+      <div class="q-field">
+        <label>What travel pace suits your family best?</label>
+        <div class="btn-group" data-field="pace">
+          <button class="btn-option" data-value="slow">Slow — 4–8 weeks per place</button>
+          <button class="btn-option" data-value="medium">Medium — 2–4 weeks per place</button>
+          <button class="btn-option" data-value="fast">Fast — as much as possible</button>
+        </div>
+      </div>
+
+      <div class="q-field">
+        <label>What kind of environment do you thrive in?</label>
+        <div class="btn-group" data-field="environment">
+          <button class="btn-option" data-value="city">Cities — culture, food, buzz</button>
+          <button class="btn-option" data-value="beach">Beach / coast — sea, sun, slow</button>
+          <button class="btn-option" data-value="nature">Nature — mountains, forests, wild</button>
+          <button class="btn-option" data-value="mix">Mix of all — variety</button>
+        </div>
+      </div>
+
+      <div class="q-field">
+        <label>Any regions already on your radar? (optional)</label>
+        <textarea id="destinationsInput" placeholder="e.g. Southeast Asia, Portugal, New Zealand…"></textarea>
+      </div>
+    </div>
+
+    <!-- NAV -->
     <div class="q-nav">
       <button class="btn-back" id="backBtn" onclick="prevSection()" style="visibility:hidden">Back</button>
-      <button class="btn-next" id="nextBtn" onclick="nextSection()">Next</button>
+      <button class="btn-next" id="nextBtn" onclick="nextSection()">Continue</button>
     </div>
   </div>
 </div>
 
 <!-- ═══ RESULTS ═══ -->
 <div id="results" class="screen">
-  <div class="r-header">
-    <span class="logo">Family Way</span>
-    <button class="btn-restart" onclick="restart()">Start over</button>
-  </div>
-
-  <div class="r-body">
-    <div class="r-page-label">Your Family Travel Profile</div>
-
-    <!-- Score card -->
-    <div class="result-card">
-      <div class="result-level" id="resultLevel"></div>
-      <div class="score-row">
-        <div>
-          <div class="score-number" id="scoreNumber"></div>
-          <div class="score-label">Readiness score</div>
-        </div>
-        <div class="score-bar-wrap">
-          <div class="score-bar-ends"><span>0</span><span>100</span></div>
-          <div class="score-bar"><div class="score-fill" id="scoreFill"></div></div>
-        </div>
+  <div class="shell">
+    <div class="result-card score-hero" id="scoreHero"></div>
+    <div class="profile-card" id="profileCard"></div>
+    <div class="swot-grid">
+      <div class="swot-card strengths">
+        <h4>What's working for you</h4>
+        <ul id="strengthsList"></ul>
+      </div>
+      <div class="swot-card challenges">
+        <h4>Areas to work on</h4>
+        <ul id="challengesList"></ul>
       </div>
     </div>
-
-    <!-- Strengths -->
-    <div class="r-section">
-      <div class="r-section-label">Strengths</div>
-      <ul class="r-list strengths" id="strengthsList"></ul>
+    <div class="actions-card">
+      <h3>Concrete next actions</h3>
+      <ul id="actionsList"></ul>
     </div>
-
-    <!-- Challenges -->
-    <div class="r-section">
-      <div class="r-section-label">Challenges</div>
-      <ul class="r-list challenges" id="challengesList"></ul>
+    <div class="next-step" id="nextStepCard"></div>
+    <div class="cta-card">
+      <div class="eyebrow">Want to talk it through?</div>
+      <h3>Book a 1:1 with us</h3>
+      <p>We've done this. We travel full-time as a family and we know what it actually takes — not the highlight reel version, the real one. If you want to talk through your specific situation, work out where the gaps are, and make a plan that fits your family, we offer a personal 1:1 call.</p>
+      <a class="cta-btn" href="/work-with-us" target="_top">Book your call →</a>
     </div>
-
-    <!-- Recommended style -->
-    <div class="r-section">
-      <div class="r-section-label">Recommended Travel Style</div>
-      <h3 id="styleTitle"></h3>
-      <p id="styleDesc" style="font-size:14px;color:var(--text-2);line-height:1.7;margin-top:6px"></p>
-    </div>
-
-    <!-- Family profile -->
-    <div class="r-section">
-      <div class="r-section-label">Family Profile</div>
-      <div class="profile-grid" id="profileGrid"></div>
-    </div>
-
-    <!-- Next step -->
-    <div class="next-step-card">
-      <div class="r-section-label">Recommended Next Step</div>
-      <h3 id="nextStepTitle"></h3>
-      <p id="nextStepDesc"></p>
-    </div>
-
-    <!-- 1:1 call CTA -->
-    <div class="call-cta">
-      <div class="r-section-label">Still have questions?</div>
-      <h3>Talk it through with Bec &amp; Oli</h3>
-      <p>A 60-minute video call with the family who's actually doing it. We follow your questions and you'll leave with concrete next steps for your family.</p>
-      <a href="/work-with-us" target="_top" class="call-cta-btn">Book a 1:1 call &rarr;</a>
-    </div>
-
-    <!-- Coming soon -->
-    <div class="coming-soon">
-      <div class="r-section-label">Coming soon</div>
-      <p>More tools in development.</p>
-      <div class="coming-tags">
-        <span class="coming-tag">Route suggestions</span>
-        <span class="coming-tag">Worldschool hubs</span>
-        <span class="coming-tag">Seasonal guidance</span>
-        <span class="coming-tag">Visa intelligence</span>
-        <span class="coming-tag">Travel optimisation</span>
-      </div>
-    </div>
-
-    <div class="restart-wrap">
-      <button class="btn-restart" onclick="restart()">Start over</button>
-    </div>
+    <button class="restart-link" onclick="restart()">Start the quiz again</button>
   </div>
 </div>
 
 <script>
+  // ───── STATE ─────
   const answers = {
-    adults: null, hasChildren: null, numChildren: null, childAges: null,
-    experience: null, duration: null, goal: null, work: null,
-    uncertainty: 5, routine: null, pace: null, environment: null, destinations: ''
+    adults: null,
+    hasChildren: null,
+    numChildren: null,
+    childExactAge: null,
+    childAges: null,
+    experience: null,
+    duration: null,
+    goal: null,
+    timeline: null,
+    workNow: null,
+    workLocation: null,
+    workWhenLeave: null,
+    newIncomeProgress: null,
+    travelIncome: null,
+    residualIncome: null,
+    savingsRate: null,
+    savingsDuration: null,
+    existingSavings: null,
+    homeExpenses: null,
+    spendingHabits: null,
+    educationStatus: null,
+    worldschoolOpen: null,
+    schoolAlignment: null,
+    uncertainty: 5,
+    routine: null,
+    familyBuyIn: null,
+    biggestFear: [],
+    pace: null,
+    environment: null,
+    destinations: '',
   };
 
   let currentSection = 1;
+  const TOTAL_SECTIONS = 7;
 
+  // ───── SCREEN SWITCHING ─────
   function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     window.scrollTo(0, 0);
   }
 
-  // Wire up all button groups
-  document.querySelectorAll('.btn-group').forEach(group => {
-    group.querySelectorAll('.btn-option').forEach(btn => {
-      btn.addEventListener('click', () => {
-        group.querySelectorAll('.btn-option').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        const field = group.dataset.field;
-        answers[field] = btn.dataset.value;
+  function startQuiz() {
+    showScreen('quiz');
+  }
 
-        if (field === 'hasChildren') {
-          const show = btn.dataset.value === 'yes';
-          document.getElementById('childrenExpand').style.display = show ? 'block' : 'none';
-          if (!show) { answers.numChildren = null; answers.childAges = null; }
-        }
+  // ───── BUTTON GROUP WIRING ─────
+  document.querySelectorAll('.btn-group').forEach(group => {
+    const field = group.dataset.field;
+    const multiAttr = group.dataset.multi;
+
+    if (multiAttr) {
+      const max = parseInt(multiAttr, 10);
+      group.querySelectorAll('.btn-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const value = btn.dataset.value;
+          let arr = Array.isArray(answers[field]) ? [...answers[field]] : [];
+
+          if (value === 'none') {
+            // "None" is exclusive: select alone, or deselect.
+            arr = arr.includes('none') ? [] : ['none'];
+          } else {
+            // Any other choice deselects "none" first.
+            arr = arr.filter(v => v !== 'none');
+            if (arr.includes(value)) {
+              arr = arr.filter(v => v !== value);
+            } else if (arr.length < max) {
+              arr.push(value);
+            }
+          }
+          answers[field] = arr;
+          group.querySelectorAll('.btn-option').forEach(b => {
+            b.classList.toggle('selected', arr.includes(b.dataset.value));
+          });
+        });
       });
-    });
+    } else {
+      group.querySelectorAll('.btn-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+          group.querySelectorAll('.btn-option').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          answers[field] = btn.dataset.value;
+          handleConditional(field);
+        });
+      });
+    }
   });
 
+  // ───── CONDITIONAL DISPLAY ─────
+  function handleConditional(field) {
+    if (field === 'hasChildren') {
+      const show = answers.hasChildren === 'yes';
+      document.getElementById('numChildrenField').style.display = show ? 'block' : 'none';
+      if (!show) {
+        answers.numChildren = null;
+        answers.childAges = null;
+        answers.childExactAge = null;
+        document.getElementById('childAgeExactField').style.display = 'none';
+        document.getElementById('childAgesRangeField').style.display = 'none';
+        // Clear UI selections for the now-hidden fields.
+        document.querySelectorAll('#numChildrenField .btn-option, #childAgeExactField .btn-option, #childAgesRangeField .btn-option')
+          .forEach(b => b.classList.remove('selected'));
+      }
+      handleSchoolAlignment();
+    }
+
+    if (field === 'numChildren') {
+      const isOne = answers.numChildren === '1';
+      document.getElementById('childAgeExactField').style.display = isOne ? 'block' : 'none';
+      document.getElementById('childAgesRangeField').style.display = (answers.numChildren && !isOne) ? 'block' : 'none';
+      if (isOne) {
+        answers.childAges = null;
+        document.querySelectorAll('#childAgesRangeField .btn-option').forEach(b => b.classList.remove('selected'));
+      } else {
+        answers.childExactAge = null;
+        document.querySelectorAll('#childAgeExactField .btn-option').forEach(b => b.classList.remove('selected'));
+      }
+    }
+
+    if (field === 'childExactAge') {
+      const age = parseInt(answers.childExactAge, 10);
+      if (age <= 4) answers.childAges = 'all-young';
+      else if (age <= 11) answers.childAges = 'mixed';
+      else answers.childAges = 'all-older';
+    }
+
+    if (field === 'adults') {
+      handleSchoolAlignment();
+    }
+
+    if (field === 'workNow') {
+      const showLoc = answers.workNow === 'home-uk' || answers.workNow === 'self-employed';
+      const showWhen = answers.workNow !== 'not-working' && answers.workNow !== null;
+      document.getElementById('workLocationField').style.display = showLoc ? 'block' : 'none';
+      document.getElementById('workWhenLeaveField').style.display = showWhen ? 'block' : 'none';
+      document.getElementById('newIncomeProgressField').style.display = 'none';
+      if (!showLoc) {
+        answers.workLocation = null;
+        document.querySelectorAll('#workLocationField .btn-option').forEach(b => b.classList.remove('selected'));
+      }
+      if (!showWhen) {
+        answers.workWhenLeave = null;
+        answers.newIncomeProgress = null;
+        document.querySelectorAll('#workWhenLeaveField .btn-option, #newIncomeProgressField .btn-option').forEach(b => b.classList.remove('selected'));
+      }
+    }
+
+    if (field === 'workWhenLeave') {
+      const showNI = answers.workWhenLeave === 'new-income';
+      document.getElementById('newIncomeProgressField').style.display = showNI ? 'block' : 'none';
+      if (!showNI) {
+        answers.newIncomeProgress = null;
+        document.querySelectorAll('#newIncomeProgressField .btn-option').forEach(b => b.classList.remove('selected'));
+      }
+    }
+  }
+
+  function handleSchoolAlignment() {
+    const show = answers.adults === '2' && answers.hasChildren === 'yes';
+    document.getElementById('schoolAlignmentField').style.display = show ? 'block' : 'none';
+    if (!show) {
+      answers.schoolAlignment = null;
+      document.querySelectorAll('#schoolAlignmentField .btn-option').forEach(b => b.classList.remove('selected'));
+    }
+  }
+
   function updateSlider(el) {
-    answers.uncertainty = parseInt(el.value);
-    document.getElementById('uncValue').textContent = el.value;
+    answers.uncertainty = parseInt(el.value, 10);
     document.getElementById('uncReadout').textContent = el.value;
   }
 
+  // ───── NAVIGATION ─────
   function updateProgress() {
-    const pct = (currentSection / 5) * 100;
+    const pct = Math.round((currentSection / TOTAL_SECTIONS) * 100);
     document.getElementById('progressFill').style.width = pct + '%';
-    document.getElementById('progressLabel').textContent = `Section ${currentSection} of 5`;
+    document.getElementById('progressLabel').textContent = `Section ${currentSection} of ${TOTAL_SECTIONS}`;
     document.getElementById('backBtn').style.visibility = currentSection === 1 ? 'hidden' : 'visible';
-    document.getElementById('nextBtn').textContent = currentSection === 5 ? 'See Your Results' : 'Next';
+    document.getElementById('nextBtn').textContent = currentSection === TOTAL_SECTIONS ? 'See My Results →' : 'Continue';
   }
 
   function showSection(n) {
     document.querySelectorAll('.q-section').forEach(s => s.classList.remove('active'));
-    document.getElementById(`section-${n}`).classList.add('active');
+    document.getElementById('section-' + n).classList.add('active');
     currentSection = n;
     updateProgress();
-    window.scrollTo(0, 0);
-  }
-
-  function validate() {
-    const msgs = {
-      1: [
-        [!answers.adults, 'Please select the number of adults.'],
-        [!answers.hasChildren, 'Please indicate if you have children.'],
-        [answers.hasChildren === 'yes' && !answers.numChildren, 'Please select the number of children.'],
-        [answers.hasChildren === 'yes' && !answers.childAges, 'Please select the age range of your children.'],
-        [!answers.experience, 'Please select your travel experience.'],
-      ],
-      2: [
-        [!answers.duration, 'Please select a travel duration.'],
-        [!answers.goal, 'Please select your primary goal.'],
-      ],
-      3: [
-        [!answers.work, 'Please select your work situation.'],
-        [!answers.routine, 'Please select your routine preference.'],
-      ],
-      4: [
-        [!answers.pace, 'Please select your preferred pace.'],
-        [!answers.environment, 'Please select your preferred environment.'],
-      ],
-    };
-    const checks = msgs[currentSection] || [];
-    for (const [fail, msg] of checks) {
-      if (fail) { alert(msg); return false; }
-    }
-    return true;
+    window.scrollTo({ top: 0 });
   }
 
   function nextSection() {
-    if (!validate()) return;
-    if (currentSection < 5) {
+    if (currentSection < TOTAL_SECTIONS) {
       showSection(currentSection + 1);
     } else {
       answers.destinations = document.getElementById('destinationsInput').value.trim();
-      buildResults();
+      calculateAndShow();
     }
   }
 
@@ -883,209 +1170,333 @@
     if (currentSection > 1) showSection(currentSection - 1);
   }
 
-  // ── SCORING ──
-  function buildResults() {
+  // ───── SCORING ─────
+  function calculateScore() {
     let score = 30;
-    const strengths = [];
-    const challenges = [];
 
-    // Work
-    const workPts = { remote: 20, partial: 10, planning: 5, none: -20 };
-    score += workPts[answers.work] || 0;
-    if (answers.work === 'remote')   strengths.push('Fully remote work removes the single biggest logistical barrier to long-term travel');
-    if (answers.work === 'partial')  strengths.push('Partial remote flexibility gives you real options, many families make this work successfully');
-    if (answers.work === 'planning') challenges.push('Income continuity must be secured before departure, building toward remote work is not the same as having it');
-    if (answers.work === 'none')     challenges.push('No work flexibility is the primary barrier, a concrete income plan is essential before travel is viable');
+    const workPts = { 'keep-going': 20, 'reduce': 10, 'new-income': 5, 'sabbatical': 3, 'unsure': -5, 'quit': -10 };
+    score += workPts[answers.workWhenLeave] || 0;
 
-    // Uncertainty (1–10 → 2–20 pts)
-    score += answers.uncertainty * 2;
-    if (answers.uncertainty >= 7) strengths.push('High comfort with uncertainty is one of the most important traits for sustaining long-term family travel');
-    else if (answers.uncertainty >= 5) strengths.push('Moderate uncertainty tolerance, manageable with good planning and a slower pace');
-    else challenges.push('Low comfort with uncertainty will be tested frequently on the road; this is a muscle worth building before you go');
+    if (answers.workNow === 'anywhere') score += 5;
+    if (answers.workNow === 'home-uk' && answers.workLocation === 'no') score -= 5;
+    if (answers.workWhenLeave === 'new-income') {
+      const ipPts = { earning: 10, started: 3, idea: -3 };
+      score += ipPts[answers.newIncomeProgress] || 0;
+    }
 
-    // Routine
+    score += (answers.uncertainty || 5) * 2;
+
     const routinePts = { low: 10, medium: 0, high: -15 };
     score += routinePts[answers.routine] || 0;
-    if (answers.routine === 'low')  strengths.push('Low routine dependency means adapting to new environments won\'t drain the family');
-    if (answers.routine === 'high') challenges.push('High routine needs require extra structure, commit to very slow travel and stable base locations');
 
-    // Combined penalty
-    if (answers.routine === 'high' && answers.pace === 'fast') score -= 10;
-
-    // Experience
     const expPts = { yes: 15, some: 5, no: -5 };
     score += expPts[answers.experience] || 0;
-    if (answers.experience === 'yes')  strengths.push('Existing long-term travel experience means you know what you\'re actually signing up for');
-    if (answers.experience === 'some') strengths.push('Previous travel experience gives you a realistic baseline to build from');
-    if (answers.experience === 'no')   challenges.push('No prior long-term travel experience means a steep learning curve, a pilot trip before committing is non-negotiable');
 
-    // Pace
     const pacePts = { slow: 15, medium: 5, fast: -5 };
     score += pacePts[answers.pace] || 0;
-    if (answers.pace === 'slow')   strengths.push('Slow travel preference is the most sustainable and enriching approach for families with children');
-    if (answers.pace === 'fast')   challenges.push('Fast-paced travel is difficult to sustain with children, consider whether this preference will hold on the road');
 
-    // Duration
-    if (['1-3m', '3-6m'].includes(answers.duration)) score += 5;
+    if (answers.duration === '1-3m' || answers.duration === '3-6m') score += 5;
     if (answers.duration === '12m+') score -= 5;
 
-    // Goal
-    if (answers.goal === 'test') {
-      score += 10;
-      strengths.push('Framing this as a test rather than a commitment is exactly the right approach, it leads to better decisions');
-    } else {
-      score += 5;
-      if (answers.goal === 'lifestyle') strengths.push('Clear lifestyle change intention drives better preparation and deeper commitment to making it work');
-      if (answers.goal === 'education') strengths.push('Education-focused travel tends to produce more intentional, slower-paced, and enriching family trips');
-    }
+    if (answers.goal === 'test') score += 10;
+    else if (answers.goal) score += 5;
 
-    // Adults
-    if (answers.adults === '1') {
-      score -= 5;
-      challenges.push('Solo parent travel is achievable but requires more planning, stronger support networks, and thorough contingency thinking');
-    }
+    if (answers.adults === '1') score -= 5;
 
-    // Children
-    if (answers.hasChildren === 'yes') {
-      if (answers.childAges === 'all-young') {
-        score -= 10;
-        challenges.push('Very young children require careful planning around healthcare access, daily rhythm, and logistics');
-      } else if (answers.childAges === 'mixed') {
-        score -= 5;
-        challenges.push('Mixed-age children require balancing different needs, schooling, pace, and activities vary significantly by age');
-      } else {
-        strengths.push('School-age-and-over children are generally adaptable and can engage meaningfully and independently with new places');
-      }
-    }
+    const cAgePts = { 'all-young': -10, mixed: -5, 'all-older': 0 };
+    score += cAgePts[answers.childAges] || 0;
 
-    score = Math.max(0, Math.min(100, Math.round(score)));
+    const tiPts = { 'yes-both': 15, 'yes-one': 8, building: 0, no: -10 };
+    score += tiPts[answers.travelIncome] || 0;
 
-    let level, cls;
-    if (score >= 70)      { level = 'High Readiness';      cls = 'high'; }
-    else if (score >= 40) { level = 'Medium Readiness';    cls = 'medium'; }
-    else                  { level = 'Needs Preparation';   cls = 'low'; }
+    const riPts = { 'yes-covers': 15, 'yes-partial': 7, potential: 3, no: 0 };
+    score += riPts[answers.residualIncome] || 0;
 
-    render({ score, level, cls, strengths, challenges });
+    const srPts = { under50: -10, '50-250': 0, '251-500': 5, '501-1000': 10, '1000+': 15 };
+    score += srPts[answers.savingsRate] || 0;
+
+    const sdPts = { under6m: -5, '6-12m': 0, '1-2yr': 5, '2yr+': 10 };
+    score += sdPts[answers.savingsDuration] || 0;
+
+    const esPts = { 'yes-strong': 10, 'yes-some': 4, no: 0 };
+    score += esPts[answers.existingSavings] || 0;
+
+    const wsPts = { 'all-in': 8, open: 5, unsure: 0, concerned: -3 };
+    score += wsPts[answers.worldschoolOpen] || 0;
+
+    const fbPts = { 'all-in': 8, mostly: 4, split: -3, 'just-me': -6 };
+    score += fbPts[answers.familyBuyIn] || 0;
+
+    if (answers.homeExpenses === 'yes') score -= 5;
+    if (answers.schoolAlignment === 'yes') score += 5;
+
+    if (answers.routine === 'high' && answers.pace === 'fast') score -= 10;
+
+    return Math.max(0, Math.min(100, Math.round(score)));
   }
 
+  function financiallyReady() {
+    return ['501-1000', '1000+'].includes(answers.savingsRate)
+      || answers.existingSavings === 'yes-strong'
+      || ['yes-both', 'yes-one'].includes(answers.travelIncome);
+  }
+
+  // ───── OUTPUT BUILDERS ─────
   function getStyle(pace, env) {
-    if (pace === 'slow') {
-      if (env === 'city')   return { title: 'Slow urban immersion', desc: 'Base your family in mid-sized, liveable cities for 6–8 weeks at a time. Prioritise cities with solid infrastructure, international school options, and a genuine local neighbourhood feel. Depth over breadth.' };
-      if (env === 'beach')  return { title: 'Coastal slow travel', desc: 'Anchor in coastal towns or island communities for 4–8 weeks each. Favour places with good local amenities and medical access. Southeast Asia, the Mediterranean, and Central America all have strong options for this approach.' };
-      if (env === 'nature') return { title: 'Rural immersion', desc: 'Extended stays in nature-adjacent bases, 4–10 weeks each. Prioritise proximity to a larger town for healthcare and supplies. New Zealand, Costa Rica, the Azores, and Portugal\'s interior work well.' };
-      return { title: 'Slow nomadic, varied bases', desc: 'Rotate between different environments every 6–10 weeks, letting the family rhythm settle before moving. Build a "home base" mindset, familiar routines in unfamiliar places.' };
-    }
-    if (pace === 'medium') {
-      if (env === 'city') return { title: 'City-focused nomadic', desc: 'Move between cities every 3–5 weeks. Focus on urban areas with good infrastructure and family amenities. Europe, Southeast Asia, and South America all have strong city-to-city routes suited to this approach.' };
-      return { title: 'Balanced nomadic', desc: 'Rotate between urban and nature bases every 3–5 weeks. A city month followed by a quieter coastal or rural base. Keeps variety without sacrificing stability.' };
-    }
-    return { title: 'Consider slowing down', desc: 'Fast-paced travel is appealing in theory but rarely sustainable for families over time. Test this pace on a short trip first, most families naturally slow down once children\'s needs become apparent on the road.' };
+    const map = {
+      'slow-city': 'Slow Urban Immersion',
+      'slow-beach': 'Coastal Slow Travel',
+      'slow-nature': 'Nature Immersion',
+      'slow-mix': 'Balanced Slow Nomadic',
+      'medium-city': 'City Hopper',
+      'medium-beach': 'Beach & Culture',
+      'medium-nature': 'Active Explorer',
+      'medium-mix': 'Classic Family Nomad',
+      'fast-city': 'Urban Sprint',
+      'fast-beach': 'Island Hopper',
+      'fast-nature': 'Adventure Seeker',
+      'fast-mix': 'Everything Traveller',
+    };
+    return map[pace + '-' + env] || 'Family Traveller';
+  }
+
+  function getPaceText(pace) {
+    return ({ slow: '4–8 weeks per place', medium: '2–4 weeks per place', fast: 'Keep moving' })[pace] || '—';
   }
 
   function getRegions(pace, env) {
-    if (env === 'city' && pace === 'slow')   return 'Chiang Mai · Medellín · Lisbon · Tbilisi · Tallinn';
-    if (env === 'city')                       return 'European city trail · Japan · South American capitals';
-    if (env === 'beach' && pace === 'slow')   return 'Bali · Algarve (Portugal) · Oaxaca coast · Koh Lanta';
-    if (env === 'beach')                      return 'Southeast Asia coast · Pacific Mexico · Greek islands';
-    if (env === 'nature' && pace === 'slow')  return 'New Zealand · Costa Rica · Azores · Scottish Highlands';
-    if (env === 'nature')                     return 'Patagonia · Canadian Rockies · Norwegian fjords · Pyrenees';
-    return 'Southeast Asia · Southern Europe · Central America · Balkans';
+    const map = {
+      'slow-city':   ['Chiang Mai', 'Medellín', 'Lisbon', 'Tbilisi', 'Tallinn'],
+      'slow-beach':  ['Bali', 'Costa Rica', 'Zanzibar', 'Koh Lanta', 'Algarve'],
+      'slow-nature': ['New Zealand', 'Patagonia', 'Costa Rica', 'Slovenia', 'Azores'],
+      'slow-mix':    ['Portugal', 'Mexico', 'Thailand', 'Colombia', 'Georgia'],
+      'medium-city':   ['Southeast Asia', 'Eastern Europe', 'Morocco', 'South America'],
+      'medium-beach':  ['Greek Islands', 'Caribbean', 'Southeast Asia coast', 'Canary Islands'],
+      'medium-nature': ['Central America', 'Balkans', 'South Africa', 'Nepal'],
+      'medium-mix':    ['Spain & Portugal', 'Thailand', 'Morocco', 'Vietnam'],
+      'fast-city':   ['Europe', 'Japan', 'South America cities'],
+      'fast-beach':  ['Philippines', 'Indonesia', 'Caribbean islands'],
+      'fast-nature': ['East Africa', 'South America', 'Australia & NZ'],
+      'fast-mix':    ['Southeast Asia', 'Central America', 'Southern Europe'],
+    };
+    return map[pace + '-' + env] || ['Southeast Asia', 'Southern Europe', 'Central America'];
   }
 
-  function getRisks(answers) {
+  function getRisks() {
     const r = [];
-    if (['none','planning'].includes(answers.work)) r.push('Income continuity');
-    if (answers.routine === 'high') r.push('Routine disruption');
-    if (answers.uncertainty <= 4)   r.push('Decision fatigue');
-    if (answers.pace === 'fast')    r.push('Sustainability over time');
-    if (answers.hasChildren === 'yes' && answers.childAges === 'all-young') r.push('Healthcare logistics');
-    if (answers.adults === '1')     r.push('Support network');
-    return r.length ? r.slice(0, 3).join(' · ') : 'None identified';
+    if (answers.workWhenLeave === 'quit' || answers.workWhenLeave === 'unsure') r.push('Income gap on departure');
+    if (answers.workWhenLeave === 'new-income' && answers.newIncomeProgress === 'idea') r.push('Income plan not yet started');
+    if (answers.routine === 'high') r.push('High routine need');
+    if (answers.uncertainty < 4) r.push('Low uncertainty tolerance');
+    if (answers.pace === 'fast' && answers.childAges === 'all-young') r.push('Fast pace + young children');
+    if (answers.adults === '1') r.push('Solo parent');
+    if (answers.familyBuyIn === 'split' || answers.familyBuyIn === 'just-me') r.push('Family alignment');
+    if (answers.savingsRate === 'under50' && answers.travelIncome === 'no') r.push('Insufficient financial runway');
+    return r.slice(0, 3);
   }
 
-  function getFamilyDesc(answers) {
-    const adult = answers.adults === '1' ? 'Solo adult' : answers.adults === '2' ? '2 adults' : '3+ adults';
-    if (answers.hasChildren === 'no') return `${adult}, no children`;
-    const n = answers.numChildren;
-    const ages = { 'all-young': 'all under 6', 'mixed': 'mixed ages', 'all-older': 'all 6+' };
-    return `${adult} · ${n} child${n === '1' ? '' : 'ren'} (${ages[answers.childAges] || ''})`;
+  function getFamilyDesc() {
+    const adultText = answers.adults === '1' ? 'Solo parent' : answers.adults === '2' ? '2 adults' : answers.adults === '3+' ? '3+ adults' : 'Family';
+    if (answers.hasChildren !== 'yes') return adultText + ', no children';
+    const n = answers.numChildren || '?';
+    const ageMap = { 'all-young': 'all under 5', 'mixed': 'mixed ages', 'all-older': 'all 5+' };
+    const ageText = ageMap[answers.childAges] || '';
+    const kidsWord = n === '1' ? 'child' : 'children';
+    return `${adultText} · ${n} ${kidsWord}${ageText ? ` (${ageText})` : ''}`;
   }
 
-  function getNextStep(score, answers, challenges) {
-    if (score >= 70) return {
-      title: 'Plan a pilot trip',
-      desc: 'Your readiness profile is strong. The next step isn\'t more research, it\'s a 4–8 week pilot in a single location. Keep it simple. Use it to stress-test family dynamics, work routines, and schooling arrangements before committing to a longer trip.'
-    };
-    if (score >= 40) return {
-      title: 'Structured trial trip',
-      desc: 'You\'re closer than you think, but specific gaps remain. Address work flexibility and logistics first. Then plan a structured 1–3 month trial in a stable, family-friendly base, somewhere with good infrastructure and low daily complexity. Treat it as research, not a commitment.'
-    };
+  function getStrengths() {
+    const s = [];
+    if (answers.workNow === 'anywhere') s.push("Your job is already truly location-independent — you can keep earning exactly as you do now, from anywhere in the world");
+    if (answers.workNow === 'home-uk' && answers.workLocation === 'yes') s.push("Your job can be done from abroad — you may be closer to location-independent than you realised");
+    if (answers.workWhenLeave === 'keep-going') s.push("Your income travels with you — this removes the single biggest financial barrier for most families");
+    if (answers.workWhenLeave === 'reduce') s.push("Part-time or reduced hours keeps money coming in and maintains an employment relationship to return to");
+    if (answers.workWhenLeave === 'sabbatical') s.push("A sabbatical keeps your job secure — you can travel knowing there's something to come back to");
+    if (answers.newIncomeProgress === 'earning') s.push("You're already earning from your new income source — that's a significant milestone most families haven't reached");
+    if (answers.experience === 'yes') s.push("Previous long-term travel experience means you know what to expect and how your family copes on the road");
+    if (answers.experience === 'some') s.push("You've done trips before — you have a baseline to build from");
+    if (answers.uncertainty >= 7) s.push("High comfort with uncertainty makes you well-suited to the unpredictable nature of travel");
+    if (answers.routine === 'low') s.push("A go-with-the-flow family adapts quickly on the road");
+    if (answers.pace === 'slow') s.push("Slow travel is significantly cheaper, kinder on kids, and easier to sustain long-term");
+    if (answers.goal === 'test') s.push("Testing the water first is the smartest approach — removes the pressure of an all-or-nothing commitment");
+    if (answers.travelIncome === 'yes-both') s.push("Both adults earning while travelling is a very strong financial position");
+    if (answers.travelIncome === 'yes-one') s.push("One income while travelling is enough for many families in affordable destinations");
+    if (answers.residualIncome === 'yes-covers') s.push("Residual income covering your home costs means your savings go directly to travel");
+    if (answers.residualIncome === 'yes-partial') s.push("Residual income as a supplement takes real financial pressure off the road");
+    if (answers.savingsRate === '501-1000' || answers.savingsRate === '1000+') s.push("A strong monthly savings rate means your travel fund builds fast");
+    if (answers.existingSavings === 'yes-strong') s.push("An existing savings pot gives you a meaningful head start");
+    if (answers.worldschoolOpen === 'all-in') s.push("Being genuinely excited about worldschooling turns education from a barrier into a reason to travel");
+    if (answers.familyBuyIn === 'all-in') s.push("Whole-family alignment is one of the biggest predictors of success — you have it");
+    if (answers.schoolAlignment === 'yes') s.push("You're both aligned on taking your child out of school — removing that friction makes the decision a lot cleaner");
+    return s;
+  }
+
+  function getChallenges() {
+    const c = [];
+    if (answers.workNow === 'home-uk' && answers.workLocation === 'no') c.push("Your current job is tied to your home country — working from home isn't the same as location-independence. Your plan for when you leave matters most");
+    if (answers.workNow === 'office') c.push("Your current role requires physical presence, so the key question is what changes when you leave — sabbatical, resign, or a new income source");
+    if (answers.workWhenLeave === 'quit') c.push("Resigning means no income from day one — your savings runway and/or a new income source needs to be firmly in place before you leave");
+    if (answers.workWhenLeave === 'new-income' && answers.newIncomeProgress === 'idea') c.push("Having the idea for a new income source is very different from having the income — this needs real momentum before departure");
+    if (answers.workWhenLeave === 'new-income' && answers.newIncomeProgress === 'started') c.push("You've started building new income but aren't earning yet — give this priority alongside your travel planning");
+    if (answers.workWhenLeave === 'unsure') c.push("Not having a plan for work when you leave is the biggest gap in your readiness — this needs to be resolved before much else falls into place");
+    if (answers.travelIncome === 'no') c.push("Living off savings alone works, but needs a very clear budget and a realistic timeline you can stick to");
+    if (answers.travelIncome === 'building') c.push("Building travel income takes time — the further along you are before leaving, the less pressure on your savings");
+    if (answers.residualIncome === 'no') c.push("No residual income means travel costs need to be fully covered by savings or earned income on the road");
+    if (answers.savingsRate === 'under50') c.push("Very limited current savings capacity — even a focused spending audit could unlock more than you expect");
+    if (answers.savingsRate === '50-250') c.push("Modest savings rate — look at subscriptions, eating out, and recurring costs. Small cuts compound quickly");
+    if (answers.existingSavings === 'no') c.push("Starting savings from zero means you need lead time — be realistic about when you can leave based on when your pot is ready");
+    if (answers.routine === 'high') c.push("High need for routine can make travel feel chaotic — slow travel and deliberate planning helps significantly");
+    if (answers.uncertainty < 4) c.push("Low comfort with uncertainty is worth building gradually — the road will throw surprises regardless of how well you plan");
+    if (answers.familyBuyIn === 'split') c.push("One of you being more keen than the rest is worth resolving before committing — travel works best as a fully shared decision");
+    if (answers.familyBuyIn === 'just-me') c.push("Family alignment is crucial — real stories from families like yours tend to move people more than logistics spreadsheets");
+    if (answers.childAges === 'all-young') c.push("Very young children add complexity — naps, kit, less flexibility. Totally doable, but needs more planning and a slower pace");
+    if (answers.pace === 'fast' && answers.hasChildren === 'yes') c.push("Moving fast with kids is exhausting — even a small shift toward slower travel makes a big practical difference");
+    if (answers.worldschoolOpen === 'concerned') c.push("Concerns about education gaps are valid and very common — most families find their children thrive with the right resources and approach");
+    if (answers.duration === '12m+') c.push("12+ months requires a more robust financial plan — make sure income or savings genuinely cover the full stretch before committing");
+    if (answers.homeExpenses === 'yes') c.push("Ongoing costs at home while you travel reduce your runway — factor these into your monthly budget calculation");
+    if (answers.schoolAlignment === 'no') c.push("Not being fully aligned on taking your child out of school is worth resolving before anything else — it affects the whole plan");
+    if (answers.adults === '1') c.push("Solo parenting on the road is completely achievable, but requires extra planning around rest, your own support, and budget buffers");
+    return c;
+  }
+
+  function getActions(score) {
+    const a = [];
+    const ready = financiallyReady();
+
+    if (!answers.workWhenLeave || answers.workWhenLeave === 'unsure') a.push("The most important thing to figure out first: what happens to your income when you leave? Sabbatical, resign, go remote, or build something new — pick a path and start working it");
+    if (answers.workNow === 'home-uk' && (answers.workLocation === 'no' || answers.workLocation === 'maybe')) a.push("Check your employment contract and speak to HR — many people assume they can't work abroad when actually there's no explicit restriction. It's worth the conversation");
+    if (answers.workWhenLeave === 'sabbatical' || answers.workWhenLeave === 'quit') a.push("Have a direct conversation with your employer about sabbatical or career break options — frame it professionally and you may be surprised by the flexibility on offer");
+    if (answers.workWhenLeave === 'new-income' && (answers.newIncomeProgress === 'idea' || answers.newIncomeProgress === 'started')) a.push("Start treating your new income source as a second job right now — even £200–£500/month before you leave proves the model and significantly reduces the pressure");
+    if (answers.spendingHabits === 'some-cuts' || answers.spendingHabits === 'lots-of-cuts') a.push("Do a 30-minute spending audit — go through your last two bank statements and highlight everything that isn't essential. Most families find £100–£300/month they can redirect without feeling it");
+    if (answers.travelIncome === 'no' || answers.travelIncome === 'building') a.push("Work out your financial runway: estimate your monthly travel cost, then divide your savings by that number. That's how many months you can travel. Build the plan around that number");
+    if (answers.residualIncome === 'potential') a.push("Get a rental valuation on your home — for many families, renting it out covers a large chunk of travel costs and changes the whole financial picture");
+    if (answers.homeExpenses === 'yes') a.push("List every cost that will continue at home while you're away and total it up — this is your fixed monthly overhead on top of travel costs, and it needs to be part of your budget from day one");
+    if (answers.worldschoolOpen === 'unsure' || answers.worldschoolOpen === 'concerned') a.push("Spend one hour exploring worldschooling: join a Facebook group, find one family blog, listen to one podcast episode. Real examples from real families are far more reassuring than theory");
+    if (answers.schoolAlignment === 'no') a.push("Before anything else, get aligned on the school question as a couple — it underpins the whole plan. Read about how other families navigated it and talk through the specific concerns");
+    if (answers.familyBuyIn === 'split' || answers.familyBuyIn === 'just-me') a.push("Share one story from a family in a similar situation who actually did it — a short video or blog post tends to shift doubters far more than spreadsheets or logistics conversations");
+    if (answers.routine === 'high' || answers.uncertainty < 5) a.push("Build your tolerance for the unexpected gradually — a weekend away with no fixed plan, a spontaneous day out. The ability to adapt is a skill and it can be trained before you leave");
+    if (ready && (answers.experience === 'no' || answers.experience === 'some')) a.push("Once your savings foundation is in place, plan a 2–3 week trip to somewhere you'd genuinely consider living — treat it as a research trip, not a holiday. You'll learn things about your family on the road that no amount of planning can tell you");
+    if (score >= 70 && (answers.workWhenLeave === 'keep-going' || answers.travelIncome === 'yes-both' || answers.travelIncome === 'yes-one')) a.push("Set a departure window — even a rough quarter and year. A real date makes everything more concrete and gives the planning genuine momentum");
+
+    return a;
+  }
+
+  function getNextStep(score) {
+    const ready = financiallyReady();
+    if (score >= 70) {
+      if (ready) {
+        return {
+          title: "You're ready to take a serious next step",
+          body: "The foundations are there. The best thing you can do now is stop planning in the abstract and start doing something real — whether that's setting a departure date, telling people, or booking the first leg. Momentum matters more than a perfect plan at this stage.",
+        };
+      }
+      return {
+        title: "Sort the money, then move fast",
+        body: "Your mindset, family alignment, and work situation look solid — the missing piece is the financial foundation. Get that in order first: build the savings pot, confirm the income picture, and then move quickly. You won't need long once the money is sorted.",
+      };
+    }
+    if (score >= 40) {
+      return {
+        title: "Close the gaps, then commit to a date",
+        body: "You've got some real foundations here but a few things need resolving — most likely around income, savings, or alignment. The best approach is to identify your one or two biggest blockers, work on those deliberately over the next 6–12 months, and set a target departure window to work backwards from. Don't wait until everything is perfect — that moment doesn't come.",
+      };
+    }
     return {
-      title: 'Prepare before you plan',
-      desc: 'Long-term travel is possible, but the timing isn\'t right yet. Focus on the primary barriers first, particularly work flexibility and uncertainty tolerance. A 6–12 month preparation window followed by a short pilot trip is a more reliable path than trying to make a long trip work before these are resolved.'
+      title: "Start with the foundations",
+      body: "The dream is real, the groundwork isn't there yet — and that's completely normal. Most families who travel long-term spent 1–3 years getting ready. Focus first on your two biggest blockers (usually income and savings), build consistency, and start surrounding yourself with families who've actually done it. The gap between where you are and where you want to be is smaller than it feels right now.",
     };
   }
 
-  function render({ score, level, cls, strengths, challenges }) {
-    // Level & score
-    const lvlEl = document.getElementById('resultLevel');
-    lvlEl.textContent = level;
-    lvlEl.className = `result-level ${cls}`;
+  function getTagline(score) {
+    if (score >= 70) return "You're closer than you think.";
+    if (score >= 40) return "You've got the foundations — now close the gaps.";
+    return "There's work to do, but the dream is real.";
+  }
 
-    const numEl = document.getElementById('scoreNumber');
-    numEl.textContent = score;
-    numEl.className = `score-number ${cls}`;
+  // ───── RENDER RESULTS ─────
+  function calculateAndShow() {
+    const score = calculateScore();
+    let band, cls;
+    if (score >= 70) { band = 'High Readiness'; cls = 'high'; }
+    else if (score >= 40) { band = 'Medium Readiness'; cls = 'medium'; }
+    else { band = 'Needs Preparation'; cls = 'low'; }
 
-    const fillEl = document.getElementById('scoreFill');
-    fillEl.className = `score-fill ${cls}`;
+    document.getElementById('scoreHero').innerHTML = `
+      <div class="score-band ${cls}">${band}</div>
+      <div class="score-number ${cls}">${score}<span class="score-out-of">/100</span></div>
+      <div class="score-tagline">${getTagline(score)}</div>
+    `;
 
-    // Lists
-    document.getElementById('strengthsList').innerHTML =
-      (strengths.length ? strengths : ['No specific strengths flagged from your answers.']).map(s => `<li>${s}</li>`).join('');
-
-    document.getElementById('challengesList').innerHTML =
-      (challenges.length ? challenges : ['No significant challenges identified.']).map(c => `<li>${c}</li>`).join('');
-
-    // Style
     const style = getStyle(answers.pace, answers.environment);
-    document.getElementById('styleTitle').textContent = style.title;
-    document.getElementById('styleDesc').textContent = style.desc;
+    const regions = getRegions(answers.pace, answers.environment);
+    const risks = getRisks();
 
-    // Profile grid
-    const profile = [
-      { label: 'Ideal pace',           value: { slow: '6–10 weeks per place', medium: '3–5 weeks per place', fast: 'Days to 2 weeks' }[answers.pace] || answers.pace },
-      { label: 'Recommended regions',  value: getRegions(answers.pace, answers.environment) },
-      { label: 'Primary risk factors', value: getRisks(answers) },
-      { label: 'Family',               value: getFamilyDesc(answers) },
-    ];
-    document.getElementById('profileGrid').innerHTML = profile.map(p =>
-      `<div class="profile-item"><div class="profile-item-label">${p.label}</div><div class="profile-item-value">${p.value}</div></div>`
-    ).join('');
+    document.getElementById('profileCard').innerHTML = `
+      <h3>Your family profile</h3>
+      <div class="profile-row">
+        <div class="profile-label">Family</div>
+        <div class="profile-value">${getFamilyDesc()}</div>
+      </div>
+      <div class="profile-row">
+        <div class="profile-label">Travel Style</div>
+        <div class="profile-value">${style}</div>
+      </div>
+      <div class="profile-row">
+        <div class="profile-label">Ideal Pace</div>
+        <div class="profile-value">${getPaceText(answers.pace)}</div>
+      </div>
+      <div class="profile-row">
+        <div class="profile-label">Good Fit Regions</div>
+        <div class="profile-value">${regions.map(r => '<span class="tag">' + r + '</span>').join('')}</div>
+      </div>
+      <div class="profile-row">
+        <div class="profile-label">Key Risk Factors</div>
+        <div class="profile-value">${risks.length ? risks.join(' · ') : 'None identified'}</div>
+      </div>
+    `;
 
-    // Next step
-    const ns = getNextStep(score, answers, challenges);
-    document.getElementById('nextStepTitle').textContent = ns.title;
-    document.getElementById('nextStepDesc').textContent = ns.desc;
+    const strengths = getStrengths();
+    const challenges = getChallenges();
+    document.getElementById('strengthsList').innerHTML =
+      (strengths.length ? strengths : ['No specific strengths flagged from your answers.']).map(s => '<li>' + s + '</li>').join('');
+    document.getElementById('challengesList').innerHTML =
+      (challenges.length ? challenges : ['No significant challenges identified.']).map(c => '<li>' + c + '</li>').join('');
+
+    const actions = getActions(score);
+    document.getElementById('actionsList').innerHTML =
+      (actions.length ? actions : ['Take a 2-week trip together as a stress test before committing to anything longer.']).map(a => '<li>' + a + '</li>').join('');
+
+    const ns = getNextStep(score);
+    document.getElementById('nextStepCard').innerHTML = '<h3>' + ns.title + '</h3><p>' + ns.body + '</p>';
 
     showScreen('results');
-    setTimeout(() => { fillEl.style.width = score + '%'; }, 120);
   }
 
+  // ───── RESTART ─────
   function restart() {
     Object.keys(answers).forEach(k => {
-      answers[k] = k === 'uncertainty' ? 5 : k === 'destinations' ? '' : null;
+      if (k === 'biggestFear') answers[k] = [];
+      else if (k === 'uncertainty') answers[k] = 5;
+      else if (k === 'destinations') answers[k] = '';
+      else answers[k] = null;
     });
     document.querySelectorAll('.btn-option').forEach(b => b.classList.remove('selected'));
     document.getElementById('uncertaintySlider').value = 5;
-    document.getElementById('uncValue').textContent = '5';
     document.getElementById('uncReadout').textContent = '5';
     document.getElementById('destinationsInput').value = '';
-    document.getElementById('childrenExpand').style.display = 'none';
+    document.getElementById('numChildrenField').style.display = 'none';
+    document.getElementById('childAgeExactField').style.display = 'none';
+    document.getElementById('childAgesRangeField').style.display = 'none';
+    document.getElementById('workLocationField').style.display = 'none';
+    document.getElementById('workWhenLeaveField').style.display = 'none';
+    document.getElementById('newIncomeProgressField').style.display = 'none';
+    document.getElementById('schoolAlignmentField').style.display = 'none';
     currentSection = 1;
     showSection(1);
-    showScreen('questions');
+    showScreen('quiz');
   }
 
+  // ───── INIT ─────
   updateProgress();
 </script>
 </body>

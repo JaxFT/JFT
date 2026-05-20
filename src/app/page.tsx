@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { listPublishedPosts, rowToView } from '@/lib/blog-db'
+import { loadCountsForSlugs } from '@/lib/blog-social-db'
 import BlogCard from '@/components/blog/BlogCard'
 import HeroBlogStack from '@/components/blog/HeroBlogStack'
 import { createClient } from '@/lib/supabase/server'
@@ -22,6 +23,7 @@ export default async function HomePage() {
     createClient(),
   ])
   const posts = rows.slice(0, 3).map(rowToView)
+  const counts = await loadCountsForSlugs(posts.map(p => p.slug))
 
   const { data: { user } } = await supabase.auth.getUser()
   let isPremium = false
@@ -143,7 +145,7 @@ export default async function HomePage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {posts.map(post => (
-                <BlogCard key={post.slug} post={post} />
+                <BlogCard key={post.slug} post={post} counts={counts[post.slug]} />
               ))}
             </div>
             <div className="text-center mt-8 sm:hidden">

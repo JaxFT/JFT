@@ -22,7 +22,9 @@ import { CONTINENT_ORDER, type Continent } from '@/lib/adventurePackTypes'
 
 const DESTINATION_GENERAL = '__none'
 
-export default function BlogBrowser({ posts }: { posts: BlogPostView[] }) {
+type Counts = Record<string, { likes: number; comments: number }>
+
+export default function BlogBrowser({ posts, counts = {} }: { posts: BlogPostView[]; counts?: Counts }) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -226,7 +228,7 @@ export default function BlogBrowser({ posts }: { posts: BlogPostView[] }) {
         </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPosts.map(p => <BlogCard key={p.slug} post={p} />)}
+          {filteredPosts.map(p => <BlogCard key={p.slug} post={p} counts={counts[p.slug]} />)}
         </div>
       )}
     </div>

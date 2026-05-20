@@ -1,4 +1,5 @@
 import { listPublishedPosts, rowToView } from '@/lib/blog-db'
+import { loadCountsForSlugs } from '@/lib/blog-social-db'
 import BlogBrowser from './BlogBrowser'
 import type { Metadata } from 'next'
 
@@ -8,6 +9,7 @@ export const dynamic = 'force-dynamic'
 export default async function BlogPage() {
   const rows = await listPublishedPosts()
   const posts = rows.map(rowToView)
+  const counts = await loadCountsForSlugs(posts.map(p => p.slug))
 
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
@@ -20,7 +22,7 @@ export default async function BlogPage() {
           </p>
         </div>
 
-        <BlogBrowser posts={posts} />
+        <BlogBrowser posts={posts} counts={counts} />
       </div>
     </div>
   )

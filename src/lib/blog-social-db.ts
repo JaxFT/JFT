@@ -112,6 +112,29 @@ export async function loadBlogPostSocial(
   }
 }
 
+// Batch-load like + comment counts for a list of post slugs. Used by
+// the blog listing pages so each card can display its own counts
+// without N+1 queries.
+export async function loadCountsForSlugs(
+  slugs: string[],
+): Promise<Record<string, { likes: number; comments: number }>> {
+  if (slugs.length === 0) return {}
+  const supabase = await createClient()
+  const [likesRes, commentsRes] = await Promise.all([
+    supabase.from('blog_post_likes').select('post_slug').in('post_slug', slugs),
+    supabase.from('blog_comments').select('post_slug').in('post_slug', slugs),
+  ])
+  const out: Record<string, { likes: number; comments: number }> = {}
+  for (const s of slugs) out[s] = { likes: 0, comments: 0 }
+  for (const row of (likesRes.data ?? []) as Array<{ post_slug: string }>) {
+    if (out[row.post_slug]) out[row.post_slug].likes++
+  }
+  for (const row of (commentsRes.data ?? []) as Array<{ post_slug: string }>) {
+    if (out[row.post_slug]) out[row.post_slug].comments++
+  }
+  return out
+}
+
 // Look up the viewer's username so the comment form can either show
 // it (ready to comment) or pop the "pick a username" modal first.
 export async function getViewerProfile(): Promise<{

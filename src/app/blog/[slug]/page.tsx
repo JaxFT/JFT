@@ -16,6 +16,7 @@ import { getAutoLinkPhrases } from '@/lib/blog-links-server'
 import { loadBlogPostSocial, getViewerProfile } from '@/lib/blog-social-db'
 import { isAdminEmail } from '@/lib/admin'
 import BlogSocial from '@/components/blog/BlogSocial'
+import ShareButton from '@/components/blog/ShareButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -150,6 +151,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <span>{format(new Date(post.date), 'MMMM d, yyyy')}</span>
           <span>·</span>
           <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {post.readTime} min read</span>
+          <span className="ml-auto">
+            <ShareButton
+              url={`${siteUrl}/blog/${slug}`}
+              title={post.title}
+              text={post.excerpt ?? undefined}
+              stopPropagation={false}
+            />
+          </span>
         </div>
         {post.tripDate && (
           <p className="text-sm text-gray-500 italic mb-10 pb-8 border-b border-gray-100">

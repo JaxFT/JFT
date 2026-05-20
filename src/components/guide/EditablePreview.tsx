@@ -21,7 +21,7 @@ import {
   Link2, Settings,
 } from 'lucide-react'
 import GuideMarkdown from './GuideMarkdown'
-import PdfPanel from './PdfPanel'
+import DownloadFilePanel from './DownloadFilePanel'
 import ImageSlotsPanel from './ImageSlotsPanel'
 import IntroEditor from './IntroEditor'
 import { resizeImageIfLarge } from '@/lib/image-resize'
@@ -206,7 +206,7 @@ function SingleDocPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
           initialPricePence={guide.price_pence}
           initialPreviewPercent={guide.preview_percent}
         />
-        <PdfPanel guideId={guide.id} hasPdf={!!guide.pdf_path} />
+        <DownloadFilePanel guide={guide} />
         <IntroEditor
           guideId={guide.id}
           initialMarkdown={guide.intro_markdown}
@@ -427,7 +427,7 @@ function BlocksPreview({ guide, aboutUsMarkdown, autoLinkPhrases }: Props) {
 
       <div className="min-h-screen bg-sand-50 pb-20">
         <CoverHero guide={guide} />
-        <PdfPanel guideId={guide.id} hasPdf={!!guide.pdf_path} />
+        <DownloadFilePanel guide={guide} />
         <IntroEditor
           guideId={guide.id}
           initialMarkdown={guide.intro_markdown}

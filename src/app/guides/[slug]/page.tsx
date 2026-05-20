@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Lock, Crown, Download, Check } from 'lucide-react'
 import type { Metadata } from 'next'
@@ -8,6 +8,7 @@ import { getGuideBySlug, userHasPurchased, formatPrice } from '@/lib/guides-db'
 import { ArticleJsonLd } from '@/components/seo/JsonLd'
 import { getPublishedWebGuideBySlug } from '@/lib/guides-content-db'
 import { userHasPurchasedWebGuide } from '@/lib/web-guide-purchases-db'
+import { claimWebGuidePurchase, generateMagicLinkUrl } from '@/lib/claim-web-guide-purchase'
 import { getAboutUs } from '@/lib/app-settings'
 import { getAutoLinkPhrases } from '@/lib/blog-links-server'
 import WebGuideView from '@/components/guide/WebGuideView'
@@ -75,8 +76,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 }
 
-export default async function GuidePage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function GuidePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
   const { slug } = await params
+  const sp = await searchParams
 
   // Fire ALL the read-side fetches in parallel up front. About-us and
   // auto-link phrases are only used for the web-guide path, but firing
@@ -92,6 +100,30 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
   // ─── New web-rendered guides win if a row exists. ───
   if (webGuide) {
     const { data: { user } } = await supabase.auth.getUser()
+
+    // Stripe success return: ?session_id=… is set by the checkout
+    // success_url. Claim the purchase (find-or-create the user from
+    // the email Stripe collected, record the row). If the buyer is
+    // signed in already, we're done — render the page and they'll
+    // see "Download my copy". If they're a guest, send them through
+    // a Supabase magic-link auto-sign-in so the next request has a
+    // session and the download button works.
+    const sessionId = typeof sp.session_id === 'string' ? sp.session_id : null
+    if (sessionId && !user) {
+      const claim = await claimWebGuidePurchase({ sessionId })
+      if (claim.ok && claim.email) {
+        const origin = process.env.NEXT_PUBLIC_SITE_URL ?? new URL('https://jaxfamilytravels.com').origin
+        const next = `/guides/${webGuide.slug}?download=success`
+        const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(next)}`
+        const magicLink = await generateMagicLinkUrl(claim.email, redirectTo)
+        if (magicLink) redirect(magicLink)
+      }
+    } else if (sessionId && user) {
+      // Already signed-in buyer returning from Stripe — still claim
+      // so the row exists even if the webhook is slow.
+      await claimWebGuidePurchase({ sessionId })
+    }
+
     let isPremium = false
     let hasPurchasedDownload = false
     if (user) {

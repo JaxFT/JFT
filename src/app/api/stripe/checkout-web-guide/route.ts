@@ -20,14 +20,13 @@ export async function POST(request: Request) {
   const slug = typeof body.slug === 'string' ? body.slug : null
   if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 })
 
+  // Guest checkout: no sign-in required. Stripe collects the email
+  // anyway (for the receipt) and the webhook + success-page handler
+  // turn that email into a Supabase user automatically. If the buyer
+  // IS already signed in we preload Stripe with their email so they
+  // don't have to type it again.
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json(
-      { error: 'Please sign in to buy this guide.', signInUrl: `/login?next=/guides/${slug}` },
-      { status: 401 },
-    )
-  }
 
   const guide = await getPublishedWebGuideBySlug(slug)
   if (!guide) {
@@ -43,6 +42,13 @@ export async function POST(request: Request) {
   const origin = new URL(request.url).origin
   const stripe = stripeClient()
 
+  const metadata: Record<string, string> = {
+    kind: 'web_guide',
+    guide_id: guide.id,
+    guide_slug: guide.slug,
+  }
+  if (user) metadata.user_id = user.id
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -50,24 +56,10 @@ export async function POST(request: Request) {
       line_items: [{ price: guide.stripe_price_id, quantity: 1 }],
       success_url: `${origin}/guides/${slug}?download=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${origin}/guides/${slug}?download=cancelled`,
-      customer_email: user.email ?? undefined,
-      // Metadata flows through to the webhook. The `kind` flag tells
-      // the webhook to write into web_guide_purchases rather than the
-      // legacy purchases table.
-      metadata: {
-        kind: 'web_guide',
-        user_id: user.id,
-        guide_id: guide.id,
-        guide_slug: guide.slug,
-      },
-      payment_intent_data: {
-        metadata: {
-          kind: 'web_guide',
-          user_id: user.id,
-          guide_id: guide.id,
-          guide_slug: guide.slug,
-        },
-      },
+      // Preload email when signed in; Stripe asks the buyer otherwise.
+      ...(user?.email ? { customer_email: user.email } : {}),
+      metadata,
+      payment_intent_data: { metadata },
     })
 
     if (!session.url) {

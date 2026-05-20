@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient as createSbClient, type SupabaseClient } from '@supabase/supabase-js'
 import { stripeClient } from '@/lib/stripe'
+import { claimWebGuidePurchase } from '@/lib/claim-web-guide-purchase'
 import type Stripe from 'stripe'
 
 export const dynamic = 'force-dynamic'
@@ -134,34 +135,13 @@ async function handleOneOffCheckout(
 
 async function handleWebGuidePurchase(
   session: Stripe.Checkout.Session,
-  admin: SupabaseClient,
+  _admin: SupabaseClient,
 ): Promise<NextResponse | null> {
-  const userId = session.metadata?.user_id
-  const guideId = session.metadata?.guide_id
-  const amount = session.amount_total
-  const paymentIntent = typeof session.payment_intent === 'string'
-    ? session.payment_intent
-    : session.payment_intent?.id
-
-  if (!userId || !guideId || amount == null) {
-    return NextResponse.json(
-      { error: 'Missing metadata on web-guide checkout session', session: session.id },
-      { status: 400 },
-    )
-  }
-
-  // unique(user_id, guide_id) keeps Stripe retries idempotent.
-  const { error } = await admin
-    .from('web_guide_purchases')
-    .insert({
-      user_id: userId,
-      guide_id: guideId,
-      stripe_payment_intent_id: paymentIntent ?? null,
-      amount_pence: amount,
-    })
-
-  if (error && error.code !== '23505') {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  // Shared with the success-page handler — finds or creates the user
+  // from Stripe's collected email and records the purchase. Idempotent.
+  const r = await claimWebGuidePurchase({ session })
+  if (!r.ok) {
+    return NextResponse.json({ error: r.error, session: session.id }, { status: r.status })
   }
   return null
 }

@@ -1,0 +1,135 @@
+// Server-side queries for the blog social features: comments, post
+// likes, comment likes, username lookups. Single source of truth so
+// the blog post page and API routes share the same shapes.
+
+import { createClient } from '@/lib/supabase/server'
+
+export type BlogCommentRow = {
+  id: string
+  post_slug: string
+  user_id: string
+  body: string
+  created_at: string
+  // Joined from profiles for display.
+  username: string | null
+  instagram_handle: string | null
+  // Hydrated separately (efficient count + current-user state).
+  like_count: number
+  liked_by_me: boolean
+}
+
+export type PostSocial = {
+  comments: BlogCommentRow[]
+  postLikes: number
+  postLikedByMe: boolean
+}
+
+// Fetch the full social state for a single blog post in one round
+// trip-ish pass. Caller passes the current user id (or null for
+// signed-out visitors) so we can compute "have I liked this" inline.
+export async function loadBlogPostSocial(
+  postSlug: string,
+  viewerId: string | null,
+): Promise<PostSocial> {
+  const supabase = await createClient()
+
+  const [commentsRes, postLikesRes, postLikedByMeRes] = await Promise.all([
+    // Comments with author profile fields joined.
+    supabase
+      .from('blog_comments')
+      .select(`
+        id, post_slug, user_id, body, created_at,
+        profiles:user_id ( username, instagram_handle )
+      `)
+      .eq('post_slug', postSlug)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('blog_post_likes')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('post_slug', postSlug),
+    viewerId
+      ? supabase
+          .from('blog_post_likes')
+          .select('user_id')
+          .eq('post_slug', postSlug)
+          .eq('user_id', viewerId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
+
+  // Supabase's generated types treat foreign-key joins as arrays even
+  // for one-to-one relations. Normalise here so the rest of the file
+  // can stay readable.
+  const rawComments = ((commentsRes.data ?? []) as unknown as Array<{
+    id: string
+    post_slug: string
+    user_id: string
+    body: string
+    created_at: string
+    profiles: { username: string | null; instagram_handle: string | null }
+            | { username: string | null; instagram_handle: string | null }[]
+            | null
+  }>).map(c => ({
+    ...c,
+    profiles: Array.isArray(c.profiles) ? (c.profiles[0] ?? null) : c.profiles,
+  }))
+
+  // Comment-like counts + per-viewer state in one go per page.
+  const commentIds = rawComments.map(c => c.id)
+  let likeCounts = new Map<string, number>()
+  let likedByMe = new Set<string>()
+  if (commentIds.length > 0) {
+    const [allLikes, myLikes] = await Promise.all([
+      supabase.from('blog_comment_likes').select('comment_id').in('comment_id', commentIds),
+      viewerId
+        ? supabase.from('blog_comment_likes').select('comment_id').in('comment_id', commentIds).eq('user_id', viewerId)
+        : Promise.resolve({ data: [] }),
+    ])
+    for (const row of (allLikes.data ?? []) as Array<{ comment_id: string }>) {
+      likeCounts.set(row.comment_id, (likeCounts.get(row.comment_id) ?? 0) + 1)
+    }
+    for (const row of (myLikes.data ?? []) as Array<{ comment_id: string }>) {
+      likedByMe.add(row.comment_id)
+    }
+  }
+
+  const comments: BlogCommentRow[] = rawComments.map(c => ({
+    id: c.id,
+    post_slug: c.post_slug,
+    user_id: c.user_id,
+    body: c.body,
+    created_at: c.created_at,
+    username: c.profiles?.username ?? null,
+    instagram_handle: c.profiles?.instagram_handle ?? null,
+    like_count: likeCounts.get(c.id) ?? 0,
+    liked_by_me: likedByMe.has(c.id),
+  }))
+
+  return {
+    comments,
+    postLikes: postLikesRes.count ?? 0,
+    postLikedByMe: !!(postLikedByMeRes && 'data' in postLikedByMeRes && postLikedByMeRes.data),
+  }
+}
+
+// Look up the viewer's username so the comment form can either show
+// it (ready to comment) or pop the "pick a username" modal first.
+export async function getViewerProfile(): Promise<{
+  userId: string | null
+  username: string | null
+  instagram_handle: string | null
+}> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { userId: null, username: null, instagram_handle: null }
+  const { data } = await supabase
+    .from('profiles')
+    .select('username, instagram_handle')
+    .eq('id', user.id)
+    .maybeSingle()
+  return {
+    userId: user.id,
+    username: data?.username ?? null,
+    instagram_handle: data?.instagram_handle ?? null,
+  }
+}

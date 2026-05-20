@@ -1,0 +1,51 @@
+// POST /api/account/username
+// Sets or updates the signed-in user's username + optional Instagram
+// handle. Validates server-side and returns the saved values (or a
+// 409 if the username is already taken).
+
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import {
+  normaliseUsername, validateUsername,
+  normaliseInstagram, validateInstagram,
+} from '@/lib/usernames'
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+export async function POST(request: Request) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Sign in required' }, { status: 401 })
+  }
+
+  let body: { username?: string; instagram_handle?: string } = {}
+  try { body = await request.json() } catch {}
+
+  const rawUsername = typeof body.username === 'string' ? body.username : ''
+  const rawInsta    = typeof body.instagram_handle === 'string' ? body.instagram_handle : ''
+
+  const usernameCheck = validateUsername(rawUsername)
+  if (!usernameCheck.ok) return NextResponse.json({ error: usernameCheck.error }, { status: 400 })
+  const instaCheck = validateInstagram(rawInsta)
+  if (!instaCheck.ok) return NextResponse.json({ error: instaCheck.error }, { status: 400 })
+
+  const username = normaliseUsername(rawUsername)
+  const instagram_handle = normaliseInstagram(rawInsta) || null
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ username, instagram_handle })
+    .eq('id', user.id)
+
+  if (error) {
+    // Postgres unique_violation when the username is taken.
+    if (error.code === '23505') {
+      return NextResponse.json({ error: 'That username is taken — try another.' }, { status: 409 })
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true, username, instagram_handle })
+}

@@ -13,6 +13,9 @@ import UpgradeButton from '@/components/billing/UpgradeButton'
 import { ArticleJsonLd } from '@/components/seo/JsonLd'
 import { remarkAutoLink } from '@/lib/blog-links'
 import { getAutoLinkPhrases } from '@/lib/blog-links-server'
+import { loadBlogPostSocial, getViewerProfile } from '@/lib/blog-social-db'
+import { isAdminEmail } from '@/lib/admin'
+import BlogSocial from '@/components/blog/BlogSocial'
 
 export const dynamic = 'force-dynamic'
 
@@ -85,6 +88,15 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   const gated = post.isPremium && !userIsPremium
   const visibleContent = gated ? truncateMarkdownToPercent(post.content, 20) : post.content
+
+  // Social state — likes + comments. Loaded server-side so the post
+  // renders with everything visible on first paint (SEO, no flicker)
+  // then hydrates as a client island for interactions.
+  const [social, viewerProfile] = await Promise.all([
+    loadBlogPostSocial(slug, user?.id ?? null),
+    getViewerProfile(),
+  ])
+  const isAdmin = isAdminEmail(user?.email)
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
 
@@ -195,6 +207,21 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               )}
             </div>
           </div>
+        )}
+
+        {/* Comments + likes. Renders for everyone (signed in or not);
+            the client component handles the auth gate for interactions. */}
+        {!gated && (
+          <BlogSocial
+            postSlug={slug}
+            initialPostLikes={social.postLikes}
+            initialPostLikedByMe={social.postLikedByMe}
+            initialComments={social.comments}
+            viewerUserId={viewerProfile.userId}
+            initialViewerUsername={viewerProfile.username}
+            initialViewerInstagram={viewerProfile.instagram_handle}
+            isAdmin={isAdmin}
+          />
         )}
       </div>
     </div>

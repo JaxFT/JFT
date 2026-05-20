@@ -566,17 +566,10 @@
 </head>
 <body>
 
-<!-- ═══ LANDING ═══ -->
-<div id="landing" class="screen landing active">
-  <span class="eyebrow">Family Way</span>
-  <h1>Could long-term travel actually work for your family?</h1>
-  <p class="lede">An honest readiness check, built for families dreaming about taking the leap. Personal results in 5 minutes.</p>
-  <button class="start-btn" onclick="startQuiz()">Start the quiz →</button>
-  <span class="time">~5 minutes · No sign-up · Free</span>
-</div>
-
-<!-- ═══ QUIZ ═══ -->
-<div id="quiz" class="screen">
+<!-- The parent page on /i-want-to-travel handles the inspirational
+     framing. The iframe lands the visitor straight on Section 1 — no
+     in-iframe landing screen, no extra "start" tap. -->
+<div id="quiz" class="screen active">
   <div class="progress-wrap">
     <div class="progress-label" id="progressLabel">Section 1 of 7</div>
     <div class="progress"><div class="progress-fill" id="progressFill" style="width:14%"></div></div>
@@ -962,7 +955,7 @@
       <p>We've done this. We travel full-time as a family and we know what it actually takes — not the highlight reel version, the real one. If you want to talk through your specific situation, work out where the gaps are, and make a plan that fits your family, we offer a personal 1:1 call.</p>
       <a class="cta-btn" href="/work-with-us" target="_top">Book your call →</a>
     </div>
-    <button class="restart-link" onclick="restart()">Start the quiz again</button>
+    <button class="restart-link" onclick="restart()">Start over</button>
   </div>
 </div>
 

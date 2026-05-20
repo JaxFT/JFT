@@ -1,4 +1,4 @@
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Lock, Crown, Download, Check } from 'lucide-react'
 import type { Metadata } from 'next'
@@ -8,7 +8,7 @@ import { getGuideBySlug, userHasPurchased, formatPrice } from '@/lib/guides-db'
 import { ArticleJsonLd } from '@/components/seo/JsonLd'
 import { getPublishedWebGuideBySlug } from '@/lib/guides-content-db'
 import { userHasPurchasedWebGuide } from '@/lib/web-guide-purchases-db'
-import { claimWebGuidePurchase, generateMagicLinkUrl } from '@/lib/claim-web-guide-purchase'
+import { claimWebGuidePurchase } from '@/lib/claim-web-guide-purchase'
 import { getAboutUs } from '@/lib/app-settings'
 import { getAutoLinkPhrases } from '@/lib/blog-links-server'
 import WebGuideView from '@/components/guide/WebGuideView'
@@ -102,26 +102,23 @@ export default async function GuidePage({
     const { data: { user } } = await supabase.auth.getUser()
 
     // Stripe success return: ?session_id=… is set by the checkout
-    // success_url. Claim the purchase (find-or-create the user from
-    // the email Stripe collected, record the row). If the buyer is
-    // signed in already, we're done — render the page and they'll
-    // see "Download my copy". If they're a guest, send them through
-    // a Supabase magic-link auto-sign-in so the next request has a
-    // session and the download button works.
+    // success_url. Always claim the purchase here as a sync backup
+    // to the webhook. The "find or create user from Stripe's email"
+    // path inside claimWebGuidePurchase handles guest checkouts.
+    //
+    // If cookies survived the Stripe round-trip, `user` is set and
+    // the download button renders immediately on the next pass.
+    // If cookies were dropped (Safari/incognito quirks) or the buyer
+    // was a guest, we surface a sign-in prompt with their email
+    // prefilled — clicking it sends them a standard Supabase magic
+    // link, which has been proven reliable for years on this stack.
     const sessionId = typeof sp.session_id === 'string' ? sp.session_id : null
-    if (sessionId && !user) {
+    let pendingPurchaseEmail: string | null = null
+    if (sessionId) {
       const claim = await claimWebGuidePurchase({ sessionId })
-      if (claim.ok && claim.email) {
-        const origin = process.env.NEXT_PUBLIC_SITE_URL ?? new URL('https://jaxfamilytravels.com').origin
-        const next = `/guides/${webGuide.slug}?download=success`
-        const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(next)}`
-        const magicLink = await generateMagicLinkUrl(claim.email, redirectTo)
-        if (magicLink) redirect(magicLink)
+      if (claim.ok && !user && claim.email) {
+        pendingPurchaseEmail = claim.email
       }
-    } else if (sessionId && user) {
-      // Already signed-in buyer returning from Stripe — still claim
-      // so the row exists even if the webhook is slow.
-      await claimWebGuidePurchase({ sessionId })
     }
 
     let isPremium = false
@@ -161,6 +158,7 @@ export default async function GuidePage({
           isLoggedIn={!!user}
           isPremium={isPremium}
           hasPurchasedDownload={hasPurchasedDownload}
+          pendingPurchaseEmail={pendingPurchaseEmail}
         />
       </>
     )

@@ -163,6 +163,28 @@ const STYLES = `
   }
   blockquote p:last-child { margin-bottom: 0; }
   img { max-width: 100%; height: auto; display: block; border-radius: 8px; margin: 20px auto; }
+  table {
+    width: 100%;
+    max-width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 22px;
+    font-size: 0.95em;
+    table-layout: auto;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+    word-break: break-word;
+  }
+  th {
+    font-weight: 600;
+    background: var(--brand-soft);
+    color: var(--ink);
+    border-bottom: 2px solid var(--brand);
+  }
+  tbody tr:last-child td { border-bottom: none; }
   code {
     font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
     font-size: 0.92em;

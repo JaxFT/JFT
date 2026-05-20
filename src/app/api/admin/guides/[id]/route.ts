@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/admin'
 import { slugifyForGuide } from '@/lib/guide-types'
+import { getWebGuideById } from '@/lib/guides-content-db'
 import type { GuideSections } from '@/lib/guide-types'
 
 export const dynamic = 'force-dynamic'
@@ -11,6 +12,21 @@ async function requireAdmin() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!isAdminEmail(user?.email)) return { ok: false as const, supabase }
   return { ok: true as const, supabase }
+}
+
+// GET: admin-only fetch of the full guide row (including unpublished
+// drafts). Used by the browser-side download pre-generator so it can
+// render the current state from a single source of truth.
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const auth = await requireAdmin()
+  if (!auth.ok) return NextResponse.json({ error: 'Not authorized' }, { status: 404 })
+  const { id } = await params
+  const guide = await getWebGuideById(id)
+  if (!guide) return NextResponse.json({ error: 'Guide not found' }, { status: 404 })
+  return NextResponse.json(guide)
 }
 
 type UpdateBody = {

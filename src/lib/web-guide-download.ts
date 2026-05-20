@@ -3,6 +3,14 @@
 // the buyer can open the file in any browser on any device and read
 // it without an internet connection.
 //
+// PRE-GENERATION ARCHITECTURE
+// On Workers Free the 10ms per-request CPU cap can't fit a full
+// inline + base64 pass for an image-heavy guide. So this renderer
+// runs in the ADMIN's browser at publish time (no CPU limit there)
+// and uploads the finished HTML to Supabase Storage. The user-facing
+// download endpoint just fetches that pre-baked file, swaps the
+// buyer's email into the watermark placeholder, and streams.
+//
 // Body images stay as URLs (Supabase storage / external) so the file
 // stays a sensible size; offline buyers will see broken image icons
 // on the body images but the cover (which is embedded as base64) and
@@ -243,9 +251,21 @@ const STYLES = `
   }
 `
 
+// Placeholder string that the pre-generated HTML contains where the
+// buyer's email would go. The user-facing download endpoint string-
+// replaces this with the actual email just before streaming the file.
+export const WATERMARK_PLACEHOLDER = '__JFT_BUYER_EMAIL__'
+
+// Apply a buyer's email to a pre-rendered HTML file. Empty string
+// renders as a generic "personal copy" watermark.
+export function applyWatermark(html: string, buyerEmail: string | null): string {
+  if (!buyerEmail) return html.split(WATERMARK_PLACEHOLDER).join('your device')
+  return html.split(WATERMARK_PLACEHOLDER).join(escapeHtml(buyerEmail))
+}
+
 export async function renderGuideHtml(
   guide: GuideRow,
-  buyerEmail: string | null,
+  buyerEmail: string | null | undefined,
 ): Promise<string> {
   // Cover image: fetch + base64 once at render time so the file is
   // self-contained for offline viewing.
@@ -279,9 +299,15 @@ export async function renderGuideHtml(
   // device, even with no internet.
   const bodyHtml = await inlineRemoteImages(rawBodyHtml)
 
-  const watermark = buyerEmail
-    ? `<div class="watermark">Personal copy purchased by <strong>${escapeHtml(buyerEmail)}</strong> · <a href="https://jaxfamilytravels.com">jaxfamilytravels.com</a></div>`
-    : `<div class="watermark"><a href="https://jaxfamilytravels.com">jaxfamilytravels.com</a></div>`
+  // Pre-gen path (buyerEmail === undefined): embed a placeholder that
+  // the download endpoint substitutes at serve time.
+  // No-email path (null): generic brand-only footer.
+  // Live email (string): embed it directly.
+  const watermark = buyerEmail === undefined
+    ? `<div class="watermark">Personal copy purchased by <strong>${WATERMARK_PLACEHOLDER}</strong> · <a href="https://jaxfamilytravels.com">jaxfamilytravels.com</a></div>`
+    : buyerEmail
+      ? `<div class="watermark">Personal copy purchased by <strong>${escapeHtml(buyerEmail)}</strong> · <a href="https://jaxfamilytravels.com">jaxfamilytravels.com</a></div>`
+      : `<div class="watermark"><a href="https://jaxfamilytravels.com">jaxfamilytravels.com</a></div>`
 
   const title = escapeHtml(guide.title)
   const subtitle = guide.subtitle ? `<p class="subtitle">${escapeHtml(guide.subtitle)}</p>` : ''

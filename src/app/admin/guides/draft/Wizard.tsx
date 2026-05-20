@@ -16,6 +16,7 @@ import {
 } from '@/lib/guide-types'
 import { buildBlockPrompt } from '@/lib/guide-prompts'
 import { resizeImageIfLarge } from '@/lib/image-resize'
+import { generateAndUploadDownload } from '@/lib/admin-guide-pregen'
 
 const TOTAL_STEPS = 4
 
@@ -182,9 +183,36 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
     window.open(`/admin/guides/${guide.id}/preview`, '_blank', 'noopener')
   }
 
+  // Regenerate the offline download file: fetch latest guide from
+  // DB, render in the browser, upload to Supabase Storage. Auto-fires
+  // on publish, available on demand via the button.
+  const [regenState, setRegenState] = useState<'idle' | 'working' | 'done' | 'error'>('idle')
+  const [regenError, setRegenError] = useState<string | null>(null)
+  const regenerateDownloadFile = async () => {
+    setRegenState('working')
+    setRegenError(null)
+    try {
+      const r = await fetch(`/api/admin/guides/${guide.id}`)
+      if (!r.ok) throw new Error(`Could not fetch guide (HTTP ${r.status})`)
+      const fresh: GuideRow = await r.json()
+      await generateAndUploadDownload(fresh)
+      setRegenState('done')
+      setTimeout(() => setRegenState(s => (s === 'done' ? 'idle' : s)), 3000)
+    } catch (e) {
+      setRegenError(e instanceof Error ? e.message : 'Regeneration failed')
+      setRegenState('error')
+    }
+  }
+
   const publish = async () => {
     const res = await saveAll({ status: 'published' })
-    if (res.ok) router.push('/admin/guides')
+    if (!res.ok) return
+    // Fire-and-await the regeneration so buyers don't see an old file
+    // (or no file at all) the moment publish completes. We continue to
+    // /admin/guides only after either success or error so Bec sees
+    // any problem before navigating away.
+    await regenerateDownloadFile()
+    router.push('/admin/guides')
   }
 
   return (
@@ -461,12 +489,37 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
               </button>
               <button
                 onClick={publish}
-                disabled={saveState === 'saving' || !title.trim()}
+                disabled={saveState === 'saving' || regenState === 'working' || !title.trim()}
                 className="flex-1 btn-primary justify-center !text-sm !py-3 disabled:opacity-50"
               >
-                Publish guide <ArrowRight className="w-4 h-4" />
+                {regenState === 'working'
+                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Publishing &amp; building download…</>
+                  : <>Publish guide <ArrowRight className="w-4 h-4" /></>
+                }
               </button>
             </div>
+
+            {/* Standalone "regenerate" — useful after editing the
+                body via /preview, or after an About Us change. */}
+            <div className="flex items-center justify-between gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div>
+                <p className="text-sm font-semibold text-gray-900">Offline download file</p>
+                <p className="text-xs text-gray-500 mt-0.5">Rebuilt in your browser and saved to storage. Buyers stream this file at download time.</p>
+              </div>
+              <button
+                type="button"
+                onClick={regenerateDownloadFile}
+                disabled={regenState === 'working'}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-4 py-2.5 rounded-md disabled:opacity-50 shrink-0"
+              >
+                {regenState === 'working' && <><Loader2 className="w-4 h-4 animate-spin" /> Building…</>}
+                {regenState === 'done'    && <><Check className="w-4 h-4" /> Saved</>}
+                {(regenState === 'idle' || regenState === 'error') && <>Refresh download file</>}
+              </button>
+            </div>
+            {regenError && (
+              <p className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">Download file: {regenError}</p>
+            )}
 
             {saveError && (
               <p className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{saveError}</p>

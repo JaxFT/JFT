@@ -27,16 +27,18 @@ export default function AboutPage() {
           </p>
         </header>
 
-        {/* Hero photo — square crop, top-anchored so Jax appears in
-            frame (the earlier 16:10 was centring the crop on the
-            adults and cutting him off the bottom). */}
+        {/* Hero photo — the source is 9:16 portrait (2754×4896). A
+            square crop with object-top cut Jax's face out of frame;
+            object-[center_55%] anchors the visible square around the
+            middle of the family group so all three faces stay in
+            shot, with the red flower canopy still visible above. */}
         <div className="relative aspect-square rounded-2xl overflow-hidden mb-10 bg-gray-100 shadow-sm border border-gray-200">
           <Image
             src="/images/us/bec-oli-jax.jpeg"
             alt="Bec, Oli and Jax — the family behind Jax Family Travels"
             fill
             sizes="(max-width: 768px) 100vw, 672px"
-            className="object-cover object-top"
+            className="object-cover object-[center_55%]"
             priority
           />
         </div>

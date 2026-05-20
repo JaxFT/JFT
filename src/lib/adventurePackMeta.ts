@@ -51,6 +51,17 @@ export const PACK_META: AdventurePackMeta[] = [
   { slug: 'pakistan',       country: 'Pakistan',       flag: '🇵🇰', iso2: 'pk', isFree: false, heroColour: 'bg-green-900',   status: 'live', continent: 'Asia',          hasWordSearch: true, hasTilePuzzle: true },
   { slug: 'bangladesh',     country: 'Bangladesh',     flag: '🇧🇩', iso2: 'bd', isFree: false, heroColour: 'bg-teal-900',    status: 'live', continent: 'Asia',          hasWordSearch: true, hasTilePuzzle: true },
   { slug: 'laos',           country: 'Laos',           flag: '🇱🇦', iso2: 'la', isFree: false, heroColour: 'bg-rose-900',    status: 'live', continent: 'Asia',          hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'italy', country: 'Italy', flag: '🇮🇹', iso2: 'it', isFree: false, heroColour: 'bg-red-950', status: 'live', continent: 'Europe', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'hungary', country: 'Hungary', flag: '🇭🇺', iso2: 'hu', isFree: false, heroColour: 'bg-rose-950', status: 'live', continent: 'Europe', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'switzerland', country: 'Switzerland', flag: '🇨🇭', iso2: 'ch', isFree: false, heroColour: 'bg-stone-800', status: 'live', continent: 'Europe', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'greece', country: 'Greece', flag: '🇬🇷', iso2: 'gr', isFree: false, heroColour: 'bg-sky-700', status: 'live', continent: 'Europe', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'sweden', country: 'Sweden', flag: '🇸🇪', iso2: 'se', isFree: false, heroColour: 'bg-blue-700', status: 'live', continent: 'Europe', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'norway', country: 'Norway', flag: '🇳🇴', iso2: 'no', isFree: false, heroColour: 'bg-blue-950', status: 'live', continent: 'Europe', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'denmark', country: 'Denmark', flag: '🇩🇰', iso2: 'dk', isFree: false, heroColour: 'bg-red-700', status: 'live', continent: 'Europe', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'poland', country: 'Poland', flag: '🇵🇱', iso2: 'pl', isFree: false, heroColour: 'bg-pink-800', status: 'live', continent: 'Europe', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'latvia', country: 'Latvia', flag: '🇱🇻', iso2: 'lv', isFree: false, heroColour: 'bg-amber-950', status: 'live', continent: 'Europe', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'lithuania', country: 'Lithuania', flag: '🇱🇹', iso2: 'lt', isFree: false, heroColour: 'bg-yellow-900', status: 'live', continent: 'Europe', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'romania', country: 'Romania', flag: '🇷🇴', iso2: 'ro', isFree: false, heroColour: 'bg-indigo-900', status: 'live', continent: 'Europe', hasWordSearch: true, hasTilePuzzle: true },
 ]
 
 export function getPackMeta(slug: string): AdventurePackMeta | null {

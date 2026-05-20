@@ -3,6 +3,7 @@ import { createClient as createSbClient } from '@supabase/supabase-js'
 import { getGuideBySlug, userHasPurchased, PREVIEWS_BUCKET, FULL_BUCKET } from '@/lib/guides-db'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
+import { isAdminEmail } from '@/lib/admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,15 +48,18 @@ export async function GET(
     .single()
   const isPremium = isPremiumTier(profile?.subscription_tier)
   const hasPurchased = await userHasPurchased(user.id, guide.id)
+  // Admins bypass purchase + premium checks so they can pull any
+  // guide for QA without paying.
+  const admin = isAdminEmail(user.email)
 
-  if (kind === 'download' && !hasPurchased) {
+  if (kind === 'download' && !hasPurchased && !admin) {
     return NextResponse.json(
       { error: 'Download is only available with a one-off purchase. Premium members can read on-site but cannot download.' },
       { status: 403 },
     )
   }
 
-  if (kind === 'full' && !isPremium && !hasPurchased) {
+  if (kind === 'full' && !isPremium && !hasPurchased && !admin) {
     return NextResponse.json({ error: 'Upgrade or buy this guide to view it' }, { status: 403 })
   }
 

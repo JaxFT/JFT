@@ -9,6 +9,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd'
 import { getPublishedWebGuideBySlug } from '@/lib/guides-content-db'
 import { userHasPurchasedWebGuide } from '@/lib/web-guide-purchases-db'
 import { claimWebGuidePurchase } from '@/lib/claim-web-guide-purchase'
+import { isAdminEmail } from '@/lib/admin'
 import { getAboutUs } from '@/lib/app-settings'
 import { getAutoLinkPhrases } from '@/lib/blog-links-server'
 import WebGuideView from '@/components/guide/WebGuideView'
@@ -183,8 +184,11 @@ export default async function GuidePage({
     hasPurchased = hp
   }
 
-  const canViewFull = isPremium || hasPurchased
-  const canDownload = hasPurchased
+  // Admins can view + download any legacy PDF guide for free — same
+  // logic as the new web guides. Lets us QA without paying.
+  const admin = isAdminEmail(user?.email)
+  const canViewFull = isPremium || hasPurchased || admin
+  const canDownload = hasPurchased || admin
   const fullAvailable = !!guide.full_path
 
   return (

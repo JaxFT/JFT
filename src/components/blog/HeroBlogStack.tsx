@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, ChevronLeft, ChevronRight, Crown } from 'lucide-react'
+import { proxyImageUrl } from '@/lib/image-proxy'
 
 type StackPost = {
   slug: string
@@ -132,7 +133,7 @@ export default function HeroBlogStack({ posts }: { posts: StackPost[] }) {
             >
               {post.coverImage && (
                 <img
-                  src={post.coverImage}
+                  src={proxyImageUrl(post.coverImage)}
                   alt={post.title}
                   draggable={false}
                   decoding="async"

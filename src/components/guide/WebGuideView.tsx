@@ -7,6 +7,7 @@ import PostPurchaseDownload from '@/app/guides/[slug]/PostPurchaseDownload'
 import type { GuideRow, GuideContentBlock } from '@/lib/guide-types'
 import { truncateMarkdownToPercent, extractMarkdownToc } from '@/lib/guide-types'
 import type { AutoLinkPhrase } from '@/lib/blog-links'
+import { proxyImageUrl } from '@/lib/image-proxy'
 
 type Props = {
   guide: GuideRow
@@ -55,7 +56,7 @@ export default function WebGuideView({
         {guide.cover_image ? (
           <div className="relative w-full max-w-3xl mx-auto pt-20">
             <img
-              src={guide.cover_image}
+              src={proxyImageUrl(guide.cover_image)}
               alt={guide.title}
               decoding="async"
               fetchPriority="high"

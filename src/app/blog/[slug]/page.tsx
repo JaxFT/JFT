@@ -6,6 +6,7 @@ import { Clock, ArrowLeft, Crown, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getPublishedPostBySlug, rowToView } from '@/lib/blog-db'
+import { proxyImageUrl } from '@/lib/image-proxy'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
 import UpgradeButton from '@/components/billing/UpgradeButton'
@@ -102,7 +103,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-8">
           <div className="aspect-square w-full overflow-hidden rounded-2xl bg-gray-100">
             <img
-              src={post.coverImage}
+              src={proxyImageUrl(post.coverImage)}
               alt={post.title}
               decoding="async"
               fetchPriority="high"
@@ -147,7 +148,19 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
         <div className="relative">
           <div className="prose-jft">
-            <ReactMarkdown remarkPlugins={[remarkGfm, remarkAutoLink(autoLinkPhrases)]}>{visibleContent}</ReactMarkdown>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm, remarkAutoLink(autoLinkPhrases)]}
+              components={{
+                // Lazy-load body images and route Supabase URLs through
+                // the edge-cached /img proxy so they're served from
+                // Cloudflare's edge after first hit.
+                img({ src, alt, title }) {
+                  if (typeof src !== 'string') return null
+                  // eslint-disable-next-line @next/next/no-img-element
+                  return <img src={proxyImageUrl(src) || src} alt={alt ?? ''} title={title ?? undefined} loading="lazy" decoding="async" />
+                },
+              }}
+            >{visibleContent}</ReactMarkdown>
           </div>
 
           {gated && (

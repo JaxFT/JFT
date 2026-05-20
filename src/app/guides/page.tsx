@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Map, ArrowRight, Crown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
+import { proxyImageUrl } from '@/lib/image-proxy'
 import { listActiveGuides, formatPrice } from '@/lib/guides-db'
 import { listPublishedWebGuides } from '@/lib/guides-content-db'
 import UpgradeButton from '@/components/billing/UpgradeButton'
@@ -118,7 +119,7 @@ export default async function GuidesPage() {
                 {/* Full-card cover image */}
                 {guide.cover_image ? (
                   <img
-                    src={guide.cover_image}
+                    src={proxyImageUrl(guide.cover_image)}
                     alt={guide.name}
                     loading="lazy"
                     decoding="async"

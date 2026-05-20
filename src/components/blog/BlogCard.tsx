@@ -1,6 +1,7 @@
 import { ArrowRight, Clock, Crown } from 'lucide-react'
 import { format } from 'date-fns'
 import type { BlogPost } from '@/types'
+import { proxyImageUrl } from '@/lib/image-proxy'
 
 // Plain <a> (not next/link) to avoid the brief unstyled-flash that
 // CSR navigation produced on this card. Tradeoff: ~300 ms slower per
@@ -12,7 +13,7 @@ export default function BlogCard({ post }: { post: BlogPost }) {
       {post.coverImage && (
         <div className="overflow-hidden h-48">
           <img
-            src={post.coverImage}
+            src={proxyImageUrl(post.coverImage)}
             alt={post.title}
             loading="lazy"
             decoding="async"

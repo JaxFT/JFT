@@ -1,6 +1,7 @@
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { remarkAutoLink, type AutoLinkPhrase } from '@/lib/blog-links'
+import { proxyImageUrl } from '@/lib/image-proxy'
 import { Callout, detectCalloutFromText } from './Callout'
 import type { ReactNode } from 'react'
 
@@ -142,6 +143,10 @@ function buildComponents(onImageClick?: (src: string, anchor: ImageAnchor) => vo
   // image is wrapped in a button that opens the option picker.
   img({ src, alt, title }) {
     if (typeof src !== 'string') return null
+    // Route Supabase Storage URLs through the edge-cached proxy so
+    // first hit pulls from Supabase and every later hit is served
+    // from Cloudflare's edge. Non-Supabase URLs pass through.
+    src = proxyImageUrl(src) || src
     const opts = parseImageOpts(title)
     const cls = `img-${opts.size} img-align-${opts.align} img-crop-${opts.crop}`
     // object-position only matters when there's something to crop/fit
@@ -171,7 +176,7 @@ function buildComponents(onImageClick?: (src: string, anchor: ImageAnchor) => vo
           aria-label={`Edit image ${alt ?? ''}`}
         >
           { /* eslint-disable-next-line @next/next/no-img-element */ }
-          <img src={src} alt={alt ?? ''} title={title ?? undefined} style={style} className={`${cls} ring-2 ring-brand-200/60 hover:ring-brand-500 transition-shadow`} />
+          <img src={src} alt={alt ?? ''} title={title ?? undefined} style={style} loading="lazy" decoding="async" className={`${cls} ring-2 ring-brand-200/60 hover:ring-brand-500 transition-shadow`} />
           <span className="absolute top-2 right-2 text-[10px] uppercase tracking-widest bg-brand-700 text-white px-2 py-0.5 rounded shadow-sm">
             {badge} · click to edit
           </span>
@@ -179,7 +184,7 @@ function buildComponents(onImageClick?: (src: string, anchor: ImageAnchor) => vo
       )
     }
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt ?? ''} title={title ?? undefined} style={style} className={cls} />
+    return <img src={src} alt={alt ?? ''} title={title ?? undefined} style={style} loading="lazy" decoding="async" className={cls} />
   },
   }
 }

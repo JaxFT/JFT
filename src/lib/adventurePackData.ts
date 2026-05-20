@@ -252,6 +252,21 @@ export const MOROCCO_DATA: AdventurePackData = {
     { question: 'Which place has felt the most different from home?' },
     { question: 'Would you rather live in a busy city like Marrakech, or a quiet mountain village in the Atlas?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Moroccan foods, places and things to spot.",
+    words: [
+      "TAGINE",
+      "COUSCOUS",
+      "MINT",
+      "KASBAH",
+      "SOUK",
+      "MEDINA",
+      "ATLAS",
+      "SAHARA",
+      "CAMEL",
+      "RIAD",
+    ],
+  },
 }
 
 // ── INDONESIA (premium, live) ────────────────────────────────────
@@ -363,6 +378,21 @@ export const INDONESIA_DATA: AdventurePackData = {
     { question: 'If you could bring one Indonesian habit home with you, what would it be?' },
     { question: 'Indonesia has hundreds of different ethnic groups and languages. What do you think holds it all together as one country?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Indonesian foods, places and things to spot.",
+    words: [
+      "BALI",
+      "JAKARTA",
+      "SATAY",
+      "NASI",
+      "BATIK",
+      "GAMELAN",
+      "KOMODO",
+      "RICE",
+      "TEMPLE",
+      "VOLCANO",
+    ],
+  },
 }
 
 // ── THAILAND (premium, live) ─────────────────────────────────────
@@ -473,6 +503,21 @@ export const THAILAND_DATA: AdventurePackData = {
     { question: 'Have you found a favourite temple or place yet? What made it special?' },
     { question: 'Thais say "mai pen rai" (never mind, it\'s fine) a lot. Where could you use more of that attitude in your own life?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Thai foods, places and things to spot.",
+    words: [
+      "BANGKOK",
+      "PADTHAI",
+      "MANGO",
+      "TEMPLE",
+      "ELEPHANT",
+      "TUKTUK",
+      "CURRY",
+      "MONK",
+      "BUDDHA",
+      "RICE",
+    ],
+  },
 }
 
 // ── MALAYSIA (premium, live) ─────────────────────────────────────
@@ -584,6 +629,21 @@ export const MALAYSIA_DATA: AdventurePackData = {
     { question: 'What\'s one thing Malaysians do better than back home?' },
     { question: 'Three big communities live side by side here, mostly peacefully. What do you think makes that work?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Malaysian foods, places and things to spot.",
+    words: [
+      "LAKSA",
+      "ROTI",
+      "NASI",
+      "DURIAN",
+      "PENANG",
+      "BORNEO",
+      "JUNGLE",
+      "MOSQUE",
+      "MONKEY",
+      "TIGER",
+    ],
+  },
 }
 
 // ── SPAIN (premium, live) ────────────────────────────────────────
@@ -695,6 +755,21 @@ export const SPAIN_DATA: AdventurePackData = {
     { question: 'Have you tried to roll your "r"? Whose is best in our family?' },
     { question: 'Spanish kids stay up late and are part of grown-up nights out. What do you think the upsides and downsides of that are?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Spanish foods, places and things to spot.",
+    words: [
+      "PAELLA",
+      "TAPAS",
+      "FLAMENCO",
+      "MADRID",
+      "BARCELONA",
+      "SIESTA",
+      "OLIVES",
+      "JAMON",
+      "FIESTA",
+      "BULL",
+    ],
+  },
 }
 
 // ── PORTUGAL (premium, live) ─────────────────────────────────────
@@ -807,6 +882,21 @@ export const PORTUGAL_DATA: AdventurePackData = {
     { question: 'If you could send a postcard to one person right now, who would it be and what would you write?' },
     { question: 'Portugal once ran an empire that stretched around the world, and now it is a small quiet country. What do you think that feels like as a nation?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Portuguese foods, places and things to spot.",
+    words: [
+      "LISBON",
+      "PORTO",
+      "NATA",
+      "FADO",
+      "AZULEJO",
+      "CASTLE",
+      "TRAM",
+      "CORK",
+      "BEACH",
+      "SARDINE",
+    ],
+  },
 }
 
 // ── JAPAN (premium, live) ────────────────────────────────────────
@@ -919,6 +1009,21 @@ export const JAPAN_DATA: AdventurePackData = {
     { question: 'Where has felt the most "Japanese" so far, in a way you cannot quite explain?' },
     { question: 'Japan is one of the most orderly countries on earth. What do you think would be hard about living somewhere where everyone follows so many rules?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Japanese foods, places and things to spot.",
+    words: [
+      "TOKYO",
+      "SUSHI",
+      "RAMEN",
+      "SAKURA",
+      "FUJI",
+      "KIMONO",
+      "SHRINE",
+      "TEMPLE",
+      "BENTO",
+      "MOCHI",
+    ],
+  },
 }
 
 // ── VIETNAM (premium, live) ──────────────────────────────────────
@@ -1030,6 +1135,21 @@ export const VIETNAM_DATA: AdventurePackData = {
     { question: 'Have you found your favourite Vietnamese place yet? What is it?' },
     { question: 'The Vietnamese have lived through huge wars and now their country is full of young people building new things. What kind of country would you want to build if you could start over?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Vietnamese foods, places and things to spot.",
+    words: [
+      "HANOI",
+      "PHO",
+      "BANHMI",
+      "NOODLE",
+      "HALONG",
+      "COFFEE",
+      "MOTORBIKE",
+      "BAMBOO",
+      "MARKET",
+      "RICE",
+    ],
+  },
 }
 
 // ── CAMBODIA (premium, live) ─────────────────────────────────────
@@ -1141,6 +1261,21 @@ export const CAMBODIA_DATA: AdventurePackData = {
     { question: 'How do you handle the heat? Out of 10, how sweaty are you right now?' },
     { question: 'Cambodia is rebuilding from something terrible that happened only 50 years ago. What kind of country do you think Cambodia could become in another 50 years?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Cambodian foods, places and things to spot.",
+    words: [
+      "ANGKOR",
+      "KHMER",
+      "RICE",
+      "MONK",
+      "TEMPLE",
+      "TUKTUK",
+      "JUNGLE",
+      "RIVER",
+      "MEKONG",
+      "MARKET",
+    ],
+  },
 }
 
 // ── CHINA (premium, live) ────────────────────────────────────────
@@ -1252,6 +1387,21 @@ export const CHINA_DATA: AdventurePackData = {
     { question: 'Have you tried saying anything in Mandarin? Whose attempt is best in our family?' },
     { question: 'China has changed enormously in the last 40 years. What do you think your own country will look most different in 40 years?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Chinese foods, places and things to spot.",
+    words: [
+      "BEIJING",
+      "WALL",
+      "DUMPLING",
+      "PANDA",
+      "DRAGON",
+      "NOODLE",
+      "JADE",
+      "SILK",
+      "TEA",
+      "LANTERN",
+    ],
+  },
 }
 
 // ── INDIA (premium, live) ────────────────────────────────────────
@@ -1364,6 +1514,21 @@ export const INDIA_DATA: AdventurePackData = {
     { question: 'India is loud, colourful, full and intense. Do you find it exciting or tiring (or both)?' },
     { question: 'India has 1.4 billion people speaking dozens of different languages, all in one country. What do you think holds it all together?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Indian foods, places and things to spot.",
+    words: [
+      "DELHI",
+      "MUMBAI",
+      "CURRY",
+      "TAJMAHAL",
+      "SARI",
+      "MASALA",
+      "NAAN",
+      "ROTI",
+      "ELEPHANT",
+      "MONSOON",
+    ],
+  },
 }
 
 // ── SRI LANKA (premium, live) ────────────────────────────────────
@@ -1475,6 +1640,21 @@ export const SRI_LANKA_DATA: AdventurePackData = {
     { question: 'The blue train, the leopards, or the rock fortress, which would you most want to come back for?' },
     { question: 'Sri Lanka has had a long civil war and a tsunami in living memory, yet it is one of the most welcoming countries on earth. What does that tell you about people?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Sri Lankan foods, places and things to spot.",
+    words: [
+      "COLOMBO",
+      "TEA",
+      "ELEPHANT",
+      "BEACH",
+      "CURRY",
+      "MONSOON",
+      "COCONUT",
+      "TEMPLE",
+      "JUNGLE",
+      "SURF",
+    ],
+  },
 }
 
 // ── NEPAL (premium, live) ────────────────────────────────────────
@@ -1586,6 +1766,21 @@ export const NEPAL_DATA: AdventurePackData = {
     { question: 'Have you seen a real Himalayan peak with your own eyes yet? How did you feel?' },
     { question: 'Nepalis live among the biggest mountains on earth and yet most of them have never climbed Everest. Why do you think we sometimes ignore amazing things on our own doorstep?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Nepali foods, places and things to spot.",
+    words: [
+      "NEPAL",
+      "EVEREST",
+      "MOMO",
+      "YAK",
+      "PRAYER",
+      "SHERPA",
+      "RICE",
+      "TEMPLE",
+      "MOUNTAIN",
+      "BUDDHA",
+    ],
+  },
 }
 
 // ── TURKEY (premium, live) ───────────────────────────────────────
@@ -1697,6 +1892,21 @@ export const TURKEY_DATA: AdventurePackData = {
     { question: 'If you could spend tomorrow in a balloon over Cappadocia or in a hamam in Istanbul, which?' },
     { question: 'Turkey sits between Europe, Asia, the old Soviet Union and the Middle East. How do you think being in the middle of all of that shapes a country?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Turkish foods, places and things to spot.",
+    words: [
+      "ISTANBUL",
+      "KEBAB",
+      "BAKLAVA",
+      "MOSQUE",
+      "BAZAAR",
+      "TEA",
+      "FERRY",
+      "CARPET",
+      "CAT",
+      "DOLMA",
+    ],
+  },
 }
 
 // ── EGYPT (premium, live) ────────────────────────────────────────
@@ -1808,6 +2018,21 @@ export const EGYPT_DATA: AdventurePackData = {
     { question: 'If you could go back to ancient Egypt for one day, what would you want to see?' },
     { question: 'Many of Egypt\'s greatest treasures (the Rosetta Stone, the Nefertiti bust, parts of mummies) are in museums in London, Berlin and Paris. Do you think they should go home?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Egyptian foods, places and things to spot.",
+    words: [
+      "CAIRO",
+      "NILE",
+      "PYRAMID",
+      "SPHINX",
+      "PHARAOH",
+      "CAMEL",
+      "DESERT",
+      "MUMMY",
+      "BAZAAR",
+      "FALAFEL",
+    ],
+  },
 }
 
 // ── UNITED KINGDOM (premium, live) ───────────────────────────────
@@ -1919,6 +2144,21 @@ export const UK_DATA: AdventurePackData = {
     { question: 'What is one thing about your own country that you have noticed for the first time on this trip?' },
     { question: 'The UK was once the biggest empire in history, and now is a small island again. How do you feel about that, when you look around today?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "British foods, places and things to spot.",
+    words: [
+      "LONDON",
+      "TEA",
+      "SCONE",
+      "CASTLE",
+      "BIGBEN",
+      "QUEEN",
+      "FISH",
+      "CHIPS",
+      "PUB",
+      "CROWN",
+    ],
+  },
 }
 
 // ── AUSTRALIA (premium, live) ────────────────────────────────────
@@ -2029,6 +2269,21 @@ export const AUSTRALIA_DATA: AdventurePackData = {
     { question: 'If you had to live in just one spot — city, beach, or outback — which would it be?' },
     { question: 'Aboriginal cultures are 65,000+ years old. What do you think people 65,000 years from now will look back on as old?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Australian foods, places and things to spot.",
+    words: [
+      "SYDNEY",
+      "KANGAROO",
+      "KOALA",
+      "OUTBACK",
+      "REEF",
+      "OPERA",
+      "CROC",
+      "BEACH",
+      "BOOMERANG",
+      "EMU",
+    ],
+  },
 }
 
 // ── NEW ZEALAND (premium, live) ──────────────────────────────────
@@ -2138,6 +2393,21 @@ export const NEW_ZEALAND_DATA: AdventurePackData = {
     { question: 'Aussies and Kiwis tease each other constantly. What\'s been the most "Kiwi" thing you have noticed?' },
     { question: '700 years ago Māori explorers navigated here by stars across the open Pacific. What do you think that journey would have been like?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "New Zealand foods, places and things to spot.",
+    words: [
+      "KIWI",
+      "MAORI",
+      "HAKA",
+      "SHEEP",
+      "AUCKLAND",
+      "FERN",
+      "HOBBIT",
+      "GLACIER",
+      "GEYSER",
+      "RUGBY",
+    ],
+  },
 }
 
 // ── CANADA (premium, live) ───────────────────────────────────────
@@ -2248,6 +2518,21 @@ export const CANADA_DATA: AdventurePackData = {
     { question: 'Have you seen any wild animals so far? (bears? moose? geese?)' },
     { question: 'Canada and the USA are so similar — what\'s one thing that has felt totally different here?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Canadian foods, places and things to spot.",
+    words: [
+      "CANADA",
+      "MOOSE",
+      "MAPLE",
+      "HOCKEY",
+      "BEAVER",
+      "IGLOO",
+      "POUTINE",
+      "BACON",
+      "TORONTO",
+      "BISON",
+    ],
+  },
 }
 
 // ── USA (premium, live) ──────────────────────────────────────────
@@ -2358,6 +2643,21 @@ export const USA_DATA: AdventurePackData = {
     { question: 'A flag is on almost every house. What do you make of that?' },
     { question: 'The USA has 350 million people and 50 states. What\'s one thing that feels totally different from where we live?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "American foods, places and things to spot.",
+    words: [
+      "AMERICA",
+      "HOTDOG",
+      "BURGER",
+      "JAZZ",
+      "BASEBALL",
+      "LIBERTY",
+      "COWBOY",
+      "EAGLE",
+      "CANYON",
+      "PIZZA",
+    ],
+  },
 }
 
 // ── MEXICO (premium, live) ───────────────────────────────────────
@@ -2468,6 +2768,21 @@ export const MEXICO_DATA: AdventurePackData = {
     { question: 'Have you spotted a piñata, Day of the Dead decoration, or mariachi band yet?' },
     { question: '500 years ago the place we\'re standing was an Aztec city. What might still be under your feet?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Mexican foods, places and things to spot.",
+    words: [
+      "MEXICO",
+      "TACO",
+      "MARIACHI",
+      "SOMBRERO",
+      "CACTUS",
+      "CHILI",
+      "FIESTA",
+      "PYRAMID",
+      "AZTEC",
+      "SALSA",
+    ],
+  },
 }
 
 // ── COSTA RICA (premium, live) ───────────────────────────────────
@@ -2578,6 +2893,21 @@ export const COSTA_RICA_DATA: AdventurePackData = {
     { question: 'Have you seen anyone in a real hurry here? Or does everyone seem chilled out?' },
     { question: 'Costa Rica has no army. If we had no army at home, what could the country spend the money on?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Costa Rican foods, places and things to spot.",
+    words: [
+      "SLOTH",
+      "RAINFOREST",
+      "BEACH",
+      "SURF",
+      "VOLCANO",
+      "COFFEE",
+      "MONKEY",
+      "JUNGLE",
+      "PURAVIDA",
+      "TOUCAN",
+    ],
+  },
 }
 
 // ── JAMAICA (premium, live) ──────────────────────────────────────
@@ -2688,6 +3018,21 @@ export const JAMAICA_DATA: AdventurePackData = {
     { question: 'What\'s the most "Jamaican" thing you have seen so far?' },
     { question: 'Jamaica is tiny but punches huge — music, sport, food, identity. How does it do that?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Jamaican foods, places and things to spot.",
+    words: [
+      "JAMAICA",
+      "REGGAE",
+      "JERK",
+      "BEACH",
+      "MARLEY",
+      "RUM",
+      "COCONUT",
+      "REEF",
+      "KINGSTON",
+      "DREAD",
+    ],
+  },
 }
 
 // ── BRAZIL (premium, live) ───────────────────────────────────────
@@ -2798,6 +3143,21 @@ export const BRAZIL_DATA: AdventurePackData = {
     { question: 'Brazilians are usually really warm to strangers. How has that felt compared to back home?' },
     { question: 'Brazil is bigger than the entire USA without Alaska. What does "huge" actually feel like here?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Brazilian foods, places and things to spot.",
+    words: [
+      "BRAZIL",
+      "RIO",
+      "SAMBA",
+      "CARNIVAL",
+      "AMAZON",
+      "JUNGLE",
+      "BEACH",
+      "FOOTBALL",
+      "JAGUAR",
+      "BANANA",
+    ],
+  },
 }
 
 // ── ARGENTINA (premium, live) ────────────────────────────────────
@@ -2901,6 +3261,21 @@ export const ARGENTINA_DATA: AdventurePackData = {
     { question: 'Argentina swings between super formal and super wild. What\'s been your favourite moment so far?' },
     { question: 'Argentina is famous for its writers (Borges), artists, and 5am footy matches. Which side of it surprised you?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Argentine foods, places and things to spot.",
+    words: [
+      "TANGO",
+      "ASADO",
+      "GAUCHO",
+      "PAMPAS",
+      "PATAGONIA",
+      "FUTBOL",
+      "MATE",
+      "BEEF",
+      "GLACIER",
+      "ANDES",
+    ],
+  },
 }
 
 // ── CHILE (premium, live) ────────────────────────────────────────
@@ -3011,6 +3386,21 @@ export const CHILE_DATA: AdventurePackData = {
     { question: 'Chile is so long it has six different climate zones. What\'s the most extreme one you\'ve been in?' },
     { question: 'The Atacama is the best place on Earth to look at the stars. If you could move there for a year, would you?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Chilean foods, places and things to spot.",
+    words: [
+      "CHILE",
+      "ANDES",
+      "SANTIAGO",
+      "PATAGONIA",
+      "WINE",
+      "DESERT",
+      "SALMON",
+      "EASTER",
+      "CONDOR",
+      "PISCO",
+    ],
+  },
 }
 
 // ── GERMANY (premium, live) ──────────────────────────────────────
@@ -3114,6 +3504,21 @@ export const GERMANY_DATA: AdventurePackData = {
     { question: 'Bikes are everywhere in some cities. Have you ridden one yet?' },
     { question: 'Germany teaches its Nazi-era history in every school. Should every country teach its worst moments that openly?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "German foods, places and things to spot.",
+    words: [
+      "BERLIN",
+      "PRETZEL",
+      "BEER",
+      "SAUSAGE",
+      "CASTLE",
+      "AUTOBAHN",
+      "MUNICH",
+      "CUCKOO",
+      "FOREST",
+      "RHINE",
+    ],
+  },
 }
 
 // ── BELGIUM (premium, live) ──────────────────────────────────────
@@ -3224,6 +3629,21 @@ export const BELGIUM_DATA: AdventurePackData = {
     { question: 'Belgium invented Tintin AND the Smurfs. Which character has surprised you the most here?' },
     { question: 'Belgium is tiny but punches huge — chocolate, beer, comics, EU. What does that tell you about the size of a country?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Belgian foods, places and things to spot.",
+    words: [
+      "BELGIUM",
+      "BRUSSELS",
+      "WAFFLE",
+      "CHOCOLATE",
+      "BEER",
+      "FRIES",
+      "COMIC",
+      "LACE",
+      "CANAL",
+      "BIKE",
+    ],
+  },
 }
 
 // ── NETHERLANDS (premium, live) ──────────────────────────────────
@@ -3334,6 +3754,21 @@ export const NETHERLANDS_DATA: AdventurePackData = {
     { question: 'Have you seen a real windmill in action? Or a tulip field? Or a houseboat?' },
     { question: 'Most of the country shouldn\'t be there — the sea would take it back without the dykes. What do you do with a country built on top of water?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Dutch foods, places and things to spot.",
+    words: [
+      "TULIP",
+      "WINDMILL",
+      "CHEESE",
+      "BIKE",
+      "CANAL",
+      "AMSTERDAM",
+      "GOUDA",
+      "CLOG",
+      "ORANGE",
+      "DUTCH",
+    ],
+  },
 }
 
 // ── UAE (premium, live) ──────────────────────────────────────────
@@ -3443,6 +3878,21 @@ export const UAE_DATA: AdventurePackData = {
     { question: 'Old (camels, desert, souks) vs new (skyscrapers, ski slopes, malls) — which side has surprised you more?' },
     { question: '88% of the people here are foreign workers. Does the city feel international or Emirati to you?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Emirati foods, places and things to spot.",
+    words: [
+      "DUBAI",
+      "DESERT",
+      "CAMEL",
+      "DATES",
+      "FALCON",
+      "SOUK",
+      "GOLD",
+      "BURJ",
+      "OASIS",
+      "ABRA",
+    ],
+  },
 }
 
 // ── SOUTH AFRICA (premium, live) ─────────────────────────────────
@@ -3553,6 +4003,21 @@ export const SOUTH_AFRICA_DATA: AdventurePackData = {
     { question: 'Eleven languages, two oceans, three capitals, a million ways of being South African. What\'s been the most surprising thing?' },
     { question: 'Mandela chose forgiveness over revenge to keep the country together. Could that work in other places too?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "South African foods, places and things to spot.",
+    words: [
+      "CAPETOWN",
+      "LION",
+      "SAFARI",
+      "BILTONG",
+      "BRAAI",
+      "RHINO",
+      "ELEPHANT",
+      "ZULU",
+      "GOLD",
+      "OSTRICH",
+    ],
+  },
 }
 
 // ── PAKISTAN (premium, live) ─────────────────────────────────────
@@ -3663,6 +4128,21 @@ export const PAKISTAN_DATA: AdventurePackData = {
     { question: 'Mountains, cities, deserts, beach — which side of Pakistan would you most want to return to?' },
     { question: 'Pakistan is younger than your grandparents but sits on a 5,000-year-old civilisation. How does it feel to walk somewhere that ancient?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Pakistani foods, places and things to spot.",
+    words: [
+      "PAKISTAN",
+      "BIRYANI",
+      "CRICKET",
+      "KAMEEZ",
+      "NAAN",
+      "CHAI",
+      "KARACHI",
+      "LAHORE",
+      "MANGO",
+      "MOUNTAIN",
+    ],
+  },
 }
 
 // ── BANGLADESH (premium, live) ───────────────────────────────────
@@ -3773,6 +4253,21 @@ export const BANGLADESH_DATA: AdventurePackData = {
     { question: 'It rains HARD in monsoon season. Have you been caught in a really big downpour yet?' },
     { question: 'Bangladesh has 170 million people in a country smaller than England. What does "crowded" really mean once you have been here?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Bangladeshi foods, places and things to spot.",
+    words: [
+      "BANGLADESH",
+      "DHAKA",
+      "RICE",
+      "TIGER",
+      "RIVER",
+      "JUTE",
+      "FISH",
+      "BENGAL",
+      "MANGO",
+      "DELTA",
+    ],
+  },
 }
 
 // ── LAOS (premium, live) ─────────────────────────────────────────
@@ -3882,6 +4377,21 @@ export const LAOS_DATA: AdventurePackData = {
     { question: 'Laos is famously the most chilled-out country in South-East Asia. Have you felt that pace?' },
     { question: '75+ million unexploded bombs are still in the ground here. How do you live with that as a country?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: "Lao foods, places and things to spot.",
+    words: [
+      "LAOS",
+      "MEKONG",
+      "MONK",
+      "ELEPHANT",
+      "RICE",
+      "TEMPLE",
+      "BAGUETTE",
+      "JUNGLE",
+      "LANTERN",
+      "COFFEE",
+    ],
+  },
 }
 
 // Lookup table for fully-built packs.

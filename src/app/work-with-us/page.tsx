@@ -13,16 +13,63 @@ export default function WorkWithUsPage() {
   return (
     <div className="min-h-screen bg-sand-50">
 
-      {/* HERO */}
-      <section className="pt-32 pb-12 px-4 sm:px-6 lg:px-8">
+      {/* HERO — questionnaire is the primary first-touch, framed
+          around the visitor's own dream rather than the call funnel.
+          The call comes after, as the deeper option for people who
+          already know they want to talk it through. */}
+      <section className="pt-32 pb-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-4">How we can help</p>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-light text-gray-900 leading-[1.05] tracking-tight mb-6">
-            Talk it through with us, <span className="font-bold text-brand-700">one-to-one</span>
+            Always wanted to <span className="font-bold text-brand-700">take a year out</span> with your family?
           </h1>
           <p className="text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto">
-            Sometimes the most useful thing is a real conversation with someone who's actually done it. Book a 1:1 call with Bec and Oli to talk through your family's plans, costs, timing, and the bits you can't find in a guide.
+            Not sure where to start, or how close you really are right now? Long-term family travel isn&apos;t one decision — it&apos;s a hundred small ones, and most families spend years dreaming before they realise they&apos;re closer than they thought.
           </p>
+        </div>
+      </section>
+
+      {/* QUESTIONNAIRE CTA — the main "start here" option for most
+          first-time visitors. Tinted card, prominent link. */}
+      <section className="pb-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-brand-50 border-2 border-brand-200 rounded-2xl p-6 sm:p-8">
+            <div className="flex items-center gap-2 mb-3">
+              <Compass className="w-5 h-5 text-brand-700" />
+              <p className="text-xs font-bold tracking-widest uppercase text-brand-700">Start here · 5 minutes · free</p>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 leading-tight">
+              Take our pre-trip questionnaire
+            </h2>
+            <p className="text-sm sm:text-base text-gray-700 leading-relaxed mb-5 max-w-xl">
+              Honest answers to your own questions, in five minutes. You&apos;ll get a readiness score, your specific strengths and gaps, recommended travel style, and a clear next step you can act on this week.
+            </p>
+            <Link
+              href="/i-want-to-travel"
+              className="inline-flex items-center gap-1.5 btn-primary !text-sm"
+            >
+              Try the questionnaire <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* CALL INTRO — dark card, mirrors the "Book a 1:1" CTA in the
+          questionnaire results so anyone arriving from either funnel
+          sees the same pitch. */}
+      <section className="pb-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-brand-950 text-white rounded-2xl p-6 sm:p-8">
+            <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-3 inline-flex items-center gap-1.5">
+              <MessageCircle className="w-3.5 h-3.5" /> Or talk it through with us
+            </p>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3 leading-tight">
+              Book a 1:1 with us
+            </h2>
+            <p className="text-white/80 leading-relaxed text-sm sm:text-base max-w-xl">
+              We&apos;ve done this. We travel full-time as a family and we know what it actually takes — not the highlight reel version, the real one. If you want to talk through your specific situation, work out where the gaps are, and make a plan that fits your family, fill in the short form below.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -30,7 +77,7 @@ export default function WorkWithUsPage() {
       <section className="pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
-            <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-4">How it works</p>
+            <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-4">How the call works</p>
             <ol className="space-y-5">
               {[
                 {
@@ -68,7 +115,7 @@ export default function WorkWithUsPage() {
       {/* WHAT YOU'LL GET */}
       <section className="pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
-          <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-4">What you'll get out of it</p>
+          <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-4">What you'll get out of the call</p>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
               'Honest take on whether long-term travel is realistic for your family right now',
@@ -86,29 +133,6 @@ export default function WorkWithUsPage() {
               </li>
             ))}
           </ul>
-        </div>
-      </section>
-
-      {/* QUESTIONNAIRE NUDGE */}
-      <section className="pb-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-brand-50 border border-brand-200 rounded-2xl p-5 sm:p-6 flex items-start gap-4 flex-wrap">
-            <div className="w-10 h-10 bg-brand-100 rounded-xl flex items-center justify-center shrink-0">
-              <Compass className="w-5 h-5 text-brand-700" />
-            </div>
-            <div className="flex-1 min-w-[14rem]">
-              <p className="text-sm font-semibold text-brand-900 mb-1">Have you completed the I Want To Travel questionnaire?</p>
-              <p className="text-sm text-brand-900/80 leading-relaxed">
-                We recommend doing it first, it takes 5 minutes and gives us (and you) a clearer picture going into the call, so we can spend the time on what matters. Totally optional though, you can skip straight to booking below.
-              </p>
-            </div>
-            <Link
-              href="/i-want-to-travel"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 bg-white hover:bg-brand-100 border border-brand-200 px-4 py-2.5 rounded-md shrink-0 w-full sm:w-auto justify-center"
-            >
-              Take the questionnaire <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
         </div>
       </section>
 

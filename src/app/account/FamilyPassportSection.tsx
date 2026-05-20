@@ -20,14 +20,21 @@ export default async function FamilyPassportSection() {
       </div>
 
       {children.length === 0 ? (
-        <div className="text-center py-6">
-          <div className="text-5xl mb-3">🧒</div>
-          <h3 className="text-base font-bold text-gray-900 mb-1">Add your first child</h3>
-          <p className="text-sm text-gray-500 mb-5 max-w-md mx-auto">
-            Each child gets their own QR-coded passport, stamps and country map.
-          </p>
-          <AddChildForm />
-        </div>
+        // Quiet, neutral empty state. The previous version shoved an
+        // emoji + "add your first child" callout that landed badly for
+        // anyone who doesn't have (or hasn't added) kids yet. Just an
+        // expandable "Add a child" panel — no pressure to use it.
+        <details className="border border-gray-100 rounded-xl group">
+          <summary className="cursor-pointer inline-flex items-center gap-1.5 text-sm font-semibold text-gray-900 px-4 py-3">
+            <Plus className="w-4 h-4 text-brand-600" /> Add a child
+          </summary>
+          <div className="px-4 pb-4 pt-1 border-t border-gray-100">
+            <p className="text-xs text-gray-500 mb-3">
+              Each child gets their own QR-coded passport, stamps and country map.
+            </p>
+            <AddChildForm />
+          </div>
+        </details>
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">

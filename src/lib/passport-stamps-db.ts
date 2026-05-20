@@ -157,6 +157,7 @@ const SECTION_STAMPS: Record<SectionKey, StampType[]> = {
   stories:    ['STORY_KEEPER'],
   convo:      ['FAMILY_CHATTERBOX'],
   wordsearch: [], // no dedicated stamp — folds into ADVENTURE_PACK_COMPLETE
+  tilepuzzle: [], // no dedicated stamp — folds into ADVENTURE_PACK_COMPLETE
 }
 
 export function autoStampsForMissionComplete(section: SectionKey): StampType[] {

@@ -16,7 +16,7 @@ import type { AdventurePackMeta, SectionKey } from './adventurePackTypes'
 import { SECTION_KEYS } from './adventurePackTypes'
 
 export const PACK_META: AdventurePackMeta[] = [
-  { slug: 'france',         country: 'France',         flag: '🇫🇷', iso2: 'fr', isFree: true,  heroColour: 'bg-brand-900',   status: 'live', continent: 'Europe', hasWordSearch: true },
+  { slug: 'france',         country: 'France',         flag: '🇫🇷', iso2: 'fr', isFree: true,  heroColour: 'bg-brand-900',   status: 'live', continent: 'Europe', hasWordSearch: true, hasTilePuzzle: true },
   { slug: 'morocco',        country: 'Morocco',        flag: '🇲🇦', iso2: 'ma', isFree: false, heroColour: 'bg-amber-900',   status: 'live', continent: 'Africa' },
   { slug: 'indonesia',      country: 'Indonesia',      flag: '🇮🇩', iso2: 'id', isFree: false, heroColour: 'bg-rose-700',    status: 'live', continent: 'Asia' },
   { slug: 'thailand',       country: 'Thailand',       flag: '🇹🇭', iso2: 'th', isFree: false, heroColour: 'bg-fuchsia-700', status: 'live', continent: 'Asia' },
@@ -63,7 +63,12 @@ export function getPackMeta(slug: string): AdventurePackMeta | null {
 export function getPackSectionKeys(slug: string): SectionKey[] {
   const meta = getPackMeta(slug)
   const hasWordSearch = !!meta?.hasWordSearch
-  return SECTION_KEYS.filter(k => k !== 'wordsearch' || hasWordSearch)
+  const hasTilePuzzle = !!meta?.hasTilePuzzle
+  return SECTION_KEYS.filter(k => {
+    if (k === 'wordsearch') return hasWordSearch
+    if (k === 'tilepuzzle') return hasTilePuzzle
+    return true
+  })
 }
 
 export function getPackSectionCount(slug: string): number {

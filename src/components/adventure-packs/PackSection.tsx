@@ -18,6 +18,7 @@ import SensesSection from './sections/SensesSection'
 import StoriesSection from './sections/StoriesSection'
 import ConvoSection from './sections/ConvoSection'
 import WordSearchSection from './sections/WordSearchSection'
+import TilePuzzleSection from './sections/TilePuzzleSection'
 
 type Props = {
   sectionKey: SectionKey
@@ -41,6 +42,7 @@ export default function PackSection({ sectionKey, data, pack }: Props) {
       case 'stories':    return <StoriesSection data={data} pack={pack} />
       case 'convo':      return <ConvoSection data={data} pack={pack} />
       case 'wordsearch': return <WordSearchSection data={data} pack={pack} />
+      case 'tilepuzzle': return <TilePuzzleSection data={data} pack={pack} />
     }
   })()
 

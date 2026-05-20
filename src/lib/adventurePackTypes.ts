@@ -16,6 +16,7 @@ export const SECTION_KEYS = [
   'stories',
   'convo',
   'wordsearch',
+  'tilepuzzle',
 ] as const
 
 export type SectionKey = typeof SECTION_KEYS[number]
@@ -32,6 +33,7 @@ export const SECTION_LABELS: Record<SectionKey, string> = {
   stories:    'Stories',
   convo:      'Family chat',
   wordsearch: 'Word search',
+  tilepuzzle: 'Flag puzzle',
 }
 
 // Emoji shown on the mission picker buttons.
@@ -47,6 +49,7 @@ export const SECTION_EMOJI: Record<SectionKey, string> = {
   stories:    '📖',
   convo:      '☕',
   wordsearch: '🔠',
+  tilepuzzle: '🧩',
 }
 
 export interface Phrase {
@@ -161,10 +164,18 @@ export interface AdventurePackData {
 }
 
 // Sections actually visible (and required for completion) for a given
-// pack. Optional sections (currently just `wordsearch`) only count
-// for countries whose data block includes them.
-export function getPackSections(data: Pick<AdventurePackData, 'wordSearch'>): SectionKey[] {
-  return SECTION_KEYS.filter(k => k !== 'wordsearch' || !!data.wordSearch)
+// pack. Optional sections only count for countries whose data block /
+// meta opts them in.
+export function getPackSections(
+  data: Pick<AdventurePackData, 'wordSearch'>,
+  opts?: { hasTilePuzzle?: boolean },
+): SectionKey[] {
+  const hasTilePuzzle = !!opts?.hasTilePuzzle
+  return SECTION_KEYS.filter(k => {
+    if (k === 'wordsearch') return !!data.wordSearch
+    if (k === 'tilepuzzle') return hasTilePuzzle
+    return true
+  })
 }
 
 // Continents we group packs by in the listing UIs.
@@ -198,6 +209,12 @@ export interface AdventurePackMeta {
   // pack data into their Worker bundle. Update this when you add a
   // word-search list to the corresponding data block.
   hasWordSearch?: boolean
+  // Toggle the flag-tile sliding puzzle on per-country. The puzzle
+  // itself needs no pack data (it just slices the country flag from
+  // flagcdn), but we still opt in country-by-country so the missions
+  // count stays even per pack and so we can ship the puzzle to one
+  // country at a time without surprising others.
+  hasTilePuzzle?: boolean
 }
 
 // ── Saved-state types ───────────────────────────────────────────

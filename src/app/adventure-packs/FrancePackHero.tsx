@@ -126,7 +126,7 @@ export default function FrancePackHero({ signedIn }: Props) {
           so it stays honest as new sections roll out. */}
       <div className="px-6 sm:px-8 py-5 border-t border-gray-100">
         <p className="text-xs font-bold tracking-widest uppercase text-gray-500 mb-3">{SECTION_KEYS.length} missions in the France pack</p>
-        <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
           {SECTION_KEYS.map(k => (
             <div
               key={k}

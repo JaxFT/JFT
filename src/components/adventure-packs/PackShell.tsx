@@ -13,6 +13,7 @@ import { ArrowLeft, Trash2, Check, ChevronLeft, ChevronRight } from 'lucide-reac
 import { useAdventurePack } from '@/hooks/useAdventurePack'
 import type { AdventurePackData, SectionKey } from '@/lib/adventurePackTypes'
 import { SECTION_LABELS, SECTION_EMOJI, getPackSections } from '@/lib/adventurePackTypes'
+import { getPackMeta } from '@/lib/adventurePackMeta'
 import AgeToggle from './AgeToggle'
 import DataNotice from './DataNotice'
 import ClearDataModal from './ClearDataModal'
@@ -62,8 +63,12 @@ export default function PackShell({
   }
   const [showAgeBanner, setShowAgeBanner] = useState<string | null>(null)
   // Which sections appear for this country (filters out optional
-  // sections like wordsearch when the pack hasn't been authored yet).
-  const sections = useMemo(() => getPackSections(data), [data])
+  // sections — wordsearch needs pack data, tile puzzle needs the
+  // meta opt-in — when the pack hasn't been authored yet).
+  const sections = useMemo(
+    () => getPackSections(data, { hasTilePuzzle: !!getPackMeta(data.slug)?.hasTilePuzzle }),
+    [data],
+  )
   // Currently-selected mission. Defaults to the first; flips to the
   // first incomplete mission once the saved state has loaded so a
   // returning user picks up where they likely left off.
@@ -166,7 +171,7 @@ export default function PackShell({
               style={{ width: `${percent}%` }}
             />
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-5 lg:grid-cols-10 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-2">
             {sections.map(k => {
               const isCurrent = currentSection === k
               const isDone = pack.isMissionComplete(k)

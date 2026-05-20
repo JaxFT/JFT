@@ -6,8 +6,7 @@ import { Stamp as StampIcon, Globe, Trophy, ArrowRight, Check, Compass, ChevronD
 import PassportPage from '@/components/passport/PassportPage'
 import PassportStamp from '@/components/passport/PassportStamp'
 import CountryFlag from '@/components/CountryFlag'
-import { getPackMeta } from '@/lib/adventurePackMeta'
-import { SECTION_KEYS } from '@/lib/adventurePackTypes'
+import { getPackMeta, getPackSectionCount } from '@/lib/adventurePackMeta'
 import type { StampRow, KidStats, AssignedPackRow } from '@/lib/passport-kid-db'
 import type { PermissionMode } from '@/lib/passport-types'
 
@@ -25,7 +24,6 @@ export default function PassportTab({
   assignedPacks: AssignedPackRow[]
 }) {
   const recent = stamps.slice(0, 6)
-  const totalSections = SECTION_KEYS.length
   // Default closed: the catalogue is large now, so the page loads on
   // the recent-stamps preview instead of pushing it below the fold.
   const [packsOpen, setPacksOpen] = useState(false)
@@ -91,7 +89,8 @@ export default function PassportTab({
               {sortPacks(assignedPacks).map(p => {
                 const meta = getPackMeta(p.country_slug)
                 if (!meta) return null
-                const done = p.missions_complete.length
+                const totalSections = getPackSectionCount(p.country_slug)
+                const done = Math.min(p.missions_complete.length, totalSections)
                 const isComplete = !!p.completed_at
                 const isStarted = done > 0
                 return (

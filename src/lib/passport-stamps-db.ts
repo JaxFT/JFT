@@ -146,16 +146,17 @@ export function autoStampsForSection(
 // (3+ foods tried / 3+ phrases used) so kids actually have to engage
 // rather than tick "complete" without doing anything.
 const SECTION_STAMPS: Record<SectionKey, StampType[]> = {
-  map:       ['MAP_READER'],
-  language:  [], // gated by 3+ used-* in autoStampsForSection
-  money:     ['MONEY_CHANGER'],
-  food:      [], // gated by 3+ tried-* in autoStampsForSection
-  geography: ['GEOGRAPHY_GENIUS'],
-  scavenger: ['SCAVENGER_HUNTER'],
-  animals:   [], // gated by 3+ spotted-* in autoStampsForSection
-  senses:    ['SENSE_SEEKER'],
-  stories:   ['STORY_KEEPER'],
-  convo:     ['FAMILY_CHATTERBOX'],
+  map:        ['MAP_READER'],
+  language:   [], // gated by 3+ used-* in autoStampsForSection
+  money:      ['MONEY_CHANGER'],
+  food:       [], // gated by 3+ tried-* in autoStampsForSection
+  geography:  ['GEOGRAPHY_GENIUS'],
+  scavenger:  ['SCAVENGER_HUNTER'],
+  animals:    [], // gated by 3+ spotted-* in autoStampsForSection
+  senses:     ['SENSE_SEEKER'],
+  stories:    ['STORY_KEEPER'],
+  convo:      ['FAMILY_CHATTERBOX'],
+  wordsearch: [], // no dedicated stamp — folds into ADVENTURE_PACK_COMPLETE
 }
 
 export function autoStampsForMissionComplete(section: SectionKey): StampType[] {

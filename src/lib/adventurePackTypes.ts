@@ -15,35 +15,38 @@ export const SECTION_KEYS = [
   'senses',
   'stories',
   'convo',
+  'wordsearch',
 ] as const
 
 export type SectionKey = typeof SECTION_KEYS[number]
 
 export const SECTION_LABELS: Record<SectionKey, string> = {
-  map:       'Map mission',
-  language:  'Language',
-  money:     'Money',
-  food:      'Food',
-  geography: 'Geography',
-  scavenger: 'Scavenger hunt',
-  animals:   'Animal spotter',
-  senses:    'Senses',
-  stories:   'Stories',
-  convo:     'Family chat',
+  map:        'Map mission',
+  language:   'Language',
+  money:      'Money',
+  food:       'Food',
+  geography:  'Geography',
+  scavenger:  'Scavenger hunt',
+  animals:    'Animal spotter',
+  senses:     'Senses',
+  stories:    'Stories',
+  convo:      'Family chat',
+  wordsearch: 'Word search',
 }
 
 // Emoji shown on the mission picker buttons.
 export const SECTION_EMOJI: Record<SectionKey, string> = {
-  map:       '🗺️',
-  language:  '🗣️',
-  money:     '💰',
-  food:      '🍽️',
-  geography: '🌍',
-  scavenger: '🔎',
-  animals:   '🐾',
-  senses:    '✨',
-  stories:   '📖',
-  convo:     '☕',
+  map:        '🗺️',
+  language:   '🗣️',
+  money:      '💰',
+  food:       '🍽️',
+  geography:  '🌍',
+  scavenger:  '🔎',
+  animals:    '🐾',
+  senses:     '✨',
+  stories:    '📖',
+  convo:      '☕',
+  wordsearch: '🔠',
 }
 
 export interface Phrase {
@@ -109,6 +112,18 @@ export interface CurrencyInfo {
   budgetNote: string
 }
 
+// Local words (foods, places, things to spot) hidden in a tap-to-colour
+// grid. The grid itself is generated at render time from the word list
+// using a slug-seeded RNG, so the layout is stable per country without
+// having to hand-craft each puzzle.
+export interface WordSearchData {
+  // 8–12 uppercase A–Z words. No spaces, punctuation, or accents.
+  words: string[]
+  // One-line intro shown above the grid (e.g. "French foods, places
+  // and things to spot").
+  hint: string
+}
+
 export interface SensesPlaceholders {
   smell: string
   hear: string
@@ -139,6 +154,17 @@ export interface AdventurePackData {
   // populated (possibly to `[]`) by the time a Section component
   // sees the pack.
   animals?: AnimalItem[]
+  // Word search is rolling out one country at a time. Packs without
+  // a word list don't render the section in the picker and don't
+  // count it toward pack completion.
+  wordSearch?: WordSearchData
+}
+
+// Sections actually visible (and required for completion) for a given
+// pack. Optional sections (currently just `wordsearch`) only count
+// for countries whose data block includes them.
+export function getPackSections(data: Pick<AdventurePackData, 'wordSearch'>): SectionKey[] {
+  return SECTION_KEYS.filter(k => k !== 'wordsearch' || !!data.wordSearch)
 }
 
 // Continents we group packs by in the listing UIs.
@@ -166,6 +192,12 @@ export interface AdventurePackMeta {
   heroColour: string        // fallback bg while the flag image loads
   status: 'live' | 'coming-soon'
   continent: Continent
+  // Mirrors `data.wordSearch` presence so the kid tabs (which import
+  // the lightweight meta, not the full data file) can compute the
+  // correct missions-total per country without pulling the 4000-line
+  // pack data into their Worker bundle. Update this when you add a
+  // word-search list to the corresponding data block.
+  hasWordSearch?: boolean
 }
 
 // ── Saved-state types ───────────────────────────────────────────

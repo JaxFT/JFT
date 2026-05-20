@@ -12,10 +12,11 @@
 // Routes that DO need full content (the actual pack pages) still import
 // `getPackData` from adventurePackData.ts.
 
-import type { AdventurePackMeta } from './adventurePackTypes'
+import type { AdventurePackMeta, SectionKey } from './adventurePackTypes'
+import { SECTION_KEYS } from './adventurePackTypes'
 
 export const PACK_META: AdventurePackMeta[] = [
-  { slug: 'france',         country: 'France',         flag: '🇫🇷', iso2: 'fr', isFree: true,  heroColour: 'bg-brand-900',   status: 'live', continent: 'Europe' },
+  { slug: 'france',         country: 'France',         flag: '🇫🇷', iso2: 'fr', isFree: true,  heroColour: 'bg-brand-900',   status: 'live', continent: 'Europe', hasWordSearch: true },
   { slug: 'morocco',        country: 'Morocco',        flag: '🇲🇦', iso2: 'ma', isFree: false, heroColour: 'bg-amber-900',   status: 'live', continent: 'Africa' },
   { slug: 'indonesia',      country: 'Indonesia',      flag: '🇮🇩', iso2: 'id', isFree: false, heroColour: 'bg-rose-700',    status: 'live', continent: 'Asia' },
   { slug: 'thailand',       country: 'Thailand',       flag: '🇹🇭', iso2: 'th', isFree: false, heroColour: 'bg-fuchsia-700', status: 'live', continent: 'Asia' },
@@ -54,6 +55,19 @@ export const PACK_META: AdventurePackMeta[] = [
 
 export function getPackMeta(slug: string): AdventurePackMeta | null {
   return PACK_META.find(p => p.slug === slug) ?? null
+}
+
+// Sections that count toward this country's completion. Mirrors
+// `getPackSections(data)` for callers that only have the slug/meta
+// (the kid tabs, the kid country page, the session-save API route).
+export function getPackSectionKeys(slug: string): SectionKey[] {
+  const meta = getPackMeta(slug)
+  const hasWordSearch = !!meta?.hasWordSearch
+  return SECTION_KEYS.filter(k => k !== 'wordsearch' || hasWordSearch)
+}
+
+export function getPackSectionCount(slug: string): number {
+  return getPackSectionKeys(slug).length
 }
 
 // Look up a pack by its ISO 3166-1 alpha-2 country code. Used to

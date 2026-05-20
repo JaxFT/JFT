@@ -8,7 +8,8 @@
 import { useMemo, useState } from 'react'
 import { Lock, Crown, ArrowRight, Search, ChevronDown } from 'lucide-react'
 import FlagHalfBanner from '@/components/adventure-packs/FlagHalfBanner'
-import { CONTINENT_ORDER, SECTION_KEYS, SECTION_EMOJI, SECTION_LABELS, type Continent } from '@/lib/adventurePackTypes'
+import { CONTINENT_ORDER, SECTION_EMOJI, SECTION_LABELS, type Continent } from '@/lib/adventurePackTypes'
+import { getPackSectionKeys } from '@/lib/adventurePackMeta'
 
 type PackLite = {
   slug: string
@@ -151,12 +152,11 @@ function PackCard({
         </span>
       </div>
       <div className="p-5 flex-1 flex flex-col">
-        <p className="text-xs text-gray-500 mb-2">10 missions · Ages 5–11</p>
-        {/* Mission emoji strip — same 10 missions across every pack;
-            visual texture more than information. Tiny title attributes
-            so curious visitors can hover for the label. */}
+        <p className="text-xs text-gray-500 mb-2">{getPackSectionKeys(pack.slug).length} missions · Ages 5–11</p>
+        {/* Mission emoji strip — most packs share the same 10 missions;
+            packs with the bonus word search get an 11th tile. */}
         <div className="flex flex-wrap gap-1 mb-3 opacity-80">
-          {SECTION_KEYS.map(k => (
+          {getPackSectionKeys(pack.slug).map(k => (
             <span
               key={k}
               title={SECTION_LABELS[k]}

@@ -120,10 +120,12 @@ export default function FrancePackHero({ signedIn }: Props) {
         </div>
       </div>
 
-      {/* MISSIONS STRIP — show all 10 mission emojis so the writer can
-          scan what's in every pack at a glance. */}
+      {/* MISSIONS STRIP — show every mission emoji so the writer can
+          scan what's in every pack at a glance. France currently has
+          the bonus wordsearch; the count derives from SECTION_KEYS
+          so it stays honest as new sections roll out. */}
       <div className="px-6 sm:px-8 py-5 border-t border-gray-100">
-        <p className="text-xs font-bold tracking-widest uppercase text-gray-500 mb-3">10 missions in every pack</p>
+        <p className="text-xs font-bold tracking-widest uppercase text-gray-500 mb-3">{SECTION_KEYS.length} missions in the France pack</p>
         <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
           {SECTION_KEYS.map(k => (
             <div

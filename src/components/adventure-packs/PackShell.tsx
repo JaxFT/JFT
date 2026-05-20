@@ -7,12 +7,12 @@
 //   - ONLY the selected mission renders below (tab-style nav)
 //   - clear-all button at the bottom
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Trash2, Check, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useAdventurePack } from '@/hooks/useAdventurePack'
 import type { AdventurePackData, SectionKey } from '@/lib/adventurePackTypes'
-import { SECTION_KEYS, SECTION_LABELS, SECTION_EMOJI } from '@/lib/adventurePackTypes'
+import { SECTION_LABELS, SECTION_EMOJI, getPackSections } from '@/lib/adventurePackTypes'
 import AgeToggle from './AgeToggle'
 import DataNotice from './DataNotice'
 import ClearDataModal from './ClearDataModal'
@@ -61,18 +61,21 @@ export default function PackShell({
     }
   }
   const [showAgeBanner, setShowAgeBanner] = useState<string | null>(null)
+  // Which sections appear for this country (filters out optional
+  // sections like wordsearch when the pack hasn't been authored yet).
+  const sections = useMemo(() => getPackSections(data), [data])
   // Currently-selected mission. Defaults to the first; flips to the
   // first incomplete mission once the saved state has loaded so a
   // returning user picks up where they likely left off.
-  const [currentSection, setCurrentSection] = useState<SectionKey>(SECTION_KEYS[0])
+  const [currentSection, setCurrentSection] = useState<SectionKey>(sections[0])
   const [hasJumpedToFirstIncomplete, setHasJumpedToFirstIncomplete] = useState(false)
 
   useEffect(() => {
     if (pack.loading || hasJumpedToFirstIncomplete) return
-    const firstIncomplete = SECTION_KEYS.find(k => !pack.isMissionComplete(k))
+    const firstIncomplete = sections.find(k => !pack.isMissionComplete(k))
     if (firstIncomplete) setCurrentSection(firstIncomplete)
     setHasJumpedToFirstIncomplete(true)
-  }, [pack.loading, pack.isMissionComplete, hasJumpedToFirstIncomplete])
+  }, [pack.loading, pack.isMissionComplete, hasJumpedToFirstIncomplete, sections])
 
   const goToSection = (key: SectionKey) => {
     setCurrentSection(key)
@@ -86,9 +89,9 @@ export default function PackShell({
     }
   }
 
-  const currentIdx = SECTION_KEYS.indexOf(currentSection)
-  const prevSection = currentIdx > 0 ? SECTION_KEYS[currentIdx - 1] : null
-  const nextSection = currentIdx < SECTION_KEYS.length - 1 ? SECTION_KEYS[currentIdx + 1] : null
+  const currentIdx = sections.indexOf(currentSection)
+  const prevSection = currentIdx > 0 ? sections[currentIdx - 1] : null
+  const nextSection = currentIdx < sections.length - 1 ? sections[currentIdx + 1] : null
 
   const onAgeChange = (mode: typeof pack.ageMode) => {
     if (mode !== pack.ageMode) {
@@ -98,7 +101,11 @@ export default function PackShell({
     }
   }
 
-  const percent = Math.round((pack.missionsComplete.length / SECTION_KEYS.length) * 100)
+  // Only count completions of sections that actually exist for this
+  // pack — guards against an old saved row carrying a section key
+  // (e.g. 'wordsearch') that this country doesn't currently have.
+  const relevantCompletions = pack.missionsComplete.filter(m => (sections as string[]).includes(m))
+  const percent = Math.round((relevantCompletions.length / sections.length) * 100)
   const expiryLabel = formatExpiry(pack.expiresAt)
 
   return (
@@ -150,7 +157,7 @@ export default function PackShell({
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <p className="text-xs font-bold tracking-widest uppercase text-brand-600">Pick a mission</p>
             <p className="text-xs font-mono tabular-nums text-gray-600">
-              {pack.missionsComplete.length} / {SECTION_KEYS.length} &middot; {percent}%
+              {relevantCompletions.length} / {sections.length} &middot; {percent}%
             </p>
           </div>
           <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-4">
@@ -160,7 +167,7 @@ export default function PackShell({
             />
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-5 lg:grid-cols-10 gap-2">
-            {SECTION_KEYS.map(k => {
+            {sections.map(k => {
               const isCurrent = currentSection === k
               const isDone = pack.isMissionComplete(k)
               return (

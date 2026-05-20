@@ -4,6 +4,7 @@ import {
   awardOrSuggestStamp, autoStampsForMissionComplete,
 } from '@/lib/passport-stamps-db'
 import { SECTION_KEYS } from '@/lib/adventurePackTypes'
+import { getPackSectionKeys } from '@/lib/adventurePackMeta'
 import type { AgeMode, SectionKey } from '@/lib/adventurePackTypes'
 
 export const dynamic = 'force-dynamic'
@@ -12,9 +13,10 @@ export const runtime = 'nodejs'
 // PUT /api/kid/[token]/pack/[slug]/session
 // Body: { age_mode: 'younger'|'older', missions_complete: string[] }
 // Upserts the session row. May also insert a child_country_visits row
-// (on first interaction) and set completed_at (on the run where all
-// 9 missions are first complete). On first completion, fires the
-// ADVENTURE_PACK_COMPLETE stamp through the stamp engine.
+// (on first interaction) and set completed_at (on the run where every
+// mission this pack actually has is first complete). On first
+// completion, fires the ADVENTURE_PACK_COMPLETE stamp through the
+// stamp engine.
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ token: string; slug: string }> },
@@ -37,12 +39,16 @@ export async function PUT(
         typeof m === 'string' && (SECTION_KEYS as readonly string[]).includes(m))
     : []
 
+  // Per-pack section count — optional sections like 'wordsearch' only
+  // count for countries whose data block includes them, so a pack
+  // without wordsearch still completes at 10/10 (not 10/11).
+  const packSectionCount = getPackSectionKeys(slug).length
   const result = await saveKidSession(
     resolved.child.id,
     slug,
     ageMode,
     missions,
-    SECTION_KEYS.length,
+    packSectionCount,
   )
 
   // Mission-completion auto-stamps. Fires BRAVE_EATER when the food

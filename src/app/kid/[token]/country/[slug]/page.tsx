@@ -10,8 +10,7 @@ import {
   getKidPackProgress,
 } from '@/lib/passport-kid-db'
 import { listJournalEntriesForChildCountry } from '@/lib/passport-journal-db'
-import { getPackMeta } from '@/lib/adventurePackMeta'
-import { SECTION_KEYS } from '@/lib/adventurePackTypes'
+import { getPackMeta, getPackSectionCount } from '@/lib/adventurePackMeta'
 import PassportPage from '@/components/passport/PassportPage'
 import PassportStamp from '@/components/passport/PassportStamp'
 import FlagBanner from '@/components/adventure-packs/FlagBanner'
@@ -109,30 +108,38 @@ export default async function KidCountryPage({
               className="block bg-white/60 hover:bg-white rounded-xl p-4 transition-colors"
               style={{ color: '#3a2810' }}
             >
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <p className="font-bold">
-                    {progress?.completedAt ? 'Pack complete' :
-                     progress?.missionsComplete?.length
-                       ? `${progress.missionsComplete.length} of ${SECTION_KEYS.length} missions done`
-                       : 'Tap to start'}
-                  </p>
-                  {progress?.completedAt && (
-                    <p className="text-xs mt-0.5 opacity-70 inline-flex items-center gap-1">
-                      <Check className="w-3 h-3" /> Finished {formatDate(progress.completedAt)}
-                    </p>
-                  )}
-                </div>
-                <ArrowRight className="w-4 h-4 opacity-50" />
-              </div>
-              {progress && !progress.completedAt && progress.missionsComplete.length > 0 && (
-                <div className="mt-3 h-1 bg-amber-900/10 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-brand-600 transition-all"
-                    style={{ width: `${(progress.missionsComplete.length / SECTION_KEYS.length) * 100}%` }}
-                  />
-                </div>
-              )}
+              {(() => {
+                const totalSections = getPackSectionCount(slug)
+                const done = Math.min(progress?.missionsComplete?.length ?? 0, totalSections)
+                return (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <p className="font-bold">
+                          {progress?.completedAt ? 'Pack complete' :
+                           done > 0
+                             ? `${done} of ${totalSections} missions done`
+                             : 'Tap to start'}
+                        </p>
+                        {progress?.completedAt && (
+                          <p className="text-xs mt-0.5 opacity-70 inline-flex items-center gap-1">
+                            <Check className="w-3 h-3" /> Finished {formatDate(progress.completedAt)}
+                          </p>
+                        )}
+                      </div>
+                      <ArrowRight className="w-4 h-4 opacity-50" />
+                    </div>
+                    {progress && !progress.completedAt && done > 0 && (
+                      <div className="mt-3 h-1 bg-amber-900/10 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-brand-600 transition-all"
+                          style={{ width: `${(done / totalSections) * 100}%` }}
+                        />
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
             </Link>
           </section>
 

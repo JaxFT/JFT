@@ -2,8 +2,7 @@ import Link from 'next/link'
 import { ArrowRight, Stamp as StampIcon, Trophy, Home } from 'lucide-react'
 import PassportPage from '@/components/passport/PassportPage'
 import CountryFlag from '@/components/CountryFlag'
-import { getPackMeta, getPackByIso2 } from '@/lib/adventurePackMeta'
-import { SECTION_KEYS } from '@/lib/adventurePackTypes'
+import { getPackMeta, getPackByIso2, getPackSectionCount } from '@/lib/adventurePackMeta'
 import type {
   CountryVisitRow, StampRow, AssignedPackRow,
 } from '@/lib/passport-kid-db'
@@ -128,7 +127,7 @@ export default function CountriesTab({
                             <Trophy className="w-3.5 h-3.5" />
                             {isComplete
                               ? 'Pack complete'
-                              : `${missionsDone} / ${SECTION_KEYS.length} missions`}
+                              : `${Math.min(missionsDone, getPackSectionCount(v.country_slug))} / ${getPackSectionCount(v.country_slug)} missions`}
                           </p>
                         )}
                       </div>

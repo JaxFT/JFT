@@ -126,6 +126,21 @@ export const FRANCE_DATA: AdventurePackData = {
     { question: 'What\'s been the biggest surprise since we got here?' },
     { question: 'What\'s one French habit you\'d like to bring home with you?', olderOnly: true },
   ],
+  wordSearch: {
+    hint: 'French foods, places and things to spot.',
+    words: [
+      'CROISSANT',
+      'BAGUETTE',
+      'MACARON',
+      'FROMAGE',
+      'EIFFEL',
+      'LOUVRE',
+      'BERET',
+      'PARIS',
+      'CREPE',
+      'BRIE',
+    ],
+  },
 }
 
 // ── MOROCCO (premium, live) ──────────────────────────────────────

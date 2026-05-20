@@ -19,6 +19,7 @@ import { NextResponse } from 'next/server'
 import { createClient as createSbClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { stripeClient } from '@/lib/stripe'
+import { isAdminEmail } from '@/lib/admin'
 import { getPublishedWebGuideBySlug } from '@/lib/guides-content-db'
 import { userHasPurchasedWebGuide } from '@/lib/web-guide-purchases-db'
 import { claimWebGuidePurchase } from '@/lib/claim-web-guide-purchase'
@@ -68,9 +69,13 @@ export async function GET(
     if (!user) {
       return NextResponse.json({ error: 'Sign in required' }, { status: 401 })
     }
-    const purchased = await userHasPurchasedWebGuide(user.id, guide.id)
-    if (!purchased) {
-      return NextResponse.json({ error: 'You have not purchased this guide.' }, { status: 403 })
+    // Admins can download any guide free for QA / proofing — same
+    // file a buyer would get, watermarked with the admin's email.
+    if (!isAdminEmail(user.email)) {
+      const purchased = await userHasPurchasedWebGuide(user.id, guide.id)
+      if (!purchased) {
+        return NextResponse.json({ error: 'You have not purchased this guide.' }, { status: 403 })
+      }
     }
     buyerEmail = user.email ?? null
   }

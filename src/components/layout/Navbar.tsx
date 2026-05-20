@@ -23,6 +23,7 @@ const navLinks = [
   { label: 'About',            href: '/about' },
   { label: 'Blog',             href: '/blog' },
   { label: 'Guides',           href: '/guides' },
+  { label: 'How We Can Help',  href: '/work-with-us' },
   { label: 'Adventure Packs',  href: '/adventure-packs' },
   { label: 'Family Passport',  href: '/passports' },
   { label: 'Worldschooling',   href: '/learning' },
@@ -123,20 +124,9 @@ export default function Navbar({ initialUserId, initialUserEmail }: Props) {
             ))}
           </div>
 
-          {/* Right side: How We Can Help CTA + auth. The CTA gets the
-              loud button styling so the visitor's eye lands on the
-              conversion action and not a regular nav link. */}
+          {/* Right side: auth controls. "How We Can Help" now sits
+              inline with the other nav links rather than as a loud CTA. */}
           <div className="hidden md:flex items-center gap-3">
-            <a
-              href="/work-with-us"
-              className={`text-sm font-bold rounded-md transition-colors px-3.5 py-2 ${
-                transparent
-                  ? 'bg-white/15 text-white hover:bg-white/25 backdrop-blur-sm'
-                  : 'bg-brand-600 text-white hover:bg-brand-700'
-              }`}
-            >
-              How We Can Help
-            </a>
             {user ? (
               <div className="flex items-center gap-2">
                 {isAdmin && (
@@ -189,14 +179,6 @@ export default function Navbar({ initialUserId, initialUserEmail }: Props) {
       {menuOpen && (
         <div className="md:hidden bg-white border-t border-gray-100 shadow-lg">
           <div className="px-4 py-3 space-y-1">
-            {/* How We Can Help pinned at the top as a CTA button — it's
-                the highest-value conversion on the site. */}
-            <a
-              href="/work-with-us"
-              className="block px-3 py-2.5 rounded-md text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 text-center mb-2"
-            >
-              How We Can Help
-            </a>
             {navLinks.map(link => (
               <a
                 key={link.href}

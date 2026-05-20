@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Check, MessageCircle, Calendar, Mail, Compass } from 'lucide-react'
 import CallRequestForm from './CallRequestForm'
+import WaystaqCard from '@/components/WaystaqCard'
 
 export const metadata: Metadata = {
   title: 'Work With Us, 1:1 family travel call',
@@ -119,6 +120,19 @@ export default function WorkWithUsPage() {
             <p className="text-sm text-gray-500 mb-6">No commitment yet, we'll reply with availability and pricing.</p>
             <CallRequestForm />
           </div>
+        </div>
+      </section>
+
+      {/* WAYSTAQ CROSS-PROMO — pitched as the planning tool that
+          complements the 1:1 conversation. Sits between the form
+          and the brand-collab block. */}
+      <section className="pb-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto">
+          <WaystaqCard
+            title="Need to plan it yourself?"
+            body="If a call isn't right yet but you want the tool we use to actually run our family trips, Waystaq is free and built for this exact job — plan routes, track flights and visas, watch your daily spend."
+            ctaLabel="Try Waystaq free"
+          />
         </div>
       </section>
 

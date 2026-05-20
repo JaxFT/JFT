@@ -16,7 +16,7 @@ export default function WorkWithUsPage() {
       {/* HERO */}
       <section className="pt-32 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto text-center">
-          <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-4">Work with us</p>
+          <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-4">How we can help</p>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-light text-gray-900 leading-[1.05] tracking-tight mb-6">
             Talk it through with us, <span className="font-bold text-brand-700">one-to-one</span>
           </h1>
@@ -123,14 +123,14 @@ export default function WorkWithUsPage() {
         </div>
       </section>
 
-      {/* WAYSTAQ CROSS-PROMO — pitched as the planning tool that
-          complements the 1:1 conversation. Sits between the form
-          and the brand-collab block. */}
+      {/* WAYSTAQ CROSS-PROMO — confident endorsement, not a "if a call
+          isn't right" alternative. Three apps in one: trip details,
+          expense tracking, and task / admin / logistics manager. */}
       <section className="pb-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
           <WaystaqCard
-            title="Need to plan it yourself?"
-            body="If a call isn't right yet but you want the tool we use to actually run our family trips, Waystaq is free and built for this exact job — plan routes, track flights and visas, watch your daily spend."
+            title="Waystaq is brilliant — you should use it too"
+            body="Three apps in one: a trip planner that lays out every leg of your route, a daily expense tracker that shows where the money's actually going, and a task manager that keeps the admin and logistics from falling through the cracks. We use it every day, on the road and at home planning the next leg."
             ctaLabel="Try Waystaq free"
           />
         </div>

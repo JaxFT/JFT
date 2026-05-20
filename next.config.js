@@ -7,12 +7,10 @@ const nextConfig = {
     ],
   },
   async redirects() {
-    return [
-      // /i-want-to-travel is folded into /work-with-us — same funnel
-      // (readiness quiz + 1:1 calls). Permanent so search engines
-      // transfer the link equity over.
-      { source: '/i-want-to-travel', destination: '/work-with-us', permanent: true },
-    ]
+    // /i-want-to-travel used to redirect into /work-with-us back when
+    // it was a stub. The real readiness questionnaire now lives at
+    // /i-want-to-travel — no redirects needed.
+    return []
   },
   async headers() {
     return [

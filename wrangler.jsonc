@@ -10,6 +10,13 @@
   "observability": {
     "enabled": true
   },
+  // Explicit CPU ceiling per request on Workers Paid. Default budget
+  // is much tighter than the 30s plan max; making it explicit gives
+  // image-heavy paths (guide rendering, downloads) all the headroom
+  // they need without bumping into Error 1102.
+  "limits": {
+    "cpu_ms": 30000
+  },
   // Plaintext env vars (non-secrets). Wrangler wipes any dashboard-set
   // plaintext vars on deploy and uses ONLY what's here, so add them
   // here, not in the dashboard. Secrets (sk_, whsec_, service role,

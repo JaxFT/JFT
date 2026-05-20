@@ -140,7 +140,10 @@ async function inlineRemoteImages(html: string): Promise<InlineResult> {
 
   console.log(`[guide-download] inlining ${urls.size} images…`)
   const urlList = Array.from(urls)
-  const results = await mapWithLimit(urlList, 4, async u => [u, await fetchAsDataUri(u)] as const)
+  // Browser-side fetch, going direct to Supabase — Supabase happily
+  // serves 10 concurrent public-bucket reads. Higher concurrency
+  // gives noticeable wall-clock speedup on image-heavy guides.
+  const results = await mapWithLimit(urlList, 10, async u => [u, await fetchAsDataUri(u)] as const)
 
   let out = html
   let inlined = 0

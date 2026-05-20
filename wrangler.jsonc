@@ -10,14 +10,6 @@
   "observability": {
     "enabled": true
   },
-  // Raise the per-request CPU ceiling so the guide-download path
-  // (which fetches + base64-encodes every image in the guide on the
-  // fly) has room to breathe. Default budget on Workers Paid is much
-  // tighter than the 30s max; making it explicit fixes Error 1102
-  // "Worker exceeded resource limits" on the download endpoint.
-  "limits": {
-    "cpu_ms": 30000
-  },
   // Plaintext env vars (non-secrets). Wrangler wipes any dashboard-set
   // plaintext vars on deploy and uses ONLY what's here, so add them
   // here, not in the dashboard. Secrets (sk_, whsec_, service role,

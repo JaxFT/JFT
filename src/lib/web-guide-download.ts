@@ -75,6 +75,15 @@ async function fetchAsDataUri(url: string): Promise<string | null> {
   }
 }
 
+// Wrap every <table>…</table> in a scrollable container so wide
+// tables never push the rest of the page sideways on narrow
+// viewports. Applies to all guides, no per-guide configuration.
+function wrapTables(html: string): string {
+  return html
+    .replace(/<table\b/gi, '<div class="table-wrap"><table')
+    .replace(/<\/table>/gi, '</table></div>')
+}
+
 // Walk every <img src="…"> in the rendered HTML and replace remote
 // URLs with inline base64 data URIs. Lets the downloaded file open
 // fully offline (or from a file:// path where Supabase signed URLs
@@ -220,32 +229,44 @@ const STYLES = `
   }
   blockquote p:last-child { margin-bottom: 0; }
   img { max-width: 100%; height: auto; display: block; border-radius: 8px; margin: 20px auto; }
-  table {
-    width: 100%;
-    max-width: 100%;
-    border-collapse: collapse;
+  /* Every table is wrapped in .table-wrap by the renderer so wide
+     tables scroll horizontally rather than push the rest of the page
+     sideways. The wrap also bounds tables to the text column on
+     wide screens. */
+  .table-wrap {
     margin: 0 0 22px;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    /* Subtle hint when there's overflow — gradient fade on right edge */
+    background-image: linear-gradient(to right, transparent calc(100% - 18px), rgba(0,0,0,0.04));
+    background-attachment: local;
+    background-repeat: no-repeat;
+  }
+  table {
+    border-collapse: collapse;
     font-size: 0.95em;
     table-layout: auto;
+    margin: 0;
   }
   th, td {
     text-align: left;
     padding: 10px 12px;
     border-bottom: 1px solid var(--line);
     vertical-align: top;
-    /* overflow-wrap only breaks unbreakable strings (URLs, hashes).
-       word-break: break-word would split normal words letter-by-letter
-       when a column gets crushed in portrait. */
+    /* Wrap only unbreakable strings (URLs, hashes); leave normal
+       words intact so columns can be their natural width. */
     overflow-wrap: break-word;
     word-break: normal;
-    /* Stop short words from being squeezed to letter-stacking width */
-    min-width: 4em;
+    white-space: normal;
   }
   th {
     font-weight: 600;
     background: var(--brand-soft);
     color: var(--ink);
     border-bottom: 2px solid var(--brand);
+    /* Keep header labels on one line where possible */
+    white-space: nowrap;
   }
   tbody tr:last-child td { border-bottom: none; }
   code {
@@ -324,10 +345,15 @@ export async function renderGuideHtml(
   }
   const fullMarkdown = parts.join('\n\n---\n\n')
   const rawBodyHtml = await marked.parse(fullMarkdown)
+  // Wrap every <table> in a horizontally-scrollable div so wide
+  // tables never push the rest of the page sideways on narrow
+  // viewports. Universal — every guide gets this treatment, no
+  // per-guide tweaking required.
+  const wrappedHtml = wrapTables(rawBodyHtml)
   // Pull every body image down and embed it base64 so the file is
   // truly self-contained — opens correctly from Downloads on any
   // device, even with no internet.
-  const bodyHtml = await inlineRemoteImages(rawBodyHtml)
+  const bodyHtml = await inlineRemoteImages(wrappedHtml)
 
   // Pre-gen path (buyerEmail === undefined): embed a placeholder that
   // the download endpoint substitutes at serve time.

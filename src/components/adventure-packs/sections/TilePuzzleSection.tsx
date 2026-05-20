@@ -1,21 +1,18 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 import type { AdventurePackData } from '@/lib/adventurePackTypes'
 import type { PackHook } from '../PackShell'
 import Logo from '@/components/branding/Logo'
 
-const GRID = 4
-const TILES = GRID * GRID  // 16
 const EMPTY = -1
 
-// Solved state: tile values 0..14 fill positions 0..14, position 15
-// is the empty square. Tile value === its solved-state position, so
-// the value also tells us which slice of the flag the tile shows.
-const SOLVED: readonly number[] = Object.freeze(
-  Array.from({ length: TILES }, (_, i) => (i < TILES - 1 ? i : EMPTY)),
-)
+// Grid size is driven by age mode — easier puzzle for younger kids,
+// classic 15-puzzle for older. The component keys remount on this
+// value so all state recomputes cleanly.
+const GRID_FOR_YOUNGER = 3
+const GRID_FOR_OLDER = 4
 
 // Lightweight seeded RNG so the initial shuffle is stable across
 // reloads when there's no saved game yet.
@@ -38,55 +35,91 @@ function emptyIndex(state: readonly number[]): number {
   return state.indexOf(EMPTY)
 }
 
-function neighbours(idx: number): number[] {
-  const r = Math.floor(idx / GRID)
-  const c = idx % GRID
+function neighbours(idx: number, gridSize: number): number[] {
+  const r = Math.floor(idx / gridSize)
+  const c = idx % gridSize
   const out: number[] = []
-  if (r > 0)         out.push(idx - GRID)
-  if (r < GRID - 1)  out.push(idx + GRID)
-  if (c > 0)         out.push(idx - 1)
-  if (c < GRID - 1)  out.push(idx + 1)
+  if (r > 0)             out.push(idx - gridSize)
+  if (r < gridSize - 1)  out.push(idx + gridSize)
+  if (c > 0)             out.push(idx - 1)
+  if (c < gridSize - 1)  out.push(idx + 1)
   return out
+}
+
+function buildSolved(gridSize: number): number[] {
+  const n = gridSize * gridSize
+  return Array.from({ length: n }, (_, i) => (i < n - 1 ? i : EMPTY))
 }
 
 // Build a shuffled state by walking the empty square around the grid
 // at random. Guarantees solvability because we only ever do legal
 // slides. `avoidLast` keeps us from immediately undoing the previous
 // move, so 400 walks actually mix the board instead of jiggling.
-function shuffleByRandomMoves(rng: () => number, moves = 400): number[] {
-  const state: number[] = [...SOLVED]
+function shuffleByRandomMoves(rng: () => number, gridSize: number, moves = 400): number[] {
+  const state = buildSolved(gridSize)
+  const solved = state.slice()
   let lastEmpty = -1
   for (let i = 0; i < moves; i++) {
     const eIdx = emptyIndex(state)
-    const opts = neighbours(eIdx).filter(n => n !== lastEmpty)
+    const opts = neighbours(eIdx, gridSize).filter(n => n !== lastEmpty)
     const pick = opts[Math.floor(rng() * opts.length)]
     state[eIdx] = state[pick]
     state[pick] = EMPTY
     lastEmpty = eIdx
   }
   // Vanishingly unlikely, but if we wound up solved, walk once more.
-  if (state.every((v, i) => v === SOLVED[i])) return shuffleByRandomMoves(rng, moves)
+  if (state.every((v, i) => v === solved[i])) return shuffleByRandomMoves(rng, gridSize, moves)
   return state
 }
 
-// Solved-check that respects visual equivalence: two tiles are
-// interchangeable if they render the same pixels. For France's
-// vertical-stripe flag this means all four blue tiles in column 0
-// are equivalent (and so on per column); for Germany's horizontal
-// stripes it's per row; for emblem flags only the truly identical
-// corner squares match. If equivalence hasn't loaded yet, fall back
-// to strict tile-to-position matching so the puzzle still functions.
-function isVisuallySolved(state: readonly number[], eq: EquivalenceResult | null): boolean {
-  for (let pos = 0; pos < TILES; pos++) {
-    const here = state[pos]
-    const expected = SOLVED[pos]
-    if (here === expected) continue
-    // The empty square is the literal hole — it has to be in its own
-    // spot (last cell), otherwise the picture has a gap mid-flag.
-    if (here === EMPTY || expected === EMPTY) return false
-    if (!eq) return false
-    if (eq.groups[here] !== eq.groups[expected]) return false
+// Per-tile equivalence + per-tile "is this essentially one solid colour?"
+// + the colour to render for the latter. See computeFlagEquivalence.
+type EquivalenceResult = {
+  groups: number[]                    // tileId → equivalence group
+  pureColours: (string | null)[]      // tileId → rgb(…) when solid, else null
+}
+
+// Solved-check that respects visual equivalence in two ways:
+//
+//  1. Two real tiles in the same equivalence group are interchangeable
+//     (all four blue tiles in France's left column are the "same").
+//  2. The empty slot is treated as visually equivalent to whatever
+//     slice would sit at the BOTTOM-RIGHT in the solved flag (where
+//     the empty lives in the solved state). For flags like Nepal where
+//     the bottom-right is transparent and SO ARE several other tiles,
+//     this means the kid can leave the empty in any one of those
+//     transparent positions and the puzzle still registers as solved
+//     — provided position 15 itself ends up filled with something that
+//     looks like the bottom-right slice.
+//
+// For emblem flags (USA, UK) where the bottom-right slice is unique,
+// no other position is equivalent and the empty must still end at 15.
+function isVisuallySolved(
+  state: readonly number[],
+  eq: EquivalenceResult | null,
+  gridSize: number,
+  solved: readonly number[],
+): boolean {
+  if (!eq) {
+    return state.every((v, i) => v === solved[i])
   }
+  const last = gridSize * gridSize - 1
+  const targetGroup = eq.groups[last]
+  for (let pos = 0; pos < state.length; pos++) {
+    const here = state[pos]
+    const expected = solved[pos]
+    const hereGroup    = here     === EMPTY ? targetGroup : eq.groups[here]
+    const expectedGroup = expected === EMPTY ? targetGroup : eq.groups[expected]
+    if (hereGroup !== expectedGroup) return false
+  }
+  return true
+}
+
+function isValidSavedState(s: unknown, expectedLength: number): s is number[] {
+  if (!Array.isArray(s) || s.length !== expectedLength) return false
+  const sorted = [...s].sort((a, b) => a - b)
+  if (sorted[0] !== EMPTY) return false
+  for (let i = 1; i < sorted.length; i++) if (sorted[i] !== i - 1) return false
   return true
 }
 
@@ -102,19 +135,9 @@ function isVisuallySolved(state: readonly number[], eq: EquivalenceResult | null
 //    as a clean solid blue and groups with the other solid-blue tiles.
 //
 // PNG download is small (~5KB at w160), and we only do it once per mount.
-type EquivalenceResult = {
-  groups: number[]                    // tileId → equivalence group
-  pureColours: (string | null)[]      // tileId → rgb(…) when solid, else null
-}
-
 async function computeFlagEquivalence(iso2: string, gridSize: number): Promise<EquivalenceResult> {
   const url = `https://flagcdn.com/w160/${iso2.toLowerCase()}.png`
-  // % of sampled pixels in one colour bucket required to snap to solid.
-  // 92% lets through anti-aliasing along stripe edges without snapping
-  // tiles that are genuinely two colours.
   const PURE_THRESHOLD = 0.92
-  // 16 buckets per channel — fine enough to distinguish flag colours,
-  // coarse enough to merge near-identical pixels.
   const BUCKET_SHIFT = 4
 
   return new Promise<EquivalenceResult>((resolve, reject) => {
@@ -142,7 +165,6 @@ async function computeFlagEquivalence(iso2: string, gridSize: number): Promise<E
         for (let i = 0; i < gridSize * gridSize; i++) {
           const col = i % gridSize
           const row = Math.floor(i / gridSize)
-          // Collect raw RGB samples for this tile.
           const samples: number[][] = []
           for (let sy = 0; sy < SAMPLES; sy++) {
             for (let sx = 0; sx < SAMPLES; sx++) {
@@ -152,7 +174,6 @@ async function computeFlagEquivalence(iso2: string, gridSize: number): Promise<E
               samples.push([all[o], all[o + 1], all[o + 2]])
             }
           }
-          // Find the dominant colour bucket.
           const bucketCounts = new Map<string, number>()
           for (const [r, g, b] of samples) {
             const key = `${r >> BUCKET_SHIFT},${g >> BUCKET_SHIFT},${b >> BUCKET_SHIFT}`
@@ -167,9 +188,6 @@ async function computeFlagEquivalence(iso2: string, gridSize: number): Promise<E
 
           let sig: string
           if (dominantRatio >= PURE_THRESHOLD) {
-            // Snap the tile to the average RGB of pixels in the dominant
-            // bucket. Stragglers are ignored so the rendered colour is
-            // the colour of the bulk of the tile.
             let sR = 0, sG = 0, sB = 0, n = 0
             for (const [r, g, b] of samples) {
               const key = `${r >> BUCKET_SHIFT},${g >> BUCKET_SHIFT},${b >> BUCKET_SHIFT}`
@@ -179,7 +197,6 @@ async function computeFlagEquivalence(iso2: string, gridSize: number): Promise<E
             sig = `pure:${dominantKey}`
           } else {
             pureColours.push(null)
-            // Full pixel signature for mixed tiles.
             sig = samples.map(([r, g, b]) => `${r >> BUCKET_SHIFT}.${g >> BUCKET_SHIFT}.${b >> BUCKET_SHIFT}`).join(',')
           }
           let group = sigToGroup.get(sig)
@@ -199,80 +216,73 @@ async function computeFlagEquivalence(iso2: string, gridSize: number): Promise<E
   })
 }
 
-function isValidSavedState(s: unknown): s is number[] {
-  if (!Array.isArray(s) || s.length !== TILES) return false
-  const sorted = [...s].sort((a, b) => a - b)
-  if (sorted[0] !== EMPTY) return false
-  for (let i = 1; i < sorted.length; i++) if (sorted[i] !== i - 1) return false
-  return true
-}
-
-// flagcdn.com is what the rest of the project already uses (CountryFlag,
-// FlagBanner). SVG scales cleanly to whatever tile size the grid lands
-// at on the current viewport.
 function flagUrl(iso2: string): string {
   return `https://flagcdn.com/${iso2.toLowerCase()}.svg`
 }
 
-export default function TilePuzzleSection({ data, pack }: { data: AdventurePackData; pack: PackHook }) {
-  const seed = `${data.slug}-tile`
-  const url = flagUrl(data.iso2)
+type Props = { data: AdventurePackData; pack: PackHook }
 
-  // Restore from save if there's a valid one, otherwise generate a
-  // fresh deterministic shuffle. Lazy init only runs once — after
-  // mount this component owns the state.
+export default function TilePuzzleSection(props: Props) {
+  // Re-mount on age change so all GRID-dependent state recomputes
+  // cleanly without juggling separate saves. The two grid sizes save
+  // under distinct keys so flipping back doesn't lose either game.
+  return <PuzzleInner key={props.pack.ageMode} {...props} />
+}
+
+function PuzzleInner({ data, pack }: Props) {
+  const GRID = pack.ageMode === 'younger' ? GRID_FOR_YOUNGER : GRID_FOR_OLDER
+  const TILES = GRID * GRID
+  const solvedRef = useMemo(() => buildSolved(GRID), [GRID])
+  const seed = `${data.slug}-tile-${GRID}`
+  const url = flagUrl(data.iso2)
+  const stateKey = `state-${GRID}`
+  const movesKey = `moves-${GRID}`
+
   const [state, setState] = useState<number[]>(() => {
-    const saved = pack.getAnswer<unknown>('tilepuzzle', 'state', null)
-    if (isValidSavedState(saved)) return saved
-    return shuffleByRandomMoves(makeRng(seed))
+    const saved = pack.getAnswer<unknown>('tilepuzzle', stateKey, null)
+    if (isValidSavedState(saved, TILES)) return saved
+    return shuffleByRandomMoves(makeRng(seed), GRID)
   })
   const [moves, setMoves] = useState<number>(() => {
-    const saved = pack.getAnswer<number>('tilepuzzle', 'moves', 0)
+    const saved = pack.getAnswer<number>('tilepuzzle', movesKey, 0)
     return typeof saved === 'number' && saved >= 0 ? saved : 0
   })
 
-  // Snapshot the initial state on mount so the freshly-generated
-  // shuffle survives a reload even if the kid never actually moved a
-  // tile. The pack hook is stable across renders for this purpose.
+  // Snapshot the initial state once so a fresh shuffle survives a
+  // reload even if the kid never moved anything.
   const didMount = useRef(false)
   useEffect(() => {
     if (didMount.current) return
     didMount.current = true
-    pack.updateAnswer('tilepuzzle', 'state', state)
-    pack.updateAnswer('tilepuzzle', 'moves', moves)
+    pack.updateAnswer('tilepuzzle', stateKey, state)
+    pack.updateAnswer('tilepuzzle', movesKey, moves)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Visual equivalence + per-tile pure colour — see computeFlagEquivalence.
-  // Loads asynchronously on mount. Until it's ready the puzzle works
-  // with strict tile-to-position matching as a fallback and tiles fall
-  // back to slicing the original flag image.
   const [equivalence, setEquivalence] = useState<EquivalenceResult | null>(null)
   useEffect(() => {
     let cancelled = false
     computeFlagEquivalence(data.iso2, GRID)
       .then(eq => { if (!cancelled) setEquivalence(eq) })
-      .catch(() => { /* silent fallback — strict matching still works */ })
+      .catch(() => { /* silent fallback */ })
     return () => { cancelled = true }
-  }, [data.iso2])
+  }, [data.iso2, GRID])
 
-  // Rare-but-possible: the initial random shuffle happens to be
-  // visually solved (e.g. France's blue tiles all in column 0 just
-  // in a different internal order). When equivalence first loads,
-  // detect that and reshuffle — but only if the kid hasn't moved
-  // yet, so we never disturb a game in progress.
+  // Rare: initial shuffle happens to be visually solved. Once
+  // equivalence loads, detect that and reshuffle — only if the kid
+  // hasn't moved yet, so we never disrupt a game in progress.
   const reshuffleCheckedRef = useRef(false)
   useEffect(() => {
     if (!equivalence || reshuffleCheckedRef.current) return
     reshuffleCheckedRef.current = true
-    if (moves === 0 && isVisuallySolved(state, equivalence)) {
-      const fresh = shuffleByRandomMoves(makeRng(`${seed}-${Date.now()}`))
+    if (moves === 0 && isVisuallySolved(state, equivalence, GRID, solvedRef)) {
+      const fresh = shuffleByRandomMoves(makeRng(`${seed}-${Date.now()}`), GRID)
       setState(fresh)
-      pack.updateAnswer('tilepuzzle', 'state', fresh)
+      pack.updateAnswer('tilepuzzle', stateKey, fresh)
     }
-  }, [equivalence, moves, state, pack, seed])
+  }, [equivalence, moves, state, pack, seed, GRID, solvedRef, stateKey])
 
-  const solved = isVisuallySolved(state, equivalence)
+  const solved = isVisuallySolved(state, equivalence, GRID, solvedRef)
   const missionDone = pack.isMissionComplete('tilepuzzle')
 
   useEffect(() => {
@@ -280,7 +290,7 @@ export default function TilePuzzleSection({ data, pack }: { data: AdventurePackD
   }, [solved, missionDone, pack])
 
   const eIdx = emptyIndex(state)
-  const movableSet = new Set(solved ? [] : neighbours(eIdx))
+  const movableSet = new Set(solved ? [] : neighbours(eIdx, GRID))
 
   const tryMove = (idx: number) => {
     if (solved || !movableSet.has(idx)) return
@@ -290,17 +300,16 @@ export default function TilePuzzleSection({ data, pack }: { data: AdventurePackD
     const nextMoves = moves + 1
     setState(next)
     setMoves(nextMoves)
-    pack.updateAnswer('tilepuzzle', 'state', next)
-    pack.updateAnswer('tilepuzzle', 'moves', nextMoves)
+    pack.updateAnswer('tilepuzzle', stateKey, next)
+    pack.updateAnswer('tilepuzzle', movesKey, nextMoves)
   }
 
   const reshuffle = () => {
-    // Per-shuffle seed so the kid gets a different board every replay.
-    const fresh = shuffleByRandomMoves(makeRng(`${seed}-${Date.now()}`))
+    const fresh = shuffleByRandomMoves(makeRng(`${seed}-${Date.now()}`), GRID)
     setState(fresh)
     setMoves(0)
-    pack.updateAnswer('tilepuzzle', 'state', fresh)
-    pack.updateAnswer('tilepuzzle', 'moves', 0)
+    pack.updateAnswer('tilepuzzle', stateKey, fresh)
+    pack.updateAnswer('tilepuzzle', movesKey, 0)
   }
 
   return (
@@ -334,8 +343,6 @@ export default function TilePuzzleSection({ data, pack }: { data: AdventurePackD
         className="mx-auto grid select-none touch-manipulation bg-sand-100 p-1.5 rounded-xl border border-gray-200"
         style={{
           gridTemplateColumns: `repeat(${GRID}, minmax(0, 1fr))`,
-          // Lock rows to equal fractions so a tall child (the empty-
-          // slot logo) can't push its row taller than the others.
           gridTemplateRows: `repeat(${GRID}, minmax(0, 1fr))`,
           gap: '4px',
           maxWidth: 'min(100%, 22rem)',
@@ -344,11 +351,14 @@ export default function TilePuzzleSection({ data, pack }: { data: AdventurePackD
       >
         {state.map((tile, pos) => {
           if (tile === EMPTY) {
-            // On solve, fill the empty corner with the missing slice
-            // so the kid sees the whole flag rather than a hole at
-            // the bottom-right. Position 15's slice is the bottom-
-            // right corner — 100% / 100% on the background grid.
+            // On solve, fill the empty slot with the slice that
+            // belongs at this specific position (NOT always bottom-
+            // right) — for flags like Nepal where the empty can end up
+            // at any visually-equivalent slot, this keeps the picture
+            // looking right wherever the empty landed.
             if (solved) {
+              const sRow = Math.floor(pos / GRID)
+              const sCol = pos % GRID
               return (
                 <div
                   key={pos}
@@ -356,16 +366,12 @@ export default function TilePuzzleSection({ data, pack }: { data: AdventurePackD
                   style={{
                     backgroundImage: `url(${url})`,
                     backgroundSize: `${GRID * 100}% ${GRID * 100}%`,
-                    backgroundPosition: '100% 100%',
+                    backgroundPosition: `${(sCol / Math.max(1, GRID - 1)) * 100}% ${(sRow / Math.max(1, GRID - 1)) * 100}%`,
                     backgroundRepeat: 'no-repeat',
                   }}
                 />
               )
             }
-            // Branded empty slot — JFT logo on a soft mint background
-            // so the kid can instantly see which square is the gap.
-            // overflow-hidden + min-h-0 guard against the logo ever
-            // pushing the cell taller than its grid track.
             return (
               <div
                 key={pos}
@@ -379,17 +385,13 @@ export default function TilePuzzleSection({ data, pack }: { data: AdventurePackD
           const row = Math.floor(tile / GRID)
           const col = tile % GRID
           const movable = movableSet.has(pos)
-          // If this tile is essentially one solid colour, render it as
-          // a flat block instead of slicing the flag — kills the "1
-          // pixel of white in a sea of blue" tile that's impossible to
-          // place by eye.
           const pureColour = equivalence?.pureColours[tile] ?? null
           const tileStyle = pureColour
             ? { backgroundColor: pureColour }
             : {
                 backgroundImage: `url(${url})`,
                 backgroundSize: `${GRID * 100}% ${GRID * 100}%`,
-                backgroundPosition: `${(col / (GRID - 1)) * 100}% ${(row / (GRID - 1)) * 100}%`,
+                backgroundPosition: `${(col / Math.max(1, GRID - 1)) * 100}% ${(row / Math.max(1, GRID - 1)) * 100}%`,
                 backgroundRepeat: 'no-repeat' as const,
               }
           return (
@@ -410,7 +412,7 @@ export default function TilePuzzleSection({ data, pack }: { data: AdventurePackD
         })}
       </div>
 
-      <div className="pt-1">
+      <div className="pt-1 flex items-center justify-between gap-3 flex-wrap">
         <button
           type="button"
           onClick={reshuffle}
@@ -418,6 +420,11 @@ export default function TilePuzzleSection({ data, pack }: { data: AdventurePackD
         >
           <RefreshCw className="w-3.5 h-3.5" /> Shuffle again
         </button>
+        <p className="text-xs text-gray-400">
+          {pack.ageMode === 'younger'
+            ? 'Younger kids mode — 9 tiles. Toggle to older for the full 16-tile puzzle.'
+            : 'Older kids mode — 16 tiles. Toggle to younger for the easier 9-tile puzzle.'}
+        </p>
       </div>
     </div>
   )

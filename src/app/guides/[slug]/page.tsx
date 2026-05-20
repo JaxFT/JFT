@@ -134,7 +134,8 @@ export default async function GuidePage({
       isPremium = isPremiumTier(profile?.subscription_tier)
       hasPurchasedDownload = dl
     }
-    const canViewFull = isPremium || !webGuide.is_premium
+    const adminWeb = isAdminEmail(user?.email)
+    const canViewFull = isPremium || !webGuide.is_premium || adminWeb
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
     return (
       <>
@@ -155,6 +156,7 @@ export default async function GuidePage({
           isLoggedIn={!!user}
           isPremium={isPremium}
           hasPurchasedDownload={hasPurchasedDownload}
+          isAdmin={adminWeb}
           freshPurchase={freshPurchase}
         />
       </>

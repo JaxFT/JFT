@@ -19,6 +19,9 @@ type Props = {
   // Whether the current user has bought the offline-download for THIS
   // guide. Premium does NOT grant download access — it's sold separately.
   hasPurchasedDownload: boolean
+  // Admin viewers can download any guide free for QA. Drives both a
+  // hero-area "Admin download" button and bypasses the buy CTA.
+  isAdmin?: boolean
   // Set when the visitor has JUST returned from Stripe Checkout.
   // The session_id from the URL authorises the download against
   // Stripe directly — no account needed. We auto-trigger the file
@@ -40,9 +43,13 @@ function blockAnchor(b: GuideContentBlock): string {
 }
 
 export default function WebGuideView({
-  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, isPremium, hasPurchasedDownload, freshPurchase,
+  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, isPremium, hasPurchasedDownload, isAdmin, freshPurchase,
 }: Props) {
   const hideAbout = !!guide.sections.hideAbout
+  // Admin gets the same UI treatment as a buyer — "Download my copy"
+  // wording, no buy CTA. The actual download endpoint already lets
+  // admins through without a purchase row.
+  const treatAsBuyer = hasPurchasedDownload || !!isAdmin
   const useSingleDoc = guide.body_markdown.trim().length > 0
   // Download CTA shows only when the guide has been wired up in Stripe.
   // Buyers see "Download my copy"; everyone else sees the buy button.
@@ -83,15 +90,28 @@ export default function WebGuideView({
           <h1 className="text-3xl sm:text-4xl font-bold leading-tight">{guide.title}</h1>
           {guide.subtitle && <p className="text-lg text-white/80 mt-3 leading-relaxed">{guide.subtitle}</p>}
 
-          <div className="mt-5 inline-flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm">
-            {canViewFull ? (
-              isPremium ? (
-                <><Crown className="w-3.5 h-3.5 text-brand-300" /> Premium access</>
+          <div className="mt-5 flex items-center gap-3 flex-wrap">
+            <div className="inline-flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm">
+              {canViewFull ? (
+                isPremium ? (
+                  <><Crown className="w-3.5 h-3.5 text-brand-300" /> Premium access</>
+                ) : (
+                  <><Crown className="w-3.5 h-3.5 text-brand-300" /> Full guide</>
+                )
               ) : (
-                <><Crown className="w-3.5 h-3.5 text-brand-300" /> Full guide</>
-              )
-            ) : (
-              <><Lock className="w-3.5 h-3.5 text-amber-200" /> Preview, first {guide.preview_percent}% shown</>
+                <><Lock className="w-3.5 h-3.5 text-amber-200" /> Preview, first {guide.preview_percent}% shown</>
+              )}
+            </div>
+            {/* Admin-only hero download — only when the file actually
+                exists in the bucket. Same endpoint as paying buyers,
+                bypassed server-side for admin emails. */}
+            {isAdmin && downloadAvailable && (
+              <a
+                href={`/api/web-guides/${guide.slug}/download`}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 bg-white hover:bg-brand-50 px-3.5 py-1.5 rounded-full"
+              >
+                <Download className="w-3.5 h-3.5" /> Admin download (free)
+              </a>
             )}
           </div>
         </div>
@@ -137,22 +157,22 @@ export default function WebGuideView({
             <div className="flex items-center gap-2 mb-3">
               <Download className="w-5 h-5 text-brand-600" />
               <p className="text-xs font-bold tracking-widest uppercase text-brand-600">
-                {hasPurchasedDownload ? 'Your offline copy' : 'Take it with you'}
+                {treatAsBuyer ? 'Your offline copy' : 'Take it with you'}
               </p>
             </div>
             <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-              {hasPurchasedDownload
+              {treatAsBuyer
                 ? 'Download your personal copy'
                 : `Download for offline reading — ${downloadPriceLabel}`}
             </h3>
             <p className="text-sm text-gray-600 leading-relaxed mb-5">
-              {hasPurchasedDownload
+              {treatAsBuyer
                 ? 'A single self-contained file. Save it anywhere, open it in any browser, read it on a plane.'
                 : 'A single self-contained file with the full guide, watermarked to you. Save it anywhere, open it in any browser, read it on a plane. Pay once, yours forever.'}
             </p>
             <DownloadButton
               slug={guide.slug}
-              hasPurchased={hasPurchasedDownload}
+              hasPurchased={treatAsBuyer}
               priceLabel={downloadPriceLabel}
             />
           </div>

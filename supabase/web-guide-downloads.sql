@@ -38,7 +38,6 @@ create index if not exists web_guide_purchases_guide_idx
   on public.web_guide_purchases(guide_id);
 
 -- Wire up the Maldives guide. Run this once the schema change is in.
--- If the slug differs, update accordingly.
 update public.guides
   set stripe_price_id = 'price_1TZ0l2Bedsajl023BtVZvqkQ'
-  where slug = 'maldives';
+  where slug = 'how-we-spent-two-weeks-in-the-maldives';

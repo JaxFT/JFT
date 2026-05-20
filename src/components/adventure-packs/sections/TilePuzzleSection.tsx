@@ -68,8 +68,81 @@ function shuffleByRandomMoves(rng: () => number, moves = 400): number[] {
   return state
 }
 
-function isSolved(state: readonly number[]): boolean {
-  return state.every((v, i) => v === SOLVED[i])
+// Solved-check that respects visual equivalence: two tiles are
+// interchangeable if they render the same pixels. For France's
+// vertical-stripe flag this means all four blue tiles in column 0
+// are equivalent (and so on per column); for Germany's horizontal
+// stripes it's per row; for emblem flags only the truly identical
+// corner squares match. If equivalence hasn't loaded yet, fall back
+// to strict tile-to-position matching so the puzzle still functions.
+function isVisuallySolved(state: readonly number[], eq: readonly number[] | null): boolean {
+  for (let pos = 0; pos < TILES; pos++) {
+    const here = state[pos]
+    const expected = SOLVED[pos]
+    if (here === expected) continue
+    // The empty square is the literal hole — it has to be in its own
+    // spot (last cell), otherwise the picture has a gap mid-flag.
+    if (here === EMPTY || expected === EMPTY) return false
+    if (!eq) return false
+    if (eq[here] !== eq[expected]) return false
+  }
+  return true
+}
+
+// Sample the flag's actual pixels to figure out which tile regions
+// render identically. PNG download is small (~5KB at w160), and we
+// only do it once per mount. Buckets RGB to 8 levels per channel so
+// subtle anti-aliasing along stripe edges doesn't break equivalence.
+async function computeFlagEquivalence(iso2: string, gridSize: number): Promise<number[]> {
+  const url = `https://flagcdn.com/w160/${iso2.toLowerCase()}.png`
+  return new Promise<number[]>((resolve, reject) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.decoding = 'async'
+    img.onload = () => {
+      try {
+        const W = img.naturalWidth || 160
+        const H = img.naturalHeight || Math.round((W * 2) / 3)
+        const canvas = document.createElement('canvas')
+        canvas.width = W
+        canvas.height = H
+        const ctx = canvas.getContext('2d', { willReadFrequently: true })
+        if (!ctx) { reject(new Error('no canvas context')); return }
+        ctx.drawImage(img, 0, 0, W, H)
+        const all = ctx.getImageData(0, 0, W, H).data
+        const tileW = W / gridSize
+        const tileH = H / gridSize
+        const SAMPLES = 4
+        const sigToGroup = new Map<string, number>()
+        const tileToGroup: number[] = []
+        for (let i = 0; i < gridSize * gridSize; i++) {
+          const col = i % gridSize
+          const row = Math.floor(i / gridSize)
+          const buf: number[] = []
+          for (let sy = 0; sy < SAMPLES; sy++) {
+            for (let sx = 0; sx < SAMPLES; sx++) {
+              const px = Math.min(W - 1, Math.floor(col * tileW + (sx + 0.5) * tileW / SAMPLES))
+              const py = Math.min(H - 1, Math.floor(row * tileH + (sy + 0.5) * tileH / SAMPLES))
+              const o = (py * W + px) * 4
+              buf.push(all[o] >> 5, all[o + 1] >> 5, all[o + 2] >> 5)
+            }
+          }
+          const sig = buf.join(',')
+          let group = sigToGroup.get(sig)
+          if (group === undefined) {
+            group = sigToGroup.size
+            sigToGroup.set(sig, group)
+          }
+          tileToGroup.push(group)
+        }
+        resolve(tileToGroup)
+      } catch (err) {
+        reject(err)
+      }
+    }
+    img.onerror = () => reject(new Error('flag image load failed'))
+    img.src = url
+  })
 }
 
 function isValidSavedState(s: unknown): s is number[] {
@@ -116,7 +189,35 @@ export default function TilePuzzleSection({ data, pack }: { data: AdventurePackD
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const solved = isSolved(state)
+  // Visual equivalence between tiles — see computeFlagEquivalence.
+  // Loads asynchronously on mount. Until it's ready the puzzle works
+  // with strict tile-to-position matching as a fallback.
+  const [equivalence, setEquivalence] = useState<number[] | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    computeFlagEquivalence(data.iso2, GRID)
+      .then(eq => { if (!cancelled) setEquivalence(eq) })
+      .catch(() => { /* silent fallback — strict matching still works */ })
+    return () => { cancelled = true }
+  }, [data.iso2])
+
+  // Rare-but-possible: the initial random shuffle happens to be
+  // visually solved (e.g. France's blue tiles all in column 0 just
+  // in a different internal order). When equivalence first loads,
+  // detect that and reshuffle — but only if the kid hasn't moved
+  // yet, so we never disturb a game in progress.
+  const reshuffleCheckedRef = useRef(false)
+  useEffect(() => {
+    if (!equivalence || reshuffleCheckedRef.current) return
+    reshuffleCheckedRef.current = true
+    if (moves === 0 && isVisuallySolved(state, equivalence)) {
+      const fresh = shuffleByRandomMoves(makeRng(`${seed}-${Date.now()}`))
+      setState(fresh)
+      pack.updateAnswer('tilepuzzle', 'state', fresh)
+    }
+  }, [equivalence, moves, state, pack, seed])
+
+  const solved = isVisuallySolved(state, equivalence)
   const missionDone = pack.isMissionComplete('tilepuzzle')
 
   useEffect(() => {

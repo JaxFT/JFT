@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 import type { AdventurePackData } from '@/lib/adventurePackTypes'
 import type { PackHook } from '../PackShell'
+import Logo from '@/components/branding/Logo'
 
 const GRID = 4
 const TILES = GRID * GRID  // 16
@@ -75,7 +76,7 @@ function shuffleByRandomMoves(rng: () => number, moves = 400): number[] {
 // stripes it's per row; for emblem flags only the truly identical
 // corner squares match. If equivalence hasn't loaded yet, fall back
 // to strict tile-to-position matching so the puzzle still functions.
-function isVisuallySolved(state: readonly number[], eq: readonly number[] | null): boolean {
+function isVisuallySolved(state: readonly number[], eq: EquivalenceResult | null): boolean {
   for (let pos = 0; pos < TILES; pos++) {
     const here = state[pos]
     const expected = SOLVED[pos]
@@ -84,18 +85,39 @@ function isVisuallySolved(state: readonly number[], eq: readonly number[] | null
     // spot (last cell), otherwise the picture has a gap mid-flag.
     if (here === EMPTY || expected === EMPTY) return false
     if (!eq) return false
-    if (eq[here] !== eq[expected]) return false
+    if (eq.groups[here] !== eq.groups[expected]) return false
   }
   return true
 }
 
-// Sample the flag's actual pixels to figure out which tile regions
-// render identically. PNG download is small (~5KB at w160), and we
-// only do it once per mount. Buckets RGB to 8 levels per channel so
-// subtle anti-aliasing along stripe edges doesn't break equivalence.
-async function computeFlagEquivalence(iso2: string, gridSize: number): Promise<number[]> {
+// Sample the flag's actual pixels to figure out:
+//  • Which tile regions render identically (equivalence groups). Stripe
+//    flags like France collapse 4 columns into 4 groups; emblem flags
+//    like the UK stay as 16 unique tiles.
+//  • Per-tile "is this essentially one solid colour?" + that colour.
+//    If 92%+ of a tile's sampled pixels fall in the same colour bucket
+//    we snap the tile to that colour for both rendering and equivalence
+//    — so a near-blank tile with one or two stray pixels (e.g. a tiny
+//    corner of Nepal's white pennant against the dark blue field) shows
+//    as a clean solid blue and groups with the other solid-blue tiles.
+//
+// PNG download is small (~5KB at w160), and we only do it once per mount.
+type EquivalenceResult = {
+  groups: number[]                    // tileId → equivalence group
+  pureColours: (string | null)[]      // tileId → rgb(…) when solid, else null
+}
+
+async function computeFlagEquivalence(iso2: string, gridSize: number): Promise<EquivalenceResult> {
   const url = `https://flagcdn.com/w160/${iso2.toLowerCase()}.png`
-  return new Promise<number[]>((resolve, reject) => {
+  // % of sampled pixels in one colour bucket required to snap to solid.
+  // 92% lets through anti-aliasing along stripe edges without snapping
+  // tiles that are genuinely two colours.
+  const PURE_THRESHOLD = 0.92
+  // 16 buckets per channel — fine enough to distinguish flag colours,
+  // coarse enough to merge near-identical pixels.
+  const BUCKET_SHIFT = 4
+
+  return new Promise<EquivalenceResult>((resolve, reject) => {
     const img = new Image()
     img.crossOrigin = 'anonymous'
     img.decoding = 'async'
@@ -112,30 +134,62 @@ async function computeFlagEquivalence(iso2: string, gridSize: number): Promise<n
         const all = ctx.getImageData(0, 0, W, H).data
         const tileW = W / gridSize
         const tileH = H / gridSize
-        const SAMPLES = 4
+        const SAMPLES = 6
         const sigToGroup = new Map<string, number>()
-        const tileToGroup: number[] = []
+        const groups: number[] = []
+        const pureColours: (string | null)[] = []
+
         for (let i = 0; i < gridSize * gridSize; i++) {
           const col = i % gridSize
           const row = Math.floor(i / gridSize)
-          const buf: number[] = []
+          // Collect raw RGB samples for this tile.
+          const samples: number[][] = []
           for (let sy = 0; sy < SAMPLES; sy++) {
             for (let sx = 0; sx < SAMPLES; sx++) {
               const px = Math.min(W - 1, Math.floor(col * tileW + (sx + 0.5) * tileW / SAMPLES))
               const py = Math.min(H - 1, Math.floor(row * tileH + (sy + 0.5) * tileH / SAMPLES))
               const o = (py * W + px) * 4
-              buf.push(all[o] >> 5, all[o + 1] >> 5, all[o + 2] >> 5)
+              samples.push([all[o], all[o + 1], all[o + 2]])
             }
           }
-          const sig = buf.join(',')
+          // Find the dominant colour bucket.
+          const bucketCounts = new Map<string, number>()
+          for (const [r, g, b] of samples) {
+            const key = `${r >> BUCKET_SHIFT},${g >> BUCKET_SHIFT},${b >> BUCKET_SHIFT}`
+            bucketCounts.set(key, (bucketCounts.get(key) ?? 0) + 1)
+          }
+          let dominantKey = ''
+          let dominantCount = 0
+          for (const [key, count] of bucketCounts) {
+            if (count > dominantCount) { dominantKey = key; dominantCount = count }
+          }
+          const dominantRatio = dominantCount / samples.length
+
+          let sig: string
+          if (dominantRatio >= PURE_THRESHOLD) {
+            // Snap the tile to the average RGB of pixels in the dominant
+            // bucket. Stragglers are ignored so the rendered colour is
+            // the colour of the bulk of the tile.
+            let sR = 0, sG = 0, sB = 0, n = 0
+            for (const [r, g, b] of samples) {
+              const key = `${r >> BUCKET_SHIFT},${g >> BUCKET_SHIFT},${b >> BUCKET_SHIFT}`
+              if (key === dominantKey) { sR += r; sG += g; sB += b; n++ }
+            }
+            pureColours.push(`rgb(${Math.round(sR / n)}, ${Math.round(sG / n)}, ${Math.round(sB / n)})`)
+            sig = `pure:${dominantKey}`
+          } else {
+            pureColours.push(null)
+            // Full pixel signature for mixed tiles.
+            sig = samples.map(([r, g, b]) => `${r >> BUCKET_SHIFT}.${g >> BUCKET_SHIFT}.${b >> BUCKET_SHIFT}`).join(',')
+          }
           let group = sigToGroup.get(sig)
           if (group === undefined) {
             group = sigToGroup.size
             sigToGroup.set(sig, group)
           }
-          tileToGroup.push(group)
+          groups.push(group)
         }
-        resolve(tileToGroup)
+        resolve({ groups, pureColours })
       } catch (err) {
         reject(err)
       }
@@ -189,10 +243,11 @@ export default function TilePuzzleSection({ data, pack }: { data: AdventurePackD
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Visual equivalence between tiles — see computeFlagEquivalence.
+  // Visual equivalence + per-tile pure colour — see computeFlagEquivalence.
   // Loads asynchronously on mount. Until it's ready the puzzle works
-  // with strict tile-to-position matching as a fallback.
-  const [equivalence, setEquivalence] = useState<number[] | null>(null)
+  // with strict tile-to-position matching as a fallback and tiles fall
+  // back to slicing the original flag image.
+  const [equivalence, setEquivalence] = useState<EquivalenceResult | null>(null)
   useEffect(() => {
     let cancelled = false
     computeFlagEquivalence(data.iso2, GRID)
@@ -304,16 +359,34 @@ export default function TilePuzzleSection({ data, pack }: { data: AdventurePackD
                 />
               )
             }
+            // Branded empty slot — JFT logo on a soft mint background
+            // so the kid can instantly see which square is the gap.
             return (
               <div
                 key={pos}
-                className="rounded-md border border-dashed border-gray-300/70 bg-sand-50"
-              />
+                className="rounded-md bg-brand-50 border border-brand-200/60 flex items-center justify-center p-1.5"
+                aria-label="Empty space"
+              >
+                <Logo variant="mono" height={20} className="opacity-50" ariaLabel="" />
+              </div>
             )
           }
           const row = Math.floor(tile / GRID)
           const col = tile % GRID
           const movable = movableSet.has(pos)
+          // If this tile is essentially one solid colour, render it as
+          // a flat block instead of slicing the flag — kills the "1
+          // pixel of white in a sea of blue" tile that's impossible to
+          // place by eye.
+          const pureColour = equivalence?.pureColours[tile] ?? null
+          const tileStyle = pureColour
+            ? { backgroundColor: pureColour }
+            : {
+                backgroundImage: `url(${url})`,
+                backgroundSize: `${GRID * 100}% ${GRID * 100}%`,
+                backgroundPosition: `${(col / (GRID - 1)) * 100}% ${(row / (GRID - 1)) * 100}%`,
+                backgroundRepeat: 'no-repeat' as const,
+              }
           return (
             <button
               key={pos}
@@ -326,12 +399,7 @@ export default function TilePuzzleSection({ data, pack }: { data: AdventurePackD
                   ? 'cursor-pointer hover:scale-[0.97] active:scale-90 ring-1 ring-brand-300'
                   : 'cursor-default ring-1 ring-gray-200'
               } ${solved ? '!ring-2 !ring-emerald-400' : ''}`}
-              style={{
-                backgroundImage: `url(${url})`,
-                backgroundSize: `${GRID * 100}% ${GRID * 100}%`,
-                backgroundPosition: `${(col / (GRID - 1)) * 100}% ${(row / (GRID - 1)) * 100}%`,
-                backgroundRepeat: 'no-repeat',
-              }}
+              style={tileStyle}
             />
           )
         })}

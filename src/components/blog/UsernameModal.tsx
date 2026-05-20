@@ -85,7 +85,7 @@ export default function UsernameModal({
         <label className="block mb-3">
           <span className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Username</span>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-mono">@</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-mono select-none pointer-events-none">@</span>
             <input
               type="text"
               value={username}
@@ -98,12 +98,13 @@ export default function UsernameModal({
           {username && !usernameCheck.ok && (
             <p className="text-xs text-red-600 mt-1">{usernameCheck.error}</p>
           )}
+          <p className="text-[11px] text-gray-400 mt-1">Don&apos;t include the @ — we add that for you.</p>
         </label>
 
         <label className="block mb-4">
           <span className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Instagram handle <span className="font-normal normal-case tracking-normal text-gray-400">· optional</span></span>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-mono">@</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-mono select-none pointer-events-none">@</span>
             <input
               type="text"
               value={instagram}
@@ -115,6 +116,7 @@ export default function UsernameModal({
           {instagram && !instaCheck.ok && (
             <p className="text-xs text-red-600 mt-1">{instaCheck.error}</p>
           )}
+          <p className="text-[11px] text-gray-400 mt-1">Don&apos;t include the @ — paste just <span className="font-mono">jax.familytravels</span> not <span className="font-mono">@jax.familytravels</span>.</p>
         </label>
 
         {error && (

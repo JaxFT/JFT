@@ -39,7 +39,7 @@ export default async function AccountPage() {
   const [{ data: profile }, { data: purchasesData }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('full_name, subscription_tier, created_at, marketing_opt_in, cancellation_requested_at')
+      .select('full_name, subscription_tier, created_at, marketing_opt_in, cancellation_requested_at, username, instagram_handle')
       .eq('id', user.id)
       .single(),
     supabase
@@ -127,6 +127,8 @@ export default async function AccountPage() {
             initialFullName={profile?.full_name ?? ''}
             email={user.email ?? ''}
             initialMarketingOptIn={!!profile?.marketing_opt_in}
+            initialUsername={(profile as { username?: string | null } | null)?.username ?? null}
+            initialInstagramHandle={(profile as { instagram_handle?: string | null } | null)?.instagram_handle ?? null}
           />
         </div>
 

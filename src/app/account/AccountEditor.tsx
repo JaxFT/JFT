@@ -3,15 +3,27 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, Check, KeyRound, User as UserIcon, Mail } from 'lucide-react'
+import { Loader2, Check, KeyRound, User as UserIcon, Mail, AtSign, Instagram } from 'lucide-react'
+import {
+  validateUsername, validateInstagram,
+  normaliseUsername, normaliseInstagram,
+} from '@/lib/usernames'
 
 type Props = {
   initialFullName: string
   email: string
   initialMarketingOptIn: boolean
+  initialUsername: string | null
+  initialInstagramHandle: string | null
 }
 
-export default function AccountEditor({ initialFullName, email, initialMarketingOptIn }: Props) {
+export default function AccountEditor({
+  initialFullName,
+  email,
+  initialMarketingOptIn,
+  initialUsername,
+  initialInstagramHandle,
+}: Props) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -62,6 +74,51 @@ export default function AccountEditor({ initialFullName, email, initialMarketing
       setNameError(e instanceof Error ? e.message : 'Could not save')
     } finally {
       setSavingName(false)
+    }
+  }
+
+  // ── Username + Instagram edit state ─────────────
+  const [username, setUsername] = useState(initialUsername ?? '')
+  const [instagram, setInstagram] = useState(initialInstagramHandle ?? '')
+  const [savedUsername, setSavedUsername] = useState(initialUsername)
+  const [savedInstagram, setSavedInstagram] = useState(initialInstagramHandle)
+  const [showUsernamePanel, setShowUsernamePanel] = useState(false)
+  const [savingUsername, setSavingUsername] = useState(false)
+  const [usernameError, setUsernameError] = useState<string | null>(null)
+  const [usernameSaved, setUsernameSaved] = useState(false)
+
+  const saveUsername = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSavingUsername(true)
+    setUsernameError(null)
+    setUsernameSaved(false)
+    try {
+      const uCheck = validateUsername(username)
+      if (!uCheck.ok) throw new Error(uCheck.error)
+      const iCheck = validateInstagram(instagram)
+      if (!iCheck.ok) throw new Error(iCheck.error)
+      const res = await fetch('/api/account/username', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: normaliseUsername(username),
+          instagram_handle: normaliseInstagram(instagram),
+        }),
+      })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(body.error || `Save failed (HTTP ${res.status})`)
+      setSavedUsername(body.username)
+      setSavedInstagram(body.instagram_handle ?? null)
+      setUsernameSaved(true)
+      router.refresh()
+      setTimeout(() => {
+        setUsernameSaved(false)
+        setShowUsernamePanel(false)
+      }, 1500)
+    } catch (e) {
+      setUsernameError(e instanceof Error ? e.message : 'Could not save')
+    } finally {
+      setSavingUsername(false)
     }
   }
 
@@ -367,6 +424,92 @@ export default function AccountEditor({ initialFullName, email, initialMarketing
                 Cancel
               </button>
               {nameSaved && (
+                <span className="inline-flex items-center gap-1 text-sm font-medium text-brand-700">
+                  <Check className="w-4 h-4" /> Saved
+                </span>
+              )}
+            </div>
+          </form>
+        )}
+      </div>
+
+      {/* USERNAME + INSTAGRAM — shown next to comments and likes on
+          blog posts. Collapsed by default, opens to a small edit form
+          with the same validation as the comment-box modal. */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <AtSign className="w-5 h-5 text-brand-600" />
+            <h2 className="font-bold text-gray-900">Username</h2>
+          </div>
+          {!showUsernamePanel && (
+            <button
+              type="button"
+              onClick={() => setShowUsernamePanel(true)}
+              className="text-sm font-semibold text-brand-700 hover:text-brand-800"
+            >
+              {savedUsername ? 'Change' : 'Set username'}
+            </button>
+          )}
+        </div>
+        <p className="text-sm text-gray-700">
+          {savedUsername
+            ? <><span className="font-mono">@{savedUsername}</span>{savedInstagram && <span className="text-gray-400"> · <Instagram className="w-3.5 h-3.5 inline mr-0.5" /><span className="font-mono">@{savedInstagram}</span></span>}</>
+            : <span className="italic text-gray-400">Not set — pick one to comment on blog posts</span>}
+        </p>
+
+        {showUsernamePanel && (
+          <form onSubmit={saveUsername} className="space-y-4 mt-5 pt-5 border-t border-gray-100">
+            <div>
+              <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Username</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-mono select-none pointer-events-none">@</span>
+                <input
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  className={`${input} !pl-8 !font-mono`}
+                  placeholder="wanderingmum"
+                />
+              </div>
+              <p className="text-[11px] text-gray-400 mt-1">Don&apos;t include the @ — we add that for you. Letters, numbers, hyphen, underscore. 3–24 chars.</p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Instagram handle <span className="font-normal normal-case tracking-normal text-gray-400">· optional</span></label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-mono select-none pointer-events-none">@</span>
+                <input
+                  value={instagram}
+                  onChange={e => setInstagram(e.target.value)}
+                  className={`${input} !pl-8 !font-mono`}
+                  placeholder="jax.familytravels"
+                />
+              </div>
+              <p className="text-[11px] text-gray-400 mt-1">Don&apos;t include the @ — paste just <span className="font-mono">jax.familytravels</span>.</p>
+            </div>
+            {usernameError && (
+              <p className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-md px-3 py-2">{usernameError}</p>
+            )}
+            <div className="flex items-center gap-3 flex-wrap">
+              <button
+                type="submit"
+                disabled={savingUsername}
+                className="btn-primary !py-2 !px-4 !text-sm disabled:opacity-50"
+              >
+                {savingUsername ? (<><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>) : 'Save'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowUsernamePanel(false)
+                  setUsername(savedUsername ?? '')
+                  setInstagram(savedInstagram ?? '')
+                  setUsernameError(null)
+                }}
+                className="text-sm font-medium text-gray-500 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              {usernameSaved && (
                 <span className="inline-flex items-center gap-1 text-sm font-medium text-brand-700">
                   <Check className="w-4 h-4" /> Saved
                 </span>

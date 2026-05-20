@@ -102,22 +102,18 @@ export default async function GuidePage({
     const { data: { user } } = await supabase.auth.getUser()
 
     // Stripe success return: ?session_id=… is set by the checkout
-    // success_url. Always claim the purchase here as a sync backup
-    // to the webhook. The "find or create user from Stripe's email"
-    // path inside claimWebGuidePurchase handles guest checkouts.
-    //
-    // If cookies survived the Stripe round-trip, `user` is set and
-    // the download button renders immediately on the next pass.
-    // If cookies were dropped (Safari/incognito quirks) or the buyer
-    // was a guest, we surface a sign-in prompt with their email
-    // prefilled — clicking it sends them a standard Supabase magic
-    // link, which has been proven reliable for years on this stack.
+    // success_url. The session_id itself authorises the download
+    // (the API verifies it against Stripe before streaming), so we
+    // can let a totally signed-out guest grab their file with zero
+    // friction. We still claim the purchase as a sync backup to the
+    // webhook so the row exists in our records.
     const sessionId = typeof sp.session_id === 'string' ? sp.session_id : null
-    let pendingPurchaseEmail: string | null = null
+    let freshPurchase: { sessionId: string; email: string | null } | null = null
     if (sessionId) {
       const claim = await claimWebGuidePurchase({ sessionId })
-      if (claim.ok && !user && claim.email) {
-        pendingPurchaseEmail = claim.email
+      freshPurchase = {
+        sessionId,
+        email: claim.ok ? (claim.email || null) : null,
       }
     }
 
@@ -158,7 +154,7 @@ export default async function GuidePage({
           isLoggedIn={!!user}
           isPremium={isPremium}
           hasPurchasedDownload={hasPurchasedDownload}
-          pendingPurchaseEmail={pendingPurchaseEmail}
+          freshPurchase={freshPurchase}
         />
       </>
     )

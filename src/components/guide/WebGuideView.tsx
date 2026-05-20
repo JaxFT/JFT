@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, Crown, Download, Lock, Map, ListOrdered } from '
 import GuideMarkdown from './GuideMarkdown'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 import DownloadButton from '@/app/guides/[slug]/DownloadButton'
-import ClaimPurchasePrompt from '@/app/guides/[slug]/ClaimPurchasePrompt'
+import PostPurchaseDownload from '@/app/guides/[slug]/PostPurchaseDownload'
 import type { GuideRow, GuideContentBlock } from '@/lib/guide-types'
 import { truncateMarkdownToPercent, extractMarkdownToc } from '@/lib/guide-types'
 import type { AutoLinkPhrase } from '@/lib/blog-links'
@@ -18,11 +18,11 @@ type Props = {
   // Whether the current user has bought the offline-download for THIS
   // guide. Premium does NOT grant download access — it's sold separately.
   hasPurchasedDownload: boolean
-  // Set when a buyer just returned from Stripe but isn't signed in
-  // (guest purchase, or session cookies dropped on the cross-origin
-  // redirect). We show them a "sign in to download" card prefilled
-  // with the email they used at checkout.
-  pendingPurchaseEmail: string | null
+  // Set when the visitor has JUST returned from Stripe Checkout.
+  // The session_id from the URL authorises the download against
+  // Stripe directly — no account needed. We auto-trigger the file
+  // download as soon as the page mounts.
+  freshPurchase: { sessionId: string; email: string | null } | null
 }
 
 function anchor(s: string): string {
@@ -39,7 +39,7 @@ function blockAnchor(b: GuideContentBlock): string {
 }
 
 export default function WebGuideView({
-  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, isPremium, hasPurchasedDownload, pendingPurchaseEmail,
+  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, isPremium, hasPurchasedDownload, freshPurchase,
 }: Props) {
   const hideAbout = !!guide.sections.hideAbout
   const useSingleDoc = guide.body_markdown.trim().length > 0
@@ -96,8 +96,12 @@ export default function WebGuideView({
         </div>
       </div>
 
-      {pendingPurchaseEmail && (
-        <ClaimPurchasePrompt email={pendingPurchaseEmail} slug={guide.slug} />
+      {freshPurchase && (
+        <PostPurchaseDownload
+          slug={guide.slug}
+          sessionId={freshPurchase.sessionId}
+          email={freshPurchase.email}
+        />
       )}
 
       {guide.intro_markdown.trim() && (

@@ -99,7 +99,7 @@ export default function AccountEditor({
     setUsernameError(null)
     setUsernameSaved(false)
     try {
-      const uCheck = validateUsername(username)
+      const uCheck = validateUsername(username, { bypassReserved: isAdmin })
       if (!uCheck.ok) throw new Error(uCheck.error)
       const iCheck = validateInstagram(instagram)
       if (!iCheck.ok) throw new Error(iCheck.error)

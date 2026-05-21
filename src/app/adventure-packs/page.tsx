@@ -66,7 +66,7 @@ export default async function AdventurePacksListing() {
 
         {/* The free France pack gets its own hero block above the
             continent cascade — visual taste of what's in every pack. */}
-        <FrancePackHero signedIn={!!user} />
+        <FrancePackHero signedIn={!!user} otherPacksCount={premiumPacks.length} />
 
         <div className="mb-5 flex items-baseline justify-between gap-3 flex-wrap">
           <h2 className="text-xl font-bold text-gray-900">All countries</h2>

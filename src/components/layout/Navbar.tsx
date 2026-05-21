@@ -14,19 +14,16 @@ import { Menu, X, User, LogOut, ShieldCheck } from 'lucide-react'
 import Logo from '@/components/branding/Logo'
 
 // Logo handles Home. How We Can Help is a right-side CTA button, not
-// part of this list. Names are the ones a visitor would search for —
-// "Family Passport" instead of just "Passports" (which is ambiguous
-// in a travel context), "Worldschooling" instead of the corporate
-// "Learning Resources". URLs stay the same so existing links + SEO
-// don't break.
+// part of this list. URLs stay the same so existing links + SEO
+// don't break, only the visible labels change.
 const navLinks = [
-  { label: 'About',            href: '/about' },
-  { label: 'Blog',             href: '/blog' },
-  { label: 'Guides',           href: '/guides' },
-  { label: 'How We Can Help',  href: '/work-with-us' },
-  { label: 'Adventure Packs',  href: '/adventure-packs' },
-  { label: 'Family Passport',  href: '/passports' },
-  { label: 'Worldschooling',   href: '/learning' },
+  { label: 'About',              href: '/about' },
+  { label: 'Blog',               href: '/blog' },
+  { label: 'Guides',             href: '/guides' },
+  { label: 'How We Can Help',    href: '/work-with-us' },
+  { label: 'Adventure Packs',    href: '/adventure-packs' },
+  { label: 'Adventure Passport', href: '/passports' },
+  { label: 'Worldschooling',     href: '/learning' },
 ]
 
 // Tiny shape, id + email is everything Navbar needs.

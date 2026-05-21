@@ -43,7 +43,7 @@ export default function Footer() {
               <li><a href="/blog" className="hover:text-white transition-colors">Blog</a></li>
               <li><a href="/guides" className="hover:text-white transition-colors">Guides</a></li>
               <li><a href="/adventure-packs" className="hover:text-white transition-colors">Adventure Packs</a></li>
-              <li><a href="/passports" className="hover:text-white transition-colors">Family Passport</a></li>
+              <li><a href="/passports" className="hover:text-white transition-colors">Adventure Passport</a></li>
               <li><a href="/learning" className="hover:text-white transition-colors">Worldschooling</a></li>
               <li><a href="/work-with-us" className="hover:text-white transition-colors">Work With Us</a></li>
             </ul>

@@ -163,8 +163,8 @@ export default async function AccountPage() {
               </h2>
               <p className={`mt-2 text-sm leading-relaxed max-w-md ${isPremium ? 'text-white/70' : 'text-gray-500'}`}>
                 {isPremium
-                  ? 'Every premium blog post, every guide, every Adventure Pack, and the full Family Passport are included.'
-                  : 'A year of access to every premium blog post, every guide, every Adventure Pack, and the Family Passport, £49.99/year.'}
+                  ? 'Every premium blog post, every guide, every Adventure Pack, and the full Adventure Passport are included.'
+                  : 'A year of access to every premium blog post, every guide, every Adventure Pack, and the Adventure Passport, £49.99/year.'}
               </p>
               {isPremium && profile?.cancellation_requested_at && (
                 <p className="mt-3 text-xs text-amber-200 bg-amber-950/30 border border-amber-700/40 rounded-md px-3 py-2 inline-block">
@@ -236,7 +236,7 @@ export default async function AccountPage() {
               <Crown className="w-5 h-5 text-brand-700 shrink-0" />
               <p className="text-sm text-brand-900">
                 <span className="font-semibold">You have access to everything.</span>{' '}
-                Premium covers every guide, every Adventure Pack, every premium blog post, and the Family Passport.
+                Premium covers every guide, every Adventure Pack, every premium blog post, and the Adventure Passport.
               </p>
             </div>
           )}

@@ -14,6 +14,9 @@ import FlagBanner from '@/components/adventure-packs/FlagBanner'
 
 type Props = {
   signedIn: boolean
+  // Live, non-France pack count — passed in so this component never
+  // drifts behind the catalogue. Caller computes from PACK_META.
+  otherPacksCount: number
 }
 
 // A few sample missions from France's actual pack, hard-coded for the
@@ -40,7 +43,7 @@ const PREVIEW_FOOD = {
   description: 'Flaky, buttery breakfast pastry, best fresh from a boulangerie before 10am.',
 }
 
-export default function FrancePackHero({ signedIn }: Props) {
+export default function FrancePackHero({ signedIn, otherPacksCount }: Props) {
   const ctaHref = signedIn ? '/adventure-packs/france' : '/signup?next=/adventure-packs/france'
   const ctaLabel = signedIn ? 'Open the France pack' : 'Create a free account to start'
 
@@ -69,8 +72,8 @@ export default function FrancePackHero({ signedIn }: Props) {
             Start with France
           </h2>
           <p className="text-gray-600 leading-relaxed text-sm sm:text-base mb-5">
-            Our free pack — the same shape as the other 34 country packs.{' '}
-            <strong>10 missions</strong> for families exploring France together: language, food,
+            Our free pack, the same shape as the other {otherPacksCount} country packs.{' '}
+            <strong>12 missions</strong> for families exploring France together: language, food,
             history, geography, scavenger hunts, animal spotting, and conversation cards for the
             drive home.
           </p>

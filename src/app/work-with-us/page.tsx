@@ -79,10 +79,13 @@ export default async function WorkWithUsPage() {
               <MessageCircle className="w-3.5 h-3.5" /> Or talk it through with us
             </p>
             <h2 className="text-2xl sm:text-3xl font-bold mb-3 leading-tight">
-              Book a 1:1 with us
+              Book a 1:1 with us, £49.99
             </h2>
-            <p className="text-white/80 leading-relaxed text-sm sm:text-base max-w-xl mb-5">
+            <p className="text-white/80 leading-relaxed text-sm sm:text-base max-w-xl mb-3">
               We&apos;ve done this. We travel full-time as a family and we know what it actually takes, not the highlight reel version, the real one. If you want to talk through your specific situation, work out where the gaps are, and make a plan that fits your family, hit the button below.
+            </p>
+            <p className="text-white/60 text-xs uppercase tracking-widest font-bold mb-5 inline-flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5" /> 60-minute video call · £49.99
             </p>
             <BookCallButton viewerEmail={viewerEmail} viewerName={viewerName} variant="outline-on-dark" />
           </div>
@@ -158,8 +161,11 @@ export default async function WorkWithUsPage() {
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Ready to talk?</h2>
-            <p className="text-sm text-gray-500 mb-5 max-w-md mx-auto">
+            <p className="text-sm text-gray-500 mb-3 max-w-md mx-auto">
               Open the form to tell us about your family, what you&apos;d like to discuss, and the days and times that work for you. We&apos;ll reply in your account thread.
+            </p>
+            <p className="text-xs uppercase tracking-widest font-bold text-brand-700 mb-5 inline-flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5" /> 60-minute video call · £49.99
             </p>
             <BookCallButton viewerEmail={viewerEmail} viewerName={viewerName} label="Book a 1:1 with us" />
             {!viewerEmail && (

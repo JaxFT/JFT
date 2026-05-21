@@ -16,7 +16,7 @@ export default async function FamilyPassportSection() {
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
       <div className="flex items-center gap-2 mb-4">
         <Users className="w-5 h-5 text-brand-600" />
-        <h2 className="text-lg font-bold text-gray-900">Family Passport</h2>
+        <h2 className="text-lg font-bold text-gray-900">Adventure Passport</h2>
       </div>
 
       {children.length === 0 ? (

@@ -40,7 +40,7 @@ export default async function FlightsPage() {
             <Plane className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-1">Family Passport</p>
+            <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-1">Adventure Passport</p>
             <h1 className="text-3xl font-bold text-gray-900">Flight log</h1>
           </div>
         </div>

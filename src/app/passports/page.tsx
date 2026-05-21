@@ -6,12 +6,13 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
+import { PACK_META } from '@/lib/adventurePackMeta'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 import PassportPage from '@/components/passport/PassportPage'
 import PassportStamp from '@/components/passport/PassportStamp'
 
 export const metadata: Metadata = {
-  title: 'Family Passports',
+  title: 'Adventure Passports',
   description: 'Every child in your family gets their own digital passport. Scan a QR code, unlock countries, collect stamps, and build a memory book of every trip. Free for every child with Premium.',
 }
 
@@ -31,6 +32,10 @@ export default async function PassportsLanding() {
     isPremium = isPremiumTier(profile?.subscription_tier)
   }
 
+  // Count live country packs once and reuse in both copy spots so a
+  // new live pack never leaves the page stating an out-of-date number.
+  const livePackCount = PACK_META.filter(p => p.status === 'live').length
+
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -38,7 +43,7 @@ export default async function PassportsLanding() {
         {/* HERO */}
         <section className="text-center max-w-3xl mx-auto mb-16">
           <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-3 inline-flex items-center gap-1.5">
-            <Users className="w-3.5 h-3.5" /> Family Passports
+            <Users className="w-3.5 h-3.5" /> Adventure Passports
           </p>
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 leading-tight mb-5">
             Every adventure deserves a stamp.
@@ -253,7 +258,7 @@ export default async function PassportsLanding() {
             </p>
             <ul className="text-sm text-white/80 inline-flex flex-col gap-2 mb-7 text-left">
               <li className="inline-flex items-center gap-2"><Check className="w-4 h-4 text-brand-300 shrink-0" /> Unlimited children per family</li>
-              <li className="inline-flex items-center gap-2"><Check className="w-4 h-4 text-brand-300 shrink-0" /> All 17 Adventure Packs included</li>
+              <li className="inline-flex items-center gap-2"><Check className="w-4 h-4 text-brand-300 shrink-0" /> All {livePackCount} Adventure Packs included</li>
               <li className="inline-flex items-center gap-2"><Check className="w-4 h-4 text-brand-300 shrink-0" /> All future country packs as we ship them</li>
               <li className="inline-flex items-center gap-2"><Check className="w-4 h-4 text-brand-300 shrink-0" /> Cancel any time</li>
             </ul>
@@ -282,7 +287,7 @@ export default async function PassportsLanding() {
             Adventure Packs are the missions that drive the passport.
           </p>
           <Link href="/adventure-packs" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-700">
-            <Globe className="w-4 h-4" /> Browse all 17 Adventure Packs <ArrowRight className="w-4 h-4" />
+            <Globe className="w-4 h-4" /> Browse all {livePackCount} Adventure Packs <ArrowRight className="w-4 h-4" />
           </Link>
         </section>
 

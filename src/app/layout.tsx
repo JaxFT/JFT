@@ -18,9 +18,26 @@ export const metadata: Metadata = {
       { url: '/favicons/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
     ],
   },
+  // Default link-preview image. Per-page metadata (e.g. blog posts
+  // pulling their cover image) overrides this when set, so this only
+  // fires for surfaces that don't define their own openGraph.images.
+  // The path is resolved against metadataBase, so a full URL ends up
+  // in the og:image tag.
   openGraph: {
     siteName: 'Jax Family Travels',
     type: 'website',
+    images: [
+      {
+        url: '/images/homepage/homepage_header_jft.jpg',
+        width: 1774,
+        height: 887,
+        alt: 'Jax Family Travels',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: ['/images/homepage/homepage_header_jft.jpg'],
   },
 }
 

@@ -47,6 +47,7 @@ export default function CallRequestRow({ request, messages, paymentLinkUrl }: Pr
   const [updating, setUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState<CallRequestStatus>(request.status)
+  const [paidAt, setPaidAt] = useState<string | null>(request.paid_at)
   // Used by the "Send payment link" quick action to seed the textarea
   // with a friendly message + the link, ready for the admin to send.
   const [draftSeed, setDraftSeed] = useState('')
@@ -74,6 +75,28 @@ export default function CallRequestRow({ request, messages, paymentLinkUrl }: Pr
         throw new Error(body.error || `HTTP ${res.status}`)
       }
       setStatus(next)
+      router.refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Update failed')
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+  const togglePaid = async (next: boolean) => {
+    setUpdating(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/admin/call-requests/${request.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paid: next }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error || `HTTP ${res.status}`)
+      }
+      setPaidAt(next ? new Date().toISOString() : null)
       router.refresh()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Update failed')
@@ -117,7 +140,7 @@ export default function CallRequestRow({ request, messages, paymentLinkUrl }: Pr
         <span className={`text-xs font-bold tracking-widest uppercase px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOURS[status]}`}>
           {STATUS_LABEL[status]}
         </span>
-        {request.paid_at && (
+        {paidAt && (
           <span className="inline-flex items-center gap-1 text-xs font-bold tracking-widest uppercase px-2 py-0.5 rounded-full shrink-0 bg-emerald-100 text-emerald-900">
             <BadgeCheck className="w-3 h-3" /> Paid
           </span>
@@ -165,9 +188,33 @@ export default function CallRequestRow({ request, messages, paymentLinkUrl }: Pr
                   >
                     <CreditCard className="w-3.5 h-3.5" /> Send payment link
                   </button>
-                  {request.paid_at && (
-                    <SendConfirmationForm requestId={request.id} />
-                  )}
+                  {paidAt
+                    ? (
+                      <>
+                        <SendConfirmationForm requestId={request.id} />
+                        <button
+                          type="button"
+                          onClick={() => togglePaid(false)}
+                          disabled={updating}
+                          title="Mark this request as unpaid (testing utility)"
+                          className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-400 hover:text-gray-700 px-2 py-1.5"
+                        >
+                          Mark unpaid
+                        </button>
+                      </>
+                    )
+                    : (
+                      <button
+                        type="button"
+                        onClick={() => togglePaid(true)}
+                        disabled={updating}
+                        title="Stamp paid_at = now without hitting Stripe. Use when payment came through another route, or for testing the confirmation flow."
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-md disabled:opacity-50"
+                      >
+                        <BadgeCheck className="w-3.5 h-3.5" /> Mark paid (manual)
+                      </button>
+                    )
+                  }
                 </div>
               )}
             />

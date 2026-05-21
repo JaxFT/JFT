@@ -30,7 +30,7 @@ export async function PATCH(
     return NextResponse.json({ error: 'Not authorized' }, { status: 404 })
   }
   const { id } = await params
-  const body = await request.json().catch(() => null) as { status?: string; notes?: string } | null
+  const body = await request.json().catch(() => null) as { status?: string; notes?: string; paid?: boolean } | null
   if (!body) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
 
   const update: Record<string, unknown> = {}
@@ -39,6 +39,13 @@ export async function PATCH(
   }
   if (typeof body.notes === 'string') {
     update.notes = body.notes
+  }
+  // Manual paid toggle: paid=true stamps paid_at=now() (idempotent, won't
+  // overwrite an existing timestamp), paid=false clears it. Lets admins
+  // flag payments that came through outside Stripe (bank transfer, etc)
+  // or unblock testing without a real charge.
+  if (typeof body.paid === 'boolean') {
+    update.paid_at = body.paid ? new Date().toISOString() : null
   }
 
   const { error } = await adminClient().from('call_requests').update(update).eq('id', id)

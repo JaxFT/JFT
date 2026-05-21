@@ -305,6 +305,7 @@ export default function BlogSocial({
         open={usernameModalOpen}
         initialUsername={viewerUsername}
         initialInstagram={initialViewerInstagram}
+        isAdmin={isAdmin}
         onClose={() => setUsernameModalOpen(false)}
         onSet={({ username }) => {
           setViewerUsername(username)

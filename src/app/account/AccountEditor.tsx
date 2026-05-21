@@ -15,6 +15,11 @@ type Props = {
   initialMarketingOptIn: boolean
   initialUsername: string | null
   initialInstagramHandle: string | null
+  // Admin accounts get an extra Instagram-handle field. Non-admins
+  // don't, because the handle is only ever shown to admins on
+  // comments and we don't want random users claiming an account is
+  // tied to a JFT Instagram they don't own.
+  isAdmin: boolean
 }
 
 export default function AccountEditor({
@@ -23,6 +28,7 @@ export default function AccountEditor({
   initialMarketingOptIn,
   initialUsername,
   initialInstagramHandle,
+  isAdmin,
 }: Props) {
   const router = useRouter()
   const supabase = createClient()
@@ -454,8 +460,8 @@ export default function AccountEditor({
         </div>
         <p className="text-sm text-gray-700">
           {savedUsername
-            ? <><span className="font-mono">@{savedUsername}</span>{savedInstagram && <span className="text-gray-400"> · <Instagram className="w-3.5 h-3.5 inline mr-0.5" /><span className="font-mono">@{savedInstagram}</span></span>}</>
-            : <span className="italic text-gray-400">Not set — pick one to comment on blog posts</span>}
+            ? <><span className="font-mono">@{savedUsername}</span>{isAdmin && savedInstagram && <span className="text-gray-400"> · <Instagram className="w-3.5 h-3.5 inline mr-0.5" /><span className="font-mono">@{savedInstagram}</span></span>}</>
+            : <span className="italic text-gray-400">Not set, pick one to comment on blog posts</span>}
         </p>
 
         {showUsernamePanel && (
@@ -473,19 +479,21 @@ export default function AccountEditor({
               </div>
               <p className="text-[11px] text-gray-400 mt-1">Don&apos;t include the @, we add that for you. Letters, numbers, period, hyphen, underscore. 3 to 24 chars.</p>
             </div>
-            <div>
-              <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Instagram handle <span className="font-normal normal-case tracking-normal text-gray-400">· optional</span></label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-mono select-none pointer-events-none">@</span>
-                <input
-                  value={instagram}
-                  onChange={e => setInstagram(e.target.value)}
-                  className={`${input} !pl-8 !font-mono`}
-                  placeholder="jax.familytravels"
-                />
+            {isAdmin && (
+              <div>
+                <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Instagram handle <span className="font-normal normal-case tracking-normal text-gray-400">· optional, admin only</span></label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-mono select-none pointer-events-none">@</span>
+                  <input
+                    value={instagram}
+                    onChange={e => setInstagram(e.target.value)}
+                    className={`${input} !pl-8 !font-mono`}
+                    placeholder="jax.familytravels"
+                  />
+                </div>
+                <p className="text-[11px] text-gray-400 mt-1">Don&apos;t include the @, paste just <span className="font-mono">jax.familytravels</span>. Shown beneath your username on your own comments (admin-side only).</p>
               </div>
-              <p className="text-[11px] text-gray-400 mt-1">Don&apos;t include the @ — paste just <span className="font-mono">jax.familytravels</span>.</p>
-            </div>
+            )}
             {usernameError && (
               <p className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-md px-3 py-2">{usernameError}</p>
             )}

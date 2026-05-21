@@ -14,6 +14,7 @@ import FamilyPassportSection from './FamilyPassportSection'
 import DeleteAccountButton from './DeleteAccountButton'
 import { isPremiumTier } from '@/lib/profile'
 import { ensureProfile } from '@/lib/ensure-profile'
+import { isAdminEmail } from '@/lib/admin'
 
 export const metadata: Metadata = { title: 'Account' }
 export const dynamic = 'force-dynamic'
@@ -129,6 +130,7 @@ export default async function AccountPage() {
             initialMarketingOptIn={!!profile?.marketing_opt_in}
             initialUsername={(profile as { username?: string | null } | null)?.username ?? null}
             initialInstagramHandle={(profile as { instagram_handle?: string | null } | null)?.instagram_handle ?? null}
+            isAdmin={isAdminEmail(user.email)}
           />
         </div>
 

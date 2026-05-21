@@ -9,6 +9,7 @@ import {
   normaliseUsername, validateUsername,
   normaliseInstagram, validateInstagram,
 } from '@/lib/usernames'
+import { isAdminEmail } from '@/lib/admin'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -25,18 +26,25 @@ export async function POST(request: Request) {
 
   const rawUsername = typeof body.username === 'string' ? body.username : ''
   const rawInsta    = typeof body.instagram_handle === 'string' ? body.instagram_handle : ''
+  const isAdmin = isAdminEmail(user.email)
 
-  const usernameCheck = validateUsername(rawUsername)
+  const usernameCheck = validateUsername(rawUsername, { bypassReserved: isAdmin })
   if (!usernameCheck.ok) return NextResponse.json({ error: usernameCheck.error }, { status: 400 })
   const instaCheck = validateInstagram(rawInsta)
   if (!instaCheck.ok) return NextResponse.json({ error: instaCheck.error }, { status: 400 })
 
   const username = normaliseUsername(rawUsername)
-  const instagram_handle = normaliseInstagram(rawInsta) || null
+  // Non-admins can't set or change an Instagram handle from this
+  // endpoint, the field is hidden in their account UI. We still let
+  // it through for admins (Bec + Oli, who share jax.familytravels).
+  const instagram_handle = isAdmin ? (normaliseInstagram(rawInsta) || null) : undefined
+
+  const update: Record<string, unknown> = { username }
+  if (instagram_handle !== undefined) update.instagram_handle = instagram_handle
 
   const { error } = await supabase
     .from('profiles')
-    .update({ username, instagram_handle })
+    .update(update)
     .eq('id', user.id)
 
   if (error) {
@@ -47,5 +55,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true, username, instagram_handle })
+  return NextResponse.json({ ok: true, username, instagram_handle: instagram_handle ?? null })
 }

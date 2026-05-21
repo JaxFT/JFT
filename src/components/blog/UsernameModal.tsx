@@ -13,12 +13,15 @@ type Props = {
   open: boolean
   initialUsername?: string | null
   initialInstagram?: string | null
+  // Admins can claim reserved names and see the Instagram-handle
+  // field. Regular users never see the IG input.
+  isAdmin?: boolean
   onClose: () => void
   onSet: (saved: { username: string; instagram_handle: string | null }) => void
 }
 
 export default function UsernameModal({
-  open, initialUsername, initialInstagram, onClose, onSet,
+  open, initialUsername, initialInstagram, isAdmin = false, onClose, onSet,
 }: Props) {
   const [username, setUsername] = useState(initialUsername ?? '')
   const [instagram, setInstagram] = useState(initialInstagram ?? '')
@@ -27,7 +30,7 @@ export default function UsernameModal({
 
   if (!open) return null
 
-  const usernameCheck = validateUsername(username)
+  const usernameCheck = validateUsername(username, { bypassReserved: isAdmin })
   const instaCheck = validateInstagram(instagram)
   const formValid = usernameCheck.ok && instaCheck.ok
 
@@ -98,26 +101,28 @@ export default function UsernameModal({
           {username && !usernameCheck.ok && (
             <p className="text-xs text-red-600 mt-1">{usernameCheck.error}</p>
           )}
-          <p className="text-[11px] text-gray-400 mt-1">Don&apos;t include the @ — we add that for you.</p>
+          <p className="text-[11px] text-gray-400 mt-1">Don&apos;t include the @, we add that for you.</p>
         </label>
 
-        <label className="block mb-4">
-          <span className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Instagram handle <span className="font-normal normal-case tracking-normal text-gray-400">· optional</span></span>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-mono select-none pointer-events-none">@</span>
-            <input
-              type="text"
-              value={instagram}
-              onChange={e => setInstagram(e.target.value)}
-              placeholder="jax.familytravels"
-              className="w-full pl-8 pr-3 py-2.5 border border-gray-200 rounded-md font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-            />
-          </div>
-          {instagram && !instaCheck.ok && (
-            <p className="text-xs text-red-600 mt-1">{instaCheck.error}</p>
-          )}
-          <p className="text-[11px] text-gray-400 mt-1">Don&apos;t include the @ — paste just <span className="font-mono">jax.familytravels</span> not <span className="font-mono">@jax.familytravels</span>.</p>
-        </label>
+        {isAdmin && (
+          <label className="block mb-4">
+            <span className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Instagram handle <span className="font-normal normal-case tracking-normal text-gray-400">· optional, admin only</span></span>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-mono select-none pointer-events-none">@</span>
+              <input
+                type="text"
+                value={instagram}
+                onChange={e => setInstagram(e.target.value)}
+                placeholder="jax.familytravels"
+                className="w-full pl-8 pr-3 py-2.5 border border-gray-200 rounded-md font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+            {instagram && !instaCheck.ok && (
+              <p className="text-xs text-red-600 mt-1">{instaCheck.error}</p>
+            )}
+            <p className="text-[11px] text-gray-400 mt-1">Don&apos;t include the @. Paste just <span className="font-mono">jax.familytravels</span>, not <span className="font-mono">@jax.familytravels</span>.</p>
+          </label>
+        )}
 
         {error && (
           <p className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-md px-3 py-2 mb-4">{error}</p>

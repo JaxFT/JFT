@@ -23,14 +23,18 @@ export function normaliseUsername(input: string): string {
   return input.trim().toLowerCase()
 }
 
-export function validateUsername(raw: string): UsernameCheck {
+// `bypassReserved` lets admin accounts claim names from the RESERVED
+// list. Those names exist to keep random users from grabbing
+// 'jaxfamilytravels' / 'bec' / 'oli' etc, but the real Bec and Oli
+// obviously need to be able to use their own names.
+export function validateUsername(raw: string, opts: { bypassReserved?: boolean } = {}): UsernameCheck {
   const u = normaliseUsername(raw)
   if (!u) return { ok: false, error: 'Pick a username so other readers know who left the comment.' }
   if (u.length < 3) return { ok: false, error: 'At least 3 characters.' }
   if (u.length > 24) return { ok: false, error: 'Keep it under 24 characters.' }
   if (u.includes('..')) return { ok: false, error: 'No two periods in a row.' }
   if (!USERNAME_RE.test(u)) return { ok: false, error: 'Letters, numbers, periods, hyphens, underscores. Must start and end with a letter or number.' }
-  if (RESERVED.has(u)) return { ok: false, error: 'That name is reserved, try another.' }
+  if (!opts.bypassReserved && RESERVED.has(u)) return { ok: false, error: 'That name is reserved, try another.' }
   return { ok: true }
 }
 

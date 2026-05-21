@@ -10,6 +10,7 @@
 //   - Light bg       #F0F4FF
 // Gradient (135deg): #0A1628 → #0D2B5E (60%) → #0066FF
 
+import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 
 type Variant = 'hero' | 'compact' | 'inline'
@@ -24,6 +25,11 @@ type Props = {
   body?: string
   ctaLabel?: string
 }
+
+// The blog post that explains why we built Waystaq and how it has
+// helped us travel. Linked from every WaystaqCard so readers can dig
+// into the story before clicking through to the app.
+const WAYSTAQ_BLOG_SLUG = 'the-travel-spreadsheet-finally-broke-us'
 
 const DEFAULTS = {
   title: 'Waystaq',
@@ -62,8 +68,18 @@ export default function WaystaqCard({
             </span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold mb-3 leading-tight">{finalTitle} — {subtitle}</h2>
-          <p className="text-white/85 leading-relaxed text-base sm:text-lg mb-6 max-w-xl">
+          <p className="text-white/85 leading-relaxed text-base sm:text-lg mb-3 max-w-xl">
             {finalBody}
+          </p>
+          <p className="text-white/70 text-sm mb-6 max-w-xl">
+            Read more about how it helps us and how it could help you{' '}
+            <Link
+              href={`/blog/${WAYSTAQ_BLOG_SLUG}`}
+              className="font-semibold text-white underline underline-offset-2 hover:text-white/90"
+            >
+              here
+            </Link>
+            .
           </p>
           <a
             href={ctaHref}
@@ -98,8 +114,19 @@ export default function WaystaqCard({
         <h3 className="font-bold mb-1" style={{ color: '#0A1628' }}>
           {finalTitle} — {subtitle}
         </h3>
-        <p className="text-sm leading-relaxed mb-3" style={{ color: '#0A1628', opacity: 0.75 }}>
+        <p className="text-sm leading-relaxed mb-2" style={{ color: '#0A1628', opacity: 0.75 }}>
           {finalBody}
+        </p>
+        <p className="text-xs leading-relaxed mb-3" style={{ color: '#0A1628', opacity: 0.65 }}>
+          Read more about how it helps us and how it could help you{' '}
+          <Link
+            href={`/blog/${WAYSTAQ_BLOG_SLUG}`}
+            className="font-semibold underline underline-offset-2"
+            style={{ color: '#0066FF' }}
+          >
+            here
+          </Link>
+          .
         </p>
         <a
           href={ctaHref}

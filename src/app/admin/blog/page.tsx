@@ -1,7 +1,8 @@
 import Link from 'next/link'
-import { Plus, FileText, ExternalLink, ShieldCheck, Upload, Crown, Link2 } from 'lucide-react'
+import { Plus, FileText, ExternalLink, ShieldCheck, Upload, Crown, Link2, Pin } from 'lucide-react'
 import type { Metadata } from 'next'
-import { listAllPostsForAdmin } from '@/lib/blog-db'
+import { listAllPostsForAdmin, MAX_HOMEPAGE_FEATURED } from '@/lib/blog-db'
+import HomepagePinButton from './HomepagePinButton'
 
 export const metadata: Metadata = {
   title: 'Admin · Blog Posts',
@@ -12,6 +13,8 @@ export const dynamic = 'force-dynamic'
 
 export default async function AdminBlogListPage() {
   const posts = await listAllPostsForAdmin()
+  const featuredCount = posts.filter(p => p.homepage_featured).length
+  const homepageFull = featuredCount >= MAX_HOMEPAGE_FEATURED
 
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
@@ -26,6 +29,11 @@ export default async function AdminBlogListPage() {
             </div>
             <h1 className="text-3xl font-bold text-gray-900">Blog posts</h1>
             <p className="text-gray-500 mt-1">Drafts and published posts. Generate new ones with the writer or edit existing ones below.</p>
+            <p className="text-xs text-gray-500 mt-2 inline-flex items-center gap-1.5">
+              <Pin className="w-3.5 h-3.5 text-brand-600" />
+              Homepage features: <span className="font-semibold text-gray-700">{featuredCount}/{MAX_HOMEPAGE_FEATURED}</span>
+              <span className="text-gray-400">, pinned posts cycle through the hero stack.</span>
+            </p>
           </div>
           <div className="flex gap-2 shrink-0">
             <Link href="/admin/blog/links" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg">
@@ -71,6 +79,11 @@ export default async function AdminBlogListPage() {
                             <Crown className="w-3 h-3" /> Premium
                           </span>
                         )}
+                        {post.homepage_featured && (
+                          <span className="inline-flex items-center gap-1 text-xs font-bold tracking-widest uppercase text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">
+                            <Pin className="w-3 h-3 fill-current" /> Homepage
+                          </span>
+                        )}
                         {post.tags.slice(0, 3).map(tag => (
                           <span key={tag} className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{tag}</span>
                         ))}
@@ -83,6 +96,13 @@ export default async function AdminBlogListPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
+                      {post.status === 'published' && (
+                        <HomepagePinButton
+                          postId={post.id}
+                          initialPinned={post.homepage_featured}
+                          disabled={homepageFull}
+                        />
+                      )}
                       {post.status === 'published' && (
                         <Link
                           href={`/blog/${post.slug}`}

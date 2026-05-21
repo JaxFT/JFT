@@ -41,10 +41,13 @@ export type BlogPostRow = {
   travel_stages: TravelStage[]
   destination_country: string | null
   topics: BlogTopic[]
+  homepage_featured: boolean
   published_at: string | null
   created_at: string
   updated_at: string
 }
+
+export const MAX_HOMEPAGE_FEATURED = 3
 
 // Normalise a raw Supabase row into BlogPostRow. Handles:
 //   - links field missing / wrong shape → []
@@ -102,6 +105,7 @@ function normaliseRow(raw: unknown): BlogPostRow {
       ? r.destination_country.trim().toLowerCase()
       : null,
     topics: sanitizeBlogTopics(r.topics),
+    homepage_featured: Boolean(r.homepage_featured),
     published_at: (r.published_at as string | null) ?? null,
     created_at: r.created_at as string,
     updated_at: r.updated_at as string,
@@ -114,6 +118,21 @@ export async function listPublishedPosts(): Promise<BlogPostRow[]> {
     .from('blog_posts')
     .select('*')
     .eq('status', 'published')
+    .order('published_at', { ascending: false })
+  return (data ?? []).map(normaliseRow)
+}
+
+// Posts marked by an admin as homepage features. The hero stack on
+// the homepage reads from here. Limit is enforced at write time
+// (see /api/admin/blog-posts/[id] PATCH), so this just orders the
+// already-capped set by publish date.
+export async function listHomepageFeaturedPosts(): Promise<BlogPostRow[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('blog_posts')
+    .select('*')
+    .eq('status', 'published')
+    .eq('homepage_featured', true)
     .order('published_at', { ascending: false })
   return (data ?? []).map(normaliseRow)
 }

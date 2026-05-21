@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { listPublishedPosts, rowToView } from '@/lib/blog-db'
+import { listHomepageFeaturedPosts, rowToView } from '@/lib/blog-db'
 import { loadCountsForSlugs } from '@/lib/blog-social-db'
 import BlogCard from '@/components/blog/BlogCard'
 import HeroBlogStack from '@/components/blog/HeroBlogStack'
@@ -19,10 +19,10 @@ export default async function HomePage() {
   // Kick off the public data fetch and the cookie-aware client construction
   // in parallel, they're independent.
   const [rows, supabase] = await Promise.all([
-    listPublishedPosts(),
+    listHomepageFeaturedPosts(),
     createClient(),
   ])
-  const posts = rows.slice(0, 3).map(rowToView)
+  const posts = rows.map(rowToView)
   const counts = await loadCountsForSlugs(posts.map(p => p.slug))
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -78,7 +78,7 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* Right: featured posts stack, draggable on desktop, swipe to flip between latest 3 posts */}
+            {/* Right: featured posts stack, draggable on desktop, swipe to flip between pinned homepage posts */}
             {posts.length > 0 && (
               <div className="hidden lg:block">
                 <HeroBlogStack posts={posts.slice(0, 3)} />
@@ -137,7 +137,7 @@ export default async function HomePage() {
             <div className="flex items-end justify-between mb-10">
               <div>
                 <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">From the blog</p>
-                <h2 className="text-3xl font-bold text-gray-900">Latest stories</h2>
+                <h2 className="text-3xl font-bold text-gray-900">Featured stories</h2>
               </div>
               <Link href="/blog" className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700">
                 All posts <ArrowRight className="w-4 h-4" />

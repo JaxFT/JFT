@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/admin'
-import { slugify, type BlogCategory, type BlogLink } from '@/lib/blog-db'
+import { slugify, MAX_HOMEPAGE_FEATURED, type BlogCategory, type BlogLink } from '@/lib/blog-db'
 import {
   sanitizeTravelStages, sanitizeBlogTopics, sanitizeDestinationCountry,
 } from '@/lib/blog-meta'
@@ -39,6 +39,7 @@ type UpdateBody = {
   travel_stages?: unknown
   destination_country?: string | null
   topics?: unknown
+  homepage_featured?: boolean
   published_at?: string | null
 }
 
@@ -135,6 +136,24 @@ export async function PATCH(
   }
   if (body.topics !== undefined) {
     update.topics = sanitizeBlogTopics(body.topics)
+  }
+  if (typeof body.homepage_featured === 'boolean') {
+    if (body.homepage_featured) {
+      // Cap at 3 simultaneous features. If this post is already
+      // featured the count includes it, so the check below allows it.
+      const { data: featured } = await auth.supabase
+        .from('blog_posts')
+        .select('id')
+        .eq('homepage_featured', true)
+      const ids = (featured ?? []).map(r => (r as { id: string }).id)
+      if (!ids.includes(id) && ids.length >= MAX_HOMEPAGE_FEATURED) {
+        return NextResponse.json(
+          { error: `Only ${MAX_HOMEPAGE_FEATURED} posts can be featured on the homepage. Unpin one first.` },
+          { status: 400 },
+        )
+      }
+    }
+    update.homepage_featured = body.homepage_featured
   }
 
   // Published-at + status interaction:

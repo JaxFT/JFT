@@ -49,6 +49,13 @@ export default function PlanningPage() {
             <p className="text-gray-500 mt-2 text-lg">
               Waystaq is the trip planner and budget tracker we use every day on the road. Built by long-term travellers for long-term travellers, designed to replace the spreadsheet.
             </p>
+            <p className="text-gray-500 mt-3 text-sm">
+              Read more about how it helps us and how it could help you{' '}
+              <Link href="/blog/the-travel-spreadsheet-finally-broke-us" className="font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-800">
+                here
+              </Link>
+              .
+            </p>
             <div className="mt-6 flex flex-wrap gap-3 sm:gap-4 items-center">
               <a
                 href="https://waystaq.com/app"
@@ -160,8 +167,15 @@ export default function PlanningPage() {
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
             Free to start. <span className="text-brand-300">£24.99 / year</span> for Premium.
           </h2>
-          <p className="text-white/90 text-lg leading-relaxed mb-10 max-w-lg mx-auto">
+          <p className="text-white/90 text-lg leading-relaxed mb-4 max-w-lg mx-auto">
             Premium adds trip sharing with travelling companions and the deeper budget views. 14-day refund. Cancel any time.
+          </p>
+          <p className="text-white/70 text-sm mb-10 max-w-lg mx-auto">
+            Read more about how it helps us and how it could help you{' '}
+            <Link href="/blog/the-travel-spreadsheet-finally-broke-us" className="font-semibold text-white underline underline-offset-2 hover:text-white/90">
+              here
+            </Link>
+            .
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             <a

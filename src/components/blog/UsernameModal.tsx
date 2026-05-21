@@ -69,7 +69,7 @@ export default function UsernameModal({
               {initialUsername ? 'Update your username' : 'Pick a username'}
             </h2>
             <p className="text-sm text-gray-500 mt-1 leading-relaxed">
-              Shown next to your comments and likes. Letters, numbers, hyphens, underscores. 3–24 characters.
+              Shown next to your comments and likes. Letters, numbers, periods, hyphens, underscores. 3 to 24 characters.
             </p>
           </div>
           <button

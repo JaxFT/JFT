@@ -1,11 +1,13 @@
 // Username rules shared between client (input validation, modal
 // previews) and server (API enforcement, DB writes).
 //
-// Format: lowercase a-z, 0-9, hyphen, underscore. 3–24 characters.
-// We force lowercase on submit so "BecKBaker" → "beckbaker"; the
+// Format: lowercase a-z, 0-9, hyphen, underscore, period. 3-24 chars.
+// Periods can't lead, trail, or appear consecutively (so "jax.travels"
+// is fine but ".jax", "jax.", and "jax..travels" are not).
+// We force lowercase on submit so "BecKBaker" -> "beckbaker"; the
 // database also has a unique lowercase index as a backstop.
 
-const USERNAME_RE = /^[a-z0-9_-]{3,24}$/
+const USERNAME_RE = /^[a-z0-9][a-z0-9._-]{1,22}[a-z0-9]$/
 
 // Names we don't want regular users grabbing. Keep this short and
 // obvious; the UI will steer real users to something better anyway.
@@ -26,8 +28,9 @@ export function validateUsername(raw: string): UsernameCheck {
   if (!u) return { ok: false, error: 'Pick a username so other readers know who left the comment.' }
   if (u.length < 3) return { ok: false, error: 'At least 3 characters.' }
   if (u.length > 24) return { ok: false, error: 'Keep it under 24 characters.' }
-  if (!USERNAME_RE.test(u)) return { ok: false, error: 'Letters, numbers, hyphens, underscores only.' }
-  if (RESERVED.has(u)) return { ok: false, error: 'That name is reserved — try another.' }
+  if (u.includes('..')) return { ok: false, error: 'No two periods in a row.' }
+  if (!USERNAME_RE.test(u)) return { ok: false, error: 'Letters, numbers, periods, hyphens, underscores. Must start and end with a letter or number.' }
+  if (RESERVED.has(u)) return { ok: false, error: 'That name is reserved, try another.' }
   return { ok: true }
 }
 

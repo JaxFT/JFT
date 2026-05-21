@@ -471,7 +471,7 @@ export default function AccountEditor({
                   placeholder="wanderingmum"
                 />
               </div>
-              <p className="text-[11px] text-gray-400 mt-1">Don&apos;t include the @ — we add that for you. Letters, numbers, hyphen, underscore. 3–24 chars.</p>
+              <p className="text-[11px] text-gray-400 mt-1">Don&apos;t include the @, we add that for you. Letters, numbers, period, hyphen, underscore. 3 to 24 chars.</p>
             </div>
             <div>
               <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Instagram handle <span className="font-normal normal-case tracking-normal text-gray-400">· optional</span></label>

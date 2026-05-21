@@ -26,8 +26,21 @@ type Props = {
   initialDraft?: string
 }
 
-function fmt(iso: string): string {
+// Format a message timestamp. The `mounted` flag lets us pick the
+// hydration-safe pre-mount output (absolute UK time, identical on
+// SSR and CSR) versus the friendlier post-mount output (same-day =
+// time only, else date + time, all in the viewer's local timezone).
+// Without this split, React error #418 fires on any session that
+// isn't UTC, since server and client format the same instant
+// differently.
+function fmt(iso: string, mounted: boolean): string {
   const d = new Date(iso)
+  if (!mounted) {
+    return d.toLocaleString('en-GB', {
+      day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+      timeZone: 'Europe/London',
+    })
+  }
   const sameDay = new Date().toDateString() === d.toDateString()
   if (sameDay) return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
   return d.toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
@@ -146,6 +159,11 @@ export default function CallThread({
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+  // mounted flips to true after the first client render. Anything
+  // locale/timezone-dependent only switches to the viewer-local
+  // formatting at that point to keep SSR output stable.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
   const unreadRef = useRef(0)
   const baseTitleRef = useRef<string>('')
 
@@ -259,7 +277,7 @@ export default function CallThread({
                   <div className="w-full max-w-md">
                     <ConfirmationCard meta={m.metadata} callId={m.call_request_id} />
                     <p className="text-[10px] text-gray-400 mt-1 text-center">
-                      {m.sender === 'admin' ? 'Bec / Oli' : 'You'} · {fmt(m.created_at)}
+                      {m.sender === 'admin' ? 'Bec / Oli' : 'You'} · {fmt(m.created_at, mounted)}
                     </p>
                   </div>
                 </li>
@@ -273,7 +291,7 @@ export default function CallThread({
                 }`}>
                   <div>{renderBody(m.body)}</div>
                   <div className={`text-[10px] mt-1 ${mine ? 'text-white/60' : 'text-gray-400'}`}>
-                    {m.sender === 'admin' ? 'Bec / Oli' : 'You'} · {fmt(m.created_at)}
+                    {m.sender === 'admin' ? 'Bec / Oli' : 'You'} · {fmt(m.created_at, mounted)}
                   </div>
                 </div>
               </li>

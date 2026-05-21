@@ -20,6 +20,15 @@ export const BEC_FROM   = 'Bec at Jax | Family Travels <bec@jaxfamilytravels.com
 export const INBOX      = 'hello@jaxfamilytravels.com'  // forwards to gmail
 export const ADMIN_NOTIFY = 'hello@jaxfamilytravels.com'
 
+type EmailAttachment = {
+  filename: string
+  // Plain string content; Resend SDK accepts strings for text-based
+  // attachments (like .ics calendar files). Binary attachments would
+  // need base64, we don't have a case for those yet.
+  content: string
+  contentType?: string
+}
+
 type SendArgs = {
   from?: string
   to: string | string[]
@@ -27,13 +36,17 @@ type SendArgs = {
   html: string
   text?: string
   replyTo?: string
+  attachments?: EmailAttachment[]
 }
 
 export async function sendEmail({
-  from = HELLO_FROM, to, subject, html, text, replyTo,
+  from = HELLO_FROM, to, subject, html, text, replyTo, attachments,
 }: SendArgs): Promise<{ ok: boolean; id?: string; error?: string }> {
   const key = process.env.RESEND_API_KEY
-  if (!key) return { ok: false, error: 'RESEND_API_KEY not set' }
+  if (!key) {
+    console.error('[email] RESEND_API_KEY not set, skipping send', { to, subject })
+    return { ok: false, error: 'RESEND_API_KEY not set' }
+  }
 
   try {
     const resend = new Resend(key)
@@ -44,10 +57,15 @@ export async function sendEmail({
       html,
       text,
       replyTo,
+      ...(attachments && attachments.length > 0 ? { attachments } : {}),
     })
-    if (error) return { ok: false, error: error.message }
+    if (error) {
+      console.error('[email] Resend rejected', { to, subject, error: error.message })
+      return { ok: false, error: error.message }
+    }
     return { ok: true, id: data?.id }
   } catch (e) {
+    console.error('[email] threw', { to, subject, err: e })
     return { ok: false, error: e instanceof Error ? e.message : 'Email failed' }
   }
 }
@@ -189,6 +207,58 @@ What you sent:
 ${p.whatToDiscuss}
 
 If anything else comes to mind before we reply, just hit reply to this email.
+
+Speak soon,
+Bec & Oli`
+
+  return { subject, html: emailShell(subject, bodyHtml), text }
+}
+
+// Confirmation email sent when the admin locks in the date/time for
+// a paid 1:1 call. Includes the formatted local time, the chosen
+// reference timezone, optional notes, and a deep link to the thread
+// so the recipient can add the call to their own calendar.
+//
+// The caller can attach the .ics file separately via Resend's
+// attachments API; this template just renders the human bits.
+export function buildCallConfirmationEmail(p: {
+  firstName: string
+  siteUrl: string
+  // Formatted strings, the caller does the timezone math.
+  localTimeLabel: string  // e.g. 'Mon, 12 May 2026, 14:00'
+  timezoneLabel: string   // e.g. 'Europe/London'
+  durationMinutes: number
+  notes?: string | null
+}): { subject: string; html: string; text: string } {
+  const subject = 'Your 1:1 call is confirmed'
+  const threadUrl = `${p.siteUrl}/account#call-request`
+  const notesHtml = p.notes
+    ? `<p style="margin-top:18px"><strong>Joining info / notes</strong></p><p style="white-space:pre-wrap; background:#f5f4f1; padding:14px 18px; border-radius:8px;">${escapeHtml(p.notes)}</p>`
+    : ''
+  const bodyHtml = `
+    <p>Hi ${escapeHtml(p.firstName)},</p>
+    <p>Your 1:1 call is locked in for:</p>
+    <div class="kv">
+      <div class="kv-row"><span class="kv-label">When</span><span class="kv-value">${escapeHtml(p.localTimeLabel)}</span></div>
+      <div class="kv-row"><span class="kv-label">Time zone</span><span class="kv-value">${escapeHtml(p.timezoneLabel)}</span></div>
+      <div class="kv-row"><span class="kv-label">Duration</span><span class="kv-value">${p.durationMinutes} minutes</span></div>
+    </div>
+    <p>An invite is attached to this email, double-click <strong>jft-1-1-call.ics</strong> and your calendar app will pick the right local time for wherever you are.</p>
+    ${notesHtml}
+    <p style="margin-top:18px"><a href="${threadUrl}" class="btn">Open the conversation</a></p>
+    <p style="margin-top:22px">Speak soon,<br>Bec &amp; Oli</p>
+  `
+  const text = `Hi ${p.firstName},
+
+Your 1:1 call is locked in for:
+
+When: ${p.localTimeLabel}
+Time zone: ${p.timezoneLabel}
+Duration: ${p.durationMinutes} minutes${p.notes ? `\n\nJoining info / notes:\n${p.notes}` : ''}
+
+An invite is attached to this email (jft-1-1-call.ics). Open it and your calendar app will set the right local time wherever you are.
+
+Open the conversation: ${threadUrl}
 
 Speak soon,
 Bec & Oli`

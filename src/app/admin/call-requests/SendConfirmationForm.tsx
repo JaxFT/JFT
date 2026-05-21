@@ -7,6 +7,7 @@
 // the thread state from here.
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Calendar, Loader2 } from 'lucide-react'
 
 const COMMON_TIMEZONES = [
@@ -24,6 +25,7 @@ const COMMON_TIMEZONES = [
 ]
 
 export default function SendConfirmationForm({ requestId }: { requestId: string }) {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [date, setDate] = useState('')
   const [time, setTime] = useState('14:00')
@@ -45,8 +47,19 @@ export default function SendConfirmationForm({ requestId }: { requestId: string 
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`)
-      setOpen(false)
-      setNotes('')
+      // The route also reports email-send failures so they're not
+      // silent (e.g. unverified domain in Resend). The message + ICS
+      // are saved either way, so just warn rather than treating it
+      // as a hard error.
+      if (data.email && data.email.ok === false) {
+        setError(`Confirmation saved, but the email didn't send (${data.email.error}). Check Resend.`)
+      } else {
+        setOpen(false)
+        setNotes('')
+      }
+      // Reload so the new confirmation message appears in the
+      // admin's own thread view immediately.
+      router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Send failed')
     } finally {

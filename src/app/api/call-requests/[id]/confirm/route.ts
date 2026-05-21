@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/admin'
 import { adminClient } from '@/lib/call-requests-db'
 import {
-  sendEmail, buildCallThreadReplyToUserEmail,
+  sendEmail, buildCallConfirmationEmail,
   BEC_FROM, ADMIN_NOTIFY,
 } from '@/lib/email'
 
@@ -126,21 +126,62 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     .update({ status: 'scheduled', updated_at: new Date().toISOString() })
     .eq('id', id)
 
-  // Email the user a nudge to come back and add the call to their
-  // calendar. The thread is the source of truth, so the email just
-  // links them there.
+  // Email the user a proper confirmation with the date/time spelled
+  // out + an .ics attachment. Their phone/laptop calendar app will
+  // re-localise the event because the ICS pins it to a UTC instant.
   const requester = row as { id: string; name: string; email: string }
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
   const firstName = requester.name.split(' ')[0] || requester.name
-  const m = buildCallThreadReplyToUserEmail({ firstName, siteUrl })
-  void sendEmail({
+  const startUtc = new Date(utcIso)
+  const endUtc = new Date(startUtc.getTime() + durationMinutes * 60 * 1000)
+  const dt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
+  const icsBody = notes
+    ? notes.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;')
+    : 'Your booked 1:1 with Bec and Oli.'
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Jax Family Travels//Call Confirmation//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:call-${id}@jaxfamilytravels.com`,
+    `DTSTAMP:${dt(new Date())}`,
+    `DTSTART:${dt(startUtc)}`,
+    `DTEND:${dt(endUtc)}`,
+    'SUMMARY:1:1 call with Jax Family Travels',
+    `DESCRIPTION:${icsBody}`,
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n')
+
+  const m = buildCallConfirmationEmail({
+    firstName,
+    siteUrl,
+    localTimeLabel: localPretty,
+    timezoneLabel: tz,
+    durationMinutes,
+    notes,
+  })
+  const emailResult = await sendEmail({
     from: BEC_FROM,
     to: requester.email,
-    subject: `Your 1:1 call is confirmed`,
+    subject: m.subject,
     html: m.html,
     text: m.text,
     replyTo: ADMIN_NOTIFY,
+    attachments: [{ filename: 'jft-1-1-call.ics', content: ics, contentType: 'text/calendar' }],
   })
+  if (!emailResult.ok) {
+    // Don't fail the request, the in-app card is still the source of
+    // truth, but surface the reason in the response so admin can see
+    // it in the network panel + the worker logs include it via the
+    // console.error in sendEmail.
+    console.error('[confirm] email send failed', emailResult.error)
+  }
 
-  return NextResponse.json({ message: inserted })
+  return NextResponse.json({
+    message: inserted,
+    email: emailResult.ok ? { ok: true } : { ok: false, error: emailResult.error },
+  })
 }

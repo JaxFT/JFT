@@ -4,6 +4,7 @@ import { isAdminEmail } from '@/lib/admin'
 import { slugifyForGuide } from '@/lib/guide-types'
 import { getWebGuideById } from '@/lib/guides-content-db'
 import type { GuideSections } from '@/lib/guide-types'
+import { stripePriceIdForPence } from '@/lib/stripe-price-tiers'
 
 export const dynamic = 'force-dynamic'
 
@@ -71,7 +72,15 @@ export async function PATCH(
   if (body.cover_image !== undefined)        update.cover_image = body.cover_image ?? null
   if (Array.isArray(body.tags))              update.tags = body.tags
   if (typeof body.is_premium === 'boolean')  update.is_premium = body.is_premium
-  if (typeof body.price_pence === 'number')  update.price_pence = Math.max(0, Math.floor(body.price_pence))
+  if (typeof body.price_pence === 'number') {
+    const pence = Math.max(0, Math.floor(body.price_pence))
+    update.price_pence = pence
+    // Auto-wire stripe_price_id from the catalog when the price hits
+    // a known tier. Non-matches are left alone so a manually-wired
+    // bespoke price (e.g. a one-off launch promo) isn't clobbered.
+    const matchedPriceId = stripePriceIdForPence(pence)
+    if (matchedPriceId) update.stripe_price_id = matchedPriceId
+  }
   if (typeof body.preview_destinations === 'number') {
     update.preview_destinations = Math.max(0, Math.min(20, Math.floor(body.preview_destinations)))
   }

@@ -17,6 +17,7 @@ import {
 import { buildBlockPrompt } from '@/lib/guide-prompts'
 import { resizeImageIfLarge } from '@/lib/image-resize'
 import { generateAndUploadDownload } from '@/lib/admin-guide-pregen'
+import { GUIDE_PRICE_TIERS, stripePriceIdForPence } from '@/lib/stripe-price-tiers'
 
 const TOTAL_STEPS = 4
 
@@ -452,7 +453,7 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
               label="One-off price (pence)"
               sub="0 = Premium-only (no one-off purchase). £49.99/year premium always includes this guide."
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <input
                   type="number"
                   min={0}
@@ -461,7 +462,30 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
                   className="w-40 text-sm px-3 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono"
                 />
                 <span className="text-sm text-gray-500">= £{(pricePence / 100).toFixed(2)}</span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {GUIDE_PRICE_TIERS.map(tier => (
+                    <button
+                      key={tier.pricePence}
+                      type="button"
+                      onClick={() => setPricePence(tier.pricePence)}
+                      className={`text-xs font-semibold px-2.5 py-1.5 rounded-md border transition-colors ${
+                        pricePence === tier.pricePence
+                          ? 'text-brand-700 bg-brand-50 border-brand-200'
+                          : 'text-gray-600 bg-white border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      {tier.label}
+                    </button>
+                  ))}
+                </div>
               </div>
+              <p className={`text-xs mt-2 ${stripePriceIdForPence(pricePence) || pricePence === 0 ? 'text-gray-500' : 'text-amber-700'}`}>
+                {pricePence === 0
+                  ? 'Premium-only, no Stripe price needed.'
+                  : stripePriceIdForPence(pricePence)
+                    ? `Stripe price auto-wired on save (${stripePriceIdForPence(pricePence)}).`
+                    : 'Custom price, no matching Stripe tier. Existing Stripe price stays as-is. Add a tier to src/lib/stripe-price-tiers.ts to auto-wire it.'}
+              </p>
             </Field>
 
             <div className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center justify-between gap-4 flex-wrap">

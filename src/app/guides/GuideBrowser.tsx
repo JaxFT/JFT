@@ -10,7 +10,10 @@ import Link from 'next/link'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { Map, ArrowRight, Crown, Search, X } from 'lucide-react'
 import { proxyImageUrl } from '@/lib/image-proxy'
-import { formatPrice } from '@/lib/guides-db'
+
+// Inlined so this client component doesn't pull guides-db (which
+// imports the server supabase client + next/headers).
+const formatPrice = (pence: number) => `£${(pence / 100).toFixed(2)}`
 
 export type GuideCardModel = {
   slug: string

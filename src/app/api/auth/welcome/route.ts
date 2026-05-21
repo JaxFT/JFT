@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient as createSbClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail, buildWelcomeEmail, HELLO_FROM } from '@/lib/email'
+import { buildUnsubscribeUrl } from '@/lib/unsubscribe-token'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -80,12 +81,18 @@ export async function POST() {
   // try again.
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
   const tpl = buildWelcomeEmail({ name: profile?.full_name ?? null, siteUrl })
+  // Per-user one-click unsubscribe URL for the welcome email (a
+  // marketing-style send, not transactional). sendEmail folds this
+  // into the List-Unsubscribe + List-Unsubscribe-Post headers so
+  // Gmail/Outlook render their native unsubscribe button.
+  const unsubscribeUrl = (await buildUnsubscribeUrl(user.id)) ?? undefined
   const result = await sendEmail({
     from: HELLO_FROM,
     to: user.email!,
     subject: tpl.subject,
     html: tpl.html,
     text: tpl.text,
+    unsubscribeUrl,
   })
 
   if (!result.ok) {

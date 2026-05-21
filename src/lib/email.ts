@@ -37,10 +37,21 @@ type SendArgs = {
   text?: string
   replyTo?: string
   attachments?: EmailAttachment[]
+  // Marketing emails (welcome, broadcasts) pass their own per-user
+  // unsubscribe URL here so the header points at a tokenised
+  // one-click endpoint. Transactional emails get the default mailto
+  // form below if not provided.
+  unsubscribeUrl?: string
 }
 
+// Default List-Unsubscribe target for transactional sends. mailto:
+// is a valid form recognised by Gmail and Outlook, no extra
+// infrastructure needed; replies land in the shared inbox where
+// Bec / Oli action them by hand.
+const DEFAULT_UNSUBSCRIBE_MAILTO = `mailto:${INBOX}?subject=Unsubscribe`
+
 export async function sendEmail({
-  from = HELLO_FROM, to, subject, html, text, replyTo, attachments,
+  from = HELLO_FROM, to, subject, html, text, replyTo, attachments, unsubscribeUrl,
 }: SendArgs): Promise<{ ok: boolean; id?: string; error?: string }> {
   const key = process.env.RESEND_API_KEY
   if (!key) {
@@ -50,6 +61,18 @@ export async function sendEmail({
 
   try {
     const resend = new Resend(key)
+    // List-Unsubscribe-Post = One-Click only makes sense when the
+    // unsubscribe target is an HTTPS URL we serve; for the mailto
+    // fallback we omit it (Gmail / Outlook still honour the header).
+    const unsubTarget = unsubscribeUrl
+      ? `<${unsubscribeUrl}>, <${DEFAULT_UNSUBSCRIBE_MAILTO}>`
+      : `<${DEFAULT_UNSUBSCRIBE_MAILTO}>`
+    const headers: Record<string, string> = {
+      'List-Unsubscribe': unsubTarget,
+    }
+    if (unsubscribeUrl) {
+      headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click'
+    }
     const { data, error } = await resend.emails.send({
       from,
       to: Array.isArray(to) ? to : [to],
@@ -57,6 +80,7 @@ export async function sendEmail({
       html,
       text,
       replyTo,
+      headers,
       ...(attachments && attachments.length > 0 ? { attachments } : {}),
     })
     if (error) {

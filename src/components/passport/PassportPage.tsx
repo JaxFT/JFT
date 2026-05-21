@@ -25,8 +25,12 @@ export default function PassportPage({
 }) {
   return (
     <div
+      // Book height is bounded by viewport minus chrome (~260px of
+      // header + tabs + main padding) so the passport never drops off
+      // the bottom on desktop / iPad. Phone's smaller viewport hits
+      // the min-h floor and stays usable. Math: see KidShell layout.
       className={`relative rounded-2xl border border-amber-100 shadow-md ${
-        book ? 'h-[88dvh] min-h-[460px]' : ''
+        book ? 'h-[calc(100dvh-260px)] min-h-[440px] max-h-[820px]' : ''
       } ${className}`}
       style={{
         background:

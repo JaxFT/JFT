@@ -1,6 +1,6 @@
 // Full ISO 3166-1 country list, used wherever we need to identify a
-// country that isn't necessarily one of the 35 Adventure Pack countries
-// (eg. the kid's home country on the Family Passport).
+// country that isn't necessarily one of the Adventure Pack countries
+// (eg. the kid's home country on the Adventure Passport).
 //
 // Storing 2-letter ISO codes (alpha-2) is the standard. We group by
 // continent so the picker can mirror the Adventure Packs continent-

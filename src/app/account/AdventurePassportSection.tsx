@@ -1,4 +1,4 @@
-// Family Passport section, lifted out of /family so we can render it
+// Adventure Passport section, lifted out of /family so we can render it
 // inline on /account (we removed the separate /family tab — bookmarks
 // to /family now redirect to /account).
 
@@ -8,7 +8,7 @@ import { listChildrenForParent, getStatsForChildren } from '@/lib/passport-db'
 import { PERMISSION_LABELS } from '@/lib/passport-types'
 import AddChildForm from '../family/AddChildForm'
 
-export default async function FamilyPassportSection() {
+export default async function AdventurePassportSection() {
   const children = await listChildrenForParent()
   const stats = await getStatsForChildren(children.map(c => c.id))
 

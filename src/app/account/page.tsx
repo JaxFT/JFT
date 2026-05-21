@@ -129,6 +129,7 @@ export default async function AccountPage() {
             email={user.email ?? ''}
             initialMarketingOptIn={!!profile?.marketing_opt_in}
             initialUsername={(profile as { username?: string | null } | null)?.username ?? null}
+            initialUsernameIsInstagram={!!(profile as { username_is_instagram?: boolean } | null)?.username_is_instagram}
             initialInstagramHandle={(profile as { instagram_handle?: string | null } | null)?.instagram_handle ?? null}
             isAdmin={isAdminEmail(user.email)}
           />

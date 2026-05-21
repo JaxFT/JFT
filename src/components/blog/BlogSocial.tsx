@@ -19,8 +19,34 @@ type Props = {
   // Viewer state from the server. null when signed out.
   viewerUserId: string | null
   initialViewerUsername: string | null
+  initialViewerUsernameIsInstagram: boolean
   initialViewerInstagram: string | null
   isAdmin: boolean
+}
+
+// Renders a username. When the user marked their handle as their
+// Instagram name, we prefix '@' and link to instagram.com; otherwise
+// it's plain text.
+function UsernameLabel({
+  username,
+  isInstagram,
+  className,
+}: { username: string | null; isInstagram: boolean; className?: string }) {
+  if (!username) return <span className={className}>anon</span>
+  if (isInstagram) {
+    return (
+      <a
+        href={`https://instagram.com/${username}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`${className ?? ''} hover:text-rose-600 hover:underline`}
+        title={`Instagram @${username}`}
+      >
+        @{username}
+      </a>
+    )
+  }
+  return <span className={className}>{username}</span>
 }
 
 function fmtDate(iso: string): string {
@@ -53,6 +79,7 @@ export default function BlogSocial({
   initialComments,
   viewerUserId,
   initialViewerUsername,
+  initialViewerUsernameIsInstagram,
   initialViewerInstagram,
   isAdmin,
 }: Props) {
@@ -61,6 +88,7 @@ export default function BlogSocial({
   const [postLikedByMe, setPostLikedByMe] = useState(initialPostLikedByMe)
   const [comments, setComments] = useState<BlogCommentRow[]>(initialComments)
   const [viewerUsername, setViewerUsername] = useState(initialViewerUsername)
+  const [viewerUsernameIsInstagram, setViewerUsernameIsInstagram] = useState(initialViewerUsernameIsInstagram)
   const [_, startTransition] = useTransition()
 
   const [usernameModalOpen, setUsernameModalOpen] = useState(false)
@@ -141,6 +169,7 @@ export default function BlogSocial({
         body: body.comment.body,
         created_at: body.comment.created_at,
         username: body.comment.username,
+        username_is_instagram: viewerUsernameIsInstagram,
         instagram_handle: initialViewerInstagram,
         like_count: 0,
         liked_by_me: false,
@@ -227,7 +256,9 @@ export default function BlogSocial({
             )}
             <div className="mt-2 flex items-center justify-between gap-3 flex-wrap">
               <p className="text-xs text-gray-400">
-                {viewerUsername && <>Posting as <span className="font-mono">{viewerUsername}</span></>}
+                {viewerUsername && (
+                  <>Posting as <UsernameLabel username={viewerUsername} isInstagram={viewerUsernameIsInstagram} className="font-mono" /></>
+                )}
               </p>
               <button
                 type="submit"
@@ -253,7 +284,7 @@ export default function BlogSocial({
               <Avatar username={c.username} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2 flex-wrap">
-                  <span className="font-mono font-semibold text-sm text-gray-900">{c.username ?? 'anon'}</span>
+                  <UsernameLabel username={c.username} isInstagram={c.username_is_instagram} className="font-mono font-semibold text-sm text-gray-900" />
                   <span className="text-xs text-gray-400 ml-auto">{fmtDate(c.created_at)}</span>
                 </div>
                 {/* Instagram handle: admin-only, on its own line in a
@@ -304,11 +335,13 @@ export default function BlogSocial({
       <UsernameModal
         open={usernameModalOpen}
         initialUsername={viewerUsername}
+        initialUsernameIsInstagram={viewerUsernameIsInstagram}
         initialInstagram={initialViewerInstagram}
         isAdmin={isAdmin}
         onClose={() => setUsernameModalOpen(false)}
-        onSet={({ username }) => {
+        onSet={({ username, username_is_instagram }) => {
           setViewerUsername(username)
+          setViewerUsernameIsInstagram(username_is_instagram)
           // Reload SSR data so the new username shows on any existing comments.
           startTransition(() => router.refresh())
         }}

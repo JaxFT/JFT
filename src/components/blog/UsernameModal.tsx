@@ -12,18 +12,20 @@ import { validateUsername, validateInstagram, normaliseUsername, normaliseInstag
 type Props = {
   open: boolean
   initialUsername?: string | null
+  initialUsernameIsInstagram?: boolean
   initialInstagram?: string | null
   // Admins can claim reserved names and see the Instagram-handle
   // field. Regular users never see the IG input.
   isAdmin?: boolean
   onClose: () => void
-  onSet: (saved: { username: string; instagram_handle: string | null }) => void
+  onSet: (saved: { username: string; username_is_instagram: boolean; instagram_handle: string | null }) => void
 }
 
 export default function UsernameModal({
-  open, initialUsername, initialInstagram, isAdmin = false, onClose, onSet,
+  open, initialUsername, initialUsernameIsInstagram = false, initialInstagram, isAdmin = false, onClose, onSet,
 }: Props) {
   const [username, setUsername] = useState(initialUsername ?? '')
+  const [usernameIsInstagram, setUsernameIsInstagram] = useState(initialUsernameIsInstagram)
   const [instagram, setInstagram] = useState(initialInstagram ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -43,12 +45,17 @@ export default function UsernameModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: normaliseUsername(username),
+          username_is_instagram: usernameIsInstagram,
           instagram_handle: normaliseInstagram(instagram),
         }),
       })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body.error || `Save failed (HTTP ${res.status})`)
-      onSet({ username: body.username, instagram_handle: body.instagram_handle ?? null })
+      onSet({
+        username: body.username,
+        username_is_instagram: !!body.username_is_instagram,
+        instagram_handle: body.instagram_handle ?? null,
+      })
       onClose()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Save failed')
@@ -98,7 +105,19 @@ export default function UsernameModal({
           {username && !usernameCheck.ok && (
             <p className="text-xs text-red-600 mt-1">{usernameCheck.error}</p>
           )}
-          <p className="text-[11px] text-gray-400 mt-1">Case is preserved (Bec stays Bec). If you want your username to display as your Instagram handle, start it with @ (e.g. <span className="font-mono">@jax.familytravels</span>).</p>
+          <p className="text-[11px] text-gray-400 mt-1">Case is preserved. Letters, numbers, period, hyphen, underscore.</p>
+        </label>
+
+        <label className="flex items-start gap-2 mb-4 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={usernameIsInstagram}
+            onChange={e => setUsernameIsInstagram(e.target.checked)}
+            className="mt-0.5 w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+          />
+          <span className="text-xs text-gray-600 leading-relaxed">
+            This is also my Instagram handle. <span className="text-gray-400">Your username will display as <span className="font-mono">@{username || 'yourhandle'}</span> and link to Instagram.</span>
+          </span>
         </label>
 
         {isAdmin && (

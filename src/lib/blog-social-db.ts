@@ -12,6 +12,7 @@ export type BlogCommentRow = {
   created_at: string
   // Joined from profiles for display.
   username: string | null
+  username_is_instagram: boolean
   instagram_handle: string | null
   // Hydrated separately (efficient count + current-user state).
   like_count: number
@@ -43,7 +44,7 @@ export async function loadBlogPostSocial(
       .from('blog_comments')
       .select(`
         id, post_slug, user_id, body, created_at,
-        profiles:user_id ( username, instagram_handle )
+        profiles:user_id ( username, username_is_instagram, instagram_handle )
       `)
       .eq('post_slug', postSlug)
       .order('created_at', { ascending: true }),
@@ -64,15 +65,18 @@ export async function loadBlogPostSocial(
   // Supabase's generated types treat foreign-key joins as arrays even
   // for one-to-one relations. Normalise here so the rest of the file
   // can stay readable.
+  type ProfileJoin = {
+    username: string | null
+    username_is_instagram: boolean | null
+    instagram_handle: string | null
+  }
   const rawComments = ((commentsRes.data ?? []) as unknown as Array<{
     id: string
     post_slug: string
     user_id: string
     body: string
     created_at: string
-    profiles: { username: string | null; instagram_handle: string | null }
-            | { username: string | null; instagram_handle: string | null }[]
-            | null
+    profiles: ProfileJoin | ProfileJoin[] | null
   }>).map(c => ({
     ...c,
     profiles: Array.isArray(c.profiles) ? (c.profiles[0] ?? null) : c.profiles,
@@ -104,6 +108,7 @@ export async function loadBlogPostSocial(
     body: c.body,
     created_at: c.created_at,
     username: c.profiles?.username ?? null,
+    username_is_instagram: !!c.profiles?.username_is_instagram,
     instagram_handle: viewerIsAdmin ? (c.profiles?.instagram_handle ?? null) : null,
     like_count: likeCounts.get(c.id) ?? 0,
     liked_by_me: likedByMe.has(c.id),
@@ -144,19 +149,21 @@ export async function loadCountsForSlugs(
 export async function getViewerProfile(): Promise<{
   userId: string | null
   username: string | null
+  username_is_instagram: boolean
   instagram_handle: string | null
 }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { userId: null, username: null, instagram_handle: null }
+  if (!user) return { userId: null, username: null, username_is_instagram: false, instagram_handle: null }
   const { data } = await supabase
     .from('profiles')
-    .select('username, instagram_handle')
+    .select('username, username_is_instagram, instagram_handle')
     .eq('id', user.id)
     .maybeSingle()
   return {
     userId: user.id,
     username: data?.username ?? null,
+    username_is_instagram: !!data?.username_is_instagram,
     instagram_handle: data?.instagram_handle ?? null,
   }
 }

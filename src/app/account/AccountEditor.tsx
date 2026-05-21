@@ -14,6 +14,7 @@ type Props = {
   email: string
   initialMarketingOptIn: boolean
   initialUsername: string | null
+  initialUsernameIsInstagram: boolean
   initialInstagramHandle: string | null
   // Admin accounts get an extra Instagram-handle field. Non-admins
   // don't, because the handle is only ever shown to admins on
@@ -27,6 +28,7 @@ export default function AccountEditor({
   email,
   initialMarketingOptIn,
   initialUsername,
+  initialUsernameIsInstagram,
   initialInstagramHandle,
   isAdmin,
 }: Props) {
@@ -85,8 +87,10 @@ export default function AccountEditor({
 
   // ── Username + Instagram edit state ─────────────
   const [username, setUsername] = useState(initialUsername ?? '')
+  const [usernameIsInstagram, setUsernameIsInstagram] = useState(initialUsernameIsInstagram)
   const [instagram, setInstagram] = useState(initialInstagramHandle ?? '')
   const [savedUsername, setSavedUsername] = useState(initialUsername)
+  const [savedUsernameIsInstagram, setSavedUsernameIsInstagram] = useState(initialUsernameIsInstagram)
   const [savedInstagram, setSavedInstagram] = useState(initialInstagramHandle)
   const [showUsernamePanel, setShowUsernamePanel] = useState(false)
   const [savingUsername, setSavingUsername] = useState(false)
@@ -108,12 +112,14 @@ export default function AccountEditor({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: normaliseUsername(username),
+          username_is_instagram: usernameIsInstagram,
           instagram_handle: normaliseInstagram(instagram),
         }),
       })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body.error || `Save failed (HTTP ${res.status})`)
       setSavedUsername(body.username)
+      setSavedUsernameIsInstagram(!!body.username_is_instagram)
       setSavedInstagram(body.instagram_handle ?? null)
       setUsernameSaved(true)
       router.refresh()
@@ -460,7 +466,26 @@ export default function AccountEditor({
         </div>
         <p className="text-sm text-gray-700">
           {savedUsername
-            ? <><span className="font-mono">{savedUsername}</span>{isAdmin && savedInstagram && <span className="text-gray-400"> · <Instagram className="w-3.5 h-3.5 inline mr-0.5" /><span className="font-mono">@{savedInstagram}</span></span>}</>
+            ? (
+              <>
+                {savedUsernameIsInstagram ? (
+                  <a
+                    href={`https://instagram.com/${savedUsername}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono hover:text-rose-600 hover:underline"
+                    title={`Instagram @${savedUsername}`}
+                  >
+                    @{savedUsername}
+                  </a>
+                ) : (
+                  <span className="font-mono">{savedUsername}</span>
+                )}
+                {isAdmin && savedInstagram && (
+                  <span className="text-gray-400"> · <Instagram className="w-3.5 h-3.5 inline mr-0.5" /><span className="font-mono">@{savedInstagram}</span></span>
+                )}
+              </>
+            )
             : <span className="italic text-gray-400">Not set, pick one to comment on blog posts</span>}
         </p>
 
@@ -474,8 +499,19 @@ export default function AccountEditor({
                 className={`${input} !font-mono`}
                 placeholder="wanderingmum"
               />
-              <p className="text-[11px] text-gray-400 mt-1">Letters, numbers, period, hyphen, underscore. 3 to 24 chars. Case is preserved (Bec stays Bec). If you want your username to display as your Instagram handle, start it with @ (e.g. <span className="font-mono">@jax.familytravels</span>).</p>
+              <p className="text-[11px] text-gray-400 mt-1">Letters, numbers, period, hyphen, underscore. 3 to 24 chars. Case is preserved.</p>
             </div>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={usernameIsInstagram}
+                onChange={e => setUsernameIsInstagram(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+              />
+              <span className="text-xs text-gray-600 leading-relaxed">
+                This is also my Instagram handle. <span className="text-gray-400">Your username will display as <span className="font-mono">@{username || 'yourhandle'}</span> and link to Instagram on your comments.</span>
+              </span>
+            </label>
             {isAdmin && (
               <div>
                 <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Instagram handle <span className="font-normal normal-case tracking-normal text-gray-400">· optional, admin only</span></label>

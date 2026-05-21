@@ -21,11 +21,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Sign in required' }, { status: 401 })
   }
 
-  let body: { username?: string; instagram_handle?: string } = {}
+  let body: { username?: string; instagram_handle?: string; username_is_instagram?: boolean } = {}
   try { body = await request.json() } catch {}
 
   const rawUsername = typeof body.username === 'string' ? body.username : ''
   const rawInsta    = typeof body.instagram_handle === 'string' ? body.instagram_handle : ''
+  const username_is_instagram = body.username_is_instagram === true
   const isAdmin = isAdminEmail(user.email)
 
   const usernameCheck = validateUsername(rawUsername, { bypassReserved: isAdmin })
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
   // it through for admins (Bec + Oli, who share jax.familytravels).
   const instagram_handle = isAdmin ? (normaliseInstagram(rawInsta) || null) : undefined
 
-  const update: Record<string, unknown> = { username }
+  const update: Record<string, unknown> = { username, username_is_instagram }
   if (instagram_handle !== undefined) update.instagram_handle = instagram_handle
 
   const { error } = await supabase
@@ -55,5 +56,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true, username, instagram_handle: instagram_handle ?? null })
+  return NextResponse.json({ ok: true, username, instagram_handle: instagram_handle ?? null, username_is_instagram })
 }

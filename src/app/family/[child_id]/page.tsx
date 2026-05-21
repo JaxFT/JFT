@@ -100,6 +100,14 @@ export default async function ChildDetailPage({
           </a>
         </div>
 
+        <p className="text-sm text-gray-500 -mt-4 mb-2">
+          New here?{' '}
+          <Link href="/passports/stamps" className="font-semibold text-brand-700 hover:text-brand-800 underline underline-offset-2">
+            Read how stamps work
+          </Link>{' '}
+          for ideas on awarding them and setting challenges.
+        </p>
+
         <div className="space-y-5">
           <QRSection
             childId={child.id}

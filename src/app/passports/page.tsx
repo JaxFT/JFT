@@ -64,6 +64,11 @@ export default async function PassportsLanding() {
               Get started <ArrowRight className="w-4 h-4" />
             </Link>
           )}
+          <div className="mt-4">
+            <Link href="/passports/stamps" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800">
+              <Stamp className="w-4 h-4" /> How stamps work for parents
+            </Link>
+          </div>
         </section>
 
         {/* MOCKUP STRIP — visual proof of what it looks like */}

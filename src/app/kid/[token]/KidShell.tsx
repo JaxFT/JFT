@@ -12,6 +12,7 @@ import StampsTab from './tabs/StampsTab'
 import MapTab from './tabs/MapTab'
 import CountriesTab from './tabs/CountriesTab'
 import JournalTab from './tabs/JournalTab'
+import PassportCover from './PassportCover'
 
 type Tab = 'passport' | 'map' | 'countries' | 'journal' | 'stamps'
 
@@ -61,10 +62,13 @@ export default function KidShell({
     router.push(`/kid/${token}?tab=${id}`, { scroll: false })
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-brand-900 to-brand-950 text-white">
-      {/* HEADER: avatar on the left, two lines of greeting on the
-          right. Compact so the book pages below get more room. */}
+  // Inside-of-passport markup is wrapped by <PassportCover> on first
+  // session arrival. On subsequent renders (after Open is tapped or
+  // sessionStorage already says it's open) the cover unmounts and
+  // the original layout takes over with zero extra wrapping.
+  const insideContent = (
+    <div className="bg-gradient-to-b from-brand-900 to-brand-950 text-white">
+      {/* HEADER */}
       <header className="pt-6 pb-4 px-4 flex justify-center">
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm text-3xl leading-none shadow-md shrink-0">
@@ -113,6 +117,23 @@ export default function KidShell({
         {tab === 'journal'   && <JournalTab token={token} childName={child.name} permissionMode={child.permission_mode} entries={journal} />}
         {tab === 'stamps'    && <StampsTab token={token} stamps={stamps} visits={visits} homeCountryIso2={child.home_country_iso2} />}
       </main>
+    </div>
+  )
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-brand-900 to-brand-950 text-white">
+      {/* Cover wraps the inside on first session arrival; on
+          subsequent renders it short-circuits and renders the
+          inside directly so the original spacing applies. Outer
+          dark-gradient wrapper here keeps the cover floating on the
+          brand background. */}
+      <PassportCover
+        childName={child.name}
+        childAvatar={child.avatar}
+        token={token}
+      >
+        {insideContent}
+      </PassportCover>
     </div>
   )
 }

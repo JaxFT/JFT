@@ -6,6 +6,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, Award } from 'lucide-react'
 import PassportPage from '@/components/passport/PassportPage'
 import PassportStamp from '@/components/passport/PassportStamp'
 import MilestoneStamp from '@/components/passport/MilestoneStamp'
+import ScatteredStampSheet from '@/components/passport/ScatteredStampSheet'
 import CountryFlag from '@/components/CountryFlag'
 import { getPackMeta } from '@/lib/adventurePackMeta'
 import { computeMilestones, type MilestoneStamp as Milestone } from '@/lib/passport-milestones'
@@ -159,7 +160,7 @@ function TravelerPage({ milestones, empty }: { milestones: Milestone[]; empty: b
           Open an Adventure Pack or log a flight to begin.
         </p>
       ) : (
-        <ScatteredStamps count={milestones.length}>
+        <ScatteredStampSheet seed="traveller-page">
           {milestones.map(m => (
             <MilestoneStamp
               key={m.id}
@@ -169,9 +170,10 @@ function TravelerPage({ milestones, empty }: { milestones: Milestone[]; empty: b
               date={m.earnedAt}
               shape={m.shape}
               size="md"
+              rotate={0}
             />
           ))}
-        </ScatteredStamps>
+        </ScatteredStampSheet>
       )}
     </section>
   )
@@ -202,7 +204,7 @@ function CountryPage({ group, token }: {
           </Link>
         )}
       </div>
-      <ScatteredStamps count={group.stamps.length}>
+      <ScatteredStampSheet seed={`country-${group.countrySlug ?? 'travel'}`}>
         {group.stamps.map(s => (
           <PassportStamp
             key={s.id}
@@ -210,24 +212,11 @@ function CountryPage({ group, token }: {
             country={group.countryName === '✈️ Travel' ? null : group.countryName}
             date={s.earned_at}
             size="md"
+            rotate={0}
           />
         ))}
-      </ScatteredStamps>
+      </ScatteredStampSheet>
     </section>
-  )
-}
-
-// Wraps stamp graphics so they sit with comfortable space between
-// them by default, but once you've collected 12+ on one page they
-// start to overlap — like a real well-used passport page where new
-// stamps end up pressed on top of old ones.
-function ScatteredStamps({ count, children }: { count: number; children: React.ReactNode }) {
-  // count → gap scale. Tight overlap once we cross 12 stamps.
-  const overlap = count >= 18 ? '-mx-5 -my-3' : count >= 12 ? '-mx-3 -my-2' : 'gap-x-3 gap-y-3 mx-0 my-0'
-  return (
-    <div className={`flex flex-wrap items-start justify-center py-3 ${overlap}`}>
-      {children}
-    </div>
   )
 }
 

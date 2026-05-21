@@ -10,6 +10,7 @@ import { PACK_META } from '@/lib/adventurePackMeta'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 import PassportPage from '@/components/passport/PassportPage'
 import PassportStamp from '@/components/passport/PassportStamp'
+import ScatteredStampSheet from '@/components/passport/ScatteredStampSheet'
 
 export const metadata: Metadata = {
   title: 'Adventure Passports',
@@ -73,7 +74,7 @@ export default async function PassportsLanding() {
 
         {/* MOCKUP STRIP — visual proof of what it looks like */}
         <section className="mb-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {/* MOCKUP 1: kid landing screen */}
             <div className="bg-gradient-to-br from-brand-700 to-brand-900 rounded-3xl p-6 sm:p-8 text-white shadow-md">
@@ -113,7 +114,32 @@ export default async function PassportsLanding() {
               <p className="text-xs text-white/60 mt-5 text-center">Accessed via QR code, no login needed.</p>
             </div>
 
-            {/* MOCKUP 2: parent view */}
+            {/* MOCKUP 2: country stamps page (Brazil sample). Same
+                ScatteredStampSheet the real kid view uses, so the
+                marketing card looks like the actual product. */}
+            <div className="bg-gradient-to-br from-brand-700 to-brand-900 rounded-3xl p-6 sm:p-8 text-white shadow-md">
+              <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-4">Kid view, Brazil page</p>
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 max-w-sm mx-auto">
+                <PassportPage className="p-4">
+                  <div className="flex items-baseline justify-between mb-3 pb-2 border-b border-dashed" style={{ borderColor: 'rgba(120,80,30,0.3)', color: '#5a3a12' }}>
+                    <p className="text-xs font-extrabold uppercase tracking-[0.18em]">🇧🇷 Brazil</p>
+                    <p className="text-[10px] uppercase tracking-widest opacity-60">7 stamps</p>
+                  </div>
+                  <ScatteredStampSheet seed="mockup-brazil" height={300}>
+                    <PassportStamp type="MAP_READER"           country="Brazil" date="2026-06-02" size="sm" rotate={0} />
+                    <PassportStamp type="LOCAL_LINGO"          country="Brazil" date="2026-06-03" size="sm" rotate={0} />
+                    <PassportStamp type="BRAVE_EATER"          country="Brazil" date="2026-06-04" size="sm" rotate={0} />
+                    <PassportStamp type="ANIMAL_SPOTTER"       country="Brazil" date="2026-06-05" size="sm" rotate={0} />
+                    <PassportStamp type="SCAVENGER_HUNTER"     country="Brazil" date="2026-06-06" size="sm" rotate={0} />
+                    <PassportStamp type="STORY_KEEPER"         country="Brazil" date="2026-06-07" size="sm" rotate={0} />
+                    <PassportStamp type="ADVENTURE_PACK_COMPLETE" country="Brazil" date="2026-06-09" size="sm" rotate={0} />
+                  </ScatteredStampSheet>
+                </PassportPage>
+              </div>
+              <p className="text-xs text-white/60 mt-5 text-center">One page per country. Stamps scatter like a real passport.</p>
+            </div>
+
+            {/* MOCKUP 3: parent view */}
             <div className="bg-white rounded-3xl border border-gray-100 shadow-md p-6 sm:p-8">
               <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-4">Parent view</p>
               <div className="space-y-3 max-w-sm mx-auto">

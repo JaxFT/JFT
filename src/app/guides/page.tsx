@@ -1,24 +1,20 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Map, ArrowRight, Crown } from 'lucide-react'
+import { ArrowRight, Crown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
-import { proxyImageUrl } from '@/lib/image-proxy'
-import { listActiveGuides, formatPrice } from '@/lib/guides-db'
+import { listActiveGuides } from '@/lib/guides-db'
 import { listPublishedWebGuides } from '@/lib/guides-content-db'
 import UpgradeButton from '@/components/billing/UpgradeButton'
+import GuideBrowser, { type GuideCardModel } from './GuideBrowser'
 
 export const metadata: Metadata = { title: 'Guides' }
 export const dynamic = 'force-dynamic'
 
-type GuideCardModel = {
-  slug: string
-  name: string
-  subtitle: string | null
-  cover_image: string | null
-  tags: string[]
-  price_pence: number
-}
+// Slugs we want at the top of the listing regardless of date. The
+// 'how to save' blueprint is our flagship money/foundations guide
+// and earns the top slot.
+const PINNED_FIRST = ['how-to-save-blueprint']
 
 export default async function GuidesPage() {
   // Fire all the data fetches in parallel, none depend on user state.
@@ -32,7 +28,7 @@ export default async function GuidesPage() {
   // Hide any PDF guide whose slug is also present as a published web guide.
   // The web version supersedes the PDF.
   const webSlugs = new Set(webGuides.map(g => g.slug))
-  const guides: GuideCardModel[] = [
+  const combined: GuideCardModel[] = [
     ...webGuides.map(g => ({
       slug: g.slug,
       name: g.title,
@@ -52,6 +48,14 @@ export default async function GuidesPage() {
         price_pence: g.price_pence,
       })),
   ]
+
+  // Move pinned slugs to the top in the order they appear in
+  // PINNED_FIRST. Everything else keeps its existing order.
+  const pinned = PINNED_FIRST
+    .map(slug => combined.find(g => g.slug === slug))
+    .filter((g): g is GuideCardModel => !!g)
+  const rest = combined.filter(g => !PINNED_FIRST.includes(g.slug))
+  const guides: GuideCardModel[] = [...pinned, ...rest]
 
   const { data: { user } } = await supabase.auth.getUser()
   let isPremium = false
@@ -103,71 +107,7 @@ export default async function GuidesPage() {
           </div>
         )}
 
-        {guides.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center text-gray-500">
-            <Map className="w-10 h-10 mx-auto text-gray-300 mb-3" />
-            <p>No guides yet, check back soon.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {guides.map(guide => (
-              <Link
-                key={guide.slug}
-                href={`/guides/${guide.slug}`}
-                className="group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all aspect-[3/4] block"
-              >
-                {/* Full-card cover image */}
-                {guide.cover_image ? (
-                  <img
-                    src={proxyImageUrl(guide.cover_image)}
-                    alt={guide.name}
-                    loading="lazy"
-                    decoding="async"
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-brand-200 via-brand-300 to-brand-500 flex items-center justify-center">
-                    <Map className="w-16 h-16 text-brand-800" />
-                  </div>
-                )}
-
-                {/* Tags floating top-left */}
-                {guide.tags.length > 0 && (
-                  <div className="absolute top-4 left-4 flex flex-wrap gap-1.5 max-w-[calc(100%-2rem)]">
-                    {guide.tags.slice(0, 2).map(tag => (
-                      <span
-                        key={tag}
-                        className="text-xs font-semibold text-white bg-black/45 backdrop-blur-sm px-2.5 py-1 rounded-full"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Opaque bottom panel, sits over the image */}
-                <div className="absolute inset-x-0 bottom-0 bg-brand-950/85 backdrop-blur-sm text-white p-5">
-                  <h3 className="font-bold leading-snug mb-1 line-clamp-2">{guide.name}</h3>
-                  {guide.subtitle && (
-                    <p className="text-sm text-white/70 leading-snug line-clamp-2 mb-3">{guide.subtitle}</p>
-                  )}
-                  <div className="flex items-center justify-between pt-3 border-t border-white/15">
-                    {isPremium ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold tracking-widest uppercase text-brand-200">
-                        <Crown className="w-3.5 h-3.5" /> Included
-                      </span>
-                    ) : (
-                      <span className="font-bold text-base">{formatPrice(guide.price_pence)}</span>
-                    )}
-                    <span className="inline-flex items-center gap-1 text-sm font-semibold text-brand-200 group-hover:gap-2 transition-all">
-                      View <ArrowRight className="w-3.5 h-3.5" />
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
+        <GuideBrowser guides={guides} isPremium={isPremium} />
       </div>
     </div>
   )

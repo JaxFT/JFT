@@ -44,7 +44,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const admin = adminClient()
   const { data, error } = await admin
     .from('call_request_messages')
-    .select('id, call_request_id, sender, body, created_at')
+    .select('id, call_request_id, sender, body, kind, metadata, created_at')
     .eq('call_request_id', id)
     .order('created_at', { ascending: true })
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -65,7 +65,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { data: inserted, error } = await admin
     .from('call_request_messages')
     .insert({ call_request_id: id, sender: access.sender, body: text })
-    .select('id, call_request_id, sender, body, created_at')
+    .select('id, call_request_id, sender, body, kind, metadata, created_at')
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 

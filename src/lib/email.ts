@@ -82,7 +82,7 @@ function escapeHtml(s: string): string {
     .replace(/'/g, '&#039;')
 }
 
-function emailShell(headerTitle: string, bodyHtml: string): string {
+export function emailShell(headerTitle: string, bodyHtml: string): string {
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>${escapeHtml(headerTitle)}</title>
 <style>${BASE_STYLES}</style>

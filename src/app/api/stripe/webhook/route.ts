@@ -2,10 +2,16 @@ import { NextResponse } from 'next/server'
 import { createClient as createSbClient, type SupabaseClient } from '@supabase/supabase-js'
 import { stripeClient } from '@/lib/stripe'
 import { claimWebGuidePurchase } from '@/lib/claim-web-guide-purchase'
+import { sendEmail, HELLO_FROM, ADMIN_NOTIFY, emailShell } from '@/lib/email'
 import type Stripe from 'stripe'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
+
+// Strict UUID v4-ish shape match. Used to tell whether a Stripe
+// session's client_reference_id is one of our call_request rows and
+// not some other arbitrary string.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 // Stripe → /api/stripe/webhook
 // Two flows go through the same endpoint:
@@ -56,9 +62,19 @@ export async function POST(request: Request) {
         if (session.mode === 'subscription') {
           await handleSubscriptionCheckout(session, admin)
         } else {
-          // mode === 'payment' (one-off guide purchase)
-          const skip = await handleOneOffCheckout(session, admin)
-          if (skip) return skip
+          // mode === 'payment'. The 1:1 call Payment Link funnels
+          // checkouts here too, distinguished by client_reference_id
+          // looking like a uuid (the call_request_id we appended to
+          // the URL in the admin composer).
+          const callRequestId = typeof session.client_reference_id === 'string'
+            ? session.client_reference_id
+            : null
+          if (callRequestId && UUID_RE.test(callRequestId)) {
+            await handleCallRequestPayment(session, callRequestId, admin)
+          } else {
+            const skip = await handleOneOffCheckout(session, admin)
+            if (skip) return skip
+          }
         }
         break
       }
@@ -131,6 +147,64 @@ async function handleOneOffCheckout(
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
   return null
+}
+
+async function handleCallRequestPayment(
+  session: Stripe.Checkout.Session,
+  callRequestId: string,
+  admin: SupabaseClient,
+): Promise<void> {
+  if (session.payment_status !== 'paid') return
+
+  // Find the request so we can email the right address + skip the
+  // update if the row no longer exists (manual delete after payment).
+  const { data: existing } = await admin
+    .from('call_requests')
+    .select('id, name, email, paid_at')
+    .eq('id', callRequestId)
+    .maybeSingle()
+  if (!existing) return
+
+  // Idempotency, Stripe retries fine if our 2xx is delayed.
+  if (!(existing as { paid_at: string | null }).paid_at) {
+    const { error } = await admin
+      .from('call_requests')
+      .update({ paid_at: new Date().toISOString() })
+      .eq('id', callRequestId)
+    if (error) {
+      console.error('[stripe webhook] failed to mark call_request paid', error)
+    }
+  }
+
+  // Nudge admin so they don't have to refresh the page to know.
+  const row = existing as { name: string; email: string }
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
+  const adminUrl = `${siteUrl}/admin/call-requests#${callRequestId}`
+  const subject = `Paid: ${row.name}'s 1:1 call`
+  const html = emailShell(subject, `
+    <p>${escapeForEmail(row.name)} (${escapeForEmail(row.email)}) just paid for their 1:1 call.</p>
+    <p>Send them a confirmation with the agreed date and time, the thread now has a 'Send confirmation' button.</p>
+    <p style="margin-top:18px"><a href="${adminUrl}" style="background:#2d6b4f; color:#fff; padding:10px 16px; border-radius:6px; text-decoration:none; font-weight:bold; display:inline-block;">Open the thread</a></p>
+  `)
+  void sendEmail({
+    from: HELLO_FROM,
+    to: ADMIN_NOTIFY,
+    subject,
+    html,
+    text: `${row.name} (${row.email}) just paid for their 1:1 call. Open ${adminUrl} to send the confirmation.`,
+    replyTo: row.email,
+  })
+}
+
+// Tiny local helper, the email module exports emailShell but not its
+// own escaper. Keep it private here so the webhook file stays
+// self-contained.
+function escapeForEmail(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 }
 
 async function handleWebGuidePurchase(

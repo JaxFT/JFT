@@ -18,7 +18,7 @@ export default async function CallRequestsAdminPage() {
   const admin = adminClient()
   const [requestsRes, messagesRes] = await Promise.all([
     admin.from('call_requests').select('*').order('updated_at', { ascending: false }),
-    admin.from('call_request_messages').select('id, call_request_id, sender, body, created_at').order('created_at', { ascending: true }),
+    admin.from('call_request_messages').select('id, call_request_id, sender, body, kind, metadata, created_at').order('created_at', { ascending: true }),
   ])
   const requests = (requestsRes.data ?? []) as CallRequest[]
   const allMessages = (messagesRes.data ?? []) as CallRequestMessageRow[]

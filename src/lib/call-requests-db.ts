@@ -19,15 +19,34 @@ export type CallRequestRow = {
   preferred_times: string[]
   status: CallRequestStatus
   notes: string | null
+  paid_at: string | null
   created_at: string
   updated_at: string
+}
+
+export type CallConfirmationMetadata = {
+  // ISO 8601 UTC instant of when the call starts. Clients format this
+  // to the viewer's local timezone for display and emit ICS files
+  // pinned to this UTC moment so the local calendar app does the
+  // right conversion automatically.
+  scheduledAtUtc: string
+  // Friendly label for the timezone the admin chose at booking time.
+  // Shown alongside the local time so it's clear what reference the
+  // admin picked.
+  displayTimezone: string
+  // Default 60. Used for the ICS DURATION + end-time label.
+  durationMinutes: number
+  // Optional joining info (video URL, dial-in, prep notes).
+  notes?: string
 }
 
 export type CallRequestMessageRow = {
   id: string
   call_request_id: string
   sender: 'admin' | 'user'
+  kind: 'chat' | 'confirmation'
   body: string
+  metadata: CallConfirmationMetadata | null
   created_at: string
 }
 

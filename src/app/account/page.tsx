@@ -74,7 +74,7 @@ export default async function AccountPage() {
       callRequest = reqRow as CallRequestRow
       const { data: msgs } = await admin
         .from('call_request_messages')
-        .select('id, call_request_id, sender, body, created_at')
+        .select('id, call_request_id, sender, body, kind, metadata, created_at')
         .eq('call_request_id', callRequest.id)
         .order('created_at', { ascending: true })
       callMessages = (msgs ?? []) as CallRequestMessageRow[]

@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2, ChevronDown, ChevronUp, Loader2, CreditCard } from 'lucide-react'
+import { Trash2, ChevronDown, ChevronUp, Loader2, CreditCard, BadgeCheck } from 'lucide-react'
 import CallThread from '@/components/call-requests/CallThread'
+import SendConfirmationForm from './SendConfirmationForm'
 import {
   DAY_LABEL, TIME_LABEL,
   type CallRequestRow as CallRequest,
@@ -96,8 +97,12 @@ export default function CallRequestRow({ request, messages, paymentLinkUrl }: Pr
 
   const seedPaymentLink = () => {
     if (!paymentLinkUrl) return
+    // ?client_reference_id ties the Stripe checkout back to this
+    // exact call request, the webhook reads it to flip paid_at.
+    const sep = paymentLinkUrl.includes('?') ? '&' : '?'
+    const url = `${paymentLinkUrl}${sep}client_reference_id=${request.id}`
     setDraftSeed(
-      `Looking forward to our call. Here's the payment link to confirm the booking, once you've paid you'll see the confirmation in your account:\n\n${paymentLinkUrl}\n\nLet me know if anything pops up.`,
+      `Looking forward to our call. Here's the payment link to confirm the booking, once you've paid we'll send through the date and time:\n\n${url}\n\nLet me know if anything pops up.`,
     )
     setDraftSeedNonce(n => n + 1)
   }
@@ -112,6 +117,11 @@ export default function CallRequestRow({ request, messages, paymentLinkUrl }: Pr
         <span className={`text-xs font-bold tracking-widest uppercase px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOURS[status]}`}>
           {STATUS_LABEL[status]}
         </span>
+        {request.paid_at && (
+          <span className="inline-flex items-center gap-1 text-xs font-bold tracking-widest uppercase px-2 py-0.5 rounded-full shrink-0 bg-emerald-100 text-emerald-900">
+            <BadgeCheck className="w-3 h-3" /> Paid
+          </span>
+        )}
         <div className="flex-1 min-w-0">
           <p className="font-bold text-gray-900 truncate">{request.name}</p>
           <p className="text-xs text-gray-500 truncate">{request.email} · {created}{messages.length > 0 && ` · ${messages.length} message${messages.length === 1 ? '' : 's'}`}</p>
@@ -155,6 +165,9 @@ export default function CallRequestRow({ request, messages, paymentLinkUrl }: Pr
                   >
                     <CreditCard className="w-3.5 h-3.5" /> Send payment link
                   </button>
+                  {request.paid_at && (
+                    <SendConfirmationForm requestId={request.id} />
+                  )}
                 </div>
               )}
             />

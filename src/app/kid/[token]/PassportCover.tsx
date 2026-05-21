@@ -1,16 +1,19 @@
 'use client'
 
-// Front cover of the kid's Adventure Passport. Three states:
-//   - 'closed'  : the cover is shown, tap to open
-//   - 'opening' : 3D book-open animation playing
-//   - 'open'    : inside content fully visible, cover unmounted
-//   - 'closing' : cover swinging back closed (triggered by a global
-//                 'jft:close-passport' window event so the Stamps tab
-//                 can fire it from a swipe-right past the first page)
+// Front cover of the kid's Adventure Passport. Four states:
+//   - 'closed'  : only the cover is visible, tap or swipe-left to open
+//   - 'opening' : cover rotates 0 → -180° around its left edge,
+//                 backface-visibility hides it as it passes 90°
+//   - 'open'    : cover unmounted, inside content shown
+//   - 'closing' : inside hidden again, cover re-mounts at -180° and
+//                 rotates back to 0° (triggered by a window event
+//                 fired from inside, see closePassport())
 //
-// State persists in sessionStorage so flipping between tabs doesn't
-// slam the cover back in front of the kid. The close event is the
-// only way to leave 'open' back to the cover within a single session.
+// Important visual rule: the inside content is NOT rendered during
+// 'closed', 'opening', or 'closing'. The cover transition runs over
+// the dark passport background only. This avoids the "see-through"
+// glitch where the previous inside page peeked through the rotating
+// cover.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Sparkles } from 'lucide-react'
@@ -26,10 +29,9 @@ type State = 'closed' | 'opening' | 'open' | 'closing'
 
 const storageKey = (token: string) => `jft.passport.open.${token}`
 const CLOSE_EVENT = 'jft:close-passport'
+const OPEN_MS = 900
+const CLOSE_MS = 900
 
-// Public helper any child component can call. Lives in this module so
-// imports stay obvious; under the hood it dispatches a window event
-// the cover listens for.
 export function closePassport() {
   if (typeof window === 'undefined') return
   window.dispatchEvent(new CustomEvent(CLOSE_EVENT))
@@ -38,19 +40,15 @@ export function closePassport() {
 export default function PassportCover({ childName, childAvatar, token, children }: Props) {
   const [state, setState] = useState<State>('closed')
 
-  // On first mount, restore the open flag for this session.
   useEffect(() => {
     if (typeof window === 'undefined') return
     try {
       if (window.sessionStorage.getItem(storageKey(token)) === '1') {
         setState('open')
       }
-    } catch { /* private window etc */ }
+    } catch { /* private window */ }
   }, [token])
 
-  // Global close event — fired from inside the passport when the kid
-  // wants to "shut the book". We replay the cover close animation
-  // and clear the session flag so next open replays the opening too.
   const onCloseRequest = useCallback(() => {
     setState(prev => {
       if (prev !== 'open') return prev
@@ -64,24 +62,30 @@ export default function PassportCover({ childName, childAvatar, token, children 
     return () => window.removeEventListener(CLOSE_EVENT, onCloseRequest)
   }, [onCloseRequest])
 
-  // Once the closing animation finishes, drop back to 'closed' so the
-  // cover is the only thing on screen again.
+  // Once the close animation finishes, drop back to 'closed' so only
+  // the cover is on screen again.
   useEffect(() => {
     if (state !== 'closing') return
-    const t = window.setTimeout(() => setState('closed'), 950)
+    const t = window.setTimeout(() => setState('closed'), CLOSE_MS + 30)
     return () => window.clearTimeout(t)
   }, [state])
 
-  const open = () => {
-    if (state !== 'closed') return
-    setState('opening')
-    try { window.sessionStorage.setItem(storageKey(token), '1') } catch { /* noop */ }
-    window.setTimeout(() => setState('open'), 850)
-  }
+  const open = useCallback(() => {
+    setState(prev => {
+      if (prev !== 'closed') return prev
+      try { window.sessionStorage.setItem(storageKey(token), '1') } catch { /* noop */ }
+      return 'opening'
+    })
+  }, [token])
 
-  // Cover gestures: tap fires the click handler; a definite swipe-
-  // left (forward, "next page") also opens. We track pointerdown +
-  // pointerup ourselves so the swipe doesn't compete with the click.
+  // Once the open animation finishes, drop the cover and show inside.
+  useEffect(() => {
+    if (state !== 'opening') return
+    const t = window.setTimeout(() => setState('open'), OPEN_MS + 30)
+    return () => window.clearTimeout(t)
+  }, [state])
+
+  // ── Cover gestures: tap OR swipe-left to open ──────────────────
   const coverDownRef = useRef<{ x: number; y: number; time: number } | null>(null)
   const onCoverPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
     coverDownRef.current = { x: e.clientX, y: e.clientY, time: Date.now() }
@@ -93,54 +97,64 @@ export default function PassportCover({ childName, childAvatar, token, children 
     const dx = e.clientX - start.x
     const dy = e.clientY - start.y
     const elapsed = Date.now() - start.time
-    // Swipe-left opens. Same thresholds as the page-turn gesture so
-    // muscle-memory carries from one to the other.
     if (dx < -70 && Math.abs(dx) > Math.abs(dy) * 1.5 && elapsed < 700) {
       open()
     }
   }
 
+  // Open state: cover gone, inside fully shown. No 3D wrapper, no
+  // animations in flight. Clean pass-through.
   if (state === 'open') {
     return <>{children}</>
   }
 
-  // For 'closed' / 'opening' / 'closing' we render the cover + the
-  // inside together so the 3D rotation reveals what's behind.
-  const insideAnim =
-    state === 'opening' ? 'animate-inside-reveal' :
-    state === 'closing' ? 'animate-inside-hide' :
-    'hidden'
-  const coverAnim =
-    state === 'opening' ? 'animate-cover-open' :
-    state === 'closing' ? 'animate-cover-close' :
+  // Cover-only states ('closed', 'opening', 'closing'). The cover
+  // lives inside a preserve-3d parent so its rotateY animation
+  // works as a real 3D flip. The inside content is intentionally
+  // NOT rendered here.
+  const coverAnimation =
+    state === 'opening' ? 'animate-cover-open-3d' :
+    state === 'closing' ? 'animate-cover-close-3d' :
     ''
-  const coverPointerEvents =
-    state === 'opening' || state === 'closing' ? 'pointer-events-none' : ''
+
+  // Cover is non-interactive once the animation is mid-flight; only
+  // a fully-closed cover responds to gestures.
+  const interactive = state === 'closed'
 
   return (
     <div className="relative pt-10 pb-16 px-4" style={{ perspective: '1400px' }}>
-      {/* Inside content: hidden when fully closed, animated in when
-          opening, animated out when closing. */}
-      <div className={`${insideAnim}`}>
-        {state === 'closed' ? null : children}
-      </div>
-
-      {/* Cover. Sits over the inside; goes absolute during the
-          open/close animations so it can rotate without pushing the
-          rest of the layout around. */}
-      <button
-        type="button"
-        onClick={open}
-        onPointerDown={onCoverPointerDown}
-        onPointerUp={onCoverPointerUp}
-        aria-label="Open passport (tap or swipe left)"
-        className={`${state === 'opening' || state === 'closing'
-          ? 'absolute inset-0 z-30'
-          : 'relative z-30'} block w-full text-left ${coverAnim} ${coverPointerEvents}`}
-        style={{ touchAction: 'pan-y' }}
+      <div
+        className="relative mx-auto"
+        style={{
+          transformStyle: 'preserve-3d',
+          maxWidth: '28rem',
+        }}
       >
-        <CoverFace childName={childName} childAvatar={childAvatar} />
-      </button>
+        <button
+          type="button"
+          onClick={interactive ? open : undefined}
+          onPointerDown={interactive ? onCoverPointerDown : undefined}
+          onPointerUp={interactive ? onCoverPointerUp : undefined}
+          aria-label="Open passport (tap or swipe left)"
+          tabIndex={interactive ? 0 : -1}
+          disabled={!interactive}
+          className={`block w-full text-left ${coverAnimation}`}
+          style={{
+            touchAction: 'pan-y',
+            cursor: interactive ? 'pointer' : 'default',
+            // The cover starts visible when 'closed' (rotateY 0) and
+            // when 'closing' (the close animation starts at -180°,
+            // which is back-facing-hidden, then rotates to 0°).
+            // Inline initial transform matches the from-frame of the
+            // active keyframe so the first paint has no jump.
+            transform: state === 'closing' ? 'rotateY(-180deg)' : 'rotateY(0deg)',
+            transformOrigin: 'left center',
+            backfaceVisibility: 'hidden',
+          }}
+        >
+          <CoverFace childName={childName} childAvatar={childAvatar} />
+        </button>
+      </div>
     </div>
   )
 }
@@ -148,7 +162,7 @@ export default function PassportCover({ childName, childAvatar, token, children 
 function CoverFace({ childName, childAvatar }: { childName: string; childAvatar: string }) {
   return (
     <div
-      className="relative w-full max-w-md mx-auto rounded-2xl shadow-2xl overflow-hidden cursor-pointer transition-transform hover:scale-[1.01]"
+      className="relative w-full rounded-2xl shadow-2xl overflow-hidden"
       style={{
         aspectRatio: '3 / 4.2',
         background: `

@@ -43,33 +43,32 @@
   backface-visibility: hidden;
 }
 
-/* Book-open: the passport cover swings 180° anticlockwise off the
-   left spine, while the inside fades up into place. Used once per
-   session when the kid first taps their passport. */
-@keyframes bookCoverOpen {
-  0%   { transform: perspective(1400px) rotateY(0deg); }
-  100% { transform: perspective(1400px) rotateY(-170deg); }
+/* Book cover open / close. Single transform per animation (rotateY
+   only). The outer container holds `perspective` and the parent
+   carries `transform-style: preserve-3d`, so the cover physically
+   sits in front of the inside in 3D space and the rotation reveals
+   the inside automatically. `backface-visibility: hidden` keeps the
+   cover invisible once it rotates past edge-on. */
+@keyframes bookCoverOpen3d {
+  from { transform: rotateY(0deg); }
+  to   { transform: rotateY(-180deg); }
 }
-@keyframes bookInsideReveal {
-  0%   { transform: perspective(1400px) rotateY(80deg) translateX(-30px); opacity: 0; }
-  60%  { opacity: 1; }
-  100% { transform: perspective(1400px) rotateY(0deg)   translateX(0);    opacity: 1; }
+@keyframes bookCoverClose3d {
+  from { transform: rotateY(-180deg); }
+  to   { transform: rotateY(0deg); }
 }
-.animate-cover-open    { animation: bookCoverOpen 800ms cubic-bezier(0.3, 0, 0.2, 1) forwards; transform-origin: left center; backface-visibility: hidden; }
-.animate-inside-reveal { animation: bookInsideReveal 750ms cubic-bezier(0.3, 0, 0.2, 1) 200ms backwards; transform-origin: left center; }
-
-/* Reverse of the open: cover swings back closed from -170° to 0°. */
-@keyframes bookCoverClose {
-  0%   { transform: perspective(1400px) rotateY(-170deg); }
-  100% { transform: perspective(1400px) rotateY(0deg); }
+.animate-cover-open-3d  {
+  animation: bookCoverOpen3d 900ms cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+  transform-origin: left center;
+  backface-visibility: hidden;
+  will-change: transform;
 }
-@keyframes bookInsideHide {
-  0%   { transform: perspective(1400px) rotateY(0deg) translateX(0);     opacity: 1; }
-  40%  { opacity: 1; }
-  100% { transform: perspective(1400px) rotateY(80deg) translateX(-30px); opacity: 0; }
+.animate-cover-close-3d {
+  animation: bookCoverClose3d 900ms cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+  transform-origin: left center;
+  backface-visibility: hidden;
+  will-change: transform;
 }
-.animate-cover-close { animation: bookCoverClose 700ms cubic-bezier(0.3, 0, 0.2, 1) 200ms forwards; transform-origin: left center; backface-visibility: hidden; }
-.animate-inside-hide { animation: bookInsideHide 650ms cubic-bezier(0.4, 0, 0.2, 1) forwards; transform-origin: left center; }
 
 /* Stamp celebration burst: pop in big, settle, then a tiny wiggle
    like the stamp was just slammed down on the page. */

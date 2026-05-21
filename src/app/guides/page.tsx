@@ -11,10 +11,10 @@ import GuideBrowser, { type GuideCardModel } from './GuideBrowser'
 export const metadata: Metadata = { title: 'Guides' }
 export const dynamic = 'force-dynamic'
 
-// Slugs we want at the top of the listing regardless of date. The
-// 'how to save' blueprint is our flagship money/foundations guide
-// and earns the top slot.
-const PINNED_FIRST = ['how-to-save-blueprint']
+// Slugs we want pinned to the END of the listing regardless of date.
+// 'how to save' belongs at the bottom because it's the foundational
+// long-read, fresher destination guides go above it.
+const PINNED_LAST = ['how-to-save-blueprint']
 
 export default async function GuidesPage() {
   // Fire all the data fetches in parallel, none depend on user state.
@@ -49,13 +49,13 @@ export default async function GuidesPage() {
       })),
   ]
 
-  // Move pinned slugs to the top in the order they appear in
-  // PINNED_FIRST. Everything else keeps its existing order.
-  const pinned = PINNED_FIRST
+  // Move pinned slugs to the bottom in the order they appear in
+  // PINNED_LAST. Everything else keeps its existing order.
+  const pinned = PINNED_LAST
     .map(slug => combined.find(g => g.slug === slug))
     .filter((g): g is GuideCardModel => !!g)
-  const rest = combined.filter(g => !PINNED_FIRST.includes(g.slug))
-  const guides: GuideCardModel[] = [...pinned, ...rest]
+  const rest = combined.filter(g => !PINNED_LAST.includes(g.slug))
+  const guides: GuideCardModel[] = [...rest, ...pinned]
 
   const { data: { user } } = await supabase.auth.getUser()
   let isPremium = false

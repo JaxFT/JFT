@@ -2,7 +2,8 @@
 
 import { useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, ChevronLeft, ChevronRight, Award } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight, Award, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
+import { TransformWrapper, TransformComponent, type ReactZoomPanPinchRef } from 'react-zoom-pan-pinch'
 import PassportPage from '@/components/passport/PassportPage'
 import PassportStamp from '@/components/passport/PassportStamp'
 import MilestoneStamp from '@/components/passport/MilestoneStamp'
@@ -30,8 +31,12 @@ export default function StampsTab({
 }) {
   const pages = useMemo(() => buildPages(stamps, visits, homeCountryIso2), [stamps, visits, homeCountryIso2])
   const [pageIndex, setPageIndex] = useState(0)
-  const [direction, setDirection] = useState<'next' | 'prev'>('next')
-  const [animKey, setAnimKey] = useState(0)
+  // While a page is turning, we keep both layers mounted: the new
+  // page sits behind, the leaving page rotates off on top. `turning`
+  // holds the outgoing page index + direction; null once the
+  // animation has finished and we've dropped the leaving layer.
+  const [turning, setTurning] = useState<{ from: number; dir: 'next' | 'prev' } | null>(null)
+  const TURN_MS = 620
 
   // Empty book (no stamps at all, no visits) — but we still show
   // the Traveler page so the empty state is at least one branded
@@ -43,11 +48,15 @@ export default function StampsTab({
   const hasNext = pageIndex < pages.length - 1
 
   const turn = (dir: 'next' | 'prev') => {
+    if (turning) return  // ignore taps mid-flip
     if (dir === 'next' && !hasNext) return
     if (dir === 'prev' && !hasPrev) return
-    setDirection(dir)
+    const from = pageIndex
+    setTurning({ from, dir })
     setPageIndex(i => i + (dir === 'next' ? 1 : -1))
-    setAnimKey(k => k + 1)
+    // Drop the leaving layer once the keyframe finishes so the
+    // settled page is just one PassportPage again.
+    window.setTimeout(() => setTurning(null), TURN_MS)
   }
 
   // ── Swipe + edge-tap gestures ─────────────────────────────────────
@@ -139,10 +148,11 @@ export default function StampsTab({
             key={pageKey(p, i)}
             type="button"
             onClick={() => {
-              if (i === pageIndex) return
-              setDirection(i > pageIndex ? 'next' : 'prev')
+              if (i === pageIndex || turning) return
+              const dir: 'next' | 'prev' = i > pageIndex ? 'next' : 'prev'
+              setTurning({ from: pageIndex, dir })
               setPageIndex(i)
-              setAnimKey(k => k + 1)
+              window.setTimeout(() => setTurning(null), TURN_MS)
             }}
             className={`w-2 h-2 rounded-full transition-all ${
               i === pageIndex ? 'bg-amber-800 w-4' : 'bg-amber-800/30 hover:bg-amber-800/50'
@@ -164,61 +174,164 @@ export default function StampsTab({
     </div>
   ) : null
 
+  // scale comes from the pinch/zoom library. We mirror it into local
+  // state so the pointerup gesture handler can suppress page turns
+  // when the user is panning a zoomed-in page (drags should pan, not
+  // turn). Library also disables its own panning at scale ~1 so our
+  // gestures pass through cleanly at default zoom.
+  const [scale, setScale] = useState(1)
+  const isZoomed = scale > 1.05
+
   return (
-    <div
-      onPointerDown={onPointerDown}
-      onPointerUp={onPointerUp}
-      onPointerCancel={() => { startRef.current = null }}
-      // pan-y lets vertical scroll work natively (the page content
-      // scrolls inside PassportPage in book mode), while horizontal
-      // gestures fall through to our pointerup handler.
-      style={{ touchAction: 'pan-y' }}
-      className="relative"
+    <TransformWrapper
+      minScale={1}
+      maxScale={4}
+      initialScale={1}
+      doubleClick={{ disabled: false, mode: 'reset' }}
+      pinch={{ disabled: false }}
+      wheel={{ step: 0.2 }}
+      panning={{ disabled: !isZoomed, velocityDisabled: true }}
+      onZoomStop={(ref: ReactZoomPanPinchRef) => setScale(ref.state.scale)}
+      onPanningStop={(ref: ReactZoomPanPinchRef) => setScale(ref.state.scale)}
+      onTransform={(ref: ReactZoomPanPinchRef) => setScale(ref.state.scale)}
     >
-      <PassportPage className="p-6 sm:p-8" book footer={footerEl}>
-        <div className="flex items-baseline justify-between mb-5">
-          <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: '#5a3a12' }}>
-              All stamps
-            </p>
-            <p className="text-xs uppercase tracking-widest mt-0.5" style={{ color: '#5a3a12', opacity: 0.6 }}>
-              {totalStamps === 0
-                ? 'Empty book'
-                : `${totalStamps} ${totalStamps === 1 ? 'stamp' : 'stamps'} · ${countryPageCount} ${countryPageCount === 1 ? 'country' : 'countries'}`}
-            </p>
+      {(controls) => (
+        <div className="relative">
+          <TransformComponent
+            wrapperStyle={{ width: '100%', height: '100%' }}
+            contentStyle={{ width: '100%' }}
+          >
+            <div
+              onPointerDown={onPointerDown}
+              onPointerUp={(e) => { if (!isZoomed) onPointerUp(e) }}
+              onPointerCancel={() => { startRef.current = null }}
+              style={{ touchAction: isZoomed ? 'none' : 'pan-y' }}
+              className="relative w-full"
+            >
+              <PassportPage className="p-6 sm:p-8" book footer={footerEl}>
+                <PageHeader
+                  page={pages[pageIndex]}
+                  pageIndex={pageIndex}
+                  totalStamps={totalStamps}
+                  countryPageCount={countryPageCount}
+                  totalPages={pages.length}
+                />
+                <PageInner page={current} token={token} onlyTravelerEmpty={onlyTravelerEmpty} />
+              </PassportPage>
+
+              {turning && (
+                <div
+                  aria-hidden
+                  className={`absolute inset-0 ${turning.dir === 'next' ? 'animate-page-out-next' : 'animate-page-out-prev'}`}
+                >
+                  <PassportPage className="p-6 sm:p-8" book footer={footerEl}>
+                    <PageHeader
+                      page={pages[turning.from]}
+                      pageIndex={turning.from}
+                      totalStamps={totalStamps}
+                      countryPageCount={countryPageCount}
+                      totalPages={pages.length}
+                    />
+                    <PageInner page={pages[turning.from]} token={token} onlyTravelerEmpty={onlyTravelerEmpty} />
+                  </PassportPage>
+                </div>
+              )}
+
+              {/* Edge hover hints on desktop. Pointer events handled
+                  above; these are purely decorative. */}
+              <div
+                aria-hidden
+                className="hidden sm:block absolute inset-y-0 left-0 w-[18%] pointer-events-none opacity-0 hover:opacity-100 transition-opacity"
+                style={{ background: 'linear-gradient(90deg, rgba(120,80,30,0.15), transparent)' }}
+              />
+              <div
+                aria-hidden
+                className="hidden sm:block absolute inset-y-0 right-0 w-[18%] pointer-events-none opacity-0 hover:opacity-100 transition-opacity"
+                style={{ background: 'linear-gradient(-90deg, rgba(120,80,30,0.15), transparent)' }}
+              />
+            </div>
+          </TransformComponent>
+
+          {/* Zoom controls. Sit on top of the book; visible always so
+              kids can use them with one hand. Reset only shows when
+              actually zoomed so it doesn't clutter the default view. */}
+          <div className="absolute bottom-3 right-3 z-30 flex flex-col gap-1.5">
+            <button
+              type="button"
+              onClick={() => controls.zoomIn()}
+              className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm shadow flex items-center justify-center text-amber-900 hover:bg-white"
+              aria-label="Zoom in"
+            >
+              <ZoomIn className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => controls.zoomOut()}
+              className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm shadow flex items-center justify-center text-amber-900 hover:bg-white"
+              aria-label="Zoom out"
+            >
+              <ZoomOut className="w-4 h-4" />
+            </button>
+            {isZoomed && (
+              <button
+                type="button"
+                onClick={() => controls.resetTransform()}
+                className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm shadow flex items-center justify-center text-amber-900 hover:bg-white"
+                aria-label="Reset zoom"
+              >
+                <Maximize2 className="w-4 h-4" />
+              </button>
+            )}
           </div>
-          {pages.length > 1 && (
-            <p className="text-xs uppercase tracking-widest" style={{ color: '#5a3a12', opacity: 0.6 }}>
-              Page {pageIndex + 1} of {pages.length}
-            </p>
-          )}
         </div>
+      )}
+    </TransformWrapper>
+  )
+}
 
-        <div
-          key={animKey}
-          className={direction === 'next' ? 'animate-page-turn-next' : 'animate-page-turn-prev'}
-        >
-          {current.kind === 'traveler'
-            ? <TravelerPage milestones={current.milestones} empty={onlyTravelerEmpty} />
-            : <CountryPage group={current} token={token} />}
-        </div>
-      </PassportPage>
-
-      {/* Subtle edge-tap hints. Invisible by default, fade in faintly
-          on hover. The pointer-down handler above does the actual
-          turning so these don't intercept events themselves. */}
-      <div
-        aria-hidden
-        className="hidden sm:block absolute inset-y-0 left-0 w-[18%] pointer-events-none opacity-0 hover:opacity-100 transition-opacity"
-        style={{ background: 'linear-gradient(90deg, rgba(120,80,30,0.15), transparent)' }}
-      />
-      <div
-        aria-hidden
-        className="hidden sm:block absolute inset-y-0 right-0 w-[18%] pointer-events-none opacity-0 hover:opacity-100 transition-opacity"
-        style={{ background: 'linear-gradient(-90deg, rgba(120,80,30,0.15), transparent)' }}
-      />
+// Header strip shown at the top of every page (page label + counter).
+// Pulled out so both the incoming and the outgoing layer can render
+// identical headers during a turn without duplicating JSX.
+function PageHeader({
+  page, pageIndex, totalStamps, countryPageCount, totalPages,
+}: {
+  page: Page
+  pageIndex: number
+  totalStamps: number
+  countryPageCount: number
+  totalPages: number
+}) {
+  void page
+  return (
+    <div className="flex items-baseline justify-between mb-5">
+      <div>
+        <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: '#5a3a12' }}>
+          All stamps
+        </p>
+        <p className="text-xs uppercase tracking-widest mt-0.5" style={{ color: '#5a3a12', opacity: 0.6 }}>
+          {totalStamps === 0
+            ? 'Empty book'
+            : `${totalStamps} ${totalStamps === 1 ? 'stamp' : 'stamps'} · ${countryPageCount} ${countryPageCount === 1 ? 'country' : 'countries'}`}
+        </p>
+      </div>
+      {totalPages > 1 && (
+        <p className="text-xs uppercase tracking-widest" style={{ color: '#5a3a12', opacity: 0.6 }}>
+          Page {pageIndex + 1} of {totalPages}
+        </p>
+      )}
     </div>
   )
+}
+
+// Decides whether to render the Traveller milestones page or a
+// country stamps page from a single Page descriptor.
+function PageInner({
+  page, token, onlyTravelerEmpty,
+}: { page: Page; token: string; onlyTravelerEmpty: boolean }) {
+  if (page.kind === 'traveler') {
+    return <TravelerPage milestones={page.milestones} empty={onlyTravelerEmpty} />
+  }
+  return <CountryPage group={page} token={token} />
 }
 
 function TravelerPage({ milestones, empty }: { milestones: Milestone[]; empty: boolean }) {

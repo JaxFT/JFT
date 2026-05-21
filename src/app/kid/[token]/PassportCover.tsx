@@ -12,7 +12,7 @@
 // slam the cover back in front of the kid. The close event is the
 // only way to leave 'open' back to the cover within a single session.
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Sparkles } from 'lucide-react'
 
 type Props = {
@@ -79,6 +79,27 @@ export default function PassportCover({ childName, childAvatar, token, children 
     window.setTimeout(() => setState('open'), 850)
   }
 
+  // Cover gestures: tap fires the click handler; a definite swipe-
+  // left (forward, "next page") also opens. We track pointerdown +
+  // pointerup ourselves so the swipe doesn't compete with the click.
+  const coverDownRef = useRef<{ x: number; y: number; time: number } | null>(null)
+  const onCoverPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    coverDownRef.current = { x: e.clientX, y: e.clientY, time: Date.now() }
+  }
+  const onCoverPointerUp = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const start = coverDownRef.current
+    coverDownRef.current = null
+    if (!start || state !== 'closed') return
+    const dx = e.clientX - start.x
+    const dy = e.clientY - start.y
+    const elapsed = Date.now() - start.time
+    // Swipe-left opens. Same thresholds as the page-turn gesture so
+    // muscle-memory carries from one to the other.
+    if (dx < -70 && Math.abs(dx) > Math.abs(dy) * 1.5 && elapsed < 700) {
+      open()
+    }
+  }
+
   if (state === 'open') {
     return <>{children}</>
   }
@@ -110,10 +131,13 @@ export default function PassportCover({ childName, childAvatar, token, children 
       <button
         type="button"
         onClick={open}
-        aria-label="Open passport"
+        onPointerDown={onCoverPointerDown}
+        onPointerUp={onCoverPointerUp}
+        aria-label="Open passport (tap or swipe left)"
         className={`${state === 'opening' || state === 'closing'
           ? 'absolute inset-0 z-30'
           : 'relative z-30'} block w-full text-left ${coverAnim} ${coverPointerEvents}`}
+        style={{ touchAction: 'pan-y' }}
       >
         <CoverFace childName={childName} childAvatar={childAvatar} />
       </button>
@@ -168,7 +192,7 @@ function CoverFace({ childName, childAvatar }: { childName: string; childAvatar:
 
         <div>
           <p className="text-[10px] sm:text-xs font-bold tracking-[0.32em] uppercase mb-2 inline-flex items-center gap-1.5" style={{ color: '#d4af69' }}>
-            <Sparkles className="w-3 h-3" /> Tap to open
+            <Sparkles className="w-3 h-3" /> Tap or swipe to open
           </p>
         </div>
       </div>

@@ -1,18 +1,21 @@
+'use client'
+
 // Scatters its children (stamps) across a passport-page area with a
 // stable per-child random rotation + offset. Used by:
-//   - the real kid Stamps tab country pages (replaces the old
-//     flex-wrap "ScatteredStamps")
+//   - the real kid Stamps tab country pages
 //   - the marketing mockups on /passports
 //
-// "Stable" is important: the same seed always produces the same
-// layout, so a kid's country page doesn't reshuffle every render and
-// the stamps feel like they were inked into the page once.
+// "Stable" matters: the same seed always produces the same layout,
+// so a kid's country page doesn't reshuffle every render and the
+// stamps feel like they were inked into the page once.
+//
+// "Responsive" matters: on a phone, fewer columns + tighter packing
+// stop stamps overlapping; on tablet+, more columns spread out.
+// We measure the container with ResizeObserver and pick a layout
+// per width.
 
-import type { ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
-// Tiny deterministic PRNG. Mulberry32 — small, fast, good enough for
-// "random-looking but reproducible" UI placement. Seed from a string
-// by hashing it first.
 function hashSeed(s: string): number {
   let h = 2166136261
   for (let i = 0; i < s.length; i++) {
@@ -34,47 +37,75 @@ function mulberry32(seed: number) {
 }
 
 type Props = {
-  // Unique seed for this page, e.g. the country slug. Same seed = same
-  // layout across renders. If the array reorders (a new stamp gets
-  // inserted) layout shifts only for new positions.
   seed: string
   children: ReactNode
-  // Approximate height in px the sheet should reserve. The component
-  // computes positions inside this, plus a small margin so stamps
-  // near the edge don't get clipped.
+  // Used as a guideline only when a height isn't supplied via the
+  // responsive layout. Real height is derived from cols+rows so the
+  // sheet grows to fit the number of stamps without clipping.
   height?: number
 }
 
-export default function ScatteredStampSheet({ seed, children, height = 360 }: Props) {
+// Pick how many columns we should use given the container width.
+// Numbers tuned so an 88px sm stamp plus its date label has ~120px
+// of breathing room per column at narrow widths.
+function colsFor(width: number, count: number): number {
+  if (width < 360) return Math.min(2, count)
+  if (width < 520) return Math.min(3, count)
+  if (width < 720) return Math.min(4, count)
+  return Math.min(5, count)
+}
+
+export default function ScatteredStampSheet({ seed, children, height: minHeight = 320 }: Props) {
   const items = Array.isArray(children) ? children.filter(Boolean) : [children].filter(Boolean)
   const count = items.length
 
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  // SSR-safe default. The first client render uses this; ResizeObserver
+  // bumps it to the real measured width on mount.
+  const [width, setWidth] = useState(360)
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const ro = new ResizeObserver(entries => {
+      const w = entries[0]?.contentRect.width
+      if (w && w > 0) setWidth(w)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const layout = useMemo(() => {
+    if (count === 0) return { cols: 1, rows: 0, cellH: 0, height: 0 }
+    const cols = colsFor(width, count)
+    const rows = Math.ceil(count / cols)
+    // Slightly more vertical room per stamp at narrower widths so
+    // the date label below the graphic doesn't bump into the row above.
+    const cellH = width < 360 ? 130 : width < 520 ? 140 : 150
+    const height = Math.max(minHeight, rows * cellH + 24)
+    return { cols, rows, cellH, height }
+  }, [width, count, minHeight])
+
   if (count === 0) {
-    return <div className="relative" style={{ height }} aria-hidden />
+    return <div ref={containerRef} className="relative" style={{ height: minHeight }} aria-hidden />
   }
 
-  // Build a grid of candidate cells, then perturb each cell with a
-  // bit of random jitter. Stops stamps from piling on top of each
-  // other while still feeling hand-stamped.
   const rng = mulberry32(hashSeed(seed))
-  const cols = count <= 4 ? 2 : count <= 9 ? 3 : 4
-  const rows = Math.ceil(count / cols)
-  // Reserve a generous bottom margin so the date strip on each stamp
-  // never sits flush against the page edge.
-  const cellW = 100 / cols                    // %
-  const cellH = (height - 32) / rows          // px
 
   return (
-    <div className="relative w-full mx-auto" style={{ height, maxWidth: 540 }}>
+    <div ref={containerRef} className="relative w-full mx-auto" style={{ height: layout.height }}>
       {items.map((child, i) => {
-        const row = Math.floor(i / cols)
-        const col = i % cols
-        // Per-stamp jitter: ±25% of cell on each axis, ±18° rotation.
-        const jitterX = (rng() - 0.5) * 0.5
-        const jitterY = (rng() - 0.5) * 0.5
+        const row = Math.floor(i / layout.cols)
+        const col = i % layout.cols
+        // Per-stamp jitter and rotation. Tighter jitter on narrow
+        // screens so stamps don't drift over the cell boundary.
+        const jitterScale = width < 360 ? 0.35 : width < 520 ? 0.4 : 0.5
+        const jitterX = (rng() - 0.5) * jitterScale
+        const jitterY = (rng() - 0.5) * jitterScale
         const rotate = (rng() - 0.5) * 36
+        const cellW = 100 / layout.cols
         const left = (col + 0.5 + jitterX) * cellW
-        const top = (row + 0.5 + jitterY) * cellH + 16
+        const top = (row + 0.5 + jitterY) * layout.cellH + 12
 
         return (
           <div
@@ -84,7 +115,6 @@ export default function ScatteredStampSheet({ seed, children, height = 360 }: Pr
               left: `${left}%`,
               top: `${top}px`,
               transform: `translate(-50%, -50%) rotate(${rotate}deg)`,
-              // Later stamps stack on top, like fresh ink over old.
               zIndex: i,
             }}
           >

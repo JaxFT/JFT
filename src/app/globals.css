@@ -15,22 +15,33 @@
   }
 }
 
-/* Page-turn animations for the kid passport's Stamps tab. Two flavours
-   (next = flipping forward, prev = flipping back) using a brief
-   3D rotateY + slight x-translate so it reads like turning a real
-   paper page. Animation is short so kids can flick quickly. */
-@keyframes pageTurnNext {
-  0%   { transform: perspective(1200px) rotateY(-25deg) translateX(40px); opacity: 0; }
-  60%  { opacity: 1; }
-  100% { transform: perspective(1200px) rotateY(0deg)   translateX(0);    opacity: 1; }
+/* Page-turn animations for the kid passport. Two layers visible
+   during a turn: an outgoing page rotating off, and the incoming
+   page sitting behind. Keys:
+   - turn-out-next: outgoing page flips off to the left (rotateY 0->-180)
+   - turn-out-prev: outgoing page flips off to the right (rotateY 0->180)
+   The incoming page is static behind it, so the transition reads as
+   a real page being lifted away rather than a swap-and-fade. */
+@keyframes pageTurnOutNext {
+  0%   { transform: perspective(1400px) rotateY(0deg);    box-shadow: 0 0 0 rgba(0,0,0,0); }
+  40%  { box-shadow: -20px 0 30px rgba(0,0,0,0.18); }
+  100% { transform: perspective(1400px) rotateY(-180deg); box-shadow: -2px 0 6px rgba(0,0,0,0.06); }
 }
-@keyframes pageTurnPrev {
-  0%   { transform: perspective(1200px) rotateY(25deg)  translateX(-40px); opacity: 0; }
-  60%  { opacity: 1; }
-  100% { transform: perspective(1200px) rotateY(0deg)   translateX(0);     opacity: 1; }
+@keyframes pageTurnOutPrev {
+  0%   { transform: perspective(1400px) rotateY(0deg);    box-shadow: 0 0 0 rgba(0,0,0,0); }
+  40%  { box-shadow: 20px 0 30px rgba(0,0,0,0.18); }
+  100% { transform: perspective(1400px) rotateY(180deg);  box-shadow: 2px 0 6px rgba(0,0,0,0.06); }
 }
-.animate-page-turn-next { animation: pageTurnNext 480ms cubic-bezier(0.4, 0, 0.2, 1); transform-origin: left center; }
-.animate-page-turn-prev { animation: pageTurnPrev 480ms cubic-bezier(0.4, 0, 0.2, 1); transform-origin: right center; }
+.animate-page-out-next {
+  animation: pageTurnOutNext 620ms cubic-bezier(0.4, 0.05, 0.25, 1) forwards;
+  transform-origin: left center;
+  backface-visibility: hidden;
+}
+.animate-page-out-prev {
+  animation: pageTurnOutPrev 620ms cubic-bezier(0.4, 0.05, 0.25, 1) forwards;
+  transform-origin: right center;
+  backface-visibility: hidden;
+}
 
 /* Book-open: the passport cover swings 180° anticlockwise off the
    left spine, while the inside fades up into place. Used once per

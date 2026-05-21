@@ -13,10 +13,20 @@ export const metadata: Metadata = {
   // PWA-style installs live under /public/favicons/ and are wired in
   // explicitly below.
   manifest: '/favicons/site.webmanifest',
+  // Explicit `icons` overrides Next.js's auto-detection of icon.svg /
+  // apple-icon.png in src/app/, so we have to spell each one out
+  // here, including the apple-touch-icon. Without it iOS Safari has
+  // no icon to use when 'Add to Home Screen' is tapped and falls back
+  // to drawing the first letter of the site name.
   icons: {
     icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
       { url: '/favicons/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
     ],
+    apple: [
+      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
   },
   // Default link-preview image. Per-page metadata (e.g. blog posts
   // pulling their cover image) overrides this when set, so this only

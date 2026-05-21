@@ -104,7 +104,7 @@ export default function GuideBrowser({ guides, isPremium }: Props) {
                   alt={guide.name}
                   loading="lazy"
                   decoding="async"
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="absolute inset-0 w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                 />
               ) : (
                 <div className="absolute inset-0 bg-gradient-to-br from-brand-200 via-brand-300 to-brand-500 flex items-center justify-center">

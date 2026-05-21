@@ -87,21 +87,18 @@ export default function UsernameModal({
 
         <label className="block mb-3">
           <span className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Username</span>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-mono select-none pointer-events-none">@</span>
-            <input
-              type="text"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              autoFocus
-              placeholder="wanderingmum"
-              className="w-full pl-8 pr-3 py-2.5 border border-gray-200 rounded-md font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-            />
-          </div>
+          <input
+            type="text"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            autoFocus
+            placeholder="wanderingmum"
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-md font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+          />
           {username && !usernameCheck.ok && (
             <p className="text-xs text-red-600 mt-1">{usernameCheck.error}</p>
           )}
-          <p className="text-[11px] text-gray-400 mt-1">Don&apos;t include the @, we add that for you.</p>
+          <p className="text-[11px] text-gray-400 mt-1">Case is preserved (Bec stays Bec). If you want your username to display as your Instagram handle, start it with @ (e.g. <span className="font-mono">@jax.familytravels</span>).</p>
         </label>
 
         {isAdmin && (

@@ -460,7 +460,7 @@ export default function AccountEditor({
         </div>
         <p className="text-sm text-gray-700">
           {savedUsername
-            ? <><span className="font-mono">@{savedUsername}</span>{isAdmin && savedInstagram && <span className="text-gray-400"> · <Instagram className="w-3.5 h-3.5 inline mr-0.5" /><span className="font-mono">@{savedInstagram}</span></span>}</>
+            ? <><span className="font-mono">{savedUsername}</span>{isAdmin && savedInstagram && <span className="text-gray-400"> · <Instagram className="w-3.5 h-3.5 inline mr-0.5" /><span className="font-mono">@{savedInstagram}</span></span>}</>
             : <span className="italic text-gray-400">Not set, pick one to comment on blog posts</span>}
         </p>
 
@@ -468,16 +468,13 @@ export default function AccountEditor({
           <form onSubmit={saveUsername} className="space-y-4 mt-5 pt-5 border-t border-gray-100">
             <div>
               <label className="block text-xs font-bold tracking-widest uppercase text-gray-500 mb-1.5">Username</label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-mono select-none pointer-events-none">@</span>
-                <input
-                  value={username}
-                  onChange={e => setUsername(e.target.value)}
-                  className={`${input} !pl-8 !font-mono`}
-                  placeholder="wanderingmum"
-                />
-              </div>
-              <p className="text-[11px] text-gray-400 mt-1">Don&apos;t include the @, we add that for you. Letters, numbers, period, hyphen, underscore. 3 to 24 chars.</p>
+              <input
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                className={`${input} !font-mono`}
+                placeholder="wanderingmum"
+              />
+              <p className="text-[11px] text-gray-400 mt-1">Letters, numbers, period, hyphen, underscore. 3 to 24 chars. Case is preserved (Bec stays Bec). If you want your username to display as your Instagram handle, start it with @ (e.g. <span className="font-mono">@jax.familytravels</span>).</p>
             </div>
             {isAdmin && (
               <div>

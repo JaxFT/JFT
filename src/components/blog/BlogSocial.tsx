@@ -227,7 +227,7 @@ export default function BlogSocial({
             )}
             <div className="mt-2 flex items-center justify-between gap-3 flex-wrap">
               <p className="text-xs text-gray-400">
-                {viewerUsername && <>Posting as <span className="font-mono">@{viewerUsername}</span></>}
+                {viewerUsername && <>Posting as <span className="font-mono">{viewerUsername}</span></>}
               </p>
               <button
                 type="submit"
@@ -253,7 +253,7 @@ export default function BlogSocial({
               <Avatar username={c.username} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2 flex-wrap">
-                  <span className="font-mono font-semibold text-sm text-gray-900">@{c.username ?? 'anon'}</span>
+                  <span className="font-mono font-semibold text-sm text-gray-900">{c.username ?? 'anon'}</span>
                   <span className="text-xs text-gray-400 ml-auto">{fmtDate(c.created_at)}</span>
                 </div>
                 {/* Instagram handle: admin-only, on its own line in a

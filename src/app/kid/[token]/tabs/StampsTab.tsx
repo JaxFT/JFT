@@ -23,11 +23,21 @@ export default function StampsTab({
   stamps,
   visits,
   homeCountryIso2,
+  onSwipeBeforeFirstPage,
+  onSwipeAfterLastPage,
 }: {
   token: string
   stamps: StampRow[]
   visits: CountryVisitRow[]
   homeCountryIso2: string | null
+  // Called when the kid tries to swipe back past the first internal
+  // stamps page. The parent (KidShell) hooks this to "go to previous
+  // tab", which falls through to closePassport on the very first tab.
+  // Defaulting to closePassport keeps the standalone behaviour sane.
+  onSwipeBeforeFirstPage?: () => void
+  // Same idea for swipes past the last internal page. Default no-op
+  // so the kid bumps against the back cover.
+  onSwipeAfterLastPage?: () => void
 }) {
   const pages = useMemo(() => buildPages(stamps, visits, homeCountryIso2), [stamps, visits, homeCountryIso2])
   const [pageIndex, setPageIndex] = useState(0)
@@ -96,13 +106,17 @@ export default function StampsTab({
     const absDx = Math.abs(dx)
     const absDy = Math.abs(dy)
 
+    const backwardEscape = onSwipeBeforeFirstPage ?? closePassport
+    const forwardEscape = onSwipeAfterLastPage ?? (() => { /* end of book */ })
+
     // Genuine horizontal swipe wins over tap detection.
     if (absDx >= SWIPE_MIN_PX && absDx >= absDy * 1.5 && elapsed <= SWIPE_MAX_MS) {
       if (dx < 0) {
         if (hasNext) turn('next')
+        else forwardEscape()
       } else {
         if (hasPrev) turn('prev')
-        else closePassport()
+        else backwardEscape()
       }
       return
     }
@@ -113,9 +127,10 @@ export default function StampsTab({
       const relX = (e.clientX - surface.left) / surface.width
       if (relX < EDGE_FRACTION) {
         if (hasPrev) turn('prev')
-        else closePassport()
+        else backwardEscape()
       } else if (relX > 1 - EDGE_FRACTION) {
         if (hasNext) turn('next')
+        else forwardEscape()
       }
     }
   }

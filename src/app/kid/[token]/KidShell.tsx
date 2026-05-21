@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Stamp, Map, Globe, BookOpen, Star } from 'lucide-react'
 import type { PermissionMode } from '@/lib/passport-types'
@@ -12,7 +13,7 @@ import StampsTab from './tabs/StampsTab'
 import MapTab from './tabs/MapTab'
 import CountriesTab from './tabs/CountriesTab'
 import JournalTab from './tabs/JournalTab'
-import PassportCover from './PassportCover'
+import PassportCover, { closePassport } from './PassportCover'
 
 type Tab = 'passport' | 'map' | 'countries' | 'journal' | 'stamps'
 
@@ -62,6 +63,68 @@ export default function KidShell({
     router.push(`/kid/${token}?tab=${id}`, { scroll: false })
   }
 
+  // ── Whole-book navigation ─────────────────────────────────────────
+  // The passport reads as a single book: Passport (landing) → Map →
+  // Countries → Journal → Stamps. Swipe-left walks forward, swipe-
+  // right walks backward. On the first tab, swipe-right closes the
+  // cover. On the last tab, the Stamps tab handles its own internal
+  // page navigation; only when the kid swipes past its first internal
+  // page do they cross back into the Journal tab.
+  const TAB_ORDER: Tab[] = ['passport', 'map', 'countries', 'journal', 'stamps']
+  const tabIndex = TAB_ORDER.indexOf(tab)
+  const goToPrevSurface = () => {
+    if (tabIndex <= 0) closePassport()
+    else goToTab(TAB_ORDER[tabIndex - 1])
+  }
+  const goToNextSurface = () => {
+    if (tabIndex < TAB_ORDER.length - 1) goToTab(TAB_ORDER[tabIndex + 1])
+    // else: kid is on the last tab; their internal handler runs the
+    // edge of the book on its own.
+  }
+
+  // Gesture handler for the non-Stamps tabs. Stamps has its own
+  // handler inside its component because it also tracks internal
+  // page state; lifting both into here would tangle concerns.
+  const SWIPE_MIN_PX = 70
+  const SWIPE_MAX_MS = 700
+  const TAP_MAX_MOVE = 8
+  const TAP_MAX_MS = 400
+  const EDGE_FRACTION = 0.18
+  const swipeStartRef = useRef<{ x: number; y: number; time: number } | null>(null)
+
+  const onMainPointerDown = (e: React.PointerEvent<HTMLElement>) => {
+    if (tab === 'stamps') return
+    const target = e.target as HTMLElement | null
+    if (target?.closest('button, a, input, textarea, select, [role="button"]')) {
+      swipeStartRef.current = null
+      return
+    }
+    swipeStartRef.current = { x: e.clientX, y: e.clientY, time: Date.now() }
+  }
+  const onMainPointerUp = (e: React.PointerEvent<HTMLElement>) => {
+    if (tab === 'stamps') return
+    const start = swipeStartRef.current
+    swipeStartRef.current = null
+    if (!start) return
+    const dx = e.clientX - start.x
+    const dy = e.clientY - start.y
+    const elapsed = Date.now() - start.time
+    const absDx = Math.abs(dx)
+    const absDy = Math.abs(dy)
+
+    if (absDx >= SWIPE_MIN_PX && absDx >= absDy * 1.5 && elapsed <= SWIPE_MAX_MS) {
+      if (dx < 0) goToNextSurface()
+      else goToPrevSurface()
+      return
+    }
+    if (absDx <= TAP_MAX_MOVE && absDy <= TAP_MAX_MOVE && elapsed <= TAP_MAX_MS) {
+      const surface = e.currentTarget.getBoundingClientRect()
+      const relX = (e.clientX - surface.left) / surface.width
+      if (relX < EDGE_FRACTION) goToPrevSurface()
+      else if (relX > 1 - EDGE_FRACTION) goToNextSurface()
+    }
+  }
+
   // Inside-of-passport markup is wrapped by <PassportCover> on first
   // session arrival. On subsequent renders (after Open is tapped or
   // sessionStorage already says it's open) the cover unmounts and
@@ -109,13 +172,30 @@ export default function KidShell({
         </div>
       </nav>
 
-      {/* PANEL */}
-      <main className="max-w-3xl mx-auto px-4 pt-6 pb-20">
+      {/* PANEL. Swipe handlers live here so the whole passport
+          reads as one book: swipe between tabs except inside Stamps,
+          which owns its own page-turn gesture. */}
+      <main
+        className="max-w-3xl mx-auto px-4 pt-6 pb-20"
+        onPointerDown={onMainPointerDown}
+        onPointerUp={onMainPointerUp}
+        onPointerCancel={() => { swipeStartRef.current = null }}
+        style={{ touchAction: 'pan-y' }}
+      >
         {tab === 'passport'  && <PassportTab token={token} child={child} stats={stats} stamps={stamps} assignedPacks={assignedPacks} />}
         {tab === 'map'       && <MapTab token={token} visits={visits} homeCountryIso2={child.home_country_iso2} />}
         {tab === 'countries' && <CountriesTab token={token} visits={visits} stamps={stamps} assignedPacks={assignedPacks} homeCountryIso2={child.home_country_iso2} />}
         {tab === 'journal'   && <JournalTab token={token} childName={child.name} permissionMode={child.permission_mode} entries={journal} />}
-        {tab === 'stamps'    && <StampsTab token={token} stamps={stamps} visits={visits} homeCountryIso2={child.home_country_iso2} />}
+        {tab === 'stamps'    && (
+          <StampsTab
+            token={token}
+            stamps={stamps}
+            visits={visits}
+            homeCountryIso2={child.home_country_iso2}
+            onSwipeBeforeFirstPage={goToPrevSurface}
+            onSwipeAfterLastPage={goToNextSurface}
+          />
+        )}
       </main>
     </div>
   )

@@ -1,52 +1,81 @@
 'use client'
 
-// Front cover of the kid's Adventure Passport. Shown once per session
-// when they first arrive at /kid/<token>. Tap → 3D book-open
-// animation → reveals the tab shell. State persists in sessionStorage
-// so flipping between tabs (which navigates the URL) doesn't slam the
-// cover back in front of them.
+// Front cover of the kid's Adventure Passport. Three states:
+//   - 'closed'  : the cover is shown, tap to open
+//   - 'opening' : 3D book-open animation playing
+//   - 'open'    : inside content fully visible, cover unmounted
+//   - 'closing' : cover swinging back closed (triggered by a global
+//                 'jft:close-passport' window event so the Stamps tab
+//                 can fire it from a swipe-right past the first page)
+//
+// State persists in sessionStorage so flipping between tabs doesn't
+// slam the cover back in front of the kid. The close event is the
+// only way to leave 'open' back to the cover within a single session.
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Sparkles } from 'lucide-react'
 
 type Props = {
   childName: string
   childAvatar: string
   token: string
-  // What to render once the cover has been opened. Lazy so the heavy
-  // tab shell doesn't paint until the kid actually clicks Open.
   children: React.ReactNode
 }
 
+type State = 'closed' | 'opening' | 'open' | 'closing'
+
 const storageKey = (token: string) => `jft.passport.open.${token}`
+const CLOSE_EVENT = 'jft:close-passport'
+
+// Public helper any child component can call. Lives in this module so
+// imports stay obvious; under the hood it dispatches a window event
+// the cover listens for.
+export function closePassport() {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(CLOSE_EVENT))
+}
 
 export default function PassportCover({ childName, childAvatar, token, children }: Props) {
-  // 'closed'  = render cover, no animation yet
-  // 'opening' = cover swings off, inside fades in
-  // 'open'    = cover unmounted, inside fully shown
-  const [state, setState] = useState<'closed' | 'opening' | 'open'>('closed')
+  const [state, setState] = useState<State>('closed')
 
-  // If the kid already opened the passport this session, skip
-  // straight to 'open' so navigating tabs doesn't re-show the cover.
-  // sessionStorage rather than localStorage so each new device /
-  // browser session starts with the open animation again.
+  // On first mount, restore the open flag for this session.
   useEffect(() => {
     if (typeof window === 'undefined') return
     try {
       if (window.sessionStorage.getItem(storageKey(token)) === '1') {
         setState('open')
       }
-    } catch {
-      // sessionStorage blocked (private window etc) — just show the
-      // cover; the kid can tap it and the animation runs as normal.
-    }
+    } catch { /* private window etc */ }
   }, [token])
+
+  // Global close event — fired from inside the passport when the kid
+  // wants to "shut the book". We replay the cover close animation
+  // and clear the session flag so next open replays the opening too.
+  const onCloseRequest = useCallback(() => {
+    setState(prev => {
+      if (prev !== 'open') return prev
+      try { window.sessionStorage.removeItem(storageKey(token)) } catch { /* noop */ }
+      return 'closing'
+    })
+  }, [token])
+
+  useEffect(() => {
+    window.addEventListener(CLOSE_EVENT, onCloseRequest)
+    return () => window.removeEventListener(CLOSE_EVENT, onCloseRequest)
+  }, [onCloseRequest])
+
+  // Once the closing animation finishes, drop back to 'closed' so the
+  // cover is the only thing on screen again.
+  useEffect(() => {
+    if (state !== 'closing') return
+    const t = window.setTimeout(() => setState('closed'), 950)
+    return () => window.clearTimeout(t)
+  }, [state])
 
   const open = () => {
     if (state !== 'closed') return
     setState('opening')
-    try { window.sessionStorage.setItem(storageKey(token), '1') } catch { /* see note above */ }
-    // 'opening' for the duration of the keyframe, then unmount cover.
+    try { window.sessionStorage.setItem(storageKey(token), '1') } catch { /* noop */ }
     window.setTimeout(() => setState('open'), 850)
   }
 
@@ -54,25 +83,37 @@ export default function PassportCover({ childName, childAvatar, token, children 
     return <>{children}</>
   }
 
+  // For 'closed' / 'opening' / 'closing' we render the cover + the
+  // inside together so the 3D rotation reveals what's behind.
+  const insideAnim =
+    state === 'opening' ? 'animate-inside-reveal' :
+    state === 'closing' ? 'animate-inside-hide' :
+    'hidden'
+  const coverAnim =
+    state === 'opening' ? 'animate-cover-open' :
+    state === 'closing' ? 'animate-cover-close' :
+    ''
+  const coverPointerEvents =
+    state === 'opening' || state === 'closing' ? 'pointer-events-none' : ''
+
   return (
     <div className="relative pt-10 pb-16 px-4" style={{ perspective: '1400px' }}>
-      {/* Inside reveals during the opening animation. Mounted but
-          off-screen until 'opening', then animates in. */}
-      {state === 'opening' && (
-        <div className="animate-inside-reveal">
-          {children}
-        </div>
-      )}
+      {/* Inside content: hidden when fully closed, animated in when
+          opening, animated out when closing. */}
+      <div className={`${insideAnim}`}>
+        {state === 'closed' ? null : children}
+      </div>
 
-      {/* Cover. Lives over the top of the inside; pinned absolute
-          when opening so it can rotate off without pushing layout. */}
+      {/* Cover. Sits over the inside; goes absolute during the
+          open/close animations so it can rotate without pushing the
+          rest of the layout around. */}
       <button
         type="button"
         onClick={open}
         aria-label="Open passport"
-        className={`${state === 'opening'
-          ? 'absolute inset-0 z-30 animate-cover-open pointer-events-none'
-          : 'relative z-30'} block w-full text-left`}
+        className={`${state === 'opening' || state === 'closing'
+          ? 'absolute inset-0 z-30'
+          : 'relative z-30'} block w-full text-left ${coverAnim} ${coverPointerEvents}`}
       >
         <CoverFace childName={childName} childAvatar={childAvatar} />
       </button>
@@ -80,20 +121,12 @@ export default function PassportCover({ childName, childAvatar, token, children 
   )
 }
 
-// The cover graphic itself. Leatherette texture + JFT branding + the
-// kid's name + avatar. Approximated with CSS — repeating gradients
-// for the pebbled leather grain, dark border for the embossed edge,
-// gold accents for the lettering. No image assets needed.
 function CoverFace({ childName, childAvatar }: { childName: string; childAvatar: string }) {
   return (
     <div
       className="relative w-full max-w-md mx-auto rounded-2xl shadow-2xl overflow-hidden cursor-pointer transition-transform hover:scale-[1.01]"
       style={{
         aspectRatio: '3 / 4.2',
-        // Layered backgrounds make the leatherette texture: a deep
-        // brand-green base, two repeating radial gradients for the
-        // pebbled grain, and an angled highlight for the leather
-        // sheen.
         background: `
           radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.05) 0%, transparent 50%),
           repeating-radial-gradient(circle at 13px 17px, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 1.5px, transparent 12px),
@@ -102,48 +135,22 @@ function CoverFace({ childName, childAvatar }: { childName: string; childAvatar:
         `,
       }}
     >
-      {/* Embossed double-line frame */}
-      <div
-        aria-hidden
-        className="absolute inset-3 rounded-xl pointer-events-none"
-        style={{ border: '1px solid rgba(212, 175, 105, 0.55)' }}
-      />
-      <div
-        aria-hidden
-        className="absolute inset-4 rounded-lg pointer-events-none"
-        style={{ border: '1px solid rgba(212, 175, 105, 0.35)' }}
-      />
-
-      {/* Spine shadow on the left */}
-      <div
-        aria-hidden
-        className="absolute inset-y-0 left-0 w-10 pointer-events-none"
-        style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.45) 0%, transparent 100%)' }}
-      />
+      <div aria-hidden className="absolute inset-3 rounded-xl pointer-events-none" style={{ border: '1px solid rgba(212, 175, 105, 0.55)' }} />
+      <div aria-hidden className="absolute inset-4 rounded-lg pointer-events-none" style={{ border: '1px solid rgba(212, 175, 105, 0.35)' }} />
+      <div aria-hidden className="absolute inset-y-0 left-0 w-10 pointer-events-none" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.45) 0%, transparent 100%)' }} />
 
       <div className="relative h-full flex flex-col items-center justify-between p-8 sm:p-10 text-center">
         <div>
-          <p
-            className="text-[10px] sm:text-xs font-extrabold tracking-[0.4em] uppercase mb-2"
-            style={{ color: '#d4af69' }}
-          >
+          <p className="text-[10px] sm:text-xs font-extrabold tracking-[0.4em] uppercase mb-2" style={{ color: '#d4af69' }}>
             Jax · Family Travels
           </p>
-          <h1
-            className="text-2xl sm:text-3xl font-bold tracking-wide mb-1"
-            style={{ color: '#f5e6c6', fontFamily: 'Georgia, "Times New Roman", serif' }}
-          >
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-wide mb-1" style={{ color: '#f5e6c6', fontFamily: 'Georgia, "Times New Roman", serif' }}>
             Adventure Passport
           </h1>
-          <div
-            aria-hidden
-            className="mx-auto h-px w-16 mt-3"
-            style={{ background: 'linear-gradient(90deg, transparent, rgba(212,175,105,0.6), transparent)' }}
-          />
+          <div aria-hidden className="mx-auto h-px w-16 mt-3" style={{ background: 'linear-gradient(90deg, transparent, rgba(212,175,105,0.6), transparent)' }} />
         </div>
 
         <div className="my-4 flex flex-col items-center gap-3">
-          {/* Kid's avatar sits inside a debossed gold roundel */}
           <div
             className="w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center text-5xl sm:text-6xl shadow-inner"
             style={{
@@ -154,32 +161,19 @@ function CoverFace({ childName, childAvatar }: { childName: string; childAvatar:
           >
             {childAvatar}
           </div>
-          <p
-            className="text-base sm:text-lg font-semibold tracking-widest uppercase"
-            style={{ color: '#f5e6c6', letterSpacing: '0.18em' }}
-          >
+          <p className="text-base sm:text-lg font-semibold tracking-widest uppercase" style={{ color: '#f5e6c6', letterSpacing: '0.18em' }}>
             {childName}
           </p>
         </div>
 
         <div>
-          <p
-            className="text-[10px] sm:text-xs font-bold tracking-[0.32em] uppercase mb-2 inline-flex items-center gap-1.5"
-            style={{ color: '#d4af69' }}
-          >
+          <p className="text-[10px] sm:text-xs font-bold tracking-[0.32em] uppercase mb-2 inline-flex items-center gap-1.5" style={{ color: '#d4af69' }}>
             <Sparkles className="w-3 h-3" /> Tap to open
           </p>
         </div>
       </div>
 
-      {/* Inner-edge gloss to sell the leatherette */}
-      <div
-        aria-hidden
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse at 75% 90%, rgba(0,0,0,0.35) 0%, transparent 60%)',
-        }}
-      />
+      <div aria-hidden className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 75% 90%, rgba(0,0,0,0.35) 0%, transparent 60%)' }} />
     </div>
   )
 }

@@ -1,12 +1,13 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, ChevronLeft, ChevronRight, Award } from 'lucide-react'
 import PassportPage from '@/components/passport/PassportPage'
 import PassportStamp from '@/components/passport/PassportStamp'
 import MilestoneStamp from '@/components/passport/MilestoneStamp'
 import ScatteredStampSheet from '@/components/passport/ScatteredStampSheet'
+import { closePassport } from '../PassportCover'
 import CountryFlag from '@/components/CountryFlag'
 import { getPackMeta } from '@/lib/adventurePackMeta'
 import { computeMilestones, type MilestoneStamp as Milestone } from '@/lib/passport-milestones'
@@ -47,6 +48,67 @@ export default function StampsTab({
     setDirection(dir)
     setPageIndex(i => i + (dir === 'next' ? 1 : -1))
     setAnimKey(k => k + 1)
+  }
+
+  // ── Swipe + edge-tap gestures ─────────────────────────────────────
+  // Real swipe = > 70px horizontal, > 1.5x vertical, < 700ms. Below
+  // that it's just finger movement / vertical scroll / a tap.
+  // Edge tap = quick small tap landing in the left or right 18% of
+  // the page surface.
+  // Swipe-right past the very first page fires closePassport(), which
+  // dispatches a window event PassportCover listens for and replays
+  // the cover-close animation.
+  const SWIPE_MIN_PX = 70
+  const SWIPE_MAX_MS = 700
+  const TAP_MAX_MOVE = 8
+  const TAP_MAX_MS = 400
+  const EDGE_FRACTION = 0.18
+  const startRef = useRef<{ x: number; y: number; time: number } | null>(null)
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Skip if the pointer landed on something interactive (buttons,
+    // links, stamp delete affordances) so those keep their own
+    // handling. Only background drags count as page-turn gestures.
+    const target = e.target as HTMLElement | null
+    if (target?.closest('button, a, input, textarea, [role="button"]')) {
+      startRef.current = null
+      return
+    }
+    startRef.current = { x: e.clientX, y: e.clientY, time: Date.now() }
+  }
+
+  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    const start = startRef.current
+    startRef.current = null
+    if (!start) return
+    const dx = e.clientX - start.x
+    const dy = e.clientY - start.y
+    const elapsed = Date.now() - start.time
+    const absDx = Math.abs(dx)
+    const absDy = Math.abs(dy)
+
+    // Genuine horizontal swipe wins over tap detection.
+    if (absDx >= SWIPE_MIN_PX && absDx >= absDy * 1.5 && elapsed <= SWIPE_MAX_MS) {
+      if (dx < 0) {
+        if (hasNext) turn('next')
+      } else {
+        if (hasPrev) turn('prev')
+        else closePassport()
+      }
+      return
+    }
+
+    // Small tap near an edge → turn that way. Middle taps do nothing.
+    if (absDx <= TAP_MAX_MOVE && absDy <= TAP_MAX_MOVE && elapsed <= TAP_MAX_MS) {
+      const surface = e.currentTarget.getBoundingClientRect()
+      const relX = (e.clientX - surface.left) / surface.width
+      if (relX < EDGE_FRACTION) {
+        if (hasPrev) turn('prev')
+        else closePassport()
+      } else if (relX > 1 - EDGE_FRACTION) {
+        if (hasNext) turn('next')
+      }
+    }
   }
 
   const totalStamps = stamps.length
@@ -103,34 +165,59 @@ export default function StampsTab({
   ) : null
 
   return (
-    <PassportPage className="p-6 sm:p-8" book footer={footerEl}>
-      <div className="flex items-baseline justify-between mb-5">
-        <div>
-          <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: '#5a3a12' }}>
-            All stamps
-          </p>
-          <p className="text-xs uppercase tracking-widest mt-0.5" style={{ color: '#5a3a12', opacity: 0.6 }}>
-            {totalStamps === 0
-              ? 'Empty book'
-              : `${totalStamps} ${totalStamps === 1 ? 'stamp' : 'stamps'} · ${countryPageCount} ${countryPageCount === 1 ? 'country' : 'countries'}`}
-          </p>
+    <div
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+      onPointerCancel={() => { startRef.current = null }}
+      // pan-y lets vertical scroll work natively (the page content
+      // scrolls inside PassportPage in book mode), while horizontal
+      // gestures fall through to our pointerup handler.
+      style={{ touchAction: 'pan-y' }}
+      className="relative"
+    >
+      <PassportPage className="p-6 sm:p-8" book footer={footerEl}>
+        <div className="flex items-baseline justify-between mb-5">
+          <div>
+            <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: '#5a3a12' }}>
+              All stamps
+            </p>
+            <p className="text-xs uppercase tracking-widest mt-0.5" style={{ color: '#5a3a12', opacity: 0.6 }}>
+              {totalStamps === 0
+                ? 'Empty book'
+                : `${totalStamps} ${totalStamps === 1 ? 'stamp' : 'stamps'} · ${countryPageCount} ${countryPageCount === 1 ? 'country' : 'countries'}`}
+            </p>
+          </div>
+          {pages.length > 1 && (
+            <p className="text-xs uppercase tracking-widest" style={{ color: '#5a3a12', opacity: 0.6 }}>
+              Page {pageIndex + 1} of {pages.length}
+            </p>
+          )}
         </div>
-        {pages.length > 1 && (
-          <p className="text-xs uppercase tracking-widest" style={{ color: '#5a3a12', opacity: 0.6 }}>
-            Page {pageIndex + 1} of {pages.length}
-          </p>
-        )}
-      </div>
 
+        <div
+          key={animKey}
+          className={direction === 'next' ? 'animate-page-turn-next' : 'animate-page-turn-prev'}
+        >
+          {current.kind === 'traveler'
+            ? <TravelerPage milestones={current.milestones} empty={onlyTravelerEmpty} />
+            : <CountryPage group={current} token={token} />}
+        </div>
+      </PassportPage>
+
+      {/* Subtle edge-tap hints. Invisible by default, fade in faintly
+          on hover. The pointer-down handler above does the actual
+          turning so these don't intercept events themselves. */}
       <div
-        key={animKey}
-        className={direction === 'next' ? 'animate-page-turn-next' : 'animate-page-turn-prev'}
-      >
-        {current.kind === 'traveler'
-          ? <TravelerPage milestones={current.milestones} empty={onlyTravelerEmpty} />
-          : <CountryPage group={current} token={token} />}
-      </div>
-    </PassportPage>
+        aria-hidden
+        className="hidden sm:block absolute inset-y-0 left-0 w-[18%] pointer-events-none opacity-0 hover:opacity-100 transition-opacity"
+        style={{ background: 'linear-gradient(90deg, rgba(120,80,30,0.15), transparent)' }}
+      />
+      <div
+        aria-hidden
+        className="hidden sm:block absolute inset-y-0 right-0 w-[18%] pointer-events-none opacity-0 hover:opacity-100 transition-opacity"
+        style={{ background: 'linear-gradient(-90deg, rgba(120,80,30,0.15), transparent)' }}
+      />
+    </div>
   )
 }
 

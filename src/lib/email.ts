@@ -108,6 +108,8 @@ export type CallRequestPayload = {
   journeyStage: string | null
   whatToDiscuss: string
   timezone: string | null
+  preferredDays: string[]
+  preferredTimes: string[]
 }
 
 // Notification TO us (forwards to gmail) when someone fills the form.
@@ -122,6 +124,15 @@ export function buildCallRequestNotificationEmail(p: CallRequestPayload): { subj
       } as Record<string, string>)[p.journeyStage] ?? p.journeyStage
     : null
 
+  const dayLabel: Record<string, string> = {
+    mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun',
+  }
+  const timeLabel: Record<string, string> = {
+    morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening',
+  }
+  const days = p.preferredDays.map(d => dayLabel[d] ?? d).join(', ') || null
+  const times = p.preferredTimes.map(t => timeLabel[t] ?? t).join(', ') || null
+
   const rows: Array<[string, string | null]> = [
     ['Name', p.name],
     ['Email', p.email],
@@ -129,6 +140,8 @@ export function buildCallRequestNotificationEmail(p: CallRequestPayload): { subj
     ['Based in', p.whereNow],
     ['Stage', stageLabel],
     ['Timezone', p.timezone],
+    ['Preferred days', days],
+    ['Preferred times', times],
   ]
   const kvHtml = rows
     .filter(([, v]) => !!v && v.trim().length > 0)
@@ -180,6 +193,55 @@ If anything else comes to mind before we reply, just hit reply to this email.
 Speak soon,
 Bec & Oli`
 
+  return { subject, html: emailShell(subject, bodyHtml), text }
+}
+
+// When the admin posts a new message in a call-request thread, the
+// requesting user gets this email. We don't include the body of the
+// reply in the email body itself, the source of truth is the thread
+// in their account so they always come back to the site.
+export function buildCallThreadReplyToUserEmail(p: {
+  firstName: string
+  siteUrl: string
+}): { subject: string; html: string; text: string } {
+  const subject = 'New message about your call request'
+  const threadUrl = `${p.siteUrl}/account#call-request`
+  const bodyHtml = `
+    <p>Hi ${escapeHtml(p.firstName)},</p>
+    <p>We've just replied to your 1:1 call request. Open the thread in your account to read it and reply.</p>
+    <p style="margin-top:18px"><a href="${threadUrl}" style="background:#2d6b4f; color:#fff; padding:10px 16px; border-radius:6px; text-decoration:none; font-weight:bold; display:inline-block;">Open the thread</a></p>
+    <p style="margin-top:22px">Speak soon,<br>Bec &amp; Oli</p>
+  `
+  const text = `Hi ${p.firstName},
+
+We've just replied to your 1:1 call request. Open the thread in your account to read it and reply: ${threadUrl}
+
+Speak soon,
+Bec & Oli`
+  return { subject, html: emailShell(subject, bodyHtml), text }
+}
+
+// When the user replies in a call-request thread, the admin inbox
+// gets this nudge. Reply-to is the requester's email so a hit-reply
+// from Gmail still lands in the right place if Bec / Oli prefer email.
+export function buildCallThreadReplyToAdminEmail(p: {
+  requesterName: string
+  body: string
+  siteUrl: string
+  requestId: string
+}): { subject: string; html: string; text: string } {
+  const subject = `New reply from ${p.requesterName} on a call request`
+  const adminUrl = `${p.siteUrl}/admin/call-requests#${p.requestId}`
+  const bodyHtml = `
+    <p>${escapeHtml(p.requesterName)} just replied in their call-request thread.</p>
+    <p style="white-space:pre-wrap; background:#f5f4f1; padding:14px 18px; border-radius:8px;">${escapeHtml(p.body)}</p>
+    <p style="margin-top:18px"><a href="${adminUrl}" style="background:#2d6b4f; color:#fff; padding:10px 16px; border-radius:6px; text-decoration:none; font-weight:bold; display:inline-block;">Open the thread</a></p>
+  `
+  const text = `${p.requesterName} just replied in their call-request thread.
+
+${p.body}
+
+Open the thread: ${adminUrl}`
   return { subject, html: emailShell(subject, bodyHtml), text }
 }
 

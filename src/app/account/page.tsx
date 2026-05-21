@@ -15,6 +15,8 @@ import DeleteAccountButton from './DeleteAccountButton'
 import { isPremiumTier } from '@/lib/profile'
 import { ensureProfile } from '@/lib/ensure-profile'
 import { isAdminEmail } from '@/lib/admin'
+import { adminClient, type CallRequestRow, type CallRequestMessageRow } from '@/lib/call-requests-db'
+import CallRequestSection from './CallRequestSection'
 
 export const metadata: Metadata = { title: 'Account' }
 export const dynamic = 'force-dynamic'
@@ -52,6 +54,35 @@ export default async function AccountPage() {
 
   const purchases = (purchasesData ?? []) as unknown as PurchaseRow[]
   const isPremium = isPremiumTier(profile?.subscription_tier)
+
+  // User's most recent 1:1 call request (if any) + its full thread.
+  // Service role here is fine, we just queried the user's own row so
+  // the data scope is intentional. Avoids relying on every viewer
+  // having a working RLS policy chain on first load.
+  let callRequest: CallRequestRow | null = null
+  let callMessages: CallRequestMessageRow[] = []
+  try {
+    const admin = adminClient()
+    const { data: reqRow } = await admin
+      .from('call_requests')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (reqRow) {
+      callRequest = reqRow as CallRequestRow
+      const { data: msgs } = await admin
+        .from('call_request_messages')
+        .select('id, call_request_id, sender, body, created_at')
+        .eq('call_request_id', callRequest.id)
+        .order('created_at', { ascending: true })
+      callMessages = (msgs ?? []) as CallRequestMessageRow[]
+    }
+  } catch {
+    // Service role not configured in dev preview, swallow so the
+    // page still renders without the call section.
+  }
   // An active subscription means we have a paid tier AND there is no
   // cancellation already in flight. Used by the delete-account modal
   // to warn the user before they wipe their account.
@@ -134,6 +165,16 @@ export default async function AccountPage() {
             isAdmin={isAdminEmail(user.email)}
           />
         </div>
+
+        {/* 3.5 ── YOUR 1:1 CALL REQUEST ─────────────────────────
+            Only shown when the user has booked a call. Anchored as
+            #call-request so reply-notification emails can deep-link
+            straight to the thread. */}
+        {callRequest && (
+          <div className="mb-6" id="call-request">
+            <CallRequestSection request={callRequest} messages={callMessages} />
+          </div>
+        )}
 
         {/* 4 ── YOUR PURCHASES ───────────────────────────────────
             Premium members see "You have access to everything" by

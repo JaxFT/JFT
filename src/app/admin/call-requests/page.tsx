@@ -1,8 +1,8 @@
-import { createClient as createSbClient } from '@supabase/supabase-js'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ShieldCheck, MessageCircle, Inbox } from 'lucide-react'
+import { ShieldCheck, Inbox } from 'lucide-react'
 import CallRequestRow from './CallRequestRow'
+import { adminClient, type CallRequestRow as CallRequest, type CallRequestMessageRow } from '@/lib/call-requests-db'
 
 export const metadata: Metadata = {
   title: 'Admin · Call requests',
@@ -11,36 +11,30 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
-type CallRequest = {
-  id: string
-  name: string
-  email: string
-  family_situation: string | null
-  where_now: string | null
-  journey_stage: 'dreaming' | 'planning' | 'soon' | 'already' | null
-  what_to_discuss: string
-  timezone: string | null
-  status: 'new' | 'replied' | 'scheduled' | 'completed' | 'declined'
-  notes: string | null
-  created_at: string
-}
-
 export default async function CallRequestsAdminPage() {
-  // The /admin layout already gates this. We use service-role here only
-  // because RLS for call_requests admin-reads needs a JWT, but the layout
-  // already verified the email, so we can trust the request and fetch.
-  const admin = createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false, autoRefreshToken: false } },
-  )
-  const { data } = await admin
-    .from('call_requests')
-    .select('*')
-    .order('created_at', { ascending: false })
-  const requests = (data ?? []) as CallRequest[]
+  // The /admin layout has already verified admin email, so service-role
+  // is safe here. Saves us granting cookie-auth select policies just
+  // for this admin path.
+  const admin = adminClient()
+  const [requestsRes, messagesRes] = await Promise.all([
+    admin.from('call_requests').select('*').order('updated_at', { ascending: false }),
+    admin.from('call_request_messages').select('id, call_request_id, sender, body, created_at').order('created_at', { ascending: true }),
+  ])
+  const requests = (requestsRes.data ?? []) as CallRequest[]
+  const allMessages = (messagesRes.data ?? []) as CallRequestMessageRow[]
+  const messagesByRequest = new Map<string, CallRequestMessageRow[]>()
+  for (const m of allMessages) {
+    const list = messagesByRequest.get(m.call_request_id) ?? []
+    list.push(m)
+    messagesByRequest.set(m.call_request_id, list)
+  }
 
   const newCount = requests.filter(r => r.status === 'new').length
+  // Stripe payment link for the 1:1 call. Created once in the Stripe
+  // dashboard from price_1TTiBrBedsajl023fzvQPfgK and pasted here as
+  // an env var. The "Send payment link" quick action is disabled
+  // until this is set.
+  const paymentLinkUrl = process.env.STRIPE_PAYMENT_LINK_1_TO_1_CALL ?? null
 
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
@@ -65,7 +59,14 @@ export default async function CallRequestsAdminPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {requests.map(r => <CallRequestRow key={r.id} request={r} />)}
+            {requests.map(r => (
+              <CallRequestRow
+                key={r.id}
+                request={r}
+                messages={messagesByRequest.get(r.id) ?? []}
+                paymentLinkUrl={paymentLinkUrl}
+              />
+            ))}
           </div>
         )}
       </div>

@@ -1,15 +1,30 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Check, MessageCircle, Calendar, Mail, Compass } from 'lucide-react'
-import CallRequestForm from './CallRequestForm'
+import BookCallButton from './BookCallButton'
 import WaystaqCard from '@/components/WaystaqCard'
+import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
   title: 'Work With Us, 1:1 family travel call',
   description: 'Book a one-to-one call with Bec and Oli to talk through your long-term family travel plans.',
 }
 
-export default function WorkWithUsPage() {
+export const dynamic = 'force-dynamic'
+
+export default async function WorkWithUsPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  let viewerName: string | null = null
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user.id)
+      .maybeSingle()
+    viewerName = (profile as { full_name?: string | null } | null)?.full_name ?? null
+  }
+  const viewerEmail = user?.email ?? null
   return (
     <div className="min-h-screen bg-sand-50">
 
@@ -66,9 +81,10 @@ export default function WorkWithUsPage() {
             <h2 className="text-2xl sm:text-3xl font-bold mb-3 leading-tight">
               Book a 1:1 with us
             </h2>
-            <p className="text-white/80 leading-relaxed text-sm sm:text-base max-w-xl">
-              We&apos;ve done this. We travel full-time as a family and we know what it actually takes — not the highlight reel version, the real one. If you want to talk through your specific situation, work out where the gaps are, and make a plan that fits your family, fill in the short form below.
+            <p className="text-white/80 leading-relaxed text-sm sm:text-base max-w-xl mb-5">
+              We&apos;ve done this. We travel full-time as a family and we know what it actually takes, not the highlight reel version, the real one. If you want to talk through your specific situation, work out where the gaps are, and make a plan that fits your family, hit the button below.
             </p>
+            <BookCallButton viewerEmail={viewerEmail} viewerName={viewerName} variant="outline-on-dark" />
           </div>
         </div>
       </section>
@@ -83,12 +99,12 @@ export default function WorkWithUsPage() {
                 {
                   icon: MessageCircle,
                   title: 'Tell us a bit about you',
-                  body: 'Fill in the short form below, where you\'re at, what you\'d like to discuss, when works for you. Takes 2 minutes.',
+                  body: 'Click the button below to open the short form, where you\'re at, what you\'d like to discuss, and the days and times that work for you. Takes 2 minutes.',
                 },
                 {
                   icon: Mail,
-                  title: 'We email you back',
-                  body: 'Usually within 48 hours. We send a payment link and a few proposed times. You pick one and pay.',
+                  title: 'We reply in your account',
+                  body: 'Usually within 48 hours. Replies land in your account thread and your inbox. We propose specific times, agree one, then send a payment link.',
                 },
                 {
                   icon: Calendar,
@@ -136,13 +152,19 @@ export default function WorkWithUsPage() {
         </div>
       </section>
 
-      {/* FORM */}
+      {/* CTA STRIP — opens the booking modal. Sign-in required, the
+          button itself routes to /login when there's no session. */}
       <section className="pb-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">Tell us about you</h2>
-            <p className="text-sm text-gray-500 mb-6">No commitment yet, we'll reply with availability and pricing.</p>
-            <CallRequestForm />
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Ready to talk?</h2>
+            <p className="text-sm text-gray-500 mb-5 max-w-md mx-auto">
+              Open the form to tell us about your family, what you&apos;d like to discuss, and the days and times that work for you. We&apos;ll reply in your account thread.
+            </p>
+            <BookCallButton viewerEmail={viewerEmail} viewerName={viewerName} label="Book a 1:1 with us" />
+            {!viewerEmail && (
+              <p className="text-[11px] text-gray-400 mt-3">You&apos;ll need to sign in or create an account so we can reply in your account thread.</p>
+            )}
           </div>
         </div>
       </section>

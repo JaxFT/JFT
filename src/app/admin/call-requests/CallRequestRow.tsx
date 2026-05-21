@@ -53,8 +53,12 @@ export default function CallRequestRow({ request, messages, paymentLinkUrl }: Pr
   const [draftSeed, setDraftSeed] = useState('')
   const [draftSeedNonce, setDraftSeedNonce] = useState(0)
 
+  // Pinned to Europe/London so SSR (UTC) and CSR (local) produce the
+  // same string. Without timeZone here, the hour/minute drift caused
+  // React error #418 to fire on every admin page load.
   const created = new Date(request.created_at).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    timeZone: 'Europe/London',
   })
 
   const days  = request.preferred_days.map(d => DAY_LABEL[d] ?? d).join(', ')

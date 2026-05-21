@@ -155,6 +155,21 @@ export default function CallThread({
   initialDraft = '',
 }: Props) {
   const [messages, setMessages] = useState<CallRequestMessageRow[]>(initialMessages)
+  // initialMessages comes from the parent server component. When the
+  // parent runs router.refresh() (after a send / confirmation), this
+  // prop changes but useState would otherwise keep the stale snapshot
+  // from first mount. Resync so the new server data wins.
+  useEffect(() => {
+    setMessages(prev => {
+      // Merge: keep any locally-added messages that haven't yet shown
+      // up in the SSR refetch (e.g. a Realtime push that arrived
+      // between this effect and the next refetch). Dedupe by id.
+      const byId = new Map<string, CallRequestMessageRow>()
+      for (const m of initialMessages) byId.set(m.id, m)
+      for (const m of prev) if (!byId.has(m.id)) byId.set(m.id, m)
+      return Array.from(byId.values())
+    })
+  }, [initialMessages])
   const [draft, setDraft] = useState(initialDraft)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)

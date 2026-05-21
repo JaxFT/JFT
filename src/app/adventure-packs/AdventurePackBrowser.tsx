@@ -6,7 +6,7 @@
 // (and auto-expands any group that has a match).
 
 import { useMemo, useState } from 'react'
-import { Lock, Crown, ArrowRight, Search, ChevronDown } from 'lucide-react'
+import { Lock, Crown, ArrowRight, Search, ChevronDown, BadgeCheck } from 'lucide-react'
 import FlagHalfBanner from '@/components/adventure-packs/FlagHalfBanner'
 import { CONTINENT_ORDER, SECTION_EMOJI, SECTION_LABELS, type Continent } from '@/lib/adventurePackTypes'
 import { getPackSectionKeys } from '@/lib/adventurePackMeta'
@@ -18,6 +18,9 @@ type PackLite = {
   iso2: string
   isFree: boolean
   continent: Continent
+  // True when the signed-in user already has a jax_pack_purchases row
+  // for this slug. Drives the green Owned badge + unlocks the card.
+  owned?: boolean
 }
 
 export default function AdventurePackBrowser({
@@ -130,8 +133,8 @@ function PackCard({
   isPremium: boolean
   signedIn: boolean
 }) {
-  const unlocked = pack.isFree || isPremium
-  const showLock = !pack.isFree && !isPremium
+  const unlocked = pack.isFree || isPremium || !!pack.owned
+  const showLock = !unlocked
 
   return (
     <article className="rounded-2xl border border-gray-100 overflow-hidden bg-white shadow-sm flex flex-col">
@@ -140,13 +143,17 @@ function PackCard({
         <span className="absolute top-2 right-2">
           {pack.isFree ? (
             <span className="inline-flex items-center gap-1 text-xs font-bold bg-white text-brand-700 px-2 py-1 rounded-full shadow-sm">Free</span>
+          ) : pack.owned && !isPremium ? (
+            <span className="inline-flex items-center gap-1 text-xs font-bold bg-emerald-100 text-emerald-900 px-2 py-1 rounded-full shadow-sm">
+              <BadgeCheck className="w-3 h-3" /> Owned
+            </span>
           ) : unlocked ? (
             <span className="inline-flex items-center gap-1 text-xs font-bold bg-white/15 text-white px-2 py-1 rounded-full backdrop-blur-sm">
               <Crown className="w-3 h-3" /> Included
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 text-xs font-bold bg-white/15 text-white px-2 py-1 rounded-full backdrop-blur-sm">
-              <Lock className="w-3 h-3" /> Premium
+              <Lock className="w-3 h-3" /> £4.99
             </span>
           )}
         </span>
@@ -176,10 +183,10 @@ function PackCard({
           </a>
         ) : showLock ? (
           <a
-            href="/account"
+            href={`/adventure-packs/${pack.slug}`}
             className="mt-auto inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-4 py-2 rounded-md"
           >
-            <Crown className="w-3.5 h-3.5" /> Unlock with Premium
+            Buy £4.99 / go Premium <ArrowRight className="w-3.5 h-3.5" />
           </a>
         ) : (
           <a

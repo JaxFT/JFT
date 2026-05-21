@@ -19,13 +19,21 @@ export default async function AdventurePacksListing() {
   const { data: { user } } = await supabase.auth.getUser()
 
   let isPremium = false
+  let ownedSlugs: Set<string> = new Set()
   if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('subscription_tier')
-      .eq('id', user.id)
-      .maybeSingle()
-    isPremium = isPremiumTier(profile?.subscription_tier)
+    const [profileRes, purchasesRes] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('subscription_tier')
+        .eq('id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('jax_pack_purchases')
+        .select('country_slug')
+        .eq('user_id', user.id),
+    ])
+    isPremium = isPremiumTier(profileRes.data?.subscription_tier)
+    ownedSlugs = new Set(((purchasesRes.data ?? []) as Array<{ country_slug: string }>).map(r => r.country_slug))
   }
 
   const livePacks   = PACK_META.filter(p => p.status === 'live')
@@ -75,6 +83,7 @@ export default async function AdventurePacksListing() {
             iso2: p.iso2,
             isFree: p.isFree,
             continent: p.continent,
+            owned: ownedSlugs.has(p.slug),
           }))}
           isPremium={isPremium}
           signedIn={!!user}

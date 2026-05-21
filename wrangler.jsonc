@@ -23,6 +23,7 @@
   // anthropic key) stay in the dashboard, wrangler preserves those.
   "vars": {
     "STRIPE_PRICE_PREMIUM_ANNUAL": "price_1TYcwmBedsajl023wYj7iJIJ",
+    "STRIPE_PRICE_ADVENTURE_PACK": "price_1TZX3BBedsajl023ycbRWXcj",
     "STRIPE_PAYMENT_LINK_1_TO_1_CALL": "https://buy.stripe.com/28E7sK88Q6NKgfY4TB4Ja01",
     "NEXT_PUBLIC_SITE_URL": "https://jaxfamilytravels.com",
     "NEXT_PUBLIC_SUPABASE_URL": "https://wjpmdwugnwuydomdmetf.supabase.co",

@@ -17,6 +17,7 @@ import { ensureProfile } from '@/lib/ensure-profile'
 import { isAdminEmail } from '@/lib/admin'
 import { adminClient, type CallRequestRow, type CallRequestMessageRow } from '@/lib/call-requests-db'
 import CallRequestSection from './CallRequestSection'
+import { PACK_META } from '@/lib/adventurePackMeta'
 
 export const metadata: Metadata = { title: 'Account' }
 export const dynamic = 'force-dynamic'
@@ -39,7 +40,7 @@ export default async function AccountPage() {
   await ensureProfile(user)
 
   // Profile + purchases are independent, fetch in parallel.
-  const [{ data: profile }, { data: purchasesData }] = await Promise.all([
+  const [{ data: profile }, { data: purchasesData }, { data: packPurchasesData }] = await Promise.all([
     supabase
       .from('profiles')
       .select('full_name, subscription_tier, created_at, marketing_opt_in, cancellation_requested_at, username, instagram_handle')
@@ -50,10 +51,52 @@ export default async function AccountPage() {
       .select('id, purchased_at, amount_pence, products(name, slug, type)')
       .eq('user_id', user.id)
       .order('purchased_at', { ascending: false }),
+    // One-off Adventure Pack purchases live in their own ledger
+    // (jax_pack_purchases) because the legacy products table doesn't
+    // cover them. Merged into the unified purchases list below.
+    supabase
+      .from('jax_pack_purchases')
+      .select('id, country_slug, purchased_at')
+      .eq('user_id', user.id)
+      .order('purchased_at', { ascending: false }),
   ])
 
   const purchases = (purchasesData ?? []) as unknown as PurchaseRow[]
+  const packPurchases = (packPurchasesData ?? []) as Array<{ id: string; country_slug: string; purchased_at: string }>
   const isPremium = isPremiumTier(profile?.subscription_tier)
+
+  // Normalise the two ledgers into a single list for display. Pack
+  // purchases are always £4.99 (flat price), so we don't need to
+  // store amount per row, just hardcode the label here.
+  type UnifiedPurchase = {
+    key: string
+    name: string
+    purchased_at: string
+    type: string
+    href: string | null
+    priceLabel: string
+  }
+  const allPurchases: UnifiedPurchase[] = [
+    ...purchases.map(p => ({
+      key: `p-${p.id}`,
+      name: p.products?.name ?? 'Unknown item',
+      purchased_at: p.purchased_at,
+      type: p.products?.type ?? 'one-off',
+      href: p.products?.slug ? `/guides/${p.products.slug}` : null,
+      priceLabel: `£${(p.amount_pence / 100).toFixed(2)}`,
+    })),
+    ...packPurchases.map(p => {
+      const meta = PACK_META.find(m => m.slug === p.country_slug)
+      return {
+        key: `pack-${p.id}`,
+        name: `${meta?.country ?? p.country_slug} Adventure Pack`,
+        purchased_at: p.purchased_at,
+        type: 'adventure-pack',
+        href: `/adventure-packs/${p.country_slug}`,
+        priceLabel: '£4.99',
+      }
+    }),
+  ].sort((a, b) => new Date(b.purchased_at).getTime() - new Date(a.purchased_at).getTime())
 
   // User's most recent 1:1 call request (if any) + its full thread.
   // Service role here is fine, we just queried the user's own row so
@@ -198,7 +241,7 @@ export default async function AccountPage() {
             </div>
           )}
 
-          {purchases.length === 0 ? (
+          {allPurchases.length === 0 ? (
             !isPremium && (
               <div className="text-center py-10">
                 <p className="text-gray-500 text-sm mb-5">You haven&apos;t bought anything yet.</p>
@@ -213,18 +256,20 @@ export default async function AccountPage() {
                 <p className="text-xs text-gray-500 mb-2">One-off purchases you made before Premium (or for items not included):</p>
               )}
               <ul className="divide-y divide-gray-100">
-                {purchases.map(p => (
-                  <li key={p.id} className="py-4 flex items-center justify-between gap-4">
+                {allPurchases.map(p => (
+                  <li key={p.key} className="py-4 flex items-center justify-between gap-4">
                     <div>
-                      <p className="font-semibold text-gray-900 text-sm">{p.products?.name ?? 'Unknown item'}</p>
+                      {p.href ? (
+                        <Link href={p.href} className="font-semibold text-gray-900 text-sm hover:text-brand-700">{p.name}</Link>
+                      ) : (
+                        <p className="font-semibold text-gray-900 text-sm">{p.name}</p>
+                      )}
                       <p className="text-xs text-gray-500 mt-0.5">
                         {new Date(p.purchased_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        {p.products?.type && <> · {p.products.type}</>}
+                        {' · '}{p.type}
                       </p>
                     </div>
-                    <span className="text-sm font-semibold text-gray-700 shrink-0">
-                      £{(p.amount_pence / 100).toFixed(2)}
-                    </span>
+                    <span className="text-sm font-semibold text-gray-700 shrink-0">{p.priceLabel}</span>
                   </li>
                 ))}
               </ul>

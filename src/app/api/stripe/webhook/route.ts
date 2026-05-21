@@ -118,6 +118,15 @@ async function handleOneOffCheckout(
     return handleWebGuidePurchase(session, admin)
   }
 
+  // `kind: 'adventure_pack'` is set by /api/stripe/checkout-pack
+  // when a free-tier user buys a single country pack at £4.99. The
+  // metadata carries user_id + country_slug; we insert into
+  // jax_pack_purchases and the access check reads from there.
+  if (session.metadata?.kind === 'adventure_pack') {
+    await handleAdventurePackPurchase(session, admin)
+    return null
+  }
+
   const userId = session.metadata?.user_id
   const productId = session.metadata?.product_id
   const amount = session.amount_total
@@ -147,6 +156,35 @@ async function handleOneOffCheckout(
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
   return null
+}
+
+async function handleAdventurePackPurchase(
+  session: Stripe.Checkout.Session,
+  admin: SupabaseClient,
+): Promise<void> {
+  const userId = session.metadata?.user_id
+  const countrySlug = session.metadata?.country_slug
+  const paymentIntent = typeof session.payment_intent === 'string'
+    ? session.payment_intent
+    : session.payment_intent?.id
+  if (!userId || !countrySlug) {
+    console.error('[stripe webhook] adventure_pack missing metadata', { sessionId: session.id })
+    return
+  }
+
+  // unique(user_id, country_slug) on jax_pack_purchases makes
+  // Stripe retries idempotent, the duplicate insert errors as
+  // 23505 (unique_violation) which we swallow.
+  const { error } = await admin
+    .from('jax_pack_purchases')
+    .insert({
+      user_id: userId,
+      country_slug: countrySlug,
+      stripe_payment_intent: paymentIntent ?? null,
+    })
+  if (error && error.code !== '23505') {
+    console.error('[stripe webhook] adventure_pack insert failed', error)
+  }
 }
 
 async function handleCallRequestPayment(

@@ -93,11 +93,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   // Social state — likes + comments. Loaded server-side so the post
   // renders with everything visible on first paint (SEO, no flicker)
   // then hydrates as a client island for interactions.
+  const isAdmin = isAdminEmail(user?.email)
   const [social, viewerProfile] = await Promise.all([
-    loadBlogPostSocial(slug, user?.id ?? null),
+    loadBlogPostSocial(slug, user?.id ?? null, isAdmin),
     getViewerProfile(),
   ])
-  const isAdmin = isAdminEmail(user?.email)
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
 

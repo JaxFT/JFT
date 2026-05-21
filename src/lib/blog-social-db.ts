@@ -27,9 +27,13 @@ export type PostSocial = {
 // Fetch the full social state for a single blog post in one round
 // trip-ish pass. Caller passes the current user id (or null for
 // signed-out visitors) so we can compute "have I liked this" inline.
+// `viewerIsAdmin` controls whether commenters' Instagram handles are
+// included; non-admin viewers get null so handles aren't harvestable
+// from the JSON payload by anyone with devtools.
 export async function loadBlogPostSocial(
   postSlug: string,
   viewerId: string | null,
+  viewerIsAdmin: boolean = false,
 ): Promise<PostSocial> {
   const supabase = await createClient()
 
@@ -100,7 +104,7 @@ export async function loadBlogPostSocial(
     body: c.body,
     created_at: c.created_at,
     username: c.profiles?.username ?? null,
-    instagram_handle: c.profiles?.instagram_handle ?? null,
+    instagram_handle: viewerIsAdmin ? (c.profiles?.instagram_handle ?? null) : null,
     like_count: likeCounts.get(c.id) ?? 0,
     liked_by_me: likedByMe.has(c.id),
   }))

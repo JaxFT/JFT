@@ -254,20 +254,23 @@ export default function BlogSocial({
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2 flex-wrap">
                   <span className="font-mono font-semibold text-sm text-gray-900">@{c.username ?? 'anon'}</span>
-                  {c.instagram_handle && (
-                    <a
-                      href={`https://instagram.com/${c.instagram_handle}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-rose-600"
-                      title={`Instagram @${c.instagram_handle}`}
-                    >
-                      <Instagram className="w-3 h-3" />
-                      <span className="hidden sm:inline">@{c.instagram_handle}</span>
-                    </a>
-                  )}
                   <span className="text-xs text-gray-400 ml-auto">{fmtDate(c.created_at)}</span>
                 </div>
+                {/* Instagram handle: admin-only, on its own line in a
+                    lighter font. Server scrubs the field for non-admin
+                    viewers, the isAdmin guard here is belt-and-braces. */}
+                {isAdmin && c.instagram_handle && (
+                  <a
+                    href={`https://instagram.com/${c.instagram_handle}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-normal text-gray-400 hover:text-rose-600 mt-0.5"
+                    title={`Instagram @${c.instagram_handle}`}
+                  >
+                    <Instagram className="w-3 h-3" />
+                    @{c.instagram_handle}
+                  </a>
+                )}
                 <p className="text-sm text-gray-700 leading-relaxed mt-1 whitespace-pre-wrap">{c.body}</p>
                 <div className="flex items-center gap-3 mt-2">
                   <button

@@ -20,8 +20,15 @@ export default async function AdventurePacksListing() {
 
   let isPremium = false
   let ownedSlugs: Set<string> = new Set()
+  // Children + per-pack assignments so the listing can show an
+  // "Assign to passport" button per card without making the parent
+  // navigate to /family first. Only relevant for premium users
+  // (non-premium can't have children), and the children/assignments
+  // queries return empty arrays for everyone else.
+  let children: Array<{ id: string; name: string; avatar: string }> = []
+  let assignmentsByPack: Record<string, string[]> = {}
   if (user) {
-    const [profileRes, purchasesRes] = await Promise.all([
+    const [profileRes, purchasesRes, childrenRes] = await Promise.all([
       supabase
         .from('profiles')
         .select('subscription_tier')
@@ -31,9 +38,26 @@ export default async function AdventurePacksListing() {
         .from('jax_pack_purchases')
         .select('country_slug')
         .eq('user_id', user.id),
+      supabase
+        .from('children')
+        .select('id, name, avatar')
+        .order('created_at', { ascending: true }),
     ])
     isPremium = isPremiumTier(profileRes.data?.subscription_tier)
     ownedSlugs = new Set(((purchasesRes.data ?? []) as Array<{ country_slug: string }>).map(r => r.country_slug))
+    children = (childrenRes.data ?? []) as Array<{ id: string; name: string; avatar: string }>
+
+    if (children.length > 0) {
+      const { data: assignments } = await supabase
+        .from('child_pack_assignments')
+        .select('child_id, country_slug')
+        .in('child_id', children.map(c => c.id))
+      const rows = (assignments ?? []) as Array<{ child_id: string; country_slug: string }>
+      for (const r of rows) {
+        if (!assignmentsByPack[r.country_slug]) assignmentsByPack[r.country_slug] = []
+        assignmentsByPack[r.country_slug].push(r.child_id)
+      }
+    }
   }
 
   const livePacks   = PACK_META.filter(p => p.status === 'live')
@@ -87,6 +111,8 @@ export default async function AdventurePacksListing() {
           }))}
           isPremium={isPremium}
           signedIn={!!user}
+          children={children}
+          assignmentsByPack={assignmentsByPack}
         />
 
         {upcomingPacks.length > 0 && (

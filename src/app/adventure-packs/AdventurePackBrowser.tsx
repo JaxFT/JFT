@@ -8,6 +8,7 @@
 import { useMemo, useState } from 'react'
 import { Lock, Crown, ArrowRight, Search, ChevronDown, BadgeCheck } from 'lucide-react'
 import FlagHalfBanner from '@/components/adventure-packs/FlagHalfBanner'
+import AssignPackButton from '@/components/adventure-packs/AssignPackButton'
 import { CONTINENT_ORDER, SECTION_EMOJI, SECTION_LABELS, type Continent } from '@/lib/adventurePackTypes'
 import { getPackSectionKeys } from '@/lib/adventurePackMeta'
 
@@ -23,14 +24,24 @@ type PackLite = {
   owned?: boolean
 }
 
+type ChildLite = { id: string; name: string; avatar: string }
+
 export default function AdventurePackBrowser({
   packs,
   isPremium,
   signedIn,
+  children,
+  assignmentsByPack,
 }: {
   packs: PackLite[]
   isPremium: boolean
   signedIn: boolean
+  // Optional: signed-in parents pass their kids and the existing
+  // pack→child assignments so each card can show an Assign button
+  // that auto-fires for single-child families and pops a picker for
+  // multi-child families.
+  children?: ChildLite[]
+  assignmentsByPack?: Record<string, string[]>
 }) {
   const [query, setQuery] = useState('')
   // Continents start collapsed. Searching opens any continent that has
@@ -113,7 +124,14 @@ export default function AdventurePackBrowser({
                 {open && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 px-5 pb-5 pt-1 border-t border-gray-100">
                     {group.map(p => (
-                      <PackCard key={p.slug} pack={p} isPremium={isPremium} signedIn={signedIn} />
+                      <PackCard
+                        key={p.slug}
+                        pack={p}
+                        isPremium={isPremium}
+                        signedIn={signedIn}
+                        kids={children ?? []}
+                        assignedChildIds={assignmentsByPack?.[p.slug] ?? []}
+                      />
                     ))}
                   </div>
                 )}
@@ -127,14 +145,19 @@ export default function AdventurePackBrowser({
 }
 
 function PackCard({
-  pack, isPremium, signedIn,
+  pack, isPremium, signedIn, kids, assignedChildIds,
 }: {
   pack: PackLite
   isPremium: boolean
   signedIn: boolean
+  kids: ChildLite[]
+  assignedChildIds: string[]
 }) {
   const unlocked = pack.isFree || isPremium || !!pack.owned
   const showLock = !unlocked
+  // Assign button only makes sense for unlocked packs (kids would
+  // open them via passport assignment) AND when the parent has kids.
+  const canAssign = unlocked && signedIn && kids.length > 0
 
   return (
     <article className="rounded-2xl border border-gray-100 overflow-hidden bg-white shadow-sm flex flex-col">
@@ -189,12 +212,22 @@ function PackCard({
             Buy £4.99 / go Premium <ArrowRight className="w-3.5 h-3.5" />
           </a>
         ) : (
-          <a
-            href={`/adventure-packs/${pack.slug}`}
-            className="mt-auto btn-primary justify-center !py-2 !px-4 !text-sm"
-          >
-            Open pack <ArrowRight className="w-3.5 h-3.5" />
-          </a>
+          <div className="mt-auto flex flex-col gap-2">
+            <a
+              href={`/adventure-packs/${pack.slug}`}
+              className="btn-primary justify-center !py-2 !px-4 !text-sm"
+            >
+              Open pack <ArrowRight className="w-3.5 h-3.5" />
+            </a>
+            {canAssign && (
+              <AssignPackButton
+                slug={pack.slug}
+                countryName={pack.country}
+                children={kids}
+                alreadyAssignedIds={assignedChildIds}
+              />
+            )}
+          </div>
         )}
       </div>
     </article>

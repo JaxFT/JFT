@@ -52,17 +52,30 @@ function renderBody(body: string) {
 // local timezone and a clickable "Add to my calendar" button that
 // downloads a timezone-aware .ics so phone/laptop calendars pick the
 // right local time automatically.
+//
+// Hydration-safe: server-render in the call's *reference* timezone
+// (always the same on both sides), then swap to the viewer's local
+// timezone after the first effect runs. Avoids React error #418 from
+// the SSR/CSR producing different formatted strings.
 function ConfirmationCard({
   meta,
   callId,
 }: { meta: CallConfirmationMetadata; callId: string }) {
   const start = new Date(meta.scheduledAtUtc)
   const end = new Date(start.getTime() + meta.durationMinutes * 60 * 1000)
-  const fmtDateTime = (d: Date) => d.toLocaleString(undefined, {
+  const [displayTz, setDisplayTz] = useState(meta.displayTimezone)
+  useEffect(() => {
+    setDisplayTz(Intl.DateTimeFormat().resolvedOptions().timeZone)
+  }, [])
+  const fmtDateTime = (d: Date) => d.toLocaleString('en-GB', {
     weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
+    timeZone: displayTz,
   })
-  const viewerTz = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const fmtTime = (d: Date) => d.toLocaleTimeString('en-GB', {
+    hour: '2-digit', minute: '2-digit',
+    timeZone: displayTz,
+  })
 
   const downloadIcs = () => {
     const dt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
@@ -102,8 +115,9 @@ function ConfirmationCard({
       <div>
         <p className="text-sm font-semibold text-gray-900">{fmtDateTime(start)}</p>
         <p className="text-xs text-gray-500 mt-0.5">
-          Until {end.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}{' '}
-          · shown in your local time ({viewerTz}). Booked in {meta.displayTimezone}.
+          Until {fmtTime(end)} · {displayTz === meta.displayTimezone
+            ? <>booked in {meta.displayTimezone}</>
+            : <>shown in your local time ({displayTz}); booked in {meta.displayTimezone}</>}.
         </p>
       </div>
       {meta.notes && (

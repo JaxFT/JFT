@@ -87,6 +87,13 @@ export const PACK_META: AdventurePackMeta[] = [
   { slug: 'philippines',country: 'Philippines',flag: '🇵🇭', iso2: 'ph', isFree: false, heroColour: 'bg-yellow-300', status: 'live', continent: 'Asia',          hasWordSearch: true, hasTilePuzzle: true },
   { slug: 'taiwan',     country: 'Taiwan',     flag: '🇹🇼', iso2: 'tw', isFree: false, heroColour: 'bg-rose-500',   status: 'live', continent: 'Asia',          hasWordSearch: true, hasTilePuzzle: true },
   { slug: 'slovenia',   country: 'Slovenia',   flag: '🇸🇮', iso2: 'si', isFree: false, heroColour: 'bg-emerald-500',status: 'live', continent: 'Europe',        hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'maldives',   country: 'Maldives',   flag: '🇲🇻', iso2: 'mv', isFree: false, heroColour: 'bg-cyan-400',   status: 'live', continent: 'Asia',          hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'bhutan',     country: 'Bhutan',     flag: '🇧🇹', iso2: 'bt', isFree: false, heroColour: 'bg-orange-500', status: 'live', continent: 'Asia',          hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'guatemala',  country: 'Guatemala',  flag: '🇬🇹', iso2: 'gt', isFree: false, heroColour: 'bg-blue-500',   status: 'live', continent: 'North America', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'belize',     country: 'Belize',     flag: '🇧🇿', iso2: 'bz', isFree: false, heroColour: 'bg-teal-600',   status: 'live', continent: 'North America', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'antarctica', country: 'Antarctica', flag: '🇦🇶', iso2: 'aq', isFree: false, heroColour: 'bg-slate-500',  status: 'live', continent: 'Antarctica',    hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'greenland',  country: 'Greenland',  flag: '🇬🇱', iso2: 'gl', isFree: false, heroColour: 'bg-slate-600',  status: 'live', continent: 'North America', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'hong-kong',  country: 'Hong Kong',  flag: '🇭🇰', iso2: 'hk', isFree: false, heroColour: 'bg-red-300',    status: 'live', continent: 'Asia',          hasWordSearch: true, hasTilePuzzle: true },
 ]
 
 export function getPackMeta(slug: string): AdventurePackMeta | null {

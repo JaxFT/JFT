@@ -186,10 +186,11 @@ export type Continent =
   | 'North America'
   | 'South America'
   | 'Oceania'
+  | 'Antarctica'
 
 // Display order for continent groupings (kid-facing).
 export const CONTINENT_ORDER: Continent[] = [
-  'Europe', 'Asia', 'Africa', 'North America', 'South America', 'Oceania',
+  'Europe', 'Asia', 'Africa', 'North America', 'South America', 'Oceania', 'Antarctica',
 ]
 
 // Metadata for the listing page. Every country has a meta entry; only

@@ -5,12 +5,12 @@ import type { Metadata } from 'next'
 import KidBackButton from '@/components/passport/KidBackButton'
 import {
   getChildByToken,
-  listCountryVisitsForChild,
+  listCountryVisitsForFamily,
   listStampsForChildCountry,
   getKidPackProgress,
 } from '@/lib/passport-kid-db'
 import { listJournalEntriesForChildCountry } from '@/lib/passport-journal-db'
-import { getPackMeta, getPackSectionCount } from '@/lib/adventurePackMeta'
+import { getPackMeta, getPackByIso2, getPackSectionCount } from '@/lib/adventurePackMeta'
 import PassportPage from '@/components/passport/PassportPage'
 import { PassportStampFromRow } from '@/components/passport/PassportStamp'
 import FlagBanner from '@/components/adventure-packs/FlagBanner'
@@ -43,16 +43,16 @@ export default async function KidCountryPage({
   if (!child) notFound()
 
   const [visits, stamps, progress, journal] = await Promise.all([
-    listCountryVisitsForChild(child.id),
+    listCountryVisitsForFamily(child.parent_id),
     listStampsForChildCountry(child.id, slug),
     getKidPackProgress(child.id, slug),
     listJournalEntriesForChildCountry(child.id, slug),
   ])
 
-  // The country must actually be in the child's passport, otherwise
+  // The country must actually be in the family's visit list, otherwise
   // a kid could brute-force any /kid/{token}/country/{slug} URL. We
   // give them a "not yet" page rather than a hard 404 — clearer.
-  const thisVisit = visits.find(v => v.country_slug === slug)
+  const thisVisit = visits.find(v => v.iso2 === meta.iso2)
 
   // Prev/Next navigation between visited countries (kid is flipping
   // through their book). Sorted by first_visit_date ascending — same
@@ -60,7 +60,7 @@ export default async function KidCountryPage({
   const visitedSorted = [...visits].sort((a, b) =>
     a.first_visit_date < b.first_visit_date ? -1 : 1,
   )
-  const idx = thisVisit ? visitedSorted.findIndex(v => v.country_slug === slug) : -1
+  const idx = thisVisit ? visitedSorted.findIndex(v => v.iso2 === meta.iso2) : -1
   const prevVisit = idx > 0 ? visitedSorted[idx - 1] : null
   const nextVisit = idx >= 0 && idx < visitedSorted.length - 1 ? visitedSorted[idx + 1] : null
 
@@ -220,24 +220,24 @@ export default async function KidCountryPage({
             className="mt-10 pt-5 flex items-center justify-between text-xs"
             style={{ borderTop: '1px dashed rgba(120,80,30,0.25)', color: '#5a3a12' }}
           >
-            {prevVisit ? (
+            {prevVisit && getPackByIso2(prevVisit.iso2) ? (
               <Link
-                href={`/kid/${token}/country/${prevVisit.country_slug}`}
+                href={`/kid/${token}/country/${getPackByIso2(prevVisit.iso2)!.slug}`}
                 className="inline-flex items-center gap-1.5 hover:opacity-80"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                <span className="uppercase tracking-widest">{getPackMeta(prevVisit.country_slug)?.country}</span>
+                <span className="uppercase tracking-widest">{getPackByIso2(prevVisit.iso2)?.country}</span>
               </Link>
             ) : <span />}
             <p className="uppercase tracking-widest opacity-50">
               {thisVisit ? `Page ${idx + 1} of ${visitedSorted.length}` : ''}
             </p>
-            {nextVisit ? (
+            {nextVisit && getPackByIso2(nextVisit.iso2) ? (
               <Link
-                href={`/kid/${token}/country/${nextVisit.country_slug}`}
+                href={`/kid/${token}/country/${getPackByIso2(nextVisit.iso2)!.slug}`}
                 className="inline-flex items-center gap-1.5 hover:opacity-80"
               >
-                <span className="uppercase tracking-widest">{getPackMeta(nextVisit.country_slug)?.country}</span>
+                <span className="uppercase tracking-widest">{getPackByIso2(nextVisit.iso2)?.country}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             ) : <span />}

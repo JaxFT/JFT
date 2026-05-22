@@ -84,21 +84,26 @@ export async function listStampsForChildParent(childId: string): Promise<ParentS
   return (data ?? []) as ParentStampRow[]
 }
 
-// Parent-scoped list of a child's country visits, ordered by date so
-// the most recent are at the top of the parent's edit list.
-export async function listCountryVisitsForChildParent(childId: string): Promise<ChildCountryVisitRow[]> {
+// Parent-scoped list of family country visits, ordered by date so
+// the most recent are at the top of the parent's edit list. Visits
+// are shared across every child in the family.
+export type FamilyVisitRow = {
+  iso2: string
+  first_visit_date: string
+}
+
+export async function listFamilyCountryVisits(): Promise<FamilyVisitRow[]> {
   const supabase = await createClient()
   const { data, error } = await supabase
-    .from('child_country_visits')
-    .select('country_slug, first_visit_date')
-    .eq('child_id', childId)
+    .from('family_country_visits')
+    .select('iso2, first_visit_date')
     .order('first_visit_date', { ascending: false })
 
   if (error) {
-    console.error('[passport] listCountryVisitsForChildParent', error)
+    console.error('[passport] listFamilyCountryVisits', error)
     return []
   }
-  return (data ?? []) as ChildCountryVisitRow[]
+  return (data ?? []) as FamilyVisitRow[]
 }
 
 export async function listChildrenForParent(): Promise<ChildRow[]> {
@@ -145,16 +150,19 @@ export async function getStatsForChildren(
   if (childIds.length === 0) return {}
 
   const supabase = await createClient()
-  const [stampsRes, visitsRes, packsRes] = await Promise.all([
+  // Visits live at the family level now: every child of the same
+  // parent shares the same countriesUnlocked number. Pull parent_id
+  // for each child, then count family_country_visits per parent.
+  const [stampsRes, kidsRes, packsRes] = await Promise.all([
     supabase
       .from('stamps')
       .select('child_id')
       .in('child_id', childIds)
       .eq('status', 'awarded'),
     supabase
-      .from('child_country_visits')
-      .select('child_id')
-      .in('child_id', childIds),
+      .from('children')
+      .select('id, parent_id')
+      .in('id', childIds),
     supabase
       .from('kid_adventure_pack_sessions')
       .select('child_id')
@@ -162,13 +170,38 @@ export async function getStatsForChildren(
       .not('completed_at', 'is', null),
   ])
 
+  const childToParent = new Map<string, string>()
+  for (const c of (kidsRes.data ?? []) as Array<{ id: string; parent_id: string }>) {
+    childToParent.set(c.id, c.parent_id)
+  }
+  const parentIds = Array.from(new Set(childToParent.values()))
+
+  const visitsRes = parentIds.length > 0
+    ? await supabase
+        .from('family_country_visits')
+        .select('parent_id')
+        .in('parent_id', parentIds)
+    : { data: [] as Array<{ parent_id: string }> }
+  const visitsByParent = new Map<string, number>()
+  for (const v of (visitsRes.data ?? []) as Array<{ parent_id: string }>) {
+    visitsByParent.set(v.parent_id, (visitsByParent.get(v.parent_id) ?? 0) + 1)
+  }
+
   const stats: Record<string, ChildStats> = {}
   for (const id of childIds) {
-    stats[id] = { stampCount: 0, countriesUnlocked: 0, packsCompleted: 0 }
+    const parentId = childToParent.get(id)
+    stats[id] = {
+      stampCount: 0,
+      countriesUnlocked: parentId ? (visitsByParent.get(parentId) ?? 0) : 0,
+      packsCompleted: 0,
+    }
   }
-  for (const row of stampsRes.data ?? []) stats[row.child_id].stampCount++
-  for (const row of visitsRes.data ?? []) stats[row.child_id].countriesUnlocked++
-  for (const row of packsRes.data ?? []) stats[row.child_id].packsCompleted++
+  for (const row of (stampsRes.data ?? []) as Array<{ child_id: string }>) {
+    if (stats[row.child_id]) stats[row.child_id].stampCount++
+  }
+  for (const row of (packsRes.data ?? []) as Array<{ child_id: string }>) {
+    if (stats[row.child_id]) stats[row.child_id].packsCompleted++
+  }
 
   return stats
 }

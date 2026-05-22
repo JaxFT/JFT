@@ -11,6 +11,7 @@
 import { createClient as createSbClient } from '@supabase/supabase-js'
 import type { StampStatus, StampType } from './passport-types'
 import type { SectionAnswers, SectionKey } from './adventurePackTypes'
+import { getPackMeta } from './adventurePackMeta'
 
 function admin() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -56,11 +57,12 @@ export type AwardResult =
 export async function awardOrSuggestStamp(input: AwardInput): Promise<AwardResult> {
   const sb = admin()
 
-  // Look up the child to find stamp_auto_approve. For system awards
-  // this decides whether the stamp lands as 'awarded' or 'suggested'.
+  // Look up the child to find stamp_auto_approve (for system awards
+  // this decides whether the stamp lands as 'awarded' or 'suggested')
+  // and parent_id (used below to write the linked family-level visit).
   const { data: child, error: childErr } = await sb
     .from('children')
-    .select('id, stamp_auto_approve')
+    .select('id, parent_id, stamp_auto_approve')
     .eq('id', input.childId)
     .maybeSingle()
   if (childErr) return { ok: false, error: childErr.message }
@@ -122,26 +124,29 @@ export async function awardOrSuggestStamp(input: AwardInput): Promise<AwardResul
   if (error) return { ok: false, error: error.message }
 
   // Linked country visit. When a stamp is tied to a country (any
-  // award path: pack, parent manual, custom), make sure the kid is
-  // marked as having visited that country so it lights up on the
-  // Map + Countries tabs and counts toward the "N countries" and
-  // continent milestones. Pack flows already insert this row when
-  // the kid first opens a pack; 23505 (unique violation) means it
-  // existed already and we keep whatever date is there.
+  // award path: pack, parent manual, custom), make sure the FAMILY
+  // is marked as having visited that country so it lights up on
+  // every child's Map + Countries tabs and counts toward the "N
+  // countries" and continent milestones. Stored at the family
+  // (parent_id + iso2) level; pack slug → iso2 via getPackMeta.
   let wasNewVisit = false
   if (input.countrySlug) {
-    const visitDate = (input.earnedAt ?? new Date().toISOString()).slice(0, 10)
-    const { error: visitErr } = await sb
-      .from('child_country_visits')
-      .insert({
-        child_id: input.childId,
-        country_slug: input.countrySlug,
-        first_visit_date: visitDate,
-      })
-    if (visitErr && visitErr.code !== '23505') {
-      console.error('[stamps] linked-visit insert', visitErr)
+    const pack = getPackMeta(input.countrySlug)
+    const parentRow = child as { parent_id?: string }
+    if (pack && parentRow.parent_id) {
+      const visitDate = (input.earnedAt ?? new Date().toISOString()).slice(0, 10)
+      const { error: visitErr } = await sb
+        .from('family_country_visits')
+        .insert({
+          parent_id: parentRow.parent_id,
+          iso2: pack.iso2,
+          first_visit_date: visitDate,
+        })
+      if (visitErr && visitErr.code !== '23505') {
+        console.error('[stamps] linked-visit insert', visitErr)
+      }
+      wasNewVisit = !visitErr
     }
-    wasNewVisit = !visitErr
   }
 
   // First time visiting this country → fire a BRAVE_TRAVELLER stamp.

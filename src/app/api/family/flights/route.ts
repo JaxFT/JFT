@@ -112,18 +112,23 @@ export async function POST(request: Request) {
     })
     if (r.ok && r.created) stampsAwarded++
 
-    if (destCountrySlug && adminSb) {
+  }
+
+  // One family-level visit per flight destination (shared across all
+  // children). Service role bypasses RLS; 23505 (unique_violation)
+  // means the family already had this country.
+  if (destCountrySlug && adminSb) {
+    const pack = getPackMeta(destCountrySlug)
+    if (pack) {
       const { error: visitErr } = await adminSb
-        .from('child_country_visits')
+        .from('family_country_visits')
         .insert({
-          child_id: k.id,
-          country_slug: destCountrySlug,
+          parent_id: user.id,
+          iso2: pack.iso2,
           first_visit_date: date,
         })
-      // 23505 = unique_violation, child already visited this country.
-      // Keep whichever date already exists.
       if (visitErr && visitErr.code !== '23505') {
-        console.error('[flights] visit insert', visitErr)
+        console.error('[flights] family visit insert', visitErr)
       }
     }
   }

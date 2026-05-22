@@ -77,9 +77,16 @@ export type KidStats = {
 
 export async function getKidStats(childId: string): Promise<KidStats> {
   const sb = admin()
+  // Visits live at the family level now, so we look up the parent
+  // first to count the right list.
+  const { data: child } = await sb.from('children').select('parent_id').eq('id', childId).maybeSingle()
+  const parentId = (child as { parent_id?: string } | null)?.parent_id ?? null
+
   const [stampsRes, visitsRes, packsRes] = await Promise.all([
     sb.from('stamps').select('id', { count: 'exact', head: true }).eq('child_id', childId).eq('status', 'awarded'),
-    sb.from('child_country_visits').select('id', { count: 'exact', head: true }).eq('child_id', childId),
+    parentId
+      ? sb.from('family_country_visits').select('iso2', { count: 'exact', head: true }).eq('parent_id', parentId)
+      : Promise.resolve({ count: 0 } as { count: number | null }),
     sb.from('kid_adventure_pack_sessions').select('id', { count: 'exact', head: true }).eq('child_id', childId).not('completed_at', 'is', null),
   ])
   return {
@@ -90,19 +97,23 @@ export async function getKidStats(childId: string): Promise<KidStats> {
 }
 
 export type CountryVisitRow = {
-  country_slug: string
+  // ISO 3166-1 alpha-2 country code (lower-case).
+  iso2: string
   first_visit_date: string
 }
 
-export async function listCountryVisitsForChild(childId: string): Promise<CountryVisitRow[]> {
+// Country visits live at the FAMILY level: one shared list per
+// parent rather than per child. The kid passport fetches by the
+// parent_id of the child whose token is on the URL.
+export async function listCountryVisitsForFamily(parentId: string): Promise<CountryVisitRow[]> {
   const { data, error } = await admin()
-    .from('child_country_visits')
-    .select('country_slug, first_visit_date')
-    .eq('child_id', childId)
+    .from('family_country_visits')
+    .select('iso2, first_visit_date')
+    .eq('parent_id', parentId)
     .order('first_visit_date', { ascending: true })
 
   if (error) {
-    console.error('[passport] listCountryVisitsForChild', error)
+    console.error('[passport] listCountryVisitsForFamily', error)
     return []
   }
   return (data ?? []) as CountryVisitRow[]

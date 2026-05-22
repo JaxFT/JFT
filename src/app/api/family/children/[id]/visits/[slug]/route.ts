@@ -15,12 +15,15 @@ function isValidPastDate(s: string): boolean {
 
 // PATCH /api/family/children/[id]/visits/[slug]
 // Body: { first_visit_date }
-// Edit just the date on an existing visit.
+// The [slug] URL param is now an ISO 3166-1 alpha-2 code; the [id]
+// is kept for URL backwards compat but visits live at the family
+// level, scoped by the authenticated parent.
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string; slug: string }> },
 ) {
-  const { id, slug } = await params
+  const { slug } = await params
+  const iso2 = slug.toLowerCase()
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Please sign in.' }, { status: 401 })
@@ -33,32 +36,33 @@ export async function PATCH(
   }
 
   const { error } = await supabase
-    .from('child_country_visits')
+    .from('family_country_visits')
     .update({ first_visit_date: date })
-    .eq('child_id', id)
-    .eq('country_slug', slug)
+    .eq('parent_id', user.id)
+    .eq('iso2', iso2)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }
 
 // DELETE /api/family/children/[id]/visits/[slug]
-// Removes a country visit. Pack progress for the same country stays
-// put — the parent can re-add the visit later without losing data.
+// Removes a country visit from the family list. Pack progress for
+// the same country stays put.
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string; slug: string }> },
 ) {
-  const { id, slug } = await params
+  const { slug } = await params
+  const iso2 = slug.toLowerCase()
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Please sign in.' }, { status: 401 })
 
   const { error } = await supabase
-    .from('child_country_visits')
+    .from('family_country_visits')
     .delete()
-    .eq('child_id', id)
-    .eq('country_slug', slug)
+    .eq('parent_id', user.id)
+    .eq('iso2', iso2)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })

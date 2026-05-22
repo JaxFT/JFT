@@ -4,7 +4,7 @@ import {
   getChildByToken,
   getKidStats,
   listAwardedStampsForChild,
-  listCountryVisitsForChild,
+  listCountryVisitsForFamily,
   listAssignedPacksForChild,
 } from '@/lib/passport-kid-db'
 import { listJournalEntriesForChild } from '@/lib/passport-journal-db'
@@ -39,7 +39,7 @@ export default async function KidLandingPage({
   const [stats, stamps, visits, assignedPacks, journal] = await Promise.all([
     getKidStats(child.id),
     listAwardedStampsForChild(child.id),
-    listCountryVisitsForChild(child.id),
+    listCountryVisitsForFamily(child.parent_id),
     listAssignedPacksForChild(child.id),
     listJournalEntriesForChild(child.id),
   ])

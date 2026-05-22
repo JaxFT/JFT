@@ -8,28 +8,19 @@
 // gets the section stamps but no travel-milestone credit.
 
 import { getPackMeta, getPackByIso2 } from './adventurePackMeta'
+import { getCountryByIso2 } from './countries'
 import type { CountryVisitRow, StampRow } from './passport-kid-db'
 
-// Continent each pack country sits on. Turkey is split E/W in real
-// life; we lean Europe here.
-export const CONTINENT_BY_SLUG: Record<string, string> = {
-  france:           'Europe',
-  morocco:          'Africa',
-  indonesia:        'Asia',
-  thailand:         'Asia',
-  malaysia:         'Asia',
-  spain:            'Europe',
-  portugal:         'Europe',
-  'united-kingdom': 'Europe',
-  japan:            'Asia',
-  vietnam:          'Asia',
-  cambodia:         'Asia',
-  china:            'Asia',
-  india:            'Asia',
-  'sri-lanka':      'Asia',
-  nepal:            'Asia',
-  turkey:           'Europe',
-  egypt:            'Africa',
+// countries.ts splits the Americas into 'North America' / 'South
+// America'; we merge them back to 'Americas' for milestone-badge
+// purposes so a kid in Mexico and a kid in Brazil both contribute
+// to the same continent badge.
+function continentFor(iso2: string): string | null {
+  const country = getCountryByIso2(iso2)
+  if (!country) return null
+  const c = country.continent
+  if (c === 'North America' || c === 'South America') return 'Americas'
+  return c
 }
 
 const CONTINENT_EMOJI: Record<string, string> = {
@@ -93,15 +84,15 @@ export function computeMilestones(
 ): MilestoneStamp[] {
   const out: MilestoneStamp[] = []
 
-  // Map the kid's home ISO 3166-1 code to a pack slug (if their home
-  // country happens to be one of our 35 packs). If it isn't, every
-  // visit counts as a new-country milestone — eg. a kid in Switzerland
-  // visiting Morocco is a real trip away from home.
-  const homePackSlug = getPackByIso2(homeCountryIso2)?.slug ?? null
+  // Home is excluded from "new countries explored" stats so a kid
+  // completing the pack for their home country doesn't get a travel
+  // milestone for it.
+  const homeIso = (homeCountryIso2 ?? '').toLowerCase() || null
+  const homePackSlug = getPackByIso2(homeIso)?.slug ?? null
 
   // Strip the home country from "new countries explored" data.
-  const travelVisits = homePackSlug
-    ? visits.filter(v => v.country_slug !== homePackSlug)
+  const travelVisits = homeIso
+    ? visits.filter(v => v.iso2 !== homeIso)
     : visits
 
   // ── First-country milestone is special: it uses the actual
@@ -113,11 +104,13 @@ export function computeMilestones(
   const countryTier = highestThreshold(travelVisits.length, COUNTRY_THRESHOLDS)
 
   if (countryTier === 1 && firstVisit) {
-    const meta = getPackMeta(firstVisit.country_slug)
+    const pack = getPackByIso2(firstVisit.iso2)
+    const country = getCountryByIso2(firstVisit.iso2)
+    const name = country?.name ?? pack?.country ?? null
     out.push({
-      id: `first-country-${firstVisit.country_slug}`,
-      emoji: meta?.flag ?? '🌍',
-      label: meta ? `First new country · ${meta.country}` : 'First new country',
+      id: `first-country-${firstVisit.iso2}`,
+      emoji: pack?.flag ?? '🌍',
+      label: name ? `First new country · ${name}` : 'First new country',
       description: 'Your very first stamp in the explorer\'s book.',
       ink: '#0f3a2a',
       earnedAt: firstVisit.first_visit_date,
@@ -135,7 +128,8 @@ export function computeMilestones(
     })
   }
 
-  // ── Tried food in N countries — also excludes home.
+  // ── Tried food in N countries — also excludes home. Stamps still
+  // carry pack slugs today, so we keep the slug-based check here.
   const foodByCountry = new Map<string, string>()
   for (const s of stamps) {
     if (s.type !== 'BRAVE_EATER' || !s.country_slug) continue
@@ -161,7 +155,7 @@ export function computeMilestones(
   // physically lives on that continent, so it's been visited).
   const continentDates = new Map<string, string>()
   for (const v of visits) {
-    const c = CONTINENT_BY_SLUG[v.country_slug]
+    const c = continentFor(v.iso2)
     if (!c) continue
     const prev = continentDates.get(c)
     if (!prev || v.first_visit_date < prev) continentDates.set(c, v.first_visit_date)

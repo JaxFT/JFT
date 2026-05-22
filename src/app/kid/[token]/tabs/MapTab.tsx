@@ -1,7 +1,8 @@
 import PassportPage from '@/components/passport/PassportPage'
 import WorldMap from '@/components/passport/WorldMap'
 import CountryFlag from '@/components/CountryFlag'
-import { getPackMeta } from '@/lib/adventurePackMeta'
+import { getPackMeta, getPackByIso2 } from '@/lib/adventurePackMeta'
+import { getCountryByIso2 } from '@/lib/countries'
 import type { CountryVisitRow } from '@/lib/passport-kid-db'
 
 // Roughly the count of sovereign countries on earth — denominator for
@@ -17,7 +18,12 @@ export default function MapTab({
   visits: CountryVisitRow[]
   homeCountryIso2: string | null
 }) {
-  const unlockedSlugs = visits.map(v => v.country_slug)
+  // Map highlight currently keys off pack slugs; non-pack visits
+  // appear only in the chip strip below until the map gains ISO
+  // support. Phase D follow-up.
+  const unlockedSlugs = visits
+    .map(v => getPackByIso2(v.iso2)?.slug)
+    .filter((s): s is string => !!s)
   const percent = visits.length === 0
     ? 0
     : Math.max(1, Math.round((visits.length / WORLD_COUNTRY_COUNT) * 100))
@@ -66,19 +72,21 @@ export default function MapTab({
           </p>
           <div className="flex flex-wrap gap-1.5">
             {visits.map(v => {
-              const meta = getPackMeta(v.country_slug)
-              if (!meta) return null
-              return (
-                <a
-                  key={v.country_slug}
-                  href={`/kid/${token}/country/${v.country_slug}`}
-                  className="inline-flex items-center gap-1.5 bg-white/40 hover:bg-white/60 rounded-full px-2 py-1 text-xs"
-                  style={{ color: '#3a2810' }}
-                >
-                  <CountryFlag iso2={meta.iso2} country={meta.country} ariaHidden size="sm" />
-                  <span className="font-semibold">{meta.country}</span>
-                </a>
+              const pack = getPackByIso2(v.iso2)
+              const country = getCountryByIso2(v.iso2)
+              const name = pack?.country ?? country?.name
+              if (!name) return null
+              const href = pack ? `/kid/${token}/country/${pack.slug}` : undefined
+              const chipClass = "inline-flex items-center gap-1.5 bg-white/40 rounded-full px-2 py-1 text-xs"
+              const inner = (
+                <>
+                  <CountryFlag iso2={v.iso2} country={name} ariaHidden size="sm" />
+                  <span className="font-semibold">{name}</span>
+                </>
               )
+              return href
+                ? <a key={v.iso2} href={href} className={`${chipClass} hover:bg-white/60`} style={{ color: '#3a2810' }}>{inner}</a>
+                : <span key={v.iso2} className={chipClass} style={{ color: '#3a2810' }} title="Pack not available yet">{inner}</span>
             })}
           </div>
         </div>

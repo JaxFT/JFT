@@ -3,6 +3,7 @@ import { ArrowRight, Stamp as StampIcon, Trophy, Home } from 'lucide-react'
 import PassportPage from '@/components/passport/PassportPage'
 import CountryFlag from '@/components/CountryFlag'
 import { getPackMeta, getPackByIso2, getPackSectionCount } from '@/lib/adventurePackMeta'
+import { getCountryByIso2 } from '@/lib/countries'
 import type {
   CountryVisitRow, StampRow, AssignedPackRow,
 } from '@/lib/passport-kid-db'
@@ -43,8 +44,12 @@ export default function CountriesTab({
   )
 
   // Assigned countries the kid hasn't visited yet — the "waiting room".
-  const visitedSet = new Set(visits.map(v => v.country_slug))
-  const waiting = assignedPacks.filter(p => !visitedSet.has(p.country_slug))
+  // Visits are iso2 now; compare against the pack iso2 of each assignment.
+  const visitedIso2Set = new Set(visits.map(v => v.iso2))
+  const waiting = assignedPacks.filter(p => {
+    const iso2 = getPackMeta(p.country_slug)?.iso2
+    return iso2 ? !visitedIso2Set.has(iso2) : true
+  })
 
   return (
     <PassportPage className="p-6 sm:p-8" book>
@@ -82,57 +87,77 @@ export default function CountriesTab({
           {/* Visited countries — rich cards */}
           <ul className="space-y-3 mb-6">
             {visitedSorted.map(v => {
-              const meta = getPackMeta(v.country_slug)
-              if (!meta) return null
-              const stampCount = stampsBySlug.get(v.country_slug) ?? 0
-              const pack = packsBySlug.get(v.country_slug)
-              const missionsDone = pack?.missions_complete?.length ?? 0
-              const isComplete = !!pack?.completed_at
-              const isHome = homePackSlug === v.country_slug
+              const pack = getPackByIso2(v.iso2)
+              const country = getCountryByIso2(v.iso2)
+              const name = pack?.country ?? country?.name
+              if (!name) return null
+              const slug = pack?.slug
+              const stampCount = slug ? (stampsBySlug.get(slug) ?? 0) : 0
+              const assigned = slug ? packsBySlug.get(slug) : undefined
+              const missionsDone = assigned?.missions_complete?.length ?? 0
+              const isComplete = !!assigned?.completed_at
+              const isHome = homePackSlug && slug === homePackSlug
               const formatted = new Date(v.first_visit_date).toLocaleDateString('en-GB', {
                 day: 'numeric', month: 'long', year: 'numeric',
               })
-              return (
-                <li key={v.country_slug}>
-                  <Link
-                    href={`/kid/${token}/country/${v.country_slug}`}
-                    className="block bg-white/40 hover:bg-white/60 rounded-xl p-4 transition-colors"
-                    style={{ color: '#3a2810' }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <CountryFlag iso2={meta.iso2} country={meta.country} ariaHidden size="2xl" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold inline-flex items-center gap-2">
-                          {meta.country}
-                          {isHome && (
-                            <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-widest bg-amber-900/15 px-1.5 py-0.5 rounded">
-                              <Home className="w-2.5 h-2.5" /> Home
-                            </span>
-                          )}
-                        </p>
-                        <p className="text-xs opacity-70">First visit · {formatted}</p>
-                      </div>
-                      <ArrowRight className="w-4 h-4 opacity-50" />
-                    </div>
-
-                    {/* Mini stats row */}
-                    {(stampCount > 0 || pack) && (
-                      <div className="mt-3 pt-3 grid grid-cols-2 gap-3 text-xs" style={{ borderTop: '1px dashed rgba(120,80,30,0.2)' }}>
-                        <p className="inline-flex items-center gap-1.5 opacity-80">
-                          <StampIcon className="w-3.5 h-3.5" />
-                          {stampCount} {stampCount === 1 ? 'stamp' : 'stamps'}
-                        </p>
-                        {pack && (
-                          <p className="inline-flex items-center gap-1.5 opacity-80">
-                            <Trophy className="w-3.5 h-3.5" />
-                            {isComplete
-                              ? 'Pack complete'
-                              : `${Math.min(missionsDone, getPackSectionCount(v.country_slug))} / ${getPackSectionCount(v.country_slug)} missions`}
-                          </p>
+              const cardInner = (
+                <>
+                  <div className="flex items-center gap-3">
+                    <CountryFlag iso2={v.iso2} country={name} ariaHidden size="2xl" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold inline-flex items-center gap-2">
+                        {name}
+                        {isHome && (
+                          <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-widest bg-amber-900/15 px-1.5 py-0.5 rounded">
+                            <Home className="w-2.5 h-2.5" /> Home
+                          </span>
                         )}
-                      </div>
-                    )}
-                  </Link>
+                        {!pack && (
+                          <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-widest bg-amber-900/15 px-1.5 py-0.5 rounded">
+                            No pack yet
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-xs opacity-70">First visit · {formatted}</p>
+                    </div>
+                    {slug && <ArrowRight className="w-4 h-4 opacity-50" />}
+                  </div>
+                  {slug && (stampCount > 0 || assigned) && (
+                    <div className="mt-3 pt-3 grid grid-cols-2 gap-3 text-xs" style={{ borderTop: '1px dashed rgba(120,80,30,0.2)' }}>
+                      <p className="inline-flex items-center gap-1.5 opacity-80">
+                        <StampIcon className="w-3.5 h-3.5" />
+                        {stampCount} {stampCount === 1 ? 'stamp' : 'stamps'}
+                      </p>
+                      {assigned && (
+                        <p className="inline-flex items-center gap-1.5 opacity-80">
+                          <Trophy className="w-3.5 h-3.5" />
+                          {isComplete
+                            ? 'Pack complete'
+                            : `${Math.min(missionsDone, getPackSectionCount(slug))} / ${getPackSectionCount(slug)} missions`}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </>
+              )
+              return (
+                <li key={v.iso2}>
+                  {slug ? (
+                    <Link
+                      href={`/kid/${token}/country/${slug}`}
+                      className="block bg-white/40 hover:bg-white/60 rounded-xl p-4 transition-colors"
+                      style={{ color: '#3a2810' }}
+                    >
+                      {cardInner}
+                    </Link>
+                  ) : (
+                    <div
+                      className="block bg-white/30 rounded-xl p-4"
+                      style={{ color: '#3a2810' }}
+                    >
+                      {cardInner}
+                    </div>
+                  )}
                 </li>
               )
             })}

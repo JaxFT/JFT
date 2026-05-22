@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
 import {
-  getChildById, listChildPackAssignments, listCountryVisitsForChildParent,
+  getChildById, listChildPackAssignments, listFamilyCountryVisits,
   listStampsForChildParent,
 } from '@/lib/passport-db'
 import { listJournalEntriesForChildParent } from '@/lib/passport-journal-db'
@@ -57,7 +57,7 @@ export default async function ChildDetailPage({
 
   const [assignments, visits, stamps, journal] = await Promise.all([
     listChildPackAssignments(child_id),
-    listCountryVisitsForChildParent(child_id),
+    listFamilyCountryVisits(),
     listStampsForChildParent(child_id),
     listJournalEntriesForChildParent(child_id),
   ])
@@ -130,7 +130,6 @@ export default async function ChildDetailPage({
           <CountryVisitsSection
             childId={child.id}
             initialVisits={visits}
-            allPacks={allPacks.map(p => ({ slug: p.slug, country: p.country, flag: p.flag }))}
           />
 
           <StampsManagementSection

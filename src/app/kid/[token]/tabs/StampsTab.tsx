@@ -10,6 +10,7 @@ import MilestoneStamp from '@/components/passport/MilestoneStamp'
 import { closePassport } from '../PassportCover'
 import CountryFlag from '@/components/CountryFlag'
 import { getPackMeta, getPackByIso2 } from '@/lib/adventurePackMeta'
+import { getCountryByIso2 } from '@/lib/countries'
 import { computeMilestones, type MilestoneStamp as Milestone } from '@/lib/passport-milestones'
 import type { StampRow, CountryVisitRow } from '@/lib/passport-kid-db'
 
@@ -615,47 +616,55 @@ function buildPages(stamps: StampRow[], visits: CountryVisitRow[], homeCountryIs
   // Country pages are driven by VISITS (so a country gets a page
   // the moment it's visited, even before any stamps land there).
   // Stamps with a country also force a page in case that country
-  // somehow doesn't have a visit row (e.g. data imported pre-fix).
-  // Home country is excluded — you don't "visit" home, so it
-  // doesn't get a country page.
-  const homePackSlug = getPackByIso2(homeCountryIso2)?.slug ?? null
-  const countrySlugs = new Set<string>()
+  // somehow doesn't have a visit row. Home country is excluded —
+  // you don't "visit" home, so it doesn't get a country page.
+  // Visits are keyed by iso2 now; stamps still carry the pack slug
+  // (pack-tied stamps only), so we lift everything to iso2 here.
+  const homeIso = (homeCountryIso2 ?? '').toLowerCase() || null
+  const homePackSlug = getPackByIso2(homeIso)?.slug ?? null
+  const countryIso2s = new Set<string>()
   for (const v of visits) {
-    if (v.country_slug && v.country_slug !== homePackSlug) {
-      countrySlugs.add(v.country_slug)
+    if (v.iso2 && v.iso2 !== homeIso) {
+      countryIso2s.add(v.iso2)
     }
   }
   for (const s of stamps) {
-    if (s.country_slug && s.country_slug !== homePackSlug) {
-      countrySlugs.add(s.country_slug)
-    }
+    if (!s.country_slug) continue
+    if (s.country_slug === homePackSlug) continue
+    const iso2 = getPackMeta(s.country_slug)?.iso2
+    if (iso2 && iso2 !== homeIso) countryIso2s.add(iso2)
   }
 
-  // Bucket stamps per country slug.
-  const stampsBySlug = new Map<string, StampRow[]>()
+  // Bucket stamps per iso2 (mapping each stamp's slug to its iso2).
+  const stampsByIso2 = new Map<string, StampRow[]>()
   for (const s of stamps) {
     if (!s.country_slug || s.country_slug === homePackSlug) continue
-    const arr = stampsBySlug.get(s.country_slug) ?? []
+    const iso2 = getPackMeta(s.country_slug)?.iso2
+    if (!iso2 || iso2 === homeIso) continue
+    const arr = stampsByIso2.get(iso2) ?? []
     arr.push(s)
-    stampsBySlug.set(s.country_slug, arr)
+    stampsByIso2.set(iso2, arr)
   }
-  for (const arr of stampsBySlug.values()) {
+  for (const arr of stampsByIso2.values()) {
     arr.sort((a, b) => (a.earned_at < b.earned_at ? 1 : -1))
   }
 
-  // Build pages. Skip slugs we don't have pack metadata for so we
-  // don't render a phantom unnamed page.
+  // Build pages. Pack countries link by their slug; non-pack countries
+  // still get a page using the bare country name from the ISO list,
+  // ready to fill with stamps once a pack ships.
   const countryPages: Extract<Page, { kind: 'country' }>[] = []
-  for (const slug of countrySlugs) {
-    const meta = getPackMeta(slug)
-    if (!meta) continue
+  for (const iso2 of countryIso2s) {
+    const pack = getPackByIso2(iso2)
+    const country = getCountryByIso2(iso2)
+    const name = pack?.country ?? country?.name
+    if (!name) continue
     countryPages.push({
       kind: 'country',
-      countrySlug: slug,
-      countryName: meta.country,
-      flag: meta.flag,
-      iso2: meta.iso2,
-      stamps: stampsBySlug.get(slug) ?? [],
+      countrySlug: pack?.slug ?? null,
+      countryName: name,
+      flag: pack?.flag ?? (country ? '🏳️' : '🌍'),
+      iso2,
+      stamps: stampsByIso2.get(iso2) ?? [],
     })
   }
 

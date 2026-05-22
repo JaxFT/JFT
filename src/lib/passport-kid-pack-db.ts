@@ -7,6 +7,7 @@ import { createClient as createSbClient } from '@supabase/supabase-js'
 import type { AgeMode, SectionAnswers, SectionKey } from './adventurePackTypes'
 import type { ChildRow } from './passport-types'
 import { awardOrSuggestStamp } from './passport-stamps-db'
+import { getPackMeta } from './adventurePackMeta'
 
 function admin() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -149,12 +150,23 @@ export async function saveKidSession(
 
   let firstVisit = false
   if (isFirstSession) {
-    const { error: visitErr } = await sb
-      .from('child_country_visits')
-      .insert({ child_id: childId, country_slug: countrySlug })
-    // Ignore unique-violation if a parallel request also inserted.
-    if (!visitErr || visitErr.code === '23505') {
-      firstVisit = !visitErr
+    // Visits live at the family level now (one shared list per
+    // parent). Look up parent_id + pack iso2 and write there.
+    const { data: childRow } = await sb
+      .from('children')
+      .select('parent_id')
+      .eq('id', childId)
+      .maybeSingle()
+    const parentId = (childRow as { parent_id?: string } | null)?.parent_id ?? null
+    const pack = getPackMeta(countrySlug)
+    if (parentId && pack) {
+      const { error: visitErr } = await sb
+        .from('family_country_visits')
+        .insert({ parent_id: parentId, iso2: pack.iso2 })
+      // Ignore unique-violation if a parallel request also inserted.
+      if (!visitErr || visitErr.code === '23505') {
+        firstVisit = !visitErr
+      }
     }
     // First visit to this country earns a BRAVE_TRAVELLER stamp.
     // Dedupe inside awardOrSuggestStamp ensures only one lands per

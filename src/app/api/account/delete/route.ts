@@ -59,8 +59,7 @@ export async function POST(request: Request) {
   const cleanup = [
     sb.from('journal_entries').delete().eq('parent_id', user.id),
     sb.from('stamps').delete().eq('parent_id', user.id),
-    sb.from('country_visits').delete().eq('parent_id', user.id),
-    sb.from('flights').delete().eq('parent_id', user.id),
+    sb.from('family_country_visits').delete().eq('parent_id', user.id),
     sb.from('pack_assignments').delete().eq('parent_id', user.id),
     sb.from('kid_pack_state').delete().eq('parent_id', user.id),
     sb.from('children').delete().eq('parent_id', user.id),

@@ -50,7 +50,7 @@ export default function DeleteAccountButton({ hasActiveSubscription }: { hasActi
         </div>
         <p className="text-sm text-gray-600 leading-relaxed mb-4">
           Permanently deletes your account, your purchases, every child profile, all of their stamps, journals,
-          country visits and flights. <strong>This cannot be undone.</strong>
+          and country visits. <strong>This cannot be undone.</strong>
         </p>
         <button
           type="button"
@@ -78,7 +78,7 @@ export default function DeleteAccountButton({ hasActiveSubscription }: { hasActi
             </div>
             <p className="text-sm text-gray-700 mb-3 leading-relaxed">
               We&apos;ll permanently remove your profile, purchases, every child, every stamp, every journal entry
-              and every flight log. <strong>There is no undo.</strong>
+              and every country visit. <strong>There is no undo.</strong>
             </p>
             {hasActiveSubscription && (
               <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mb-3 leading-relaxed">

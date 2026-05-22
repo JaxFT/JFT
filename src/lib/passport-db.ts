@@ -41,32 +41,6 @@ export type ParentStampRow = {
   custom_ink: string | null
 }
 
-export type FlightRow = {
-  id: string
-  from_airport: string
-  to_airport: string
-  flight_date: string // YYYY-MM-DD
-  duration_mins: number | null
-  distance_km: number | null
-  notes: string | null
-  created_at: string
-  updated_at: string
-}
-
-// All flights for the signed-in parent, newest flight_date first.
-export async function listFlightsForParent(): Promise<FlightRow[]> {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('flights')
-    .select('id, from_airport, to_airport, flight_date, duration_mins, distance_km, notes, created_at, updated_at')
-    .order('flight_date', { ascending: false })
-  if (error) {
-    console.error('[passport] listFlightsForParent', error)
-    return []
-  }
-  return (data ?? []) as FlightRow[]
-}
-
 // All stamps for a child, regardless of status, newest first. Used
 // for the parent's stamp management section + approval queue.
 export async function listStampsForChildParent(childId: string): Promise<ParentStampRow[]> {

@@ -3,7 +3,7 @@
 // to /family now redirect to /account).
 
 import Link from 'next/link'
-import { Users, ArrowRight, Plus, Stamp, MapPin, Trophy, Plane } from 'lucide-react'
+import { Users, ArrowRight, Plus, Stamp, MapPin, Trophy } from 'lucide-react'
 import { listChildrenForParent, getStatsForChildren } from '@/lib/passport-db'
 import { PERMISSION_LABELS } from '@/lib/passport-types'
 import AddChildForm from '../family/AddChildForm'
@@ -88,21 +88,6 @@ export default async function AdventurePassportSection() {
             </div>
           </details>
 
-          <Link
-            href="/family/flights"
-            className="block bg-sand-50 hover:bg-white rounded-xl border border-gray-100 hover:border-brand-200 p-4 transition-all"
-          >
-            <div className="flex items-center gap-3">
-              <div className="bg-brand-50 text-brand-700 rounded-lg p-2">
-                <Plane className="w-4 h-4" />
-              </div>
-              <div className="flex-1">
-                <p className="font-bold text-gray-900 text-sm">Family flights</p>
-                <p className="text-xs text-gray-500">Log every flight to earn Brave Traveller stamps.</p>
-              </div>
-              <ArrowRight className="w-4 h-4 text-gray-400" />
-            </div>
-          </Link>
         </>
       )}
     </div>

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Crown, ShoppingBag, ArrowRight, Calendar, ShieldCheck, FileText, Mail } from 'lucide-react'
+import { Crown, ShoppingBag, ArrowRight, Calendar, ShieldCheck, FileText, Mail, Users } from 'lucide-react'
 import WaystaqCard from '@/components/WaystaqCard'
 import type { Metadata } from 'next'
 import SignOutButton from './SignOutButton'
@@ -10,7 +10,6 @@ import PremiumCancelButton from './PremiumCancelButton'
 import ResumeMembershipButton from './ResumeMembershipButton'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 import ManageBillingButton from '@/components/billing/ManageBillingButton'
-import FamilyPassportSections from './FamilyPassportSections'
 import DeleteAccountButton from './DeleteAccountButton'
 import { isPremiumTier } from '@/lib/profile'
 import { ensureProfile } from '@/lib/ensure-profile'
@@ -189,11 +188,28 @@ export default async function AccountPage() {
           </div>
         </div>
 
-        {/* 2 ── FAMILY PASSPORT (premium-only) ──────────────────── */}
+        {/* 2 ── OPEN MY FAMILY (premium-only) ─────────────────────
+            The full family dashboard (kid cards, home country,
+            country visits, pack allocation, stamp award, delete
+            passport) lives on /family. This is just the doorway. */}
         {isPremium && (
-          <FamilyPassportSections
-            homeIso2={(profile as { home_country_iso2?: string | null } | null)?.home_country_iso2 ?? null}
-          />
+          <Link
+            href="/family"
+            className="block bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6 hover:border-brand-200 hover:bg-sand-50 transition-all group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-brand-50 text-brand-700 rounded-xl p-3 shrink-0">
+                <Users className="w-6 h-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg font-bold text-gray-900 group-hover:text-brand-800">Open my family</h2>
+                <p className="text-sm text-gray-500">
+                  Manage every child&apos;s passport, country visits, packs and stamps.
+                </p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-brand-600 shrink-0" />
+            </div>
+          </Link>
         )}
 
         {/* 3 ── DETAILS (email / password / name) + EMAIL PREFS ── */}

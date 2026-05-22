@@ -66,10 +66,11 @@ export async function POST(
     return NextResponse.json({ error: 'Unknown stamp type.' }, { status: 400 })
   }
 
-  // CUSTOM stamps don't carry a country (issuer is JFT). For the 17
-  // system types, country_slug is optional and must be a real pack.
+  // country_slug is optional for every stamp type, including CUSTOM
+  // (a custom stamp can be Global or tied to a country, parent's
+  // choice). Must be a real pack slug if provided.
   let countrySlug: string | null = null
-  if (type !== 'CUSTOM' && body.country_slug) {
+  if (body.country_slug) {
     if (!getPackMeta(body.country_slug)) {
       return NextResponse.json({ error: 'Unknown country.' }, { status: 400 })
     }

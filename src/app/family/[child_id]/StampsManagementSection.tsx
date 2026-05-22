@@ -83,6 +83,7 @@ export default function StampsManagementSection({
   const [customEmoji, setCustomEmoji] = useState<string>('✨')
   const [customShape, setCustomShape] = useState<StampShape>('circle')
   const [customInk, setCustomInk] = useState<string>(INK_PALETTE[0].value)
+  const [customCountry, setCustomCountry] = useState<string>('') // '' = Global
   const [customDate, setCustomDate] = useState<string>(today())
   const [customNote, setCustomNote] = useState<string>('')
   const [customBusy, setCustomBusy] = useState(false)
@@ -152,6 +153,7 @@ export default function StampsManagementSection({
           custom_emoji: emoji,
           custom_shape: customShape,
           custom_ink: customInk,
+          country_slug: customCountry || null,
           note: customNote.trim() || null,
           earned_at: customDate,
         }),
@@ -161,7 +163,7 @@ export default function StampsManagementSection({
       setStamps(prev => [{
         id: body.id ?? `tmp-${Date.now()}`,
         type: 'CUSTOM',
-        country_slug: null,
+        country_slug: customCountry || null,
         note: customNote.trim() || null,
         awarded_by: 'parent',
         status: 'awarded',
@@ -447,6 +449,21 @@ export default function StampsManagementSection({
               </div>
             </div>
 
+            {/* Country picker. Default is Global (empty value), where
+                the stamp lands on the Global Stamps page. Pick a
+                country and the stamp slots into that country's page
+                mixed in with the system stamps. */}
+            <select
+              value={customCountry}
+              onChange={e => setCustomCountry(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
+            >
+              <option value="">Global (no country)</option>
+              {allPacks.map(p => (
+                <option key={p.slug} value={p.slug}>{p.flag} {p.country}</option>
+              ))}
+            </select>
+
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2">
               <input
                 type="text"
@@ -484,6 +501,7 @@ export default function StampsManagementSection({
               emoji={customEmoji.trim() || '✨'}
               ink={customInk}
               shape={customShape}
+              country={customCountry ? (packBySlug.get(customCountry)?.country ?? null) : null}
               date={customDate}
               size="sm"
             />

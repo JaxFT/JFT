@@ -75,6 +75,19 @@ function formatDateLine(s?: string | null): string {
   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).toUpperCase()
 }
 
+// Step down the curved/straight label font as the label gets longer
+// so the text stays inside the stamp face. Tuned for the SVG viewBox
+// dimensions used by each shape family; the values were picked by
+// eyeballing the breakpoints where letters first start clipping or
+// overlapping on a default-rendered Georgia letterform.
+function shrinkFor(label: string, base: number, step: number, min: number): number {
+  const len = label.length
+  if (len <= 12) return base
+  if (len <= 16) return base - step
+  if (len <= 22) return Math.max(min, base - step * 2)
+  return min
+}
+
 function pxFor(shape: StampShape, size: 'sm' | 'md') {
   const base = size === 'md' ? 138 : 104
   if (shape === 'oval')    return { w: base * 1.4,  h: base * 0.9 }
@@ -256,21 +269,23 @@ function CircularStamp({ shape, ink, label, country, date, emoji, seed }: {
         <line x1={cx - 32} y1={cy + 22} x2={cx + 32} y2={cy + 22} strokeWidth="0.6" />
         <line x1={cx - 32} y1={cy + 36} x2={cx + 32} y2={cy + 36} strokeWidth="0.6" />
       </g>
-      {/* Text layer — no filter, crisp */}
+      {/* Text layer — no filter, crisp. Font size steps down on the
+          top label and bottom country arc as text gets longer so it
+          stays inside the ring band. */}
       <g fill={ink} stroke="none">
         <text
           fontFamily="Georgia, 'Times New Roman', serif"
-          fontSize="14"
+          fontSize={shrinkFor(label, 14, 1.5, 9)}
           fontWeight="800"
-          letterSpacing="2.5"
+          letterSpacing={label.length > 16 ? 1.5 : 2.5}
         >
           <textPath href={`#${topArcId}`} startOffset="50%" textAnchor="middle">{label}</textPath>
         </text>
         <text
           fontFamily="Georgia, 'Times New Roman', serif"
-          fontSize="10"
+          fontSize={shrinkFor(country, 10, 1, 7)}
           fontWeight="700"
-          letterSpacing="2"
+          letterSpacing={country.length > 16 ? 1.2 : 2}
         >
           <textPath href={`#${botArcId}`} startOffset="50%" textAnchor="middle">{country}</textPath>
         </text>
@@ -373,9 +388,9 @@ function RectStamp({ shape, ink, label, country, date, emoji, seed }: {
           y={innerInset + 22}
           textAnchor="middle"
           fontFamily="Georgia, 'Times New Roman', serif"
-          fontSize="16"
+          fontSize={shrinkFor(label, 16, 2, 10)}
           fontWeight="800"
-          letterSpacing="3"
+          letterSpacing={label.length > 16 ? 1.5 : 3}
         >
           {label}
         </text>
@@ -406,9 +421,9 @@ function RectStamp({ shape, ink, label, country, date, emoji, seed }: {
           y={vbH - innerInset - 12}
           textAnchor="middle"
           fontFamily="Georgia, 'Times New Roman', serif"
-          fontSize="10"
+          fontSize={shrinkFor(country, 10, 1, 7)}
           fontWeight="700"
-          letterSpacing="2"
+          letterSpacing={country.length > 16 ? 1.2 : 2}
         >
           {country}
         </text>

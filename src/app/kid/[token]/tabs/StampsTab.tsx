@@ -456,17 +456,18 @@ function buildPages(stamps: StampRow[], visits: CountryVisitRow[], homeCountryIs
   // Always lead with the Global Stamps page
   const milestones = computeMilestones(visits, stamps, homeCountryIso2)
 
-  // Custom stamps live on Global Stamps alongside the milestones —
-  // they're personal achievements rather than country-tied stamps,
-  // so they don't belong on any country page. Sort newest first.
+  // Custom stamps WITHOUT a country live on Global Stamps alongside
+  // the milestones. Custom stamps WITH a country (parent's choice
+  // when creating) get treated like a system stamp and slotted onto
+  // that country's page mixed in with the rest. Sort newest first.
   const customs = stamps
-    .filter(s => s.type === 'CUSTOM')
+    .filter(s => s.type === 'CUSTOM' && !s.country_slug)
     .sort((a, b) => (a.earned_at < b.earned_at ? 1 : -1))
 
-  // Group remaining (non-CUSTOM) stamps by country.
+  // Group all country-tied stamps (system OR custom) by country.
   const byCountry = new Map<string, Extract<Page, { kind: 'country' }>>()
   for (const s of stamps) {
-    if (s.type === 'CUSTOM') continue
+    if (s.type === 'CUSTOM' && !s.country_slug) continue
     const key = s.country_slug ?? '__none__'
     const meta = s.country_slug ? getPackMeta(s.country_slug) : null
     if (!byCountry.has(key)) {

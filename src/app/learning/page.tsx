@@ -58,6 +58,15 @@ const RECOMMENDED: RecommendedSite[] = [
     icon: Users,
     image: '/images/learning/Worldschooling-club.png',
   },
+  {
+    name: 'Sums of Anarchy',
+    url: 'https://www.instagram.com/sumsofanarchy/',
+    eyebrow: 'Maths on Instagram',
+    blurb: "Maths.... Like you've never seen it before!",
+    cta: 'Visit Sums of Anarchy',
+    icon: GraduationCap,
+    image: '/images/learning/Sums-Of-Annarchy.png',
+  },
 ]
 
 export default async function LearningPage() {

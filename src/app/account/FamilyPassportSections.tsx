@@ -8,7 +8,9 @@
 import AdventurePassportSection from './AdventurePassportSection'
 import HomeCountrySection from './HomeCountrySection'
 import CountryVisitsSection from './CountryVisitsSection'
+import StampAwardSection from './StampAwardSection'
 import { listChildrenForParent, listFamilyCountryVisits } from '@/lib/passport-db'
+import { PACK_META } from '@/lib/adventurePackMeta'
 
 export default async function FamilyPassportSections({
   homeIso2,
@@ -41,6 +43,15 @@ export default async function FamilyPassportSections({
           <CountryVisitsSection
             scopeChildId={scopeChildId}
             initialVisits={visits}
+          />
+        </div>
+      )}
+
+      {children.length > 0 && (
+        <div className="mb-6">
+          <StampAwardSection
+            children={children.map(c => ({ id: c.id, name: c.name, avatar: c.avatar }))}
+            allPacks={PACK_META.map(p => ({ slug: p.slug, country: p.country, flag: p.flag }))}
           />
         </div>
       )}

@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
 import {
   getChildById, listChildPackAssignments,
-  listStampsForChildParent,
 } from '@/lib/passport-db'
 import { listJournalEntriesForChildParent } from '@/lib/passport-journal-db'
 import { PERMISSION_LABELS } from '@/lib/passport-types'
@@ -16,7 +15,7 @@ import PermissionSection from './PermissionSection'
 import QRSection from './QRSection'
 import PackAssignmentSection from './PackAssignmentSection'
 // CountryVisitsSection moved to /account (family-level).
-import StampsManagementSection from './StampsManagementSection'
+// StampsManagementSection moved to /account (family-level).
 import JournalSection from './JournalSection'
 // HomeCountrySection moved to /family (family-level setting).
 import DeleteChildButton from './DeleteChildButton'
@@ -55,9 +54,8 @@ export default async function ChildDetailPage({
   const child = await getChildById(child_id)
   if (!child) notFound()
 
-  const [assignments, stamps, journal] = await Promise.all([
+  const [assignments, journal] = await Promise.all([
     listChildPackAssignments(child_id),
-    listStampsForChildParent(child_id),
     listJournalEntriesForChildParent(child_id),
   ])
 
@@ -118,13 +116,6 @@ export default async function ChildDetailPage({
             childId={child.id}
             initialAssigned={assignments}
             allPacks={allPacks}
-          />
-
-          <StampsManagementSection
-            childId={child.id}
-            childName={child.name}
-            initialStamps={stamps}
-            allPacks={allPacks.map(p => ({ slug: p.slug, country: p.country, flag: p.flag }))}
           />
 
           <JournalSection

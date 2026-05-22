@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, ChevronLeft, ChevronRight, Award, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
 import { TransformWrapper, TransformComponent, type ReactZoomPanPinchRef } from 'react-zoom-pan-pinch'
@@ -351,23 +351,136 @@ function PageInner({
   return <CountryPage group={page} token={token} />
 }
 
-// Per-stamp tilt in the Global Stamps pile. Deterministic from the
-// stamp id so a stamp doesn't shuffle position every render. Range
-// -10° to +10° gives a noticeably jumbled feel without making any
-// stamp unreadable.
-function tiltFor(id: string): number {
+// Deterministic per-id hash, used to seed each stamp's tilt and
+// jitter so it stays in the same spot across renders.
+function hashId(id: string): number {
   let h = 0
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
-  return (h % 21) - 10
+  return h
+}
+
+// Pick a column count that scales with how many stamps are on the
+// page. The grid stays the same shape until the count crosses a
+// threshold, at which point the whole pile reflows to fit. Capped
+// so cells never get narrower than minCellW for the container.
+function tierForCount(count: number, containerW: number): { cols: number; rows: number } {
+  let ideal: number
+  if (count <= 6)       ideal = 2
+  else if (count <= 10) ideal = 3
+  else if (count <= 15) ideal = 4
+  else if (count <= 22) ideal = 5
+  else if (count <= 30) ideal = 6
+  else                  ideal = Math.ceil(Math.sqrt(count * 1.3))
+  const minCellW = 56
+  const maxByWidth = Math.max(2, Math.floor(containerW / minCellW))
+  const cols = Math.max(1, Math.min(ideal, maxByWidth))
+  const rows = Math.max(1, Math.ceil(count / cols))
+  return { cols, rows }
+}
+
+// Absolute-positioned scatter that fills its parent. Cells are
+// computed from (cols × rows), each stamp sits at the centre of
+// its cell with a per-stamp jitter and tilt. Cells smaller than
+// the stamp width is intentional — stamps overlap their neighbours
+// for the pile-of-stamps feel.
+function GlobalStampsCanvas({ items }: { items: { key: string; node: React.ReactNode; tiltSeed: string }[] }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [dims, setDims] = useState({ w: 270, h: 380 })
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const ro = new ResizeObserver(entries => {
+      const rect = entries[0]?.contentRect
+      if (rect && rect.width > 0 && rect.height > 0) {
+        setDims({ w: rect.width, h: rect.height })
+      }
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const tier = useMemo(() => tierForCount(items.length, dims.w), [items.length, dims.w])
+  const cellW = dims.w / tier.cols
+  const cellH = dims.h / tier.rows
+
+  return (
+    <div ref={containerRef} className="relative w-full h-full">
+      {items.map((it, i) => {
+        const col = i % tier.cols
+        const row = Math.floor(i / tier.cols)
+        // ±30% jitter of cell, ±10° tilt. Seeded per id so the
+        // stamp lands in the same spot every render.
+        const seedX = hashId(`${it.tiltSeed}-x-${tier.cols}`)
+        const seedY = hashId(`${it.tiltSeed}-y-${tier.cols}`)
+        const seedR = hashId(`${it.tiltSeed}-r`)
+        const jitterX = ((seedX % 100) / 100 - 0.5) * 0.6
+        const jitterY = ((seedY % 100) / 100 - 0.5) * 0.6
+        const tilt = (seedR % 21) - 10
+        const left = (col + 0.5 + jitterX) * cellW
+        const top  = (row + 0.5 + jitterY) * cellH
+        return (
+          <div
+            key={it.key}
+            className="absolute"
+            style={{
+              left,
+              top,
+              transform: `translate(-50%, -50%) rotate(${tilt}deg)`,
+              zIndex: i + 1,
+            }}
+          >
+            {it.node}
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 function TravelerPage({ milestones, globals, empty }: { milestones: Milestone[]; globals: StampRow[]; empty: boolean }) {
   const totalCount = milestones.length + globals.length
   const trulyEmpty = empty && globals.length === 0
+
+  // Mix milestones and globals into a single ordered list for the
+  // scatter canvas. Milestones first, then globals (newest globals
+  // last so they land on top of older ones via z-index).
+  const items = useMemo(() => {
+    const out: { key: string; node: React.ReactNode; tiltSeed: string }[] = []
+    milestones.forEach(m => {
+      out.push({
+        key: `m-${m.id}`,
+        tiltSeed: m.id,
+        node: <MilestoneStamp
+          emoji={m.emoji}
+          label={m.label}
+          ink={m.ink}
+          date={m.earnedAt}
+          shape={m.shape}
+          size="sm"
+          rotate={0}
+        />,
+      })
+    })
+    globals.forEach(s => {
+      out.push({
+        key: `g-${s.id}`,
+        tiltSeed: s.id,
+        node: <PassportStampFromRow
+          row={s}
+          date={s.earned_at}
+          size="sm"
+          rotate={0}
+        />,
+      })
+    })
+    return out
+  }, [milestones, globals])
+
   return (
-    <section>
+    <section className="h-full flex flex-col min-h-0">
       <div
-        className="flex items-baseline justify-between gap-3 mb-5 pb-2"
+        className="flex items-baseline justify-between gap-3 mb-5 pb-2 shrink-0"
         style={{ borderBottom: '1px dashed rgba(120,80,30,0.25)', color: '#5a3a12' }}
       >
         <div className="inline-flex items-center gap-2">
@@ -389,57 +502,8 @@ function TravelerPage({ milestones, globals, empty }: { milestones: Milestone[];
           Open an Adventure Pack or log a flight to begin.
         </p>
       ) : (
-        // Dense grid layout: columns intentionally smaller than the
-        // stamp width so stamps overlap their neighbours a little,
-        // tight row gap so vertical pile is compact, and a per-stamp
-        // rotation so the whole page reads as a jumbled collection
-        // rather than a uniform grid. Milestones render first, then
-        // globals; later items layer over earlier ones via z-index.
-        <div
-          className="px-1 py-3"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(64px, 1fr))',
-            rowGap: '0.5rem',
-            columnGap: 0,
-            justifyItems: 'center',
-          }}
-        >
-          {milestones.map((m, i) => (
-            <div
-              key={`m-${m.id}`}
-              style={{
-                transform: `rotate(${tiltFor(m.id)}deg)`,
-                zIndex: 200 - i,
-              }}
-            >
-              <MilestoneStamp
-                emoji={m.emoji}
-                label={m.label}
-                ink={m.ink}
-                date={m.earnedAt}
-                shape={m.shape}
-                size="sm"
-                rotate={0}
-              />
-            </div>
-          ))}
-          {globals.map((s, i) => (
-            <div
-              key={`g-${s.id}`}
-              style={{
-                transform: `rotate(${tiltFor(s.id)}deg)`,
-                zIndex: 100 - i,
-              }}
-            >
-              <PassportStampFromRow
-                row={s}
-                date={s.earned_at}
-                size="sm"
-                rotate={0}
-              />
-            </div>
-          ))}
+        <div className="flex-1 min-h-0">
+          <GlobalStampsCanvas items={items} />
         </div>
       )}
     </section>

@@ -378,11 +378,18 @@ function tierForCount(count: number, containerW: number): { cols: number; rows: 
   return { cols, rows }
 }
 
-// Absolute-positioned scatter that fills its parent. Cells are
-// computed from (cols × rows), each stamp sits at the centre of
-// its cell with a per-stamp jitter and tilt. Cells smaller than
-// the stamp width is intentional — stamps overlap their neighbours
-// for the pile-of-stamps feel.
+// Safe margins so even an edge-row/col stamp at its widest shape
+// (sm oval is ~109px wide, sm shield is ~82px tall) and tilted to
+// the maximum ±10° doesn't poke past the cream paper. Edge of the
+// stamp can touch the boundary; that's acceptable per spec.
+const SAFE_MARGIN_X = 64
+const SAFE_MARGIN_Y = 50
+
+// Absolute-positioned scatter that fills its parent. Positions are
+// computed inside a safe inner region [margin, container - margin]
+// so stamps never overflow regardless of jitter or tilt. Cell size
+// is the safe region divided by cols × rows, so adding stamps past
+// a tier threshold reflows the whole pile.
 function GlobalStampsCanvas({ items }: { items: { key: string; node: React.ReactNode; tiltSeed: string }[] }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [dims, setDims] = useState({ w: 270, h: 380 })
@@ -401,24 +408,33 @@ function GlobalStampsCanvas({ items }: { items: { key: string; node: React.React
   }, [])
 
   const tier = useMemo(() => tierForCount(items.length, dims.w), [items.length, dims.w])
-  const cellW = dims.w / tier.cols
-  const cellH = dims.h / tier.rows
+
+  // Safe inner region. innerW/H is the area the stamp CENTRES can
+  // occupy without the stamp body poking past the container edge.
+  const innerW = Math.max(1, dims.w - SAFE_MARGIN_X * 2)
+  const innerH = Math.max(1, dims.h - SAFE_MARGIN_Y * 2)
+  const cellW = innerW / tier.cols
+  const cellH = innerH / tier.rows
 
   return (
     <div ref={containerRef} className="relative w-full h-full">
       {items.map((it, i) => {
         const col = i % tier.cols
         const row = Math.floor(i / tier.cols)
-        // ±30% jitter of cell, ±10° tilt. Seeded per id so the
-        // stamp lands in the same spot every render.
         const seedX = hashId(`${it.tiltSeed}-x-${tier.cols}`)
         const seedY = hashId(`${it.tiltSeed}-y-${tier.cols}`)
         const seedR = hashId(`${it.tiltSeed}-r`)
-        const jitterX = ((seedX % 100) / 100 - 0.5) * 0.6
-        const jitterY = ((seedY % 100) / 100 - 0.5) * 0.6
+        // Jitter is ±35% of cell so the scatter feels organic, not
+        // grid-y. Clamped inside the safe region below.
+        const jitterX = ((seedX % 100) / 100 - 0.5) * 0.7
+        const jitterY = ((seedY % 100) / 100 - 0.5) * 0.7
         const tilt = (seedR % 21) - 10
-        const left = (col + 0.5 + jitterX) * cellW
-        const top  = (row + 0.5 + jitterY) * cellH
+        let left = SAFE_MARGIN_X + (col + 0.5 + jitterX) * cellW
+        let top  = SAFE_MARGIN_Y + (row + 0.5 + jitterY) * cellH
+        // Hard clamp to safe region as a belt-and-braces guard
+        // against jitter overshooting at low cell counts.
+        left = Math.max(SAFE_MARGIN_X, Math.min(dims.w - SAFE_MARGIN_X, left))
+        top  = Math.max(SAFE_MARGIN_Y, Math.min(dims.h - SAFE_MARGIN_Y, top))
         return (
           <div
             key={it.key}

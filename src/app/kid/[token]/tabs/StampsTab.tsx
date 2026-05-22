@@ -361,8 +361,9 @@ function hashId(id: string): number {
 
 // Pick a column count that scales with how many stamps are on the
 // page. The grid stays the same shape until the count crosses a
-// threshold, at which point the whole pile reflows to fit. Capped
-// so cells never get narrower than minCellW for the container.
+// threshold, at which point the whole pile reflows to fit. Cap is
+// loose (allow tight overlap) so even narrow phones can show a 6
+// or 7 col pile when there are lots of stamps.
 function tierForCount(count: number, containerW: number): { cols: number; rows: number } {
   let ideal: number
   if (count <= 6)       ideal = 2
@@ -371,70 +372,64 @@ function tierForCount(count: number, containerW: number): { cols: number; rows: 
   else if (count <= 22) ideal = 5
   else if (count <= 30) ideal = 6
   else                  ideal = Math.ceil(Math.sqrt(count * 1.3))
-  const minCellW = 56
+  const minCellW = 32
   const maxByWidth = Math.max(2, Math.floor(containerW / minCellW))
   const cols = Math.max(1, Math.min(ideal, maxByWidth))
   const rows = Math.max(1, Math.ceil(count / cols))
   return { cols, rows }
 }
 
-// Safe margins so even an edge-row/col stamp at its widest shape
-// (sm oval is ~109px wide, sm shield is ~82px tall) and tilted to
-// the maximum ±10° doesn't poke past the cream paper. Edge of the
-// stamp can touch the boundary; that's acceptable per spec.
-const SAFE_MARGIN_X = 64
-const SAFE_MARGIN_Y = 50
+// Safe margins so an edge-row/col stamp at its widest shape (sm
+// oval is ~109px wide, sm shield is ~82px tall) and tilted ±10°
+// has its edge touching the cream paper boundary at most, never
+// past it. Tuned tight on purpose so the pile reaches the edges
+// rather than clumping in the middle.
+const SAFE_MARGIN_X = 48
+const SAFE_MARGIN_Y = 42
+// Fixed vertical step between rows in the pile. Smaller than a
+// stamp's height so adjacent rows overlap a touch.
+const ROW_STEP_PX = 64
 
-// Absolute-positioned scatter that fills its parent. Positions are
-// computed inside a safe inner region [margin, container - margin]
-// so stamps never overflow regardless of jitter or tilt. Cell size
-// is the safe region divided by cols × rows, so adding stamps past
-// a tier threshold reflows the whole pile.
 function GlobalStampsCanvas({ items }: { items: { key: string; node: React.ReactNode; tiltSeed: string }[] }) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [dims, setDims] = useState({ w: 270, h: 380 })
+  const [containerW, setContainerW] = useState(270)
 
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
     const ro = new ResizeObserver(entries => {
-      const rect = entries[0]?.contentRect
-      if (rect && rect.width > 0 && rect.height > 0) {
-        setDims({ w: rect.width, h: rect.height })
-      }
+      const w = entries[0]?.contentRect.width
+      if (w && w > 0) setContainerW(w)
     })
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
 
-  const tier = useMemo(() => tierForCount(items.length, dims.w), [items.length, dims.w])
-
-  // Safe inner region. innerW/H is the area the stamp CENTRES can
-  // occupy without the stamp body poking past the container edge.
-  const innerW = Math.max(1, dims.w - SAFE_MARGIN_X * 2)
-  const innerH = Math.max(1, dims.h - SAFE_MARGIN_Y * 2)
+  const tier = useMemo(() => tierForCount(items.length, containerW), [items.length, containerW])
+  // Canvas height is computed from the row count so the bottom of
+  // the pile is bounded. If it exceeds the available book frame the
+  // PassportPage's overflow-y-auto handles it, but tier transitions
+  // are tuned so most counts stay within one screen.
+  const canvasH = tier.rows * ROW_STEP_PX + SAFE_MARGIN_Y * 2
+  const innerW = Math.max(1, containerW - SAFE_MARGIN_X * 2)
   const cellW = innerW / tier.cols
-  const cellH = innerH / tier.rows
 
   return (
-    <div ref={containerRef} className="relative w-full h-full">
+    <div ref={containerRef} className="relative w-full" style={{ height: canvasH }}>
       {items.map((it, i) => {
         const col = i % tier.cols
         const row = Math.floor(i / tier.cols)
         const seedX = hashId(`${it.tiltSeed}-x-${tier.cols}`)
         const seedY = hashId(`${it.tiltSeed}-y-${tier.cols}`)
         const seedR = hashId(`${it.tiltSeed}-r`)
-        // Jitter is ±35% of cell so the scatter feels organic, not
-        // grid-y. Clamped inside the safe region below.
-        const jitterX = ((seedX % 100) / 100 - 0.5) * 0.7
-        const jitterY = ((seedY % 100) / 100 - 0.5) * 0.7
+        // Jitter ±25% of cell for a scattered feel, clamped below.
+        const jitterX = ((seedX % 100) / 100 - 0.5) * 0.5
+        const jitterY = ((seedY % 100) / 100 - 0.5) * 0.5
         const tilt = (seedR % 21) - 10
         let left = SAFE_MARGIN_X + (col + 0.5 + jitterX) * cellW
-        let top  = SAFE_MARGIN_Y + (row + 0.5 + jitterY) * cellH
-        // Hard clamp to safe region as a belt-and-braces guard
-        // against jitter overshooting at low cell counts.
-        left = Math.max(SAFE_MARGIN_X, Math.min(dims.w - SAFE_MARGIN_X, left))
-        top  = Math.max(SAFE_MARGIN_Y, Math.min(dims.h - SAFE_MARGIN_Y, top))
+        let top  = SAFE_MARGIN_Y + (row + 0.5 + jitterY) * ROW_STEP_PX
+        left = Math.max(SAFE_MARGIN_X, Math.min(containerW - SAFE_MARGIN_X, left))
+        top  = Math.max(SAFE_MARGIN_Y, Math.min(canvasH - SAFE_MARGIN_Y, top))
         return (
           <div
             key={it.key}
@@ -494,9 +489,9 @@ function TravelerPage({ milestones, globals, empty }: { milestones: Milestone[];
   }, [milestones, globals])
 
   return (
-    <section className="h-full flex flex-col min-h-0">
+    <section>
       <div
-        className="flex items-baseline justify-between gap-3 mb-5 pb-2 shrink-0"
+        className="flex items-baseline justify-between gap-3 mb-5 pb-2"
         style={{ borderBottom: '1px dashed rgba(120,80,30,0.25)', color: '#5a3a12' }}
       >
         <div className="inline-flex items-center gap-2">
@@ -518,9 +513,7 @@ function TravelerPage({ milestones, globals, empty }: { milestones: Milestone[];
           Open an Adventure Pack or log a flight to begin.
         </p>
       ) : (
-        <div className="flex-1 min-h-0">
-          <GlobalStampsCanvas items={items} />
-        </div>
+        <GlobalStampsCanvas items={items} />
       )}
     </section>
   )

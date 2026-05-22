@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Stamp as StampIcon, Globe, Trophy, ArrowRight, Check, Compass, ChevronDown } from 'lucide-react'
+import { Stamp as StampIcon, Globe, Trophy, ArrowRight, Check, Compass, ChevronDown, Sparkles } from 'lucide-react'
 import PassportPage from '@/components/passport/PassportPage'
 import TappableStamp from '@/components/passport/TappableStamp'
+import SuggestStampSheet from '../SuggestStampSheet'
 import CountryFlag from '@/components/CountryFlag'
 import { getPackMeta, getPackSectionCount } from '@/lib/adventurePackMeta'
 import type { StampRow, KidStats, AssignedPackRow } from '@/lib/passport-kid-db'
@@ -27,6 +28,10 @@ export default function PassportTab({
   // Default closed: the catalogue is large now, so the page loads on
   // the recent-stamps preview instead of pushing it below the fold.
   const [packsOpen, setPacksOpen] = useState(false)
+  // Kid suggest sheet open state. Only guided + creator modes get
+  // the button; view-only kids can't suggest stamps.
+  const [suggestOpen, setSuggestOpen] = useState(false)
+  const canSuggest = child.permission_mode !== 'view'
 
   return (
     <div className="space-y-5">
@@ -59,6 +64,27 @@ export default function PassportTab({
           <p className="text-[10px] uppercase tracking-widest text-white/60">Packs</p>
         </button>
       </div>
+
+      {/* Kid can suggest a stamp (guided + creator modes). View-only
+          kids don't see this card; the parent is the only path. */}
+      {canSuggest && (
+        <button
+          type="button"
+          onClick={() => setSuggestOpen(true)}
+          className="w-full bg-white/10 hover:bg-white/15 backdrop-blur-sm rounded-2xl p-4 flex items-center gap-3 text-left transition-colors"
+        >
+          <div className="w-10 h-10 rounded-full bg-brand-300/30 text-brand-300 flex items-center justify-center shrink-0">
+            <Sparkles className="w-5 h-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-white text-sm">Suggest a stamp</p>
+            <p className="text-xs text-white/60">Tell a grown-up about something you earned. They&apos;ll add it to your book.</p>
+          </div>
+          <ArrowRight className="w-4 h-4 text-white/40" />
+        </button>
+      )}
+
+      {suggestOpen && <SuggestStampSheet token={token} onClose={() => setSuggestOpen(false)} />}
 
       {/* Adventure Packs — collapsible. Tap the header to open/close.
           Cards cascade indented under the heading on a brand rail. */}

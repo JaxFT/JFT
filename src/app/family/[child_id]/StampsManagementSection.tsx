@@ -336,7 +336,7 @@ export default function StampsManagementSection({
             onChange={e => setCountrySlug(e.target.value)}
             className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
           >
-            <option value="">No country (general)</option>
+            <option value="">Global (no country)</option>
             {allPacks.map(p => (
               <option key={p.slug} value={p.slug}>{p.flag} {p.country}</option>
             ))}

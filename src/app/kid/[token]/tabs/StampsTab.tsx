@@ -14,7 +14,7 @@ import { computeMilestones, type MilestoneStamp as Milestone } from '@/lib/passp
 import type { StampRow, CountryVisitRow } from '@/lib/passport-kid-db'
 
 type Page =
-  | { kind: 'traveler'; milestones: Milestone[]; customs: StampRow[] }
+  | { kind: 'traveler'; milestones: Milestone[]; globals: StampRow[] }
   | { kind: 'country'; countrySlug: string | null; countryName: string; flag: string; iso2: string | null; stamps: StampRow[] }
 
 export default function StampsTab({
@@ -53,7 +53,7 @@ export default function StampsTab({
   const onlyTravelerEmpty = pages.length === 1
     && pages[0].kind === 'traveler'
     && pages[0].milestones.length === 0
-    && pages[0].customs.length === 0
+    && pages[0].globals.length === 0
 
   const current = pages[pageIndex] ?? pages[0]
   const hasPrev = pageIndex > 0
@@ -346,14 +346,14 @@ function PageInner({
   page, token, onlyTravelerEmpty,
 }: { page: Page; token: string; onlyTravelerEmpty: boolean }) {
   if (page.kind === 'traveler') {
-    return <TravelerPage milestones={page.milestones} customs={page.customs} empty={onlyTravelerEmpty} />
+    return <TravelerPage milestones={page.milestones} globals={page.globals} empty={onlyTravelerEmpty} />
   }
   return <CountryPage group={page} token={token} />
 }
 
-function TravelerPage({ milestones, customs, empty }: { milestones: Milestone[]; customs: StampRow[]; empty: boolean }) {
-  const totalCount = milestones.length + customs.length
-  const trulyEmpty = empty && customs.length === 0
+function TravelerPage({ milestones, globals, empty }: { milestones: Milestone[]; globals: StampRow[]; empty: boolean }) {
+  const totalCount = milestones.length + globals.length
+  const trulyEmpty = empty && globals.length === 0
   return (
     <section>
       <div
@@ -395,9 +395,9 @@ function TravelerPage({ milestones, customs, empty }: { milestones: Milestone[];
               size="sm"
             />
           ))}
-          {customs.map(s => (
+          {globals.map(s => (
             <PassportStampFromRow
-              key={`c-${s.id}`}
+              key={`g-${s.id}`}
               row={s}
               date={s.earned_at}
               size="sm"
@@ -439,7 +439,7 @@ function CountryPage({ group, token }: {
           <PassportStampFromRow
             key={s.id}
             row={s}
-            country={group.countryName === '✈️ Travel' ? null : group.countryName}
+            country={group.countryName}
             date={s.earned_at}
             size="sm"
           />
@@ -453,31 +453,31 @@ function buildPages(stamps: StampRow[], visits: CountryVisitRow[], homeCountryIs
   // Always lead with the Global Stamps page
   const milestones = computeMilestones(visits, stamps, homeCountryIso2)
 
-  // Custom stamps WITHOUT a country live on Global Stamps alongside
-  // the milestones. Custom stamps WITH a country (parent's choice
-  // when creating) get treated like a system stamp and slotted onto
-  // that country's page mixed in with the rest. Sort newest first.
-  const customs = stamps
-    .filter(s => s.type === 'CUSTOM' && !s.country_slug)
+  // Any stamp without a country (system OR custom) lives on the
+  // Global Stamps page alongside the milestones — "Global" is the
+  // default issuer, marked JFT on the stamp face. Stamps WITH a
+  // country slot into that country's page. Sort newest first.
+  const globals = stamps
+    .filter(s => !s.country_slug)
     .sort((a, b) => (a.earned_at < b.earned_at ? 1 : -1))
 
   // Group all country-tied stamps (system OR custom) by country.
   const byCountry = new Map<string, Extract<Page, { kind: 'country' }>>()
   for (const s of stamps) {
-    if (s.type === 'CUSTOM' && !s.country_slug) continue
-    const key = s.country_slug ?? '__none__'
-    const meta = s.country_slug ? getPackMeta(s.country_slug) : null
-    if (!byCountry.has(key)) {
-      byCountry.set(key, {
+    if (!s.country_slug) continue
+    const meta = getPackMeta(s.country_slug)
+    if (!meta) continue  // unknown slug, skip rather than create a phantom page
+    if (!byCountry.has(s.country_slug)) {
+      byCountry.set(s.country_slug, {
         kind: 'country',
-        countrySlug: s.country_slug ?? null,
-        countryName: meta?.country ?? '✈️ Travel',
-        flag: meta?.flag ?? '✈️',
-        iso2: meta?.iso2 ?? null,
+        countrySlug: s.country_slug,
+        countryName: meta.country,
+        flag: meta.flag,
+        iso2: meta.iso2,
         stamps: [],
       })
     }
-    byCountry.get(key)!.stamps.push(s)
+    byCountry.get(s.country_slug)!.stamps.push(s)
   }
   for (const g of byCountry.values()) {
     g.stamps.sort((a, b) => (a.earned_at < b.earned_at ? 1 : -1))
@@ -489,7 +489,7 @@ function buildPages(stamps: StampRow[], visits: CountryVisitRow[], homeCountryIs
   })
 
   return [
-    { kind: 'traveler', milestones, customs },
+    { kind: 'traveler', milestones, globals },
     ...countryPages,
   ]
 }

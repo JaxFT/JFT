@@ -508,6 +508,24 @@ export const ANIMALS_BY_SLUG: Record<string, AnimalItem[]> = {
     { emoji: '🦦', name: 'Otter', description: 'Found in clean Irish rivers and along the west coast in sea estuaries.', olderOnly: true },
     { emoji: '🐎', name: 'Connemara pony', description: 'A small, sturdy native Irish pony breed from the wild west coast. Often grey or dun.', olderOnly: true },
   ],
+  oman: [
+    { emoji: '🐢', name: 'Green sea turtle', description: 'Lays eggs by the thousand at Ras al-Jinz on the east coast (May to October). One of the world\'s most important turtle nesting sites.' },
+    { emoji: '🐪', name: 'Dromedary camel', description: 'Across the Sharqiya Sands and the interior. Sometimes raced at the camel race-track outside Muscat.' },
+    { emoji: '🐠', name: 'Reef fish', description: 'Bright clownfish, parrotfish and angelfish around the Daymaniyat Islands off Oman\'s north coast.' },
+    { emoji: '🦘', name: 'Arabian oryx', description: 'A pale-white antelope with long straight horns, once extinct in the wild and reintroduced to Oman\'s Jiddat al-Harasis reserve.' },
+    { emoji: '🐐', name: 'Wild Arabian tahr', description: 'A small wild goat found only in the Hajar Mountains of Oman and the UAE. Around 2,000 left.', olderOnly: true },
+    { emoji: '🐬', name: 'Spinner dolphin', description: 'Plays in big pods off the Muscat and Musandam coasts. Pinks-spotted patterns visible underwater.', olderOnly: true },
+    { emoji: '🦅', name: 'Egyptian vulture', description: 'A small white-and-black vulture nesting on Hajar Mountain cliffs.', olderOnly: true },
+  ],
+  mongolia: [
+    { emoji: '🐎', name: 'Mongolian horse', description: 'Short, sturdy, with a thick mane. Mongolians have ridden them for 4,000 years. There are about 3 million horses in Mongolia (almost one per person).' },
+    { emoji: '🐑', name: 'Sheep', description: 'Around 30 million sheep across the Mongolian steppe, herded by nomadic families on horseback.' },
+    { emoji: '🐪', name: 'Bactrian camel', description: 'The two-humped camel of the Gobi Desert. Adapted to extreme cold AND extreme heat.' },
+    { emoji: '🦅', name: 'Golden eagle', description: 'Trained by Kazakh families in western Mongolia to hunt foxes from horseback. A 2 m wingspan.' },
+    { emoji: '🦌', name: 'Mongolian gazelle', description: 'Big herds (some over 100,000) graze across the eastern Mongolian steppe. One of the largest hoofed-animal migrations on Earth.' },
+    { emoji: '🐴', name: 'Przewalski\'s horse (takhi)', description: 'The only TRULY wild horse species in the world (others are feral domestic horses). Reintroduced to Hustai National Park after going extinct in the wild.', olderOnly: true },
+    { emoji: '🐆', name: 'Snow leopard', description: 'Lives in the high Altai mountains of western Mongolia. Around 1,000 of them. Almost impossible to spot.', olderOnly: true },
+  ],
 
   // ── NORTH AMERICA ───────────────────────────────────────────────
   canada: [

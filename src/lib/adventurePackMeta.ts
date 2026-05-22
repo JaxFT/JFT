@@ -99,6 +99,8 @@ export const PACK_META: AdventurePackMeta[] = [
   { slug: 'montenegro', country: 'Montenegro', flag: '🇲🇪', iso2: 'me', isFree: false, heroColour: 'bg-zinc-800',   status: 'live', continent: 'Europe',        hasWordSearch: true, hasTilePuzzle: true },
   { slug: 'austria',    country: 'Austria',    flag: '🇦🇹', iso2: 'at', isFree: false, heroColour: 'bg-red-200',    status: 'live', continent: 'Europe',        hasWordSearch: true, hasTilePuzzle: true },
   { slug: 'ireland',    country: 'Ireland',    flag: '🇮🇪', iso2: 'ie', isFree: false, heroColour: 'bg-green-600',  status: 'live', continent: 'Europe',        hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'oman',       country: 'Oman',       flag: '🇴🇲', iso2: 'om', isFree: false, heroColour: 'bg-amber-300',  status: 'live', continent: 'Asia',          hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'mongolia',   country: 'Mongolia',   flag: '🇲🇳', iso2: 'mn', isFree: false, heroColour: 'bg-sky-400',    status: 'live', continent: 'Asia',          hasWordSearch: true, hasTilePuzzle: true },
 ]
 
 export function getPackMeta(slug: string): AdventurePackMeta | null {

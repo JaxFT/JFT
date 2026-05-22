@@ -351,6 +351,16 @@ function PageInner({
   return <CountryPage group={page} token={token} />
 }
 
+// Per-stamp tilt in the Global Stamps pile. Deterministic from the
+// stamp id so a stamp doesn't shuffle position every render. Range
+// -10° to +10° gives a noticeably jumbled feel without making any
+// stamp unreadable.
+function tiltFor(id: string): number {
+  let h = 0
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
+  return (h % 21) - 10
+}
+
 function TravelerPage({ milestones, globals, empty }: { milestones: Milestone[]; globals: StampRow[]; empty: boolean }) {
   const totalCount = milestones.length + globals.length
   const trulyEmpty = empty && globals.length === 0
@@ -379,29 +389,56 @@ function TravelerPage({ milestones, globals, empty }: { milestones: Milestone[];
           Open an Adventure Pack or log a flight to begin.
         </p>
       ) : (
-        // Milestones first, customs after. Flex-wrap layout (not the
-        // scatter sheet) so each stamp gets its natural width and
-        // wraps cleanly to the next row when the page runs out of
-        // horizontal space — no edge clipping, no fragile jitter math.
-        <div className="flex flex-wrap items-start justify-center gap-x-4 gap-y-5 pt-2 pb-4">
-          {milestones.map(m => (
-            <MilestoneStamp
+        // Dense grid layout: columns intentionally smaller than the
+        // stamp width so stamps overlap their neighbours a little,
+        // tight row gap so vertical pile is compact, and a per-stamp
+        // rotation so the whole page reads as a jumbled collection
+        // rather than a uniform grid. Milestones render first, then
+        // globals; later items layer over earlier ones via z-index.
+        <div
+          className="px-1 py-3"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(64px, 1fr))',
+            rowGap: '0.5rem',
+            columnGap: 0,
+            justifyItems: 'center',
+          }}
+        >
+          {milestones.map((m, i) => (
+            <div
               key={`m-${m.id}`}
-              emoji={m.emoji}
-              label={m.label}
-              ink={m.ink}
-              date={m.earnedAt}
-              shape={m.shape}
-              size="sm"
-            />
+              style={{
+                transform: `rotate(${tiltFor(m.id)}deg)`,
+                zIndex: 200 - i,
+              }}
+            >
+              <MilestoneStamp
+                emoji={m.emoji}
+                label={m.label}
+                ink={m.ink}
+                date={m.earnedAt}
+                shape={m.shape}
+                size="sm"
+                rotate={0}
+              />
+            </div>
           ))}
-          {globals.map(s => (
-            <PassportStampFromRow
+          {globals.map((s, i) => (
+            <div
               key={`g-${s.id}`}
-              row={s}
-              date={s.earned_at}
-              size="sm"
-            />
+              style={{
+                transform: `rotate(${tiltFor(s.id)}deg)`,
+                zIndex: 100 - i,
+              }}
+            >
+              <PassportStampFromRow
+                row={s}
+                date={s.earned_at}
+                size="sm"
+                rotate={0}
+              />
+            </div>
           ))}
         </div>
       )}

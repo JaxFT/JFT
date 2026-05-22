@@ -89,9 +89,11 @@ function shrinkFor(label: string, base: number, step: number, min: number): numb
 }
 
 function pxFor(shape: StampShape, size: 'sm' | 'md') {
-  // sm base: tuned down from 104 → 92 so stamps fit a few-per-row on
-  // phone widths without feeling cramped.
-  const base = size === 'md' ? 138 : 92
+  // sm base: tuned to 78 so a Global Stamps page packed with 20+
+  // stamps + milestones fits within the book frame without endless
+  // scrolling. Still readable at this size; the dense grid layout
+  // on Global Stamps overlaps stamps slightly for the pile feel.
+  const base = size === 'md' ? 138 : 78
   if (shape === 'oval')    return { w: base * 1.4,  h: base * 0.9 }
   if (shape === 'rounded') return { w: base * 1.3,  h: base * 0.92 }
   if (shape === 'flag')    return { w: base * 1.15, h: base }

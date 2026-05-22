@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     )
   }
 
-  let body: { name?: string; avatar?: string; permission_mode?: string } = {}
+  let body: { name?: string; avatar?: string; permission_mode?: string; age_mode?: string } = {}
   try { body = await request.json() } catch {}
 
   const name = typeof body.name === 'string' ? body.name.trim() : ''
@@ -52,6 +52,11 @@ export async function POST(request: Request) {
       ? (body.permission_mode as PermissionMode)
       : 'guided'
 
+  const age_mode: 'younger' | 'older' =
+    body.age_mode === 'younger' || body.age_mode === 'older'
+      ? body.age_mode
+      : 'older'
+
   const { data, error } = await supabase
     .from('children')
     .insert({
@@ -59,6 +64,7 @@ export async function POST(request: Request) {
       name,
       avatar,
       permission_mode,
+      age_mode,
     })
     .select('id')
     .single()

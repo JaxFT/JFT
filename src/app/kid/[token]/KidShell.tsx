@@ -15,6 +15,7 @@ import CountriesTab from './tabs/CountriesTab'
 import JournalTab from './tabs/JournalTab'
 import PassportCover, { closePassport } from './PassportCover'
 import NewStampsAnnouncement from '@/components/passport/NewStampsAnnouncement'
+import { StampModalProvider } from '@/components/passport/StampModalContext'
 
 type Tab = 'passport' | 'map' | 'countries' | 'journal' | 'stamps'
 
@@ -174,6 +175,7 @@ export default function KidShell({
   // sessionStorage already says it's open) the cover unmounts and
   // the original layout takes over with zero extra wrapping.
   const insideContent = (
+    <StampModalProvider>
     <div className="bg-gradient-to-b from-brand-900 to-brand-950 text-white">
       {/* New-stamps celebration. Renders only when the inside has
           mounted (i.e. cover has opened), so it shows up after the
@@ -266,6 +268,7 @@ export default function KidShell({
         </div>
       </main>
     </div>
+    </StampModalProvider>
   )
 
   return (

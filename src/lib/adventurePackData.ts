@@ -3198,7 +3198,7 @@ export const ARGENTINA_DATA: AdventurePackData = {
     { emoji: '🍮', name: 'Dulce de leche', description: 'Caramel made by slowly boiling milk and sugar until it turns thick and golden. Argentines put it on everything: toast, ice cream, alfajores, pancakes, biscuits, cake.' },
     { emoji: '🍪', name: 'Alfajores', description: 'Two soft buttery biscuits sandwiched together with dulce de leche and rolled in coconut, chocolate or sugar. The national snack.' },
     { emoji: '🥪', name: 'Choripán', description: 'Grilled chorizo sausage in crusty bread, with chimichurri (a fresh herb-and-garlic sauce) drizzled over the top. Eaten at football stadiums, outside parks, after night markets.' },
-    { emoji: '🍷', name: 'Malbec wine', description: 'Argentina is the world\'s top producer of Malbec, a deep red wine grown high in the Andes around Mendoza. The high altitude makes the wine intense and rich.' },
+    { emoji: '🍪', name: 'Alfajores', description: 'Two soft shortbread biscuits sandwiched around a thick layer of dulce de leche, sometimes rolled in coconut. The classic Argentine sweet treat, found on every corner.' },
   ],
   scavengerItems: [
     { emoji: '🧉', label: 'Someone drinking mate from a gourd with a metal straw' },

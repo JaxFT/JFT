@@ -23,8 +23,22 @@ export type ChildRow = {
   qr_token: string
   permission_mode: PermissionMode
   stamp_auto_approve: boolean
+  // Default age tier for Adventure Pack content. 'younger' = up to
+  // ~7, simpler stories and easier tile game; 'older' = full pack
+  // content. Set on child create; editable from the profile.
+  age_mode: 'younger' | 'older'
   created_at: string
   updated_at: string
+}
+
+export const AGE_MODE_LABELS: Record<'younger' | 'older', string> = {
+  younger: 'Younger (up to about 7)',
+  older:   'Older (about 7+)',
+}
+
+export const AGE_MODE_DESCRIPTIONS: Record<'younger' | 'older', string> = {
+  younger: 'Easier tile game and simpler story sections. Best for early readers.',
+  older:   'Full pack content including the older-only stories and tougher games.',
 }
 
 // Home country now lives on the parent profile and applies to

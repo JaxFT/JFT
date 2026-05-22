@@ -56,7 +56,7 @@ export type LoadedKidPack = {
 
 export async function loadKidPack(childId: string, countrySlug: string): Promise<LoadedKidPack> {
   const sb = admin()
-  const [answersRes, sessionRes] = await Promise.all([
+  const [answersRes, sessionRes, childRes] = await Promise.all([
     sb
       .from('kid_adventure_pack_answers')
       .select('section, answers')
@@ -68,6 +68,11 @@ export async function loadKidPack(childId: string, countrySlug: string): Promise
       .eq('child_id', childId)
       .eq('country_slug', countrySlug)
       .maybeSingle(),
+    sb
+      .from('children')
+      .select('age_mode')
+      .eq('id', childId)
+      .maybeSingle(),
   ])
 
   const answersBySection: Record<string, SectionAnswers> = {}
@@ -77,8 +82,12 @@ export async function loadKidPack(childId: string, countrySlug: string): Promise
   }
 
   const s = sessionRes.data
+  // New pack? Default to the kid's profile age_mode so the parent's
+  // choice carries across without the kid having to pick. An existing
+  // session keeps whatever it was started with.
+  const childAgeMode = ((childRes.data as { age_mode?: AgeMode } | null)?.age_mode ?? 'older')
   return {
-    ageMode: ((s?.age_mode as AgeMode) ?? 'younger'),
+    ageMode: ((s?.age_mode as AgeMode) ?? childAgeMode),
     hasSession: !!s,
     missionsComplete: (s?.missions_complete as string[]) ?? [],
     completedAt: (s?.completed_at as string) ?? null,

@@ -73,10 +73,11 @@ export function useKidAdventurePack(token: string, countrySlug: string): UseAdve
       .then(r => r.json())
       .then(loaded => {
         if (!mounted) return
-        const initialMode = loaded.hasSession
-          ? (loaded.ageMode as AgeMode)
-          : (readAgeModePref() ?? (loaded.ageMode as AgeMode))
-        setAgeMode(initialMode)
+        // New packs default to the kid's profile age_mode (set on
+        // /family). Existing sessions keep whatever they started with.
+        // localStorage is no longer consulted — the parent setting is
+        // the source of truth.
+        setAgeMode(loaded.ageMode as AgeMode)
         setMissionsComplete(Array.isArray(loaded.missionsComplete) ? loaded.missionsComplete : [])
         const ans = (loaded.answersBySection ?? {}) as Record<string, SectionAnswers>
         setAnswers(ans)

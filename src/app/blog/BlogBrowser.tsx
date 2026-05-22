@@ -9,8 +9,9 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { Search, X } from 'lucide-react'
+import { Search, X, Crown } from 'lucide-react'
 import BlogCard from '@/components/blog/BlogCard'
+import ShareButton from '@/components/blog/ShareButton'
 import type { BlogPostView } from '@/lib/blog-db'
 import {
   TRAVEL_STAGES, BLOG_TOPICS,
@@ -41,10 +42,14 @@ export default function BlogBrowser({
   posts,
   counts = {},
   guides = [],
+  isAdmin = false,
 }: {
   posts: BlogPostView[]
   counts?: Counts
   guides?: GuideCardItem[]
+  // Admins get an extra Premium/Free toggle to sanity-check what
+  // each visitor type sees. Non-admins don't see the chip.
+  isAdmin?: boolean
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -54,6 +59,9 @@ export default function BlogBrowser({
   const destination = searchParams.get('destination')
   const topic = searchParams.get('topic') as BlogTopic | null
   const q = searchParams.get('q') ?? ''
+  // Admin-only tier toggle. 'premium' shows premium-gated posts;
+  // 'free' shows posts without the gate. Empty = both.
+  const tier = (searchParams.get('tier') as 'premium' | 'free' | null) ?? null
 
   const [query, setQuery] = useState(q)
 
@@ -80,13 +88,15 @@ export default function BlogBrowser({
         }
       }
       if (topic && !p.topics.includes(topic)) return false
+      if (tier === 'premium' && !p.isPremium) return false
+      if (tier === 'free' && p.isPremium) return false
       if (term) {
         const hay = `${p.title} ${p.excerpt} ${p.tags.join(' ')}`.toLowerCase()
         if (!hay.includes(term)) return false
       }
       return true
     })
-  }, [posts, stage, destination, topic, q])
+  }, [posts, stage, destination, topic, q, tier])
 
   // Guides only carry tags + a country, not the structured stage /
   // topic metadata blog posts have. So a stage or topic filter hides
@@ -94,6 +104,9 @@ export default function BlogBrowser({
   // a free-text search hits title / excerpt / tags as you'd expect.
   const filteredGuides = useMemo(() => {
     const term = q.trim().toLowerCase()
+    // Guides are premium-only content, so the admin "free" filter
+    // hides every guide; "premium" keeps them.
+    if (tier === 'free') return []
     return guides.filter(g => {
       if (stage) return false
       if (topic) return false
@@ -110,7 +123,7 @@ export default function BlogBrowser({
       }
       return true
     })
-  }, [guides, stage, destination, topic, q])
+  }, [guides, stage, destination, topic, q, tier])
 
   // Combined feed sorted newest-first regardless of filter state so
   // the default view (no filters) always leads with the most recent
@@ -178,7 +191,7 @@ export default function BlogBrowser({
     return meta?.country ?? destination
   })()
 
-  const hasAnyFilter = Boolean(stage || destination || topic || q.trim())
+  const hasAnyFilter = Boolean(stage || destination || topic || q.trim() || tier)
 
   return (
     <div>
@@ -255,6 +268,31 @@ export default function BlogBrowser({
           </select>
         )}
 
+        {/* Admin-only Premium/Free toggle. Lets the writer sanity-
+            check what each visitor tier sees without logging out. */}
+        {isAdmin && (
+          <div className="inline-flex items-center gap-1 bg-gray-100 rounded-md p-0.5">
+            <button
+              type="button"
+              onClick={() => setParam('tier', tier === 'premium' ? null : 'premium')}
+              className={`text-xs font-semibold px-2.5 py-1.5 rounded ${tier === 'premium' ? 'bg-white text-brand-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+              aria-pressed={tier === 'premium'}
+              title="Show only premium posts and guides"
+            >
+              <Crown className="w-3 h-3 inline -mt-0.5 mr-1" /> Premium
+            </button>
+            <button
+              type="button"
+              onClick={() => setParam('tier', tier === 'free' ? null : 'free')}
+              className={`text-xs font-semibold px-2.5 py-1.5 rounded ${tier === 'free' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+              aria-pressed={tier === 'free'}
+              title="Show only free posts (hides every guide)"
+            >
+              Free
+            </button>
+          </div>
+        )}
+
         {/* Clear-all */}
         {hasAnyFilter && (
           <button
@@ -302,9 +340,9 @@ export default function BlogBrowser({
 }
 
 // Card for a published web guide on /blog. Same visual rhythm as
-// BlogCard but routes to /guides/[slug], shows a "Guide" badge in
-// place of the Premium chip, and drops the likes / comments /
-// share footer (guides don't have those interactions).
+// BlogCard but routes to /guides/[slug], shows a "Guide" badge,
+// and includes a share button. No likes/comments — guides don't
+// have those interactions.
 function GuideCard({ guide }: { guide: GuideCardItem }) {
   return (
     <a
@@ -334,13 +372,27 @@ function GuideCard({ guide }: { guide: GuideCardItem }) {
           {guide.title}
         </h3>
         <p className="text-sm text-gray-500 leading-relaxed flex-1 line-clamp-3">{guide.excerpt}</p>
-        <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between gap-2 text-xs">
-          <span className="text-gray-400">
-            {new Date(guide.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-          </span>
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold tracking-wide uppercase text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full">
-            Guide
-          </span>
+        <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
+          <div className="flex items-center justify-between gap-2 text-xs">
+            <span className="text-gray-400">
+              {new Date(guide.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold tracking-wide uppercase text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full">
+                Guide
+              </span>
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold tracking-wide uppercase text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">
+                <Crown className="w-3 h-3" /> Premium
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center justify-end">
+            <ShareButton
+              url={`/guides/${guide.slug}`}
+              title={guide.title}
+              text={guide.excerpt || undefined}
+            />
+          </div>
         </div>
       </div>
     </a>

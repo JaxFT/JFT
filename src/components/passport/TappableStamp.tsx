@@ -1,16 +1,13 @@
 'use client'
 
-// Wraps a stamp graphic so that tapping it opens the StampDetailModal
-// with the right title/description/note for that stamp.
-//
-// Two variants in one component (discriminated union):
-// - kind 'row'       : a stored stamp row (system or CUSTOM)
-// - kind 'milestone' : a derived milestone badge (computed, not in DB)
+// Wraps a stamp graphic so tapping it asks the StampModalProvider
+// to open the detail modal with the right title/description/note.
+// Provider handles the rest: only one modal at a time, modal lives
+// outside any transformed parent so it's always viewport-centered.
 
-import { useState } from 'react'
 import { PassportStampFromRow } from './PassportStamp'
 import MilestoneStamp from './MilestoneStamp'
-import StampDetailModal from './StampDetailModal'
+import { useStampModal } from './StampModalContext'
 import { STAMP_META, type StampType } from '@/lib/passport-types'
 import type { StampShape } from '@/lib/passport-milestones'
 
@@ -50,7 +47,7 @@ type MilestoneVariant = CommonProps & {
 type Props = RowVariant | MilestoneVariant
 
 export default function TappableStamp(props: Props) {
-  const [open, setOpen] = useState(false)
+  const { open } = useStampModal()
 
   const graphic = props.kind === 'row'
     ? <PassportStampFromRow
@@ -69,7 +66,7 @@ export default function TappableStamp(props: Props) {
         rotate={0}
       />
 
-  // Title + description + note resolved from whichever variant.
+  // Resolve modal content from whichever variant.
   let title: string
   let description: string
   let date: string | null
@@ -79,7 +76,7 @@ export default function TappableStamp(props: Props) {
     if (props.row.type === 'CUSTOM') {
       title = props.row.custom_label ?? 'Custom stamp'
       description = props.row.note ?? 'A one-off stamp made just for this moment.'
-      note = null // custom stamps put their parent message in the description already
+      note = null
     } else {
       const meta = STAMP_META[props.row.type]
       title = meta.label
@@ -97,26 +94,13 @@ export default function TappableStamp(props: Props) {
   }
 
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="appearance-none border-0 p-0 bg-transparent cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded-md"
-        aria-label={`${title}, tap for details`}
-      >
-        {graphic}
-      </button>
-      {open && (
-        <StampDetailModal
-          title={title}
-          description={description}
-          date={date}
-          country={country}
-          note={note}
-          graphic={graphic}
-          onClose={() => setOpen(false)}
-        />
-      )}
-    </>
+    <button
+      type="button"
+      onClick={() => open({ title, description, date, country, note, graphic })}
+      className="appearance-none border-0 p-0 bg-transparent cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded-md"
+      aria-label={`${title}, tap for details`}
+    >
+      {graphic}
+    </button>
   )
 }

@@ -5,7 +5,8 @@
 // this for..."), the date earned, and the parent's note if there
 // is one (custom stamps usually have one, system stamps may).
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 
 type Props = {
@@ -24,6 +25,8 @@ type Props = {
 export default function StampDetailModal({
   title, description, date, country, note, graphic, onClose,
 }: Props) {
+  const [mounted, setMounted] = useState(false)
+
   // Esc closes the modal.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -31,9 +34,14 @@ export default function StampDetailModal({
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
+  // Portal target is document.body, only available client-side.
+  useEffect(() => { setMounted(true) }, [])
+
   const formattedDate = date ? formatDate(date) : null
 
-  return (
+  if (!mounted) return null
+
+  return createPortal((
     <div
       role="dialog"
       aria-modal="true"
@@ -92,7 +100,7 @@ export default function StampDetailModal({
         )}
       </div>
     </div>
-  )
+  ), document.body)
 }
 
 function formatDate(s: string): string {

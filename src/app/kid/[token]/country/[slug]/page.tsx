@@ -13,6 +13,7 @@ import { listJournalEntriesForChildCountry } from '@/lib/passport-journal-db'
 import { getPackMeta, getPackByIso2, getPackSectionCount } from '@/lib/adventurePackMeta'
 import PassportPage from '@/components/passport/PassportPage'
 import TappableStamp from '@/components/passport/TappableStamp'
+import { StampModalProvider } from '@/components/passport/StampModalContext'
 import FlagBanner from '@/components/adventure-packs/FlagBanner'
 
 export const dynamic = 'force-dynamic'
@@ -65,6 +66,7 @@ export default async function KidCountryPage({
   const nextVisit = idx >= 0 && idx < visitedSorted.length - 1 ? visitedSorted[idx + 1] : null
 
   return (
+    <StampModalProvider>
     <div className="min-h-screen bg-gradient-to-b from-brand-900 to-brand-950 text-white pt-6 pb-12">
       <div className="max-w-3xl mx-auto px-4">
         <div className="mb-4">
@@ -246,6 +248,7 @@ export default async function KidCountryPage({
         </PassportPage>
       </div>
     </div>
+    </StampModalProvider>
   )
 }
 

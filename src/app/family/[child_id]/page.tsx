@@ -99,6 +99,7 @@ export default async function ChildDetailPage({
             childId={child.id}
             initialName={child.name}
             initialAvatar={child.avatar}
+            initialAgeMode={child.age_mode}
           />
 
           <JournalSection

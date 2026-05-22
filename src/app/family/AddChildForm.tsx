@@ -7,14 +7,19 @@ import {
   AVATAR_OPTIONS,
   PERMISSION_LABELS,
   PERMISSION_DESCRIPTIONS,
+  AGE_MODE_LABELS,
+  AGE_MODE_DESCRIPTIONS,
   type PermissionMode,
 } from '@/lib/passport-types'
+
+type AgeMode = 'younger' | 'older'
 
 export default function AddChildForm() {
   const router = useRouter()
   const [name, setName] = useState('')
   const [avatar, setAvatar] = useState<string>(AVATAR_OPTIONS[0])
   const [permission, setPermission] = useState<PermissionMode>('guided')
+  const [ageMode, setAgeMode] = useState<AgeMode>('older')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -26,7 +31,7 @@ export default function AddChildForm() {
       const res = await fetch('/api/family/children', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), avatar, permission_mode: permission }),
+        body: JSON.stringify({ name: name.trim(), avatar, permission_mode: permission, age_mode: ageMode }),
       })
       const body = await res.json().catch(() => ({}))
       if (!res.ok || !body.id) throw new Error(body.error || `HTTP ${res.status}`)
@@ -117,6 +122,35 @@ export default function AddChildForm() {
               <div className="flex-1">
                 <p className="font-semibold text-sm text-gray-900">{PERMISSION_LABELS[mode]}</p>
                 <p className="text-xs text-gray-500 mt-0.5">{PERMISSION_DESCRIPTIONS[mode]}</p>
+              </div>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Age mode</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {(['younger', 'older'] as const).map(mode => (
+            <label
+              key={mode}
+              className={`flex gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                ageMode === mode
+                  ? 'border-brand-600 bg-brand-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <input
+                type="radio"
+                name="ageMode"
+                value={mode}
+                checked={ageMode === mode}
+                onChange={() => setAgeMode(mode)}
+                className="mt-1 accent-brand-600"
+              />
+              <div className="flex-1">
+                <p className="font-semibold text-sm text-gray-900">{AGE_MODE_LABELS[mode]}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{AGE_MODE_DESCRIPTIONS[mode]}</p>
               </div>
             </label>
           ))}

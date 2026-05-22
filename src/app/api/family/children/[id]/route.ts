@@ -26,6 +26,7 @@ export async function PATCH(
     avatar?: string
     permission_mode?: string
     stamp_auto_approve?: boolean
+    age_mode?: string
   } = {}
   try { body = await request.json() } catch {}
 
@@ -46,6 +47,9 @@ export async function PATCH(
   }
   if (typeof body.stamp_auto_approve === 'boolean') {
     update.stamp_auto_approve = body.stamp_auto_approve
+  }
+  if (body.age_mode === 'younger' || body.age_mode === 'older') {
+    update.age_mode = body.age_mode
   }
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: 'Nothing to update.' }, { status: 400 })

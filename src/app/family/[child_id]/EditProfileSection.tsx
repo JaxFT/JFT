@@ -3,25 +3,30 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { User, Loader2, Check } from 'lucide-react'
-import { AVATAR_OPTIONS } from '@/lib/passport-types'
+import { AVATAR_OPTIONS, AGE_MODE_LABELS, AGE_MODE_DESCRIPTIONS } from '@/lib/passport-types'
+
+type AgeMode = 'younger' | 'older'
 
 export default function EditProfileSection({
   childId,
   initialName,
   initialAvatar,
+  initialAgeMode,
 }: {
   childId: string
   initialName: string
   initialAvatar: string
+  initialAgeMode: AgeMode
 }) {
   const router = useRouter()
   const [name, setName] = useState(initialName)
   const [avatar, setAvatar] = useState(initialAvatar)
+  const [ageMode, setAgeMode] = useState<AgeMode>(initialAgeMode)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const dirty = name.trim() !== initialName || avatar !== initialAvatar
+  const dirty = name.trim() !== initialName || avatar !== initialAvatar || ageMode !== initialAgeMode
 
   const save = async () => {
     setSaving(true)
@@ -31,7 +36,7 @@ export default function EditProfileSection({
       const res = await fetch(`/api/family/children/${childId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), avatar }),
+        body: JSON.stringify({ name: name.trim(), avatar, age_mode: ageMode }),
       })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`)
@@ -97,6 +102,35 @@ export default function EditProfileSection({
               >
                 {emoji}
               </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Age mode</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {(['younger', 'older'] as const).map(mode => (
+              <label
+                key={mode}
+                className={`flex gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                  ageMode === mode
+                    ? 'border-brand-600 bg-brand-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="ageMode"
+                  value={mode}
+                  checked={ageMode === mode}
+                  onChange={() => setAgeMode(mode)}
+                  className="mt-1 accent-brand-600"
+                />
+                <div className="flex-1">
+                  <p className="font-semibold text-sm text-gray-900">{AGE_MODE_LABELS[mode]}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{AGE_MODE_DESCRIPTIONS[mode]}</p>
+                </div>
+              </label>
             ))}
           </div>
         </div>

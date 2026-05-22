@@ -82,6 +82,17 @@ const RECOMMENDED: RecommendedSite[] = [
     blurb: 'Country-specific missions for your family. Language, food, geography, history, scavenger hunts and family chat cards, designed to do on the ground as you travel. France is free for every member.',
     cta: 'Browse Adventure Packs',
     icon: Compass,
+    image: '/images/learning/adventure-passport-front-cover.png',
+    fit: 'contain',
+  },
+  {
+    name: 'Penang Worldschoolers',
+    url: 'https://penangworldschoolers.wixsite.com/home',
+    eyebrow: 'Community in Penang',
+    blurb: 'We are a community of families embracing alternative education for our children, whether through home education, worldschooling or a range of alternative approaches. We are made up of a mix of families that live permanently in Penang and also a large amount of families travelling through for anything from a couple of weeks to several months.',
+    cta: 'Visit Penang Worldschoolers',
+    icon: Users,
+    image: '/images/learning/penang-world-schoolers-ness-andy.jpg',
   },
 ]
 

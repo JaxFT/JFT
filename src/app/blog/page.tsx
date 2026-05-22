@@ -3,6 +3,7 @@ import { listPublishedPosts, rowToView } from '@/lib/blog-db'
 import { loadCountsForSlugs } from '@/lib/blog-social-db'
 import { listPublishedWebGuides } from '@/lib/guides-content-db'
 import { isPremiumTier } from '@/lib/profile'
+import { isAdminEmail } from '@/lib/admin'
 import BlogBrowser, { type GuideCardItem } from './BlogBrowser'
 import type { Metadata } from 'next'
 
@@ -56,7 +57,7 @@ export default async function BlogPage() {
           </p>
         </div>
 
-        <BlogBrowser posts={posts} counts={counts} guides={guides} />
+        <BlogBrowser posts={posts} counts={counts} guides={guides} isAdmin={isAdminEmail(user?.email)} />
       </div>
     </div>
   )

@@ -190,7 +190,7 @@ export const STAMP_META: Record<StampType, { emoji: string; label: string; descr
     ink: '#5b21b6', // royal purple
   },
   FAMILY_CHATTERBOX: {
-    emoji: '☕',
+    emoji: '🎙️',
     label: 'Family Chatterbox',
     description: 'Did the family chat cards together.',
     ink: '#0f3a2a', // brand dark green

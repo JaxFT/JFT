@@ -261,6 +261,18 @@ export default async function StampsExplainerPage() {
   )
 }
 
+// Deterministic-but-varied sample date per stamp type, so the preview
+// looks like a real lived-in passport rather than every stamp being
+// dated the same day.
+function sampleDateForStamp(type: StampType): string {
+  let h = 0
+  for (let i = 0; i < type.length; i++) h = (h * 31 + type.charCodeAt(i)) >>> 0
+  const daysAgo = (h % 240) + 7
+  const d = new Date()
+  d.setDate(d.getDate() - daysAgo)
+  return d.toISOString().slice(0, 10)
+}
+
 function CatalogueGroup({
   title, subtitle, types, badge,
 }: {
@@ -286,7 +298,7 @@ function CatalogueGroup({
           return (
             <li key={t} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
               <div className="shrink-0 flex items-center justify-center">
-                <PassportStamp type={t} size="sm" />
+                <PassportStamp type={t} size="md" date={sampleDateForStamp(t)} />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-gray-900 text-sm">{meta.label}</p>

@@ -131,7 +131,7 @@ export function computeMilestones(
       description: `You've explored ${countryTier} different countries.`,
       ink: '#0f3a2a',
       earnedAt: dateOfNth(visitsSorted.map(v => v.first_visit_date), countryTier),
-      shape: countryTier >= 20 ? 'star' : countryTier >= 10 ? 'shield' : 'oval',
+      shape: countryTier >= 20 ? 'hexagon' : countryTier >= 10 ? 'shield' : 'oval',
     })
   }
 
@@ -196,7 +196,7 @@ export function computeMilestones(
       description: `You've been to ${continentTier} different continents.`,
       ink: '#5b21b6',
       earnedAt: dateOfNth(Array.from(continentDates.values()), continentTier),
-      shape: 'star',
+      shape: 'hexagon',
     })
   }
 

@@ -32,6 +32,10 @@ type Props = {
   size?: 'sm' | 'md'
 }
 
+// CUSTOM stamps get their shape from the row's custom_shape column.
+// The placeholder 'circle' entry here is only used when something
+// looks up SHAPE_FOR_TYPE['CUSTOM'] without supplying a real shape
+// override — render code should always pass the row's custom_shape.
 const SHAPE_FOR_TYPE: Record<StampType, StampShape> = {
   BRAVE_EATER:             'circle',
   LOCAL_LINGO:             'oval',
@@ -51,6 +55,7 @@ const SHAPE_FOR_TYPE: Record<StampType, StampShape> = {
   SENSE_SEEKER:            'oval',
   STORY_KEEPER:            'rounded',
   FAMILY_CHATTERBOX:       'circle',
+  CUSTOM:                  'circle',
 }
 
 function hashSeed(s: string): number {
@@ -84,8 +89,10 @@ function pxFor(shape: StampShape, size: 'sm' | 'md') {
 export default function PassportStamp(props: Props) {
   const { type, country, date, rotate, size = 'md' } = props
   // Resolve content: explicit override props win; fall back to
-  // STAMP_META if a type was provided. If neither is available we
-  // can't render — render nothing rather than crash.
+  // STAMP_META if a type was provided. CUSTOM stamps will hit the
+  // placeholder STAMP_META.CUSTOM entry if no overrides are passed,
+  // which is intentional — the caller (PassportStampFromRow) is
+  // responsible for forwarding the row's custom_* fields.
   const meta = type ? STAMP_META[type] : null
   const label = props.label ?? meta?.label
   const emoji = props.emoji ?? meta?.emoji
@@ -414,6 +421,60 @@ const IRREGULAR_PATHS: Record<string, string> = {
   shield:  'M50 4 L94 18 L94 60 Q94 75 75 86 L50 96 L25 86 Q6 75 6 60 L6 18 Z',
   star:    'M50 4 L62 38 L96 38 L68 58 L78 92 L50 72 L22 92 L32 58 L4 38 L38 38 Z',
   hexagon: 'M50 4 L92 26 L92 74 L50 96 L8 74 L8 26 Z',
+}
+
+// ── Helpers for rendering stored stamp rows ──────────────────────
+//
+// Stored stamp rows may be one of the 17 system types (label/emoji/
+// ink come from STAMP_META) or 'CUSTOM' (label/emoji/ink/shape come
+// from the row's custom_* columns). Use these helpers anywhere a
+// stamp is rendered straight from the DB so the dispatch lives in
+// one place.
+
+type StampRowLike = {
+  type: StampType
+  custom_label: string | null
+  custom_emoji: string | null
+  custom_shape: string | null
+  custom_ink: string | null
+}
+
+export function effectiveStampMeta(row: StampRowLike): { label: string; emoji: string; ink: string } {
+  if (row.type === 'CUSTOM') {
+    return {
+      label: row.custom_label ?? '—',
+      emoji: row.custom_emoji ?? '✨',
+      ink:   row.custom_ink   ?? '#0f3a2a',
+    }
+  }
+  const meta = STAMP_META[row.type]
+  return { label: meta.label, emoji: meta.emoji, ink: meta.ink }
+}
+
+export function PassportStampFromRow({
+  row, country, date, size, rotate,
+}: {
+  row: StampRowLike
+  country?: string | null
+  date?: string | null
+  size?: 'sm' | 'md'
+  rotate?: number
+}) {
+  if (row.type === 'CUSTOM') {
+    return (
+      <PassportStamp
+        label={row.custom_label ?? '—'}
+        emoji={row.custom_emoji ?? '✨'}
+        ink={row.custom_ink ?? '#0f3a2a'}
+        shape={(row.custom_shape as StampShape) ?? 'circle'}
+        country={country}
+        date={date}
+        size={size}
+        rotate={rotate}
+      />
+    )
+  }
+  return <PassportStamp type={row.type} country={country} date={date} size={size} rotate={rotate} />
 }
 
 function IrregularStamp({ shape, ink, label, country, date, emoji, seed }: {

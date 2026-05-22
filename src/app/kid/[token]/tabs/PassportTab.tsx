@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Stamp as StampIcon, Globe, Trophy, ArrowRight, Check, Compass, ChevronDown } from 'lucide-react'
 import PassportPage from '@/components/passport/PassportPage'
-import PassportStamp from '@/components/passport/PassportStamp'
+import { PassportStampFromRow } from '@/components/passport/PassportStamp'
 import CountryFlag from '@/components/CountryFlag'
 import { getPackMeta, getPackSectionCount } from '@/lib/adventurePackMeta'
 import type { StampRow, KidStats, AssignedPackRow } from '@/lib/passport-kid-db'
@@ -160,9 +160,9 @@ export default function PassportTab({
         ) : (
           <div className="flex flex-wrap items-center justify-center gap-3">
             {recent.map(s => (
-              <PassportStamp
+              <PassportStampFromRow
                 key={s.id}
-                type={s.type}
+                row={s}
                 country={s.country_slug ? (getPackMeta(s.country_slug)?.country ?? null) : null}
                 date={s.earned_at}
                 size="sm"

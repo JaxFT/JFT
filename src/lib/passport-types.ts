@@ -60,6 +60,10 @@ export type StampType =
   | 'SENSE_SEEKER'
   | 'STORY_KEEPER'
   | 'FAMILY_CHATTERBOX'
+  // Free-form stamp created by a parent (or, in a later phase, a
+  // Creator-mode kid). Label/emoji/shape/ink come from custom_*
+  // columns on the row rather than STAMP_META.
+  | 'CUSTOM'
 
 export type StampStatus = 'suggested' | 'awarded' | 'rejected'
 
@@ -85,6 +89,11 @@ export const AUTO_STAMP_TYPES: StampType[] = [
 // The `ink` colour is what the passport-stamp graphic uses for its
 // double ring + text, so different stamp categories feel like they
 // were inked with different official pads.
+// CUSTOM stamps draw their real label/emoji/ink from the row's
+// custom_* columns at render time. The placeholder entry below is
+// only a fallback used by call sites that look up by type without a
+// row in hand (eg. parent's stamp picker — which intentionally
+// doesn't list CUSTOM anyway).
 export const STAMP_META: Record<StampType, { emoji: string; label: string; description: string; ink: string }> = {
   BRAVE_EATER: {
     emoji: '🍜',
@@ -194,5 +203,11 @@ export const STAMP_META: Record<StampType, { emoji: string; label: string; descr
     label: 'Family Chatterbox',
     description: 'Did the family chat cards together.',
     ink: '#0f3a2a', // brand dark green
+  },
+  CUSTOM: {
+    emoji: '✨',
+    label: 'Custom',
+    description: 'A one-off stamp created by a parent or kid.',
+    ink: '#0f3a2a',
   },
 }

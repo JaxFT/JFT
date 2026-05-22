@@ -49,20 +49,62 @@ export async function POST(
     .maybeSingle()
   if (!child) return NextResponse.json({ error: 'Child not found' }, { status: 404 })
 
-  let body: { type?: string; country_slug?: string | null; note?: string | null; earned_at?: string } = {}
+  let body: {
+    type?: string
+    country_slug?: string | null
+    note?: string | null
+    earned_at?: string
+    custom_label?: string
+    custom_emoji?: string
+    custom_shape?: string
+    custom_ink?: string
+  } = {}
   try { body = await request.json() } catch {}
 
   const type = body.type as StampType | undefined
-  if (!type || !ALL_TYPES.includes(type)) {
+  if (!type || (!ALL_TYPES.includes(type) && type !== 'CUSTOM')) {
     return NextResponse.json({ error: 'Unknown stamp type.' }, { status: 400 })
   }
 
+  // CUSTOM stamps don't carry a country (issuer is JFT). For the 17
+  // system types, country_slug is optional and must be a real pack.
   let countrySlug: string | null = null
-  if (body.country_slug) {
+  if (type !== 'CUSTOM' && body.country_slug) {
     if (!getPackMeta(body.country_slug)) {
       return NextResponse.json({ error: 'Unknown country.' }, { status: 400 })
     }
     countrySlug = body.country_slug
+  }
+
+  // Validate the custom fields when type='CUSTOM'. Shape/ink lists
+  // mirror the DB CHECK constraint so an invalid value 400s here
+  // rather than dying at insert time.
+  let customLabel: string | undefined
+  let customEmoji: string | undefined
+  let customShape: string | undefined
+  let customInk: string | undefined
+  if (type === 'CUSTOM') {
+    const label = (body.custom_label ?? '').trim()
+    if (!label || label.length > 60) {
+      return NextResponse.json({ error: 'Custom label must be 1–60 characters.' }, { status: 400 })
+    }
+    const emoji = (body.custom_emoji ?? '').trim()
+    if (!emoji) {
+      return NextResponse.json({ error: 'Custom emoji is required.' }, { status: 400 })
+    }
+    const shape = body.custom_shape
+    const ALLOWED_SHAPES = ['circle','oval','rounded','flag','shield','hexagon']
+    if (!shape || !ALLOWED_SHAPES.includes(shape)) {
+      return NextResponse.json({ error: 'Custom shape is required.' }, { status: 400 })
+    }
+    const ink = body.custom_ink
+    if (!ink || !/^#[0-9a-fA-F]{6}$/.test(ink)) {
+      return NextResponse.json({ error: 'Custom ink must be a #RRGGBB colour.' }, { status: 400 })
+    }
+    customLabel = label
+    customEmoji = emoji
+    customShape = shape
+    customInk = ink
   }
 
   const note = typeof body.note === 'string' && body.note.trim().length > 0
@@ -90,6 +132,10 @@ export async function POST(
     note,
     awardedBy: 'parent',
     earnedAt,
+    customLabel,
+    customEmoji,
+    customShape,
+    customInk,
   })
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 500 })

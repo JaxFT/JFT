@@ -34,6 +34,11 @@ export type ParentStampRow = {
   status: StampStatus
   earned_at: string
   decided_at: string | null
+  // Populated only when type='CUSTOM'.
+  custom_label: string | null
+  custom_emoji: string | null
+  custom_shape: string | null
+  custom_ink: string | null
 }
 
 export type FlightRow = {

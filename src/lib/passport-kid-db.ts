@@ -47,6 +47,11 @@ export type StampRow = {
   earned_at: string
   decided_at: string | null
   created_at: string
+  // Populated only when type='CUSTOM'; null for the 17 system types.
+  custom_label: string | null
+  custom_emoji: string | null
+  custom_shape: string | null
+  custom_ink: string | null
 }
 
 export async function listAwardedStampsForChild(childId: string): Promise<StampRow[]> {

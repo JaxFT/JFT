@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ArrowRight, ChevronLeft, ChevronRight, Award, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
 import { TransformWrapper, TransformComponent, type ReactZoomPanPinchRef } from 'react-zoom-pan-pinch'
 import PassportPage from '@/components/passport/PassportPage'
-import PassportStamp from '@/components/passport/PassportStamp'
+import { PassportStampFromRow } from '@/components/passport/PassportStamp'
 import MilestoneStamp from '@/components/passport/MilestoneStamp'
 import ScatteredStampSheet from '@/components/passport/ScatteredStampSheet'
 import { closePassport } from '../PassportCover'
@@ -15,7 +15,7 @@ import { computeMilestones, type MilestoneStamp as Milestone } from '@/lib/passp
 import type { StampRow, CountryVisitRow } from '@/lib/passport-kid-db'
 
 type Page =
-  | { kind: 'traveler'; milestones: Milestone[] }
+  | { kind: 'traveler'; milestones: Milestone[]; customs: StampRow[] }
   | { kind: 'country'; countrySlug: string | null; countryName: string; flag: string; iso2: string | null; stamps: StampRow[] }
 
 export default function StampsTab({
@@ -51,7 +51,10 @@ export default function StampsTab({
   // Empty book (no stamps at all, no visits) — but we still show
   // the Traveler page so the empty state is at least one branded
   // page rather than a bare message.
-  const onlyTravelerEmpty = pages.length === 1 && pages[0].kind === 'traveler' && pages[0].milestones.length === 0
+  const onlyTravelerEmpty = pages.length === 1
+    && pages[0].kind === 'traveler'
+    && pages[0].milestones.length === 0
+    && pages[0].customs.length === 0
 
   const current = pages[pageIndex] ?? pages[0]
   const hasPrev = pageIndex > 0
@@ -344,12 +347,14 @@ function PageInner({
   page, token, onlyTravelerEmpty,
 }: { page: Page; token: string; onlyTravelerEmpty: boolean }) {
   if (page.kind === 'traveler') {
-    return <TravelerPage milestones={page.milestones} empty={onlyTravelerEmpty} />
+    return <TravelerPage milestones={page.milestones} customs={page.customs} empty={onlyTravelerEmpty} />
   }
   return <CountryPage group={page} token={token} />
 }
 
-function TravelerPage({ milestones, empty }: { milestones: Milestone[]; empty: boolean }) {
+function TravelerPage({ milestones, customs, empty }: { milestones: Milestone[]; customs: StampRow[]; empty: boolean }) {
+  const totalCount = milestones.length + customs.length
+  const trulyEmpty = empty && customs.length === 0
   return (
     <section>
       <div
@@ -361,11 +366,11 @@ function TravelerPage({ milestones, empty }: { milestones: Milestone[]; empty: b
           <h3 className="text-base font-extrabold uppercase tracking-[0.18em]">Global Stamps</h3>
         </div>
         <p className="text-xs uppercase tracking-widest opacity-60">
-          {empty ? 'Empty' : `${milestones.length} ${milestones.length === 1 ? 'badge' : 'badges'}`}
+          {trulyEmpty ? 'Empty' : `${totalCount} ${totalCount === 1 ? 'stamp' : 'stamps'}`}
         </p>
       </div>
 
-      {empty ? (
+      {trulyEmpty ? (
         <p
           className="text-center text-xs uppercase tracking-widest py-10 leading-relaxed"
           style={{ color: '#5a3a12', opacity: 0.7 }}
@@ -375,15 +380,27 @@ function TravelerPage({ milestones, empty }: { milestones: Milestone[]; empty: b
           Open an Adventure Pack or log a flight to begin.
         </p>
       ) : (
-        <ScatteredStampSheet seed="traveller-page">
+        // Milestones render first, customs after — milestones are the
+        // pinnacle aspirational stamps the kid is chasing; customs are
+        // personal moments slotted in alongside them.
+        <ScatteredStampSheet seed="global-stamps-page">
           {milestones.map(m => (
             <MilestoneStamp
-              key={m.id}
+              key={`m-${m.id}`}
               emoji={m.emoji}
               label={m.label}
               ink={m.ink}
               date={m.earnedAt}
               shape={m.shape}
+              size="md"
+              rotate={0}
+            />
+          ))}
+          {customs.map(s => (
+            <PassportStampFromRow
+              key={`c-${s.id}`}
+              row={s}
+              date={s.earned_at}
               size="md"
               rotate={0}
             />
@@ -421,9 +438,9 @@ function CountryPage({ group, token }: {
       </div>
       <ScatteredStampSheet seed={`country-${group.countrySlug ?? 'travel'}`}>
         {group.stamps.map(s => (
-          <PassportStamp
+          <PassportStampFromRow
             key={s.id}
-            type={s.type}
+            row={s}
             country={group.countryName === '✈️ Travel' ? null : group.countryName}
             date={s.earned_at}
             size="md"
@@ -436,12 +453,20 @@ function CountryPage({ group, token }: {
 }
 
 function buildPages(stamps: StampRow[], visits: CountryVisitRow[], homeCountryIso2: string | null): Page[] {
-  // Always lead with the Traveler page
+  // Always lead with the Global Stamps page
   const milestones = computeMilestones(visits, stamps, homeCountryIso2)
 
-  // Group country stamps
+  // Custom stamps live on Global Stamps alongside the milestones —
+  // they're personal achievements rather than country-tied stamps,
+  // so they don't belong on any country page. Sort newest first.
+  const customs = stamps
+    .filter(s => s.type === 'CUSTOM')
+    .sort((a, b) => (a.earned_at < b.earned_at ? 1 : -1))
+
+  // Group remaining (non-CUSTOM) stamps by country.
   const byCountry = new Map<string, Extract<Page, { kind: 'country' }>>()
   for (const s of stamps) {
+    if (s.type === 'CUSTOM') continue
     const key = s.country_slug ?? '__none__'
     const meta = s.country_slug ? getPackMeta(s.country_slug) : null
     if (!byCountry.has(key)) {
@@ -466,7 +491,7 @@ function buildPages(stamps: StampRow[], visits: CountryVisitRow[], homeCountryIs
   })
 
   return [
-    { kind: 'traveler', milestones },
+    { kind: 'traveler', milestones, customs },
     ...countryPages,
   ]
 }

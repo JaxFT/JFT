@@ -36,6 +36,12 @@ export type AwardInput = {
   // earns a BRAVE_TRAVELLER, not just the first one. Setting this
   // true skips the per-(child, type, country) dedupe.
   skipDedupe?: boolean
+  // Required when type='CUSTOM'; ignored otherwise. The DB CHECK
+  // constraint enforces these for CUSTOM and forbids them otherwise.
+  customLabel?: string | null
+  customEmoji?: string | null
+  customShape?: string | null
+  customInk?: string | null
 }
 
 export type AwardResult =
@@ -60,8 +66,12 @@ export async function awardOrSuggestStamp(input: AwardInput): Promise<AwardResul
   if (childErr) return { ok: false, error: childErr.message }
   if (!child) return { ok: false, error: 'Child not found' }
 
+  // CUSTOM stamps are unique by definition — never dedupe them, even
+  // when fired by the system (no current path does, but be defensive).
+  const isCustom = input.type === 'CUSTOM'
+
   // Dedupe system awards unless caller opted out.
-  if (input.awardedBy === 'system' && !input.skipDedupe) {
+  if (input.awardedBy === 'system' && !input.skipDedupe && !isCustom) {
     let q = sb
       .from('stamps')
       .select('id, status')
@@ -100,6 +110,12 @@ export async function awardOrSuggestStamp(input: AwardInput): Promise<AwardResul
       status,
       earned_at: input.earnedAt ?? new Date().toISOString(),
       decided_at: status === 'awarded' && input.awardedBy === 'parent' ? new Date().toISOString() : null,
+      // Custom fields only land for CUSTOM; for the 17 system types
+      // they're nulled out so the CHECK constraint passes.
+      custom_label: isCustom ? (input.customLabel ?? null) : null,
+      custom_emoji: isCustom ? (input.customEmoji ?? null) : null,
+      custom_shape: isCustom ? (input.customShape ?? null) : null,
+      custom_ink:   isCustom ? (input.customInk   ?? null) : null,
     })
     .select('id')
     .single()

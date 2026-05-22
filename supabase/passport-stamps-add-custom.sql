@@ -1,68 +1,60 @@
 -- ═══════════════════════════════════════
---  JFT, Passport stamps: custom stamps
+--  JFT, Passport stamps: custom stamps + ANIMAL_SPOTTER catch-up
 --  Run in: Supabase Dashboard > SQL Editor
---  Safe to re-run.
+--  Safe to re-run, all statements use IF NOT EXISTS / IF EXISTS.
 --
 --  Adds a 'CUSTOM' stamp type plus four override columns
 --  (custom_label, custom_emoji, custom_shape, custom_ink) so parents
 --  (and Creator-mode kids in a later phase) can create one-off
---  stamps with their own wording, picture, shape, and ink. The JFT
---  issuer mark on the stamp face stays fixed, so there's no
---  override for that.
+--  stamps with their own wording, picture, shape, and ink.
+--
+--  Also adds 'ANIMAL_SPOTTER' to the type check list, which was
+--  present in the application code but missing from the DB
+--  constraint, silently breaking the animal-spotting auto-stamp.
 --
 --  Existing rows are untouched; custom_* columns sit null on every
 --  pre-existing stamp.
 -- ═══════════════════════════════════════
 
--- 1. Extend the type CHECK to allow 'CUSTOM'
-alter table public.stamps drop constraint if exists stamps_type_check;
-alter table public.stamps add constraint stamps_type_check
-  check (type in (
-    -- Existing 17 system types
-    'BRAVE_EATER',
-    'LOCAL_LINGO',
-    'STEP_CHAMP',
-    'ADVENTURE_PACK_COMPLETE',
-    'EXPLORER_DAY',
-    'CULTURE_SPOTTER',
-    'NATURE_LOVER',
-    'BRAVE_TRAVELLER',
-    'WATER_ADVENTURER',
-    'EARLY_BIRD',
-    'MAP_READER',
-    'MONEY_CHANGER',
-    'GEOGRAPHY_GENIUS',
-    'SCAVENGER_HUNTER',
-    'SENSE_SEEKER',
-    'STORY_KEEPER',
-    'FAMILY_CHATTERBOX',
-    -- New: parent/kid-created stamp
+-- 1. Custom override columns (nullable, populated only when type='CUSTOM')
+ALTER TABLE public.stamps
+  ADD COLUMN IF NOT EXISTS custom_label text,
+  ADD COLUMN IF NOT EXISTS custom_emoji text,
+  ADD COLUMN IF NOT EXISTS custom_shape text,
+  ADD COLUMN IF NOT EXISTS custom_ink   text;
+
+-- 2. Full type list. 18 system types + CUSTOM.
+ALTER TABLE public.stamps DROP CONSTRAINT IF EXISTS stamps_type_check;
+ALTER TABLE public.stamps ADD CONSTRAINT stamps_type_check
+  CHECK (type IN (
+    'BRAVE_EATER', 'LOCAL_LINGO', 'STEP_CHAMP', 'ADVENTURE_PACK_COMPLETE',
+    'EXPLORER_DAY', 'CULTURE_SPOTTER', 'NATURE_LOVER', 'BRAVE_TRAVELLER',
+    'WATER_ADVENTURER', 'EARLY_BIRD',
+    'MAP_READER', 'MONEY_CHANGER', 'GEOGRAPHY_GENIUS', 'SCAVENGER_HUNTER',
+    'ANIMAL_SPOTTER', 'SENSE_SEEKER', 'STORY_KEEPER', 'FAMILY_CHATTERBOX',
     'CUSTOM'
   ));
 
--- 2. Add the override columns
-alter table public.stamps
-  add column if not exists custom_label text,
-  add column if not exists custom_emoji text,
-  add column if not exists custom_shape text,
-  add column if not exists custom_ink   text;
-
--- 3. Custom fields must be populated for CUSTOM, null for the rest.
---    Keeps data clean: a system stamp can't accidentally store a
---    label, and a custom stamp can't ship without a label.
-alter table public.stamps drop constraint if exists stamps_custom_fields_check;
-alter table public.stamps add constraint stamps_custom_fields_check
-  check (
+-- 3. Custom fields populated iff type='CUSTOM' (otherwise null).
+--    Keeps system stamp rows clean and stops a CUSTOM row from
+--    sneaking through without a label.
+ALTER TABLE public.stamps DROP CONSTRAINT IF EXISTS stamps_custom_fields_check;
+ALTER TABLE public.stamps ADD CONSTRAINT stamps_custom_fields_check
+  CHECK (
     (type = 'CUSTOM'
-      and custom_label is not null
-      and length(custom_label) between 1 and 60
-      and custom_emoji is not null
-      and custom_shape in ('circle','oval','rounded','flag','shield','hexagon')
-      and custom_ink   is not null)
-    or
+      AND custom_label IS NOT NULL
+      AND length(custom_label) BETWEEN 1 AND 60
+      AND custom_emoji IS NOT NULL
+      AND custom_shape IN ('circle','oval','rounded','flag','shield','hexagon')
+      AND custom_ink   IS NOT NULL)
+    OR
     (type <> 'CUSTOM'
-      and custom_label is null
-      and custom_emoji is null
-      and custom_shape is null
-      and custom_ink   is null)
+      AND custom_label IS NULL
+      AND custom_emoji IS NULL
+      AND custom_shape IS NULL
+      AND custom_ink   IS NULL)
   );
+
+-- 4. Force PostgREST to pick up the schema change immediately so the
+--    REST API stops returning "column not found in schema cache".
+NOTIFY pgrst, 'reload schema';

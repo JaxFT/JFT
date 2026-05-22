@@ -380,10 +380,11 @@ function TravelerPage({ milestones, customs, empty }: { milestones: Milestone[];
           Open an Adventure Pack or log a flight to begin.
         </p>
       ) : (
-        // Milestones render first, customs after. Both at 'sm' size
-        // so the Global Stamps page fits a healthy mix without
-        // stamps drifting past the cream-paper edge.
-        <ScatteredStampSheet seed="global-stamps-page">
+        // Milestones first, customs after. Flex-wrap layout (not the
+        // scatter sheet) so each stamp gets its natural width and
+        // wraps cleanly to the next row when the page runs out of
+        // horizontal space — no edge clipping, no fragile jitter math.
+        <div className="flex flex-wrap items-start justify-center gap-x-4 gap-y-5 pt-2 pb-4">
           {milestones.map(m => (
             <MilestoneStamp
               key={`m-${m.id}`}
@@ -393,7 +394,6 @@ function TravelerPage({ milestones, customs, empty }: { milestones: Milestone[];
               date={m.earnedAt}
               shape={m.shape}
               size="sm"
-              rotate={0}
             />
           ))}
           {customs.map(s => (
@@ -402,10 +402,9 @@ function TravelerPage({ milestones, customs, empty }: { milestones: Milestone[];
               row={s}
               date={s.earned_at}
               size="sm"
-              rotate={0}
             />
           ))}
-        </ScatteredStampSheet>
+        </div>
       )}
     </section>
   )

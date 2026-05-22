@@ -118,7 +118,7 @@ export default async function LearningPage() {
         <div className="mb-12 max-w-2xl">
           <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">Learning Resources</p>
           <h1 className="text-4xl font-bold text-gray-900">Resources for families on the road</h1>
-          <p className="text-gray-500 mt-2 text-lg">Sites we actually use and trust for families on the road.</p>
+          <p className="text-gray-500 mt-2 text-lg">Sites we genuinely use and trust for other families on the road.</p>
         </div>
 
         {/* RECOMMENDED SITES (public) — the people we trust go first;

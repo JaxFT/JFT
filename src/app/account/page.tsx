@@ -11,6 +11,7 @@ import ResumeMembershipButton from './ResumeMembershipButton'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 import ManageBillingButton from '@/components/billing/ManageBillingButton'
 import AdventurePassportSection from './AdventurePassportSection'
+import HomeCountrySection from './HomeCountrySection'
 import DeleteAccountButton from './DeleteAccountButton'
 import { isPremiumTier } from '@/lib/profile'
 import { ensureProfile } from '@/lib/ensure-profile'
@@ -43,7 +44,7 @@ export default async function AccountPage() {
   const [{ data: profile }, { data: purchasesData }, { data: packPurchasesData }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('full_name, subscription_tier, created_at, marketing_opt_in, cancellation_requested_at, username, instagram_handle')
+      .select('full_name, subscription_tier, created_at, marketing_opt_in, cancellation_requested_at, username, instagram_handle, home_country_iso2')
       .eq('id', user.id)
       .single(),
     supabase
@@ -191,9 +192,16 @@ export default async function AccountPage() {
 
         {/* 2 ── FAMILY PASSPORT (premium-only) ──────────────────── */}
         {isPremium && (
-          <div className="mb-6">
-            <AdventurePassportSection />
-          </div>
+          <>
+            <div className="mb-6">
+              <AdventurePassportSection />
+            </div>
+            <div className="mb-6">
+              <HomeCountrySection
+                initialHomeIso2={(profile as { home_country_iso2?: string | null } | null)?.home_country_iso2 ?? null}
+              />
+            </div>
+          </>
         )}
 
         {/* 3 ── DETAILS (email / password / name) + EMAIL PREFS ── */}

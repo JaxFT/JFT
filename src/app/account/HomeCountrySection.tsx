@@ -1,14 +1,15 @@
 'use client'
 
-// Set or clear the kid's home country. Home is excluded from
-// "new countries explored" travel stats so a kid who lives in (say)
-// the UK can still complete the UK pack and earn its section stamps
-// without the UK counting toward their travel milestones.
+// Family-level home country picker. Sets the parent profile's
+// home_country_iso2, which applies to every child in the family.
+// Home is excluded from "new countries explored" travel stats so a
+// kid living in (say) the UK can still complete the UK Adventure
+// Pack and earn its stamps without the UK counting toward their
+// travel milestones.
 //
-// Accepts ANY ISO 3166-1 country (not just the 35 Adventure Pack
-// countries). Picker is a simple type-to-search scrollable list —
-// faster than a continent drill-down for a list this long, since
-// the parent already knows the country name.
+// Picker accepts ANY ISO 3166-1 country (not limited to the 35
+// Adventure Pack countries). Type-to-search modal — quicker for a
+// list this long than a continent drill-down.
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -23,12 +24,8 @@ const PICKABLE_COUNTRIES = COUNTRIES
   .sort((a, b) => a.name.localeCompare(b.name))
 
 export default function HomeCountrySection({
-  childId,
-  childName,
   initialHomeIso2,
 }: {
-  childId: string
-  childName: string
   initialHomeIso2: string | null
 }) {
   const router = useRouter()
@@ -44,8 +41,6 @@ export default function HomeCountrySection({
   const dirty = (iso2 || null) !== (initialHomeIso2 || null)
   const selected = getCountryByIso2(iso2)
 
-  // Auto-focus the search box when the picker opens. Saves a tap on
-  // mobile and means you can start typing immediately.
   useEffect(() => {
     if (open) {
       requestAnimationFrame(() => searchInputRef.current?.focus())
@@ -54,7 +49,6 @@ export default function HomeCountrySection({
     }
   }, [open])
 
-  // Escape closes the modal.
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
@@ -62,7 +56,6 @@ export default function HomeCountrySection({
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
 
-  // Simple includes-match. Searches the country name only.
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return PICKABLE_COUNTRIES
@@ -74,7 +67,7 @@ export default function HomeCountrySection({
     setError(null)
     setSaved(false)
     try {
-      const res = await fetch(`/api/family/children/${childId}`, {
+      const res = await fetch('/api/family/home-country', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ home_country_iso2: iso2 || null }),
@@ -99,8 +92,9 @@ export default function HomeCountrySection({
       </div>
 
       <p className="text-sm text-gray-500 mb-5">
-        Where {childName} lives. They can still do this country&apos;s Adventure Pack (if we have one)
-        and earn its stamps, but it won&apos;t count toward &quot;new countries explored&quot; travel stats.
+        Where the family lives. Applies to every child in the family. They can still do this country&apos;s
+        Adventure Pack (if we have one) and earn its stamps, but it won&apos;t count toward &quot;new countries
+        explored&quot; travel stats.
       </p>
 
       <div className="flex gap-2 flex-wrap sm:flex-nowrap">
@@ -116,7 +110,7 @@ export default function HomeCountrySection({
                 <span className="font-semibold text-gray-900 truncate">{selected.name}</span>
               </>
             ) : (
-              <span className="text-gray-700">— No home set —</span>
+              <span className="text-gray-700">, No home set ,</span>
             )}
           </span>
           <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`} />
@@ -128,16 +122,13 @@ export default function HomeCountrySection({
           className="btn-primary !py-2.5 !px-5 !text-sm disabled:opacity-60 shrink-0"
         >
           {saving
-            ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
+            ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
             : saved
               ? <><Check className="w-4 h-4" /> Saved</>
               : 'Save'}
         </button>
       </div>
 
-      {/* Centred modal — gives the 200-country list room on tall
-          phones where an inline dropdown would scroll off the bottom
-          of the viewport. */}
       {open && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px] px-4"
@@ -165,7 +156,7 @@ export default function HomeCountrySection({
                 type="search"
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder="Type to search…"
+                placeholder="Type to search..."
                 className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
               />
             </div>
@@ -177,7 +168,7 @@ export default function HomeCountrySection({
                 iso2 === null ? 'bg-brand-50 text-brand-800 font-semibold' : 'text-gray-700 hover:bg-gray-50'
               }`}
             >
-              — No home set —
+              , No home set ,
             </button>
 
             {filtered.length === 0 ? (

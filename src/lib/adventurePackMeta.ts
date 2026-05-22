@@ -81,6 +81,12 @@ export const PACK_META: AdventurePackMeta[] = [
   { slug: 'czechia',    country: 'Czechia',    flag: '🇨🇿', iso2: 'cz', isFree: false, heroColour: 'bg-blue-600',   status: 'live', continent: 'Europe',        hasWordSearch: true, hasTilePuzzle: true },
   { slug: 'cuba',       country: 'Cuba',       flag: '🇨🇺', iso2: 'cu', isFree: false, heroColour: 'bg-cyan-600',   status: 'live', continent: 'North America', hasWordSearch: true, hasTilePuzzle: true },
   { slug: 'bolivia',    country: 'Bolivia',    flag: '🇧🇴', iso2: 'bo', isFree: false, heroColour: 'bg-amber-400',  status: 'live', continent: 'South America', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'namibia',    country: 'Namibia',    flag: '🇳🇦', iso2: 'na', isFree: false, heroColour: 'bg-yellow-400', status: 'live', continent: 'Africa',        hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'botswana',   country: 'Botswana',   flag: '🇧🇼', iso2: 'bw', isFree: false, heroColour: 'bg-sky-500',    status: 'live', continent: 'Africa',        hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'fiji',       country: 'Fiji',       flag: '🇫🇯', iso2: 'fj', isFree: false, heroColour: 'bg-cyan-500',   status: 'live', continent: 'Oceania',       hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'philippines',country: 'Philippines',flag: '🇵🇭', iso2: 'ph', isFree: false, heroColour: 'bg-yellow-300', status: 'live', continent: 'Asia',          hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'taiwan',     country: 'Taiwan',     flag: '🇹🇼', iso2: 'tw', isFree: false, heroColour: 'bg-rose-500',   status: 'live', continent: 'Asia',          hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'slovenia',   country: 'Slovenia',   flag: '🇸🇮', iso2: 'si', isFree: false, heroColour: 'bg-emerald-500',status: 'live', continent: 'Europe',        hasWordSearch: true, hasTilePuzzle: true },
 ]
 
 export function getPackMeta(slug: string): AdventurePackMeta | null {

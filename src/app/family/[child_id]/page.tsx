@@ -4,21 +4,16 @@ import { ArrowLeft, ExternalLink } from 'lucide-react'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
-import {
-  getChildById, listChildPackAssignments,
-} from '@/lib/passport-db'
+import { getChildById } from '@/lib/passport-db'
 import { listJournalEntriesForChildParent } from '@/lib/passport-journal-db'
 import { PERMISSION_LABELS } from '@/lib/passport-types'
 import { PACK_META } from '@/lib/adventurePackMeta'
 import EditProfileSection from './EditProfileSection'
 import PermissionSection from './PermissionSection'
 import QRSection from './QRSection'
-import PackAssignmentSection from './PackAssignmentSection'
-// CountryVisitsSection moved to /account (family-level).
-// StampsManagementSection moved to /account (family-level).
 import JournalSection from './JournalSection'
-// HomeCountrySection moved to /family (family-level setting).
-import DeleteChildButton from './DeleteChildButton'
+// Pack assignment, country visits, stamps management, home country
+// and delete-passport all moved to /account as family-level sections.
 
 export const dynamic = 'force-dynamic'
 
@@ -54,22 +49,10 @@ export default async function ChildDetailPage({
   const child = await getChildById(child_id)
   if (!child) notFound()
 
-  const [assignments, journal] = await Promise.all([
-    listChildPackAssignments(child_id),
-    listJournalEntriesForChildParent(child_id),
-  ])
+  const journal = await listJournalEntriesForChildParent(child_id)
 
-  // Strip PACK_META down to the lite shape the sections need — slug,
-  // country, flag, status, continent. Everything else stays on the
-  // server.
-  const allPacks = PACK_META.map(p => ({
-    slug: p.slug,
-    country: p.country,
-    flag: p.flag,
-    iso2: p.iso2,
-    status: p.status,
-    continent: p.continent,
-  }))
+  // Strip PACK_META down to the lite shape Journal needs.
+  const journalPacks = PACK_META.map(p => ({ slug: p.slug, country: p.country, flag: p.flag }))
 
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
@@ -112,33 +95,22 @@ export default async function ChildDetailPage({
             initialToken={child.qr_token}
           />
 
-          <PackAssignmentSection
-            childId={child.id}
-            initialAssigned={assignments}
-            allPacks={allPacks}
-          />
-
-          <JournalSection
-            childId={child.id}
-            initialEntries={journal}
-            allPacks={allPacks.map(p => ({ slug: p.slug, country: p.country, flag: p.flag }))}
-          />
-
           <EditProfileSection
             childId={child.id}
             initialName={child.name}
             initialAvatar={child.avatar}
           />
 
+          <JournalSection
+            childId={child.id}
+            initialEntries={journal}
+            allPacks={journalPacks}
+          />
+
           <PermissionSection
             childId={child.id}
             initialMode={child.permission_mode}
             initialAutoApprove={child.stamp_auto_approve}
-          />
-
-          <DeleteChildButton
-            childId={child.id}
-            childName={child.name}
           />
         </div>
       </div>

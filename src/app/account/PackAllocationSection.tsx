@@ -13,7 +13,6 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Compass, ChevronDown, Loader2, Check, Search } from 'lucide-react'
-import CountryFlag from '@/components/CountryFlag'
 import { CONTINENT_ORDER, type Continent } from '@/lib/adventurePackTypes'
 
 type PackMetaLite = {
@@ -133,7 +132,7 @@ export default function PackAllocationSection({
                       key={p.slug}
                       className="flex items-center gap-3 p-2 rounded-md bg-gray-50"
                     >
-                      <CountryFlag iso2={p.iso2} country={p.country} ariaHidden size="md" />
+                      <span className="text-2xl leading-none shrink-0" aria-hidden>{p.flag}</span>
                       <span className="font-semibold text-gray-900 text-sm flex-1 min-w-0 truncate">{p.country}</span>
                       {isAssigned ? (
                         <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">

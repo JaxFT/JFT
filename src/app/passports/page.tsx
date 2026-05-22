@@ -10,7 +10,9 @@ import { PACK_META } from '@/lib/adventurePackMeta'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 import PassportPage from '@/components/passport/PassportPage'
 import PassportStamp from '@/components/passport/PassportStamp'
-import ScatteredStampSheet from '@/components/passport/ScatteredStampSheet'
+// ScatteredStampSheet retired from the marketing mockups; the actual
+// kid passport country pages now use a flex-wrap layout, and the
+// mockups follow.
 
 export const metadata: Metadata = {
   title: 'Adventure Passports',
@@ -114,9 +116,9 @@ export default async function PassportsLanding() {
               <p className="text-xs text-white/60 mt-5 text-center">Accessed via QR code, no login needed.</p>
             </div>
 
-            {/* MOCKUP 2: country stamps page (Brazil sample). Same
-                ScatteredStampSheet the real kid view uses, so the
-                marketing card looks like the actual product. */}
+            {/* MOCKUP 2: country stamps page (Brazil sample). Mirrors
+                the actual kid country page layout so the marketing
+                card looks like the real product. */}
             <div className="bg-gradient-to-br from-brand-700 to-brand-900 rounded-3xl p-6 sm:p-8 text-white shadow-md">
               <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-4">Kid view, Brazil page</p>
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 max-w-sm mx-auto">
@@ -125,15 +127,18 @@ export default async function PassportsLanding() {
                     <p className="text-xs font-extrabold uppercase tracking-[0.18em]">🇧🇷 Brazil</p>
                     <p className="text-[10px] uppercase tracking-widest opacity-60">7 stamps</p>
                   </div>
-                  <ScatteredStampSheet seed="mockup-brazil" height={300}>
-                    <PassportStamp type="MAP_READER"           country="Brazil" date="2026-06-02" size="sm" rotate={0} />
-                    <PassportStamp type="LOCAL_LINGO"          country="Brazil" date="2026-06-03" size="sm" rotate={0} />
-                    <PassportStamp type="BRAVE_EATER"          country="Brazil" date="2026-06-04" size="sm" rotate={0} />
-                    <PassportStamp type="ANIMAL_SPOTTER"       country="Brazil" date="2026-06-05" size="sm" rotate={0} />
-                    <PassportStamp type="SCAVENGER_HUNTER"     country="Brazil" date="2026-06-06" size="sm" rotate={0} />
-                    <PassportStamp type="STORY_KEEPER"         country="Brazil" date="2026-06-07" size="sm" rotate={0} />
-                    <PassportStamp type="ADVENTURE_PACK_COMPLETE" country="Brazil" date="2026-06-09" size="sm" rotate={0} />
-                  </ScatteredStampSheet>
+                  {/* Same flex-wrap layout as the actual country page
+                      in the kid passport so the mockup reads as a
+                      truthful preview of what they'd see. */}
+                  <div className="flex flex-wrap items-start justify-center gap-x-3 gap-y-4 pt-2 pb-4">
+                    <PassportStamp type="MAP_READER"              country="Brazil" date="2026-06-02" size="sm" />
+                    <PassportStamp type="LOCAL_LINGO"             country="Brazil" date="2026-06-03" size="sm" />
+                    <PassportStamp type="BRAVE_EATER"             country="Brazil" date="2026-06-04" size="sm" />
+                    <PassportStamp type="ANIMAL_SPOTTER"          country="Brazil" date="2026-06-05" size="sm" />
+                    <PassportStamp type="SCAVENGER_HUNTER"        country="Brazil" date="2026-06-06" size="sm" />
+                    <PassportStamp type="STORY_KEEPER"            country="Brazil" date="2026-06-07" size="sm" />
+                    <PassportStamp type="ADVENTURE_PACK_COMPLETE" country="Brazil" date="2026-06-09" size="sm" />
+                  </div>
                 </PassportPage>
               </div>
               <p className="text-xs text-white/60 mt-5 text-center">One page per country. Stamps scatter like a real passport.</p>

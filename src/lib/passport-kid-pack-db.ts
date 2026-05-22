@@ -36,14 +36,41 @@ export async function resolveKidPack(token: string, countrySlug: string): Promis
   if (childErr) return { ok: false, status: 404, error: childErr.message }
   if (!child) return { ok: false, status: 404, error: 'Passport not found' }
 
+  const childRow = child as ChildRow
+  const isAssigned = await isPackAvailableToChild(sb, childRow, countrySlug)
+  return { ok: true, child: childRow, isAssigned }
+}
+
+// A pack is "available" to a kid in two ways:
+//  1. The parent assigned it explicitly via Account → pack allocation
+//     (child_pack_assignments row), OR
+//  2. The family has a country_visit for the pack's iso2, even if the
+//     pack didn't exist at the time the visit was recorded.
+// (1) is the source of truth for parent intent; (2) keeps things
+// self-healing when we publish new packs for countries families have
+// already visited.
+async function isPackAvailableToChild(
+  sb: ReturnType<typeof admin>,
+  child: Pick<ChildRow, 'id' | 'parent_id'>,
+  countrySlug: string,
+): Promise<boolean> {
   const { data: assignment } = await sb
     .from('child_pack_assignments')
     .select('country_slug')
     .eq('child_id', child.id)
     .eq('country_slug', countrySlug)
     .maybeSingle()
+  if (assignment) return true
 
-  return { ok: true, child: child as ChildRow, isAssigned: !!assignment }
+  const meta = getPackMeta(countrySlug)
+  if (!meta || !child.parent_id) return false
+  const { data: visit } = await sb
+    .from('family_country_visits')
+    .select('iso2')
+    .eq('parent_id', child.parent_id)
+    .eq('iso2', meta.iso2)
+    .maybeSingle()
+  return !!visit
 }
 
 export type LoadedKidPack = {

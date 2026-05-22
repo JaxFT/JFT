@@ -8,6 +8,7 @@
 
 import { createClient as createSbClient } from '@supabase/supabase-js'
 import type { ChildRow, StampStatus, StampType } from './passport-types'
+import { getPackByIso2 } from './adventurePackMeta'
 
 function admin() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -182,17 +183,48 @@ export async function getKidPackProgress(childId: string, countrySlug: string): 
 
 export async function listAssignedPacksForChild(childId: string): Promise<AssignedPackRow[]> {
   const sb = admin()
-  const [assignmentsRes, sessionsRes] = await Promise.all([
+  // Look up parent_id so we can pull in packs derived from family
+  // country visits (any visit whose iso2 maps to a live pack counts,
+  // even if no explicit child_pack_assignments row exists yet).
+  const { data: childRow } = await sb
+    .from('children')
+    .select('parent_id')
+    .eq('id', childId)
+    .maybeSingle()
+  const parentId = (childRow as { parent_id?: string } | null)?.parent_id ?? null
+
+  const [assignmentsRes, visitsRes, sessionsRes] = await Promise.all([
     sb
       .from('child_pack_assignments')
-      .select('country_slug')
+      .select('country_slug, assigned_at')
       .eq('child_id', childId)
       .order('assigned_at', { ascending: true }),
+    parentId
+      ? sb
+        .from('family_country_visits')
+        .select('iso2, first_visit_date')
+        .eq('parent_id', parentId)
+      : Promise.resolve({ data: [] as Array<{ iso2: string; first_visit_date: string }> }),
     sb
       .from('kid_adventure_pack_sessions')
       .select('country_slug, missions_complete, completed_at')
       .eq('child_id', childId),
   ])
+
+  // Build an ordered slug → earliest-seen-date map. Explicit
+  // assignments come first (with assigned_at as their sort key); visit-
+  // derived packs only fill in slugs we haven't already seen.
+  const addedAt = new Map<string, string>()
+  for (const a of assignmentsRes.data ?? []) {
+    addedAt.set(a.country_slug as string, (a.assigned_at as string) ?? '')
+  }
+  for (const v of (visitsRes.data ?? []) as Array<{ iso2: string; first_visit_date: string }>) {
+    const pack = getPackByIso2(v.iso2)
+    if (!pack) continue
+    if (!addedAt.has(pack.slug)) {
+      addedAt.set(pack.slug, v.first_visit_date ?? '')
+    }
+  }
 
   const progress = new Map<string, { missions_complete: string[]; completed_at: string | null }>()
   for (const s of sessionsRes.data ?? []) {
@@ -202,13 +234,14 @@ export async function listAssignedPacksForChild(childId: string): Promise<Assign
     })
   }
 
-  return (assignmentsRes.data ?? []).map(a => {
-    const slug = a.country_slug as string
-    const p = progress.get(slug)
-    return {
-      country_slug: slug,
-      missions_complete: p?.missions_complete ?? [],
-      completed_at: p?.completed_at ?? null,
-    }
-  })
+  return Array.from(addedAt.entries())
+    .sort(([, a], [, b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([slug]) => {
+      const p = progress.get(slug)
+      return {
+        country_slug: slug,
+        missions_complete: p?.missions_complete ?? [],
+        completed_at: p?.completed_at ?? null,
+      }
+    })
 }

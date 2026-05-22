@@ -24,7 +24,10 @@ export async function generateMetadata({
   }
 }
 
-async function isAssignedToChild(childId: string, slug: string): Promise<boolean> {
+// A pack is available to the kid if either (a) the parent explicitly
+// assigned it OR (b) the family has visited the country, even if the
+// pack didn't exist at the time of the visit.
+async function isAssignedToChild(childId: string, parentId: string | null, slug: string): Promise<boolean> {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!serviceKey) return false
   const admin = createSbClient(
@@ -32,13 +35,23 @@ async function isAssignedToChild(childId: string, slug: string): Promise<boolean
     serviceKey,
     { auth: { persistSession: false, autoRefreshToken: false } },
   )
-  const { data } = await admin
+  const { data: assignment } = await admin
     .from('child_pack_assignments')
     .select('country_slug')
     .eq('child_id', childId)
     .eq('country_slug', slug)
     .maybeSingle()
-  return !!data
+  if (assignment) return true
+
+  const meta = getPackMeta(slug)
+  if (!meta || !parentId) return false
+  const { data: visit } = await admin
+    .from('family_country_visits')
+    .select('iso2')
+    .eq('parent_id', parentId)
+    .eq('iso2', meta.iso2)
+    .maybeSingle()
+  return !!visit
 }
 
 export default async function KidPackPage({
@@ -54,7 +67,7 @@ export default async function KidPackPage({
   const child = await getChildByToken(token)
   if (!child) notFound()
 
-  const assigned = await isAssignedToChild(child.id, slug)
+  const assigned = await isAssignedToChild(child.id, child.parent_id, slug)
   if (!assigned) {
     // Friendly "not assigned" screen rather than a hard 404 — helps the
     // parent diagnose if they handed the kid a URL for a pack they

@@ -9,7 +9,7 @@ import { PassportStampFromRow } from '@/components/passport/PassportStamp'
 import MilestoneStamp from '@/components/passport/MilestoneStamp'
 import { closePassport } from '../PassportCover'
 import CountryFlag from '@/components/CountryFlag'
-import { getPackMeta } from '@/lib/adventurePackMeta'
+import { getPackMeta, getPackByIso2 } from '@/lib/adventurePackMeta'
 import { computeMilestones, type MilestoneStamp as Milestone } from '@/lib/passport-milestones'
 import type { StampRow, CountryVisitRow } from '@/lib/passport-kid-db'
 
@@ -578,7 +578,16 @@ function CountryPage({ group, token }: {
         )}
       </div>
       <div className="flex flex-wrap items-start justify-center gap-x-4 gap-y-5 pt-2 pb-4">
-        {group.stamps.map(s => (
+        {group.stamps.length === 0 ? (
+          <p
+            className="text-center text-xs uppercase tracking-widest py-10 leading-relaxed"
+            style={{ color: '#5a3a12', opacity: 0.6 }}
+          >
+            No stamps yet for {group.countryName}.
+            <br />
+            Earn some in the Adventure Pack or ask a grown-up.
+          </p>
+        ) : group.stamps.map(s => (
           <PassportStampFromRow
             key={s.id}
             row={s}
@@ -598,37 +607,67 @@ function buildPages(stamps: StampRow[], visits: CountryVisitRow[], homeCountryIs
 
   // Any stamp without a country (system OR custom) lives on the
   // Global Stamps page alongside the milestones — "Global" is the
-  // default issuer, marked JFT on the stamp face. Stamps WITH a
-  // country slot into that country's page. Sort newest first.
+  // default issuer, marked JFT on the stamp face.
   const globals = stamps
     .filter(s => !s.country_slug)
     .sort((a, b) => (a.earned_at < b.earned_at ? 1 : -1))
 
-  // Group all country-tied stamps (system OR custom) by country.
-  const byCountry = new Map<string, Extract<Page, { kind: 'country' }>>()
-  for (const s of stamps) {
-    if (!s.country_slug) continue
-    const meta = getPackMeta(s.country_slug)
-    if (!meta) continue  // unknown slug, skip rather than create a phantom page
-    if (!byCountry.has(s.country_slug)) {
-      byCountry.set(s.country_slug, {
-        kind: 'country',
-        countrySlug: s.country_slug,
-        countryName: meta.country,
-        flag: meta.flag,
-        iso2: meta.iso2,
-        stamps: [],
-      })
+  // Country pages are driven by VISITS (so a country gets a page
+  // the moment it's visited, even before any stamps land there).
+  // Stamps with a country also force a page in case that country
+  // somehow doesn't have a visit row (e.g. data imported pre-fix).
+  // Home country is excluded — you don't "visit" home, so it
+  // doesn't get a country page.
+  const homePackSlug = getPackByIso2(homeCountryIso2)?.slug ?? null
+  const countrySlugs = new Set<string>()
+  for (const v of visits) {
+    if (v.country_slug && v.country_slug !== homePackSlug) {
+      countrySlugs.add(v.country_slug)
     }
-    byCountry.get(s.country_slug)!.stamps.push(s)
   }
-  for (const g of byCountry.values()) {
-    g.stamps.sort((a, b) => (a.earned_at < b.earned_at ? 1 : -1))
+  for (const s of stamps) {
+    if (s.country_slug && s.country_slug !== homePackSlug) {
+      countrySlugs.add(s.country_slug)
+    }
   }
-  const countryPages = Array.from(byCountry.values()).sort((a, b) => {
+
+  // Bucket stamps per country slug.
+  const stampsBySlug = new Map<string, StampRow[]>()
+  for (const s of stamps) {
+    if (!s.country_slug || s.country_slug === homePackSlug) continue
+    const arr = stampsBySlug.get(s.country_slug) ?? []
+    arr.push(s)
+    stampsBySlug.set(s.country_slug, arr)
+  }
+  for (const arr of stampsBySlug.values()) {
+    arr.sort((a, b) => (a.earned_at < b.earned_at ? 1 : -1))
+  }
+
+  // Build pages. Skip slugs we don't have pack metadata for so we
+  // don't render a phantom unnamed page.
+  const countryPages: Extract<Page, { kind: 'country' }>[] = []
+  for (const slug of countrySlugs) {
+    const meta = getPackMeta(slug)
+    if (!meta) continue
+    countryPages.push({
+      kind: 'country',
+      countrySlug: slug,
+      countryName: meta.country,
+      flag: meta.flag,
+      iso2: meta.iso2,
+      stamps: stampsBySlug.get(slug) ?? [],
+    })
+  }
+
+  // Most-recently-active country first; pages with no stamps yet
+  // sort by name to keep their order stable.
+  countryPages.sort((a, b) => {
     const aLatest = a.stamps[0]?.earned_at ?? ''
     const bLatest = b.stamps[0]?.earned_at ?? ''
-    return aLatest < bLatest ? 1 : -1
+    if (aLatest && bLatest) return aLatest < bLatest ? 1 : -1
+    if (aLatest) return -1
+    if (bLatest) return 1
+    return a.countryName.localeCompare(b.countryName)
   })
 
   return [

@@ -359,24 +359,58 @@ function hashId(id: string): number {
   return h
 }
 
-// Pick a column count that scales with how many stamps are on the
-// page. The grid stays the same shape until the count crosses a
-// threshold, at which point the whole pile reflows to fit. Cap is
-// loose (allow tight overlap) so even narrow phones can show a 6
-// or 7 col pile when there are lots of stamps.
+// Pick a (cols × rows) grid that's intentionally LARGER than the
+// stamp count so stamps can be scattered into non-adjacent cells.
+// Two stamps from different countries end up in different parts
+// of the page rather than next to each other. Grid grows in steps
+// at familiar thresholds (10, 15, 22, 30) so the layout reflows
+// noticeably when the kid earns a milestone-y number of stamps.
 function tierForCount(count: number, containerW: number): { cols: number; rows: number } {
-  let ideal: number
-  if (count <= 6)       ideal = 2
-  else if (count <= 10) ideal = 3
-  else if (count <= 15) ideal = 4
-  else if (count <= 22) ideal = 5
-  else if (count <= 30) ideal = 6
-  else                  ideal = Math.ceil(Math.sqrt(count * 1.3))
+  let cols: number, rows: number
+  if (count <= 4)        { cols = 3; rows = 2 }
+  else if (count <= 9)   { cols = 3; rows = 3 }
+  else if (count <= 15)  { cols = 4; rows = 4 }
+  else if (count <= 22)  { cols = 5; rows = 4 }
+  else if (count <= 30)  { cols = 6; rows = 5 }
+  else                   { cols = 6; rows = Math.ceil(count / 6) }
+  // Cap cols by what the container can fit at min cell width.
   const minCellW = 32
   const maxByWidth = Math.max(2, Math.floor(containerW / minCellW))
-  const cols = Math.max(1, Math.min(ideal, maxByWidth))
-  const rows = Math.max(1, Math.ceil(count / cols))
+  cols = Math.max(1, Math.min(cols, maxByWidth))
+  rows = Math.max(rows, Math.ceil(count / cols))
   return { cols, rows }
+}
+
+// Assign each stamp to a cell by hashing its id, with collision
+// resolution. Stamps with different ids land in different cells
+// (different parts of the page). The same stamp keeps its cell
+// across renders. When the tier changes (kid crosses a count
+// threshold) cells reshuffle, which is the intended reflow.
+function assignCells(
+  items: { tiltSeed: string }[],
+  tier: { cols: number; rows: number },
+): { col: number; row: number }[] {
+  const total = tier.cols * tier.rows
+  const taken = new Set<number>()
+  const out: { col: number; row: number }[] = []
+  for (const it of items) {
+    const start = hashId(`${it.tiltSeed}-cell-${tier.cols}-${tier.rows}`)
+    let placed = false
+    for (let k = 0; k < total; k++) {
+      // Linear probe with a stride coprime to total to spread
+      // collisions; 7919 is prime and unlikely to share factors
+      // with realistic grid sizes.
+      const idx = (start + k * 7919) % total
+      if (!taken.has(idx)) {
+        taken.add(idx)
+        out.push({ col: idx % tier.cols, row: Math.floor(idx / tier.cols) })
+        placed = true
+        break
+      }
+    }
+    if (!placed) out.push({ col: 0, row: 0 }) // shouldn't happen, items <= total by construction
+  }
+  return out
 }
 
 // Safe margins so an edge-row/col stamp at its widest shape (sm
@@ -406,10 +440,10 @@ function GlobalStampsCanvas({ items }: { items: { key: string; node: React.React
   }, [])
 
   const tier = useMemo(() => tierForCount(items.length, containerW), [items.length, containerW])
+  const cells = useMemo(() => assignCells(items, tier), [items, tier])
   // Canvas height is computed from the row count so the bottom of
-  // the pile is bounded. If it exceeds the available book frame the
-  // PassportPage's overflow-y-auto handles it, but tier transitions
-  // are tuned so most counts stay within one screen.
+  // the pile is bounded. Tier sizes are tuned so most counts fit
+  // within the book frame on a typical phone.
   const canvasH = tier.rows * ROW_STEP_PX + SAFE_MARGIN_Y * 2
   const innerW = Math.max(1, containerW - SAFE_MARGIN_X * 2)
   const cellW = innerW / tier.cols
@@ -417,8 +451,7 @@ function GlobalStampsCanvas({ items }: { items: { key: string; node: React.React
   return (
     <div ref={containerRef} className="relative w-full" style={{ height: canvasH }}>
       {items.map((it, i) => {
-        const col = i % tier.cols
-        const row = Math.floor(i / tier.cols)
+        const { col, row } = cells[i] ?? { col: 0, row: 0 }
         const seedX = hashId(`${it.tiltSeed}-x-${tier.cols}`)
         const seedY = hashId(`${it.tiltSeed}-y-${tier.cols}`)
         const seedR = hashId(`${it.tiltSeed}-r`)

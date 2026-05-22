@@ -81,6 +81,13 @@ export default async function AdminGuidesListPage() {
                         }`}>
                           {g.status}
                         </span>
+                        <span className="text-xs font-bold tracking-widest uppercase px-2 py-0.5 rounded-full bg-gray-900 text-white">
+                          {g.is_premium
+                            ? 'Premium'
+                            : g.price_pence > 0
+                              ? `£${(g.price_pence / 100).toFixed(2)}`
+                              : 'Free'}
+                        </span>
                         {g.country && <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{g.country}</span>}
                         {g.tags.slice(0, 3).map(tag => (
                           <span key={tag} className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{tag}</span>

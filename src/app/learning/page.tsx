@@ -19,6 +19,10 @@ type RecommendedSite = {
   cta: string
   icon: typeof GraduationCap
   image?: string
+  // 'cover' (default) crops to fill the 4:3 frame; good for full-bleed
+  // photos. 'contain' fits the whole image inside the frame; use for
+  // circular or padded logos that would lose their edges to a crop.
+  fit?: 'cover' | 'contain'
 }
 
 const RECOMMENDED: RecommendedSite[] = [
@@ -39,6 +43,7 @@ const RECOMMENDED: RecommendedSite[] = [
     cta: 'Visit Future Explorers Club',
     icon: GraduationCap,
     image: '/images/learning/future-explorers-club.png',
+    fit: 'contain',
   },
   {
     name: 'Tuition-Up',
@@ -57,6 +62,7 @@ const RECOMMENDED: RecommendedSite[] = [
     cta: 'Apply to join',
     icon: Users,
     image: '/images/learning/Worldschooling-club.png',
+    fit: 'contain',
   },
   {
     name: 'Sums of Anarchy',
@@ -115,7 +121,9 @@ export default async function LearningPage() {
                       alt={item.name}
                       loading="lazy"
                       decoding="async"
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className={`absolute inset-0 w-full h-full group-hover:scale-105 transition-transform duration-500 ${
+                        item.fit === 'contain' ? 'object-contain p-6' : 'object-cover'
+                      }`}
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">

@@ -8,7 +8,7 @@ import PhotoPrompt from '../PhotoPrompt'
 
 export default function StoriesSection({ data, pack }: { data: AdventurePackData; pack: PackHook }) {
   const visible = data.stories.filter(s => pack.ageMode === 'older' || !s.olderOnly)
-  const [openIdx, setOpenIdx] = useState<number | null>(0)
+  const [openIdx, setOpenIdx] = useState<number | null>(null)
 
   return (
     <div className="space-y-3">

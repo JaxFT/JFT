@@ -12,7 +12,7 @@ import {
 import { listJournalEntriesForChildCountry } from '@/lib/passport-journal-db'
 import { getPackMeta, getPackByIso2, getPackSectionCount } from '@/lib/adventurePackMeta'
 import PassportPage from '@/components/passport/PassportPage'
-import { PassportStampFromRow } from '@/components/passport/PassportStamp'
+import TappableStamp from '@/components/passport/TappableStamp'
 import FlagBanner from '@/components/adventure-packs/FlagBanner'
 
 export const dynamic = 'force-dynamic'
@@ -164,8 +164,9 @@ export default async function KidCountryPage({
             ) : (
               <div className="flex flex-wrap items-start justify-center gap-x-5 gap-y-6 py-3">
                 {stamps.map(s => (
-                  <PassportStampFromRow
+                  <TappableStamp
                     key={s.id}
+                    kind="row"
                     row={s}
                     country={meta.country}
                     date={s.earned_at}

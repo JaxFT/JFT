@@ -7,6 +7,7 @@ import { TransformWrapper, TransformComponent, type ReactZoomPanPinchRef } from 
 import PassportPage from '@/components/passport/PassportPage'
 import { PassportStampFromRow } from '@/components/passport/PassportStamp'
 import MilestoneStamp from '@/components/passport/MilestoneStamp'
+import TappableStamp from '@/components/passport/TappableStamp'
 import { closePassport } from '../PassportCover'
 import CountryFlag from '@/components/CountryFlag'
 import { getPackMeta, getPackByIso2 } from '@/lib/adventurePackMeta'
@@ -496,27 +497,14 @@ function TravelerPage({ milestones, globals, empty }: { milestones: Milestone[];
       out.push({
         key: `m-${m.id}`,
         tiltSeed: m.id,
-        node: <MilestoneStamp
-          emoji={m.emoji}
-          label={m.label}
-          ink={m.ink}
-          date={m.earnedAt}
-          shape={m.shape}
-          size="sm"
-          rotate={0}
-        />,
+        node: <TappableStamp kind="milestone" milestone={m} size="sm" />,
       })
     })
     globals.forEach(s => {
       out.push({
         key: `g-${s.id}`,
         tiltSeed: s.id,
-        node: <PassportStampFromRow
-          row={s}
-          date={s.earned_at}
-          size="sm"
-          rotate={0}
-        />,
+        node: <TappableStamp kind="row" row={s} date={s.earned_at} size="sm" />,
       })
     })
     return out
@@ -589,8 +577,9 @@ function CountryPage({ group, token }: {
             Earn some in the Adventure Pack or ask a grown-up.
           </p>
         ) : group.stamps.map(s => (
-          <PassportStampFromRow
+          <TappableStamp
             key={s.id}
+            kind="row"
             row={s}
             country={group.countryName}
             date={s.earned_at}

@@ -7,7 +7,6 @@ import { TransformWrapper, TransformComponent, type ReactZoomPanPinchRef } from 
 import PassportPage from '@/components/passport/PassportPage'
 import { PassportStampFromRow } from '@/components/passport/PassportStamp'
 import MilestoneStamp from '@/components/passport/MilestoneStamp'
-import ScatteredStampSheet from '@/components/passport/ScatteredStampSheet'
 import { closePassport } from '../PassportCover'
 import CountryFlag from '@/components/CountryFlag'
 import { getPackMeta } from '@/lib/adventurePackMeta'
@@ -435,18 +434,17 @@ function CountryPage({ group, token }: {
           </Link>
         )}
       </div>
-      <ScatteredStampSheet seed={`country-${group.countrySlug ?? 'travel'}`} stampSize="md">
+      <div className="flex flex-wrap items-start justify-center gap-x-4 gap-y-5 pt-2 pb-4">
         {group.stamps.map(s => (
           <PassportStampFromRow
             key={s.id}
             row={s}
             country={group.countryName === '✈️ Travel' ? null : group.countryName}
             date={s.earned_at}
-            size="md"
-            rotate={0}
+            size="sm"
           />
         ))}
-      </ScatteredStampSheet>
+      </div>
     </section>
   )
 }

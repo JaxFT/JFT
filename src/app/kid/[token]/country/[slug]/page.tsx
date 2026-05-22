@@ -169,7 +169,7 @@ export default async function KidCountryPage({
                     row={s}
                     country={meta.country}
                     date={s.earned_at}
-                    size="md"
+                    size="sm"
                   />
                 ))}
               </div>

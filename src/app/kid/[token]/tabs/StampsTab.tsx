@@ -338,7 +338,7 @@ function PageHeader({
   )
 }
 
-// Decides whether to render the Traveller milestones page or a
+// Decides whether to render the Global Stamps milestones page or a
 // country stamps page from a single Page descriptor.
 function PageInner({
   page, token, onlyTravelerEmpty,
@@ -358,7 +358,7 @@ function TravelerPage({ milestones, empty }: { milestones: Milestone[]; empty: b
       >
         <div className="inline-flex items-center gap-2">
           <Award className="w-4 h-4" />
-          <h3 className="text-base font-extrabold uppercase tracking-[0.18em]">Traveller</h3>
+          <h3 className="text-base font-extrabold uppercase tracking-[0.18em]">Global Stamps</h3>
         </div>
         <p className="text-xs uppercase tracking-widest opacity-60">
           {empty ? 'Empty' : `${milestones.length} ${milestones.length === 1 ? 'badge' : 'badges'}`}
@@ -370,7 +370,7 @@ function TravelerPage({ milestones, empty }: { milestones: Milestone[]; empty: b
           className="text-center text-xs uppercase tracking-widest py-10 leading-relaxed"
           style={{ color: '#5a3a12', opacity: 0.7 }}
         >
-          Visit your first country to start earning traveller badges.
+          Visit your first country to start earning global stamps.
           <br />
           Open an Adventure Pack or log a flight to begin.
         </p>
@@ -472,7 +472,7 @@ function buildPages(stamps: StampRow[], visits: CountryVisitRow[], homeCountryIs
 }
 
 function pageLabel(p: Page): string {
-  if (p.kind === 'traveler') return 'Traveller'
+  if (p.kind === 'traveler') return 'Global Stamps'
   return p.countryName
 }
 function pageKey(p: Page, i: number): string {

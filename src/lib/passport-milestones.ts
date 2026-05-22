@@ -51,7 +51,7 @@ const CONTINENT_INK: Record<string, string> = {
 }
 
 // Visual variety: each milestone picks a stamp shape so the
-// Traveller page doesn't feel like a wall of identical circles.
+// Global Stamps page doesn't feel like a wall of identical circles.
 // We stick to clean geometric shapes — hand-rolled continent
 // silhouettes never quite read right at stamp size, so each
 // continent gets one of these shapes instead.

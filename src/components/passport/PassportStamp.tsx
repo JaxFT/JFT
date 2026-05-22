@@ -13,8 +13,19 @@
 import { STAMP_META, type StampType } from '@/lib/passport-types'
 import type { StampShape } from '@/lib/passport-milestones'
 
+// PassportStamp can be driven two ways:
+//   1. By `type` — looks up STAMP_META for label/emoji/ink and
+//      SHAPE_FOR_TYPE for shape. Used by the 18 system stamps.
+//   2. By explicit overrides `{ label, emoji, ink, shape }` — used by
+//      milestone badges and custom kid/parent-created stamps.
+// Callers must provide one or the other; passing `type` plus an
+// override lets the override win for that field.
 type Props = {
-  type: StampType
+  type?: StampType
+  label?: string
+  emoji?: string
+  ink?: string
+  shape?: StampShape
   country?: string | null
   date?: string | null
   rotate?: number
@@ -48,8 +59,8 @@ function hashSeed(s: string): number {
   return h
 }
 
-function rotationFor(type: StampType): number {
-  return (hashSeed(type) % 13) - 6
+function rotationFor(seed: string): number {
+  return (hashSeed(seed) % 13) - 6
 }
 
 function formatDateLine(s?: string | null): string {
@@ -70,18 +81,30 @@ function pxFor(shape: StampShape, size: 'sm' | 'md') {
   return { w: base, h: base }
 }
 
-export default function PassportStamp({ type, country, date, rotate, size = 'md' }: Props) {
-  const meta = STAMP_META[type]
-  const shape = SHAPE_FOR_TYPE[type] ?? 'circle'
-  const angle = rotate ?? rotationFor(type)
-  const seed = hashSeed(type) % 1000
+export default function PassportStamp(props: Props) {
+  const { type, country, date, rotate, size = 'md' } = props
+  // Resolve content: explicit override props win; fall back to
+  // STAMP_META if a type was provided. If neither is available we
+  // can't render — render nothing rather than crash.
+  const meta = type ? STAMP_META[type] : null
+  const label = props.label ?? meta?.label
+  const emoji = props.emoji ?? meta?.emoji
+  const ink = props.ink ?? meta?.ink
+  const shape = props.shape ?? (type ? SHAPE_FOR_TYPE[type] : null) ?? 'circle'
+  if (!label || !emoji || !ink) return null
+
+  // Seed for rotation + distress filter. Stable per-stamp so the same
+  // stamp always looks identical across renders.
+  const seedSource = type ?? `${label}|${emoji}`
+  const angle = rotate ?? rotationFor(seedSource)
+  const seed = hashSeed(seedSource) % 1000
+
   const { w, h } = pxFor(shape, size)
   const dateStr = formatDateLine(date)
   // Default issuer mark when no country is attached (eg. STEP_CHAMP,
-  // EARLY_BIRD). Real country names (Japan, Morocco, …) pass through.
+  // EARLY_BIRD, milestones, customs). Real country names pass through.
   const countryStr = country ? country.toUpperCase() : 'JFT'
-  const labelStr = meta.label.toUpperCase()
-  const emoji = meta.emoji
+  const labelStr = label.toUpperCase()
 
   return (
     <div
@@ -93,11 +116,11 @@ export default function PassportStamp({ type, country, date, rotate, size = 'md'
         opacity: 0.88,
         mixBlendMode: 'multiply',
       }}
-      aria-label={`${meta.label}${country ? ' · ' + countryStr : ''}${dateStr ? ' · ' + dateStr : ''}`}
+      aria-label={`${label}${country ? ' · ' + countryStr : ''}${dateStr ? ' · ' + dateStr : ''}`}
     >
       <StampSVG
         shape={shape}
-        ink={meta.ink}
+        ink={ink}
         label={labelStr}
         country={countryStr}
         date={dateStr}

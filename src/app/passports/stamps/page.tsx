@@ -5,6 +5,9 @@ import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 import PassportStamp from '@/components/passport/PassportStamp'
+import MilestoneStamp from '@/components/passport/MilestoneStamp'
+import ScatteredStampSheet from '@/components/passport/ScatteredStampSheet'
+import PassportPage from '@/components/passport/PassportPage'
 import { STAMP_META, AUTO_STAMP_TYPES, PERMISSION_LABELS, PERMISSION_DESCRIPTIONS, type StampType, type PermissionMode } from '@/lib/passport-types'
 
 export const metadata: Metadata = {
@@ -233,6 +236,47 @@ export default async function StampsExplainerPage() {
           </ul>
         </section>
 
+        {/* DENSITY PREVIEW — what a Global Stamps page looks like
+            with ~30 stamps. Mix of system + milestone + sample
+            custom. Use this to evaluate whether to cap, paginate,
+            or just let it grow with internal scroll. */}
+        <section className="mb-14">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Density preview: 30 stamps</h2>
+          <p className="text-sm text-gray-500 mb-6">
+            Sample of what the Global Stamps page will look like once custom stamps are in play and a kid has been at it a while. Mix of system stamps, milestone badges, and parent/kid customs.
+          </p>
+          <div className="bg-brand-950 rounded-2xl p-4 sm:p-6">
+            <PassportPage className="p-6 sm:p-8">
+              <div className="flex items-baseline justify-between mb-5">
+                <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: '#5a3a12' }}>
+                  Global Stamps · Sample
+                </p>
+                <p className="text-xs uppercase tracking-widest" style={{ color: '#5a3a12', opacity: 0.6 }}>
+                  30 stamps
+                </p>
+              </div>
+              <ScatteredStampSheet seed="density-preview">
+                {DENSITY_PREVIEW.map((entry, i) => {
+                  if (entry.kind === 'system') {
+                    return <PassportStamp key={i} type={entry.type} size="sm" date={entry.date} country={entry.country} />
+                  }
+                  return (
+                    <MilestoneStamp
+                      key={i}
+                      label={entry.label}
+                      emoji={entry.emoji}
+                      ink={entry.ink}
+                      shape={entry.shape}
+                      date={entry.date}
+                      size="sm"
+                    />
+                  )
+                })}
+              </ScatteredStampSheet>
+            </PassportPage>
+          </div>
+        </section>
+
         {/* CTA */}
         <section>
           <div className="bg-brand-950 text-white rounded-2xl p-6 sm:p-8 text-center">
@@ -260,6 +304,52 @@ export default async function StampsExplainerPage() {
     </div>
   )
 }
+
+// Mix of stamp variants used by the density preview at the bottom of
+// the page. Order is intentional — recent at top, older at bottom —
+// so the scattered layout has a chronological feel.
+type PreviewEntry =
+  | { kind: 'system';    type: StampType; country?: string | null; date: string }
+  | { kind: 'milestone'; label: string;   emoji: string; ink: string;
+      shape: 'circle' | 'oval' | 'rounded' | 'shield' | 'hexagon' | 'flag'; date: string }
+
+const DENSITY_PREVIEW: PreviewEntry[] = [
+  // Milestone badges (count-based achievements)
+  { kind: 'milestone', label: '5 Countries',          emoji: '🌍', ink: '#0f3a2a', shape: 'oval',    date: '2026-04-21' },
+  { kind: 'milestone', label: 'Brave Eater · 5',      emoji: '🍜', ink: '#9c2516', shape: 'rounded', date: '2026-04-12' },
+  { kind: 'milestone', label: 'Europe Explorer',      emoji: '🏰', ink: '#1e3a8a', shape: 'oval',    date: '2026-03-30' },
+  { kind: 'milestone', label: 'Asia Explorer',        emoji: '🏯', ink: '#9c2516', shape: 'rounded', date: '2026-02-18' },
+  { kind: 'milestone', label: 'Africa Explorer',      emoji: '🐘', ink: '#15803d', shape: 'shield',  date: '2026-01-08' },
+  { kind: 'milestone', label: '3 Continents',         emoji: '🌎', ink: '#5b21b6', shape: 'hexagon', date: '2026-01-08' },
+
+  // Custom stamps — parent or kid created. Free-form labels.
+  { kind: 'milestone', label: 'Treehouse Sleepover',  emoji: '🌳', ink: '#15803d', shape: 'circle',  date: '2026-05-02' },
+  { kind: 'milestone', label: 'First Solo Order',     emoji: '🥐', ink: '#5a3a12', shape: 'oval',    date: '2026-04-28' },
+  { kind: 'milestone', label: 'Camel Ride',           emoji: '🐪', ink: '#9c2516', shape: 'rounded', date: '2026-04-15' },
+  { kind: 'milestone', label: 'Lost a Tooth',         emoji: '🦷', ink: '#1e3a8a', shape: 'circle',  date: '2026-03-22' },
+  { kind: 'milestone', label: 'Picked Up Snorkel',    emoji: '🤿', ink: '#1e3a8a', shape: 'oval',    date: '2026-03-15' },
+  { kind: 'milestone', label: 'Sushi Solo',           emoji: '🍣', ink: '#9c2516', shape: 'rounded', date: '2026-02-28' },
+  { kind: 'milestone', label: 'Train Conductor Day',  emoji: '🚂', ink: '#5b21b6', shape: 'shield',  date: '2026-02-10' },
+  { kind: 'milestone', label: 'Rainforest Walk',      emoji: '🌴', ink: '#15803d', shape: 'hexagon', date: '2026-01-25' },
+  { kind: 'milestone', label: 'First Long-Haul',      emoji: '✈️', ink: '#1e3a8a', shape: 'oval',    date: '2026-01-12' },
+
+  // System stamps from a few different countries
+  { kind: 'system', type: 'BRAVE_EATER',             country: 'Japan',          date: '2026-05-10' },
+  { kind: 'system', type: 'LOCAL_LINGO',             country: 'Japan',          date: '2026-05-09' },
+  { kind: 'system', type: 'CULTURE_SPOTTER',         country: 'Japan',          date: '2026-05-08' },
+  { kind: 'system', type: 'ADVENTURE_PACK_COMPLETE', country: 'Japan',          date: '2026-05-11' },
+  { kind: 'system', type: 'STEP_CHAMP',              country: null,             date: '2026-04-25' },
+  { kind: 'system', type: 'BRAVE_EATER',             country: 'Morocco',        date: '2026-04-05' },
+  { kind: 'system', type: 'BRAVE_TRAVELLER',         country: null,             date: '2026-03-28' },
+  { kind: 'system', type: 'SCAVENGER_HUNTER',        country: 'France',         date: '2026-03-19' },
+  { kind: 'system', type: 'MAP_READER',              country: 'France',         date: '2026-03-18' },
+  { kind: 'system', type: 'MONEY_CHANGER',           country: 'France',         date: '2026-03-17' },
+  { kind: 'system', type: 'STORY_KEEPER',            country: 'Indonesia',      date: '2026-02-15' },
+  { kind: 'system', type: 'ANIMAL_SPOTTER',          country: 'Indonesia',      date: '2026-02-14' },
+  { kind: 'system', type: 'NATURE_LOVER',            country: null,             date: '2026-01-30' },
+  { kind: 'system', type: 'WATER_ADVENTURER',        country: 'Thailand',       date: '2026-01-22' },
+  { kind: 'system', type: 'EARLY_BIRD',              country: null,             date: '2026-01-04' },
+]
 
 // Deterministic-but-varied sample date per stamp type, so the preview
 // looks like a real lived-in passport rather than every stamp being

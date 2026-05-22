@@ -6,7 +6,7 @@
 // moment that country lights up on the map.
 //
 // The country picker spans every ISO 3166-1 country, not just the
-// 35 Adventure Pack countries. Non-pack visits still get a Stamps
+// Adventure Pack countries. Non-pack visits still get a Stamps
 // tab page; they just don't have Adventure Pack content yet.
 
 import { useMemo, useState } from 'react'

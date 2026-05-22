@@ -73,7 +73,7 @@ type SelectedCountry = {
 type Props = {
   unlockedSlugs: string[]
   // ISO 3166-1 alpha-2 code of the kid's home country (any country,
-  // not just one of the 35 packs). If it matches a pack country we
+  // not just one of the pack countries). If it matches a pack country we
   // zoom the map to it on first load; otherwise we leave the global
   // view and the home-country highlight just doesn't apply.
   homeCountryIso2?: string | null

@@ -62,6 +62,18 @@ export const PACK_META: AdventurePackMeta[] = [
   { slug: 'latvia', country: 'Latvia', flag: '🇱🇻', iso2: 'lv', isFree: false, heroColour: 'bg-amber-950', status: 'live', continent: 'Europe', hasWordSearch: true, hasTilePuzzle: true },
   { slug: 'lithuania', country: 'Lithuania', flag: '🇱🇹', iso2: 'lt', isFree: false, heroColour: 'bg-yellow-900', status: 'live', continent: 'Europe', hasWordSearch: true, hasTilePuzzle: true },
   { slug: 'romania', country: 'Romania', flag: '🇷🇴', iso2: 'ro', isFree: false, heroColour: 'bg-indigo-900', status: 'live', continent: 'Europe', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'peru',      country: 'Peru',      flag: '🇵🇪', iso2: 'pe', isFree: false, heroColour: 'bg-orange-950', status: 'live', continent: 'South America', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'colombia',  country: 'Colombia',  flag: '🇨🇴', iso2: 'co', isFree: false, heroColour: 'bg-amber-600',  status: 'live', continent: 'South America', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'ecuador',   country: 'Ecuador',   flag: '🇪🇨', iso2: 'ec', isFree: false, heroColour: 'bg-lime-700',   status: 'live', continent: 'South America', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'uruguay',   country: 'Uruguay',   flag: '🇺🇾', iso2: 'uy', isFree: false, heroColour: 'bg-sky-600',    status: 'live', continent: 'South America', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'iceland',   country: 'Iceland',   flag: '🇮🇸', iso2: 'is', isFree: false, heroColour: 'bg-slate-700',  status: 'live', continent: 'Europe',        hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'kenya',     country: 'Kenya',     flag: '🇰🇪', iso2: 'ke', isFree: false, heroColour: 'bg-amber-500',  status: 'live', continent: 'Africa',        hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'nigeria',   country: 'Nigeria',   flag: '🇳🇬', iso2: 'ng', isFree: false, heroColour: 'bg-green-700',  status: 'live', continent: 'Africa',        hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'ghana',     country: 'Ghana',     flag: '🇬🇭', iso2: 'gh', isFree: false, heroColour: 'bg-yellow-500', status: 'live', continent: 'Africa',        hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'malawi',    country: 'Malawi',    flag: '🇲🇼', iso2: 'mw', isFree: false, heroColour: 'bg-emerald-900',status: 'live', continent: 'Africa',        hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'algeria',   country: 'Algeria',   flag: '🇩🇿', iso2: 'dz', isFree: false, heroColour: 'bg-stone-600',  status: 'live', continent: 'Africa',        hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'tunisia',   country: 'Tunisia',   flag: '🇹🇳', iso2: 'tn', isFree: false, heroColour: 'bg-red-500',    status: 'live', continent: 'Africa',        hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'zimbabwe',  country: 'Zimbabwe',  flag: '🇿🇼', iso2: 'zw', isFree: false, heroColour: 'bg-stone-900',  status: 'live', continent: 'Africa',        hasWordSearch: true, hasTilePuzzle: true },
 ]
 
 export function getPackMeta(slug: string): AdventurePackMeta | null {
@@ -89,8 +101,8 @@ export function getPackSectionCount(slug: string): number {
 // Look up a pack by its ISO 3166-1 alpha-2 country code. Used to
 // bridge the kid's home_country_iso2 (any country) to the optional
 // pack we have for that country (if any). Returns null if the country
-// isn't one of the 35 packs — entirely normal for families living in
-// e.g. Switzerland or Norway.
+// isn't one of the available packs, entirely normal for families
+// living somewhere we haven't built a pack for yet.
 export function getPackByIso2(iso2: string | null | undefined): AdventurePackMeta | null {
   if (!iso2) return null
   const lower = iso2.toLowerCase()

@@ -21,7 +21,7 @@ export default function CountriesTab({
   assignedPacks: AssignedPackRow[]
   homeCountryIso2: string | null
 }) {
-  // Home country may or may not be one of our 35 packs. If it is,
+  // Home country may or may not be one of our packs. If it is,
   // its pack slug is how we'll flag visits as "home"; if not, the
   // kid simply won't see a home flag (their home country isn't on
   // the visited list either since there's no pack for it).

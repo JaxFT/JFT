@@ -14,6 +14,7 @@ import MapTab from './tabs/MapTab'
 import CountriesTab from './tabs/CountriesTab'
 import JournalTab from './tabs/JournalTab'
 import PassportCover, { closePassport } from './PassportCover'
+import NewStampsAnnouncement from '@/components/passport/NewStampsAnnouncement'
 
 type Tab = 'passport' | 'map' | 'countries' | 'journal' | 'stamps'
 
@@ -174,6 +175,11 @@ export default function KidShell({
   // the original layout takes over with zero extra wrapping.
   const insideContent = (
     <div className="bg-gradient-to-b from-brand-900 to-brand-950 text-white">
+      {/* New-stamps celebration. Renders only when the inside has
+          mounted (i.e. cover has opened), so it shows up after the
+          kid actually arrives inside their book. */}
+      <NewStampsAnnouncement token={token} stamps={stamps} />
+
       {/* HEADER */}
       <header className="pt-6 pb-4 px-4 flex justify-center">
         <div className="flex items-center gap-3">

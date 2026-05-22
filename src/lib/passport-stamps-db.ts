@@ -11,7 +11,7 @@
 import { createClient as createSbClient } from '@supabase/supabase-js'
 import type { StampStatus, StampType } from './passport-types'
 import type { SectionAnswers, SectionKey } from './adventurePackTypes'
-import { getPackMeta } from './adventurePackMeta'
+import { getPackMeta, getPackByIso2 } from './adventurePackMeta'
 
 function admin() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -21,6 +21,41 @@ function admin() {
     serviceKey,
     { auth: { persistSession: false, autoRefreshToken: false } },
   )
+}
+
+// Called whenever a new family country visit is created. If the
+// visited country has a live Adventure Pack, every child in the
+// family who isn't already assigned that pack gets it inserted into
+// child_pack_assignments. Silently no-ops for non-pack countries
+// and for children who already have the assignment.
+export async function autoAssignPackForVisit(parentId: string, iso2: string): Promise<void> {
+  const pack = getPackByIso2(iso2)
+  if (!pack || pack.status !== 'live') return
+
+  const sb = admin()
+  const { data: kidsData } = await sb
+    .from('children')
+    .select('id')
+    .eq('parent_id', parentId)
+  const kidIds = ((kidsData ?? []) as Array<{ id: string }>).map(k => k.id)
+  if (kidIds.length === 0) return
+
+  const { data: existingData } = await sb
+    .from('child_pack_assignments')
+    .select('child_id')
+    .eq('country_slug', pack.slug)
+    .in('child_id', kidIds)
+  const haveSet = new Set(
+    ((existingData ?? []) as Array<{ child_id: string }>).map(e => e.child_id),
+  )
+
+  const rows = kidIds
+    .filter(id => !haveSet.has(id))
+    .map(child_id => ({ child_id, country_slug: pack.slug }))
+  if (rows.length === 0) return
+
+  const { error } = await sb.from('child_pack_assignments').insert(rows)
+  if (error) console.error('[stamps] autoAssignPackForVisit', error)
 }
 
 export type AwardInput = {
@@ -146,6 +181,11 @@ export async function awardOrSuggestStamp(input: AwardInput): Promise<AwardResul
         console.error('[stamps] linked-visit insert', visitErr)
       }
       wasNewVisit = !visitErr
+      // New visit → auto-assign the pack to every child in the
+      // family who doesn't already have it.
+      if (wasNewVisit) {
+        await autoAssignPackForVisit(parentRow.parent_id, pack.iso2)
+      }
     }
   }
 

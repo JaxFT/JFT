@@ -6,7 +6,7 @@
 import { createClient as createSbClient } from '@supabase/supabase-js'
 import type { AgeMode, SectionAnswers, SectionKey } from './adventurePackTypes'
 import type { ChildRow } from './passport-types'
-import { awardOrSuggestStamp } from './passport-stamps-db'
+import { awardOrSuggestStamp, autoAssignPackForVisit } from './passport-stamps-db'
 import { getPackMeta } from './adventurePackMeta'
 
 function admin() {
@@ -166,6 +166,12 @@ export async function saveKidSession(
       // Ignore unique-violation if a parallel request also inserted.
       if (!visitErr || visitErr.code === '23505') {
         firstVisit = !visitErr
+      }
+      // New visit → assign the pack to every sibling who doesn't
+      // already have it (the current child opened it, but siblings
+      // get it auto-allocated so they can join in).
+      if (firstVisit) {
+        await autoAssignPackForVisit(parentId, pack.iso2)
       }
     }
     // First visit to this country earns a BRAVE_TRAVELLER stamp.

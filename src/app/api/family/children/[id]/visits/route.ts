@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCountryByIso2 } from '@/lib/countries'
+import { autoAssignPackForVisit } from '@/lib/passport-stamps-db'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -48,6 +49,17 @@ export async function POST(
     return NextResponse.json({ error: 'Date must be a past date (YYYY-MM-DD).' }, { status: 400 })
   }
 
+  // Was this country already in the family's list? We need to know
+  // so we only auto-assign packs on a genuine first visit (not on a
+  // date-only edit via the same endpoint).
+  const { data: existing } = await supabase
+    .from('family_country_visits')
+    .select('iso2')
+    .eq('parent_id', user.id)
+    .eq('iso2', iso2Raw)
+    .maybeSingle()
+  const isNewVisit = !existing
+
   // Upsert so calling POST on an existing country acts as "set /
   // replace the date" — the UI doesn't need to know whether a row
   // exists yet. Parent_id pulled from the auth session, never the URL.
@@ -59,5 +71,13 @@ export async function POST(
     )
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // First visit → auto-assign the pack (if one exists for this
+  // country and is live) to every child in the family who doesn't
+  // already have it. No-op for non-pack countries.
+  if (isNewVisit) {
+    await autoAssignPackForVisit(user.id, iso2Raw)
+  }
+
   return NextResponse.json({ ok: true })
 }

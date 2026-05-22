@@ -97,9 +97,13 @@ export default function ScatteredStampSheet({ seed, children, height: minHeight 
       {items.map((child, i) => {
         const row = Math.floor(i / layout.cols)
         const col = i % layout.cols
-        // Per-stamp jitter and rotation. Tighter jitter on narrow
-        // screens so stamps don't drift over the cell boundary.
-        const jitterScale = width < 360 ? 0.35 : width < 520 ? 0.4 : 0.5
+        // Per-stamp jitter and rotation. Pulled back from the old
+        // values so larger stamps (md = 138px base) still sit inside
+        // their cell on narrow phones rather than bleeding past the
+        // cream-paper edge. Edge cells get even less horizontal drift.
+        const baseJitter = width < 360 ? 0.18 : width < 520 ? 0.22 : 0.28
+        const isEdgeCol = col === 0 || col === layout.cols - 1
+        const jitterScale = isEdgeCol ? baseJitter * 0.6 : baseJitter
         const jitterX = (rng() - 0.5) * jitterScale
         const jitterY = (rng() - 0.5) * jitterScale
         const rotate = (rng() - 0.5) * 36

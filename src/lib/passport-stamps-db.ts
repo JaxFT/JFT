@@ -120,6 +120,28 @@ export async function awardOrSuggestStamp(input: AwardInput): Promise<AwardResul
     .select('id')
     .single()
   if (error) return { ok: false, error: error.message }
+
+  // Linked country visit. When a stamp is tied to a country (any
+  // award path: pack, parent manual, custom), make sure the kid is
+  // marked as having visited that country so it lights up on the
+  // Map + Countries tabs and counts toward the "N countries" and
+  // continent milestones. Pack flows already insert this row when
+  // the kid first opens a pack; 23505 (unique violation) means it
+  // existed already and we keep whatever date is there.
+  if (input.countrySlug) {
+    const visitDate = (input.earnedAt ?? new Date().toISOString()).slice(0, 10)
+    const { error: visitErr } = await sb
+      .from('child_country_visits')
+      .insert({
+        child_id: input.childId,
+        country_slug: input.countrySlug,
+        first_visit_date: visitDate,
+      })
+    if (visitErr && visitErr.code !== '23505') {
+      console.error('[stamps] linked-visit insert', visitErr)
+    }
+  }
+
   return { ok: true, created: true, id: data.id, status }
 }
 

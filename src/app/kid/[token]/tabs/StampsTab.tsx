@@ -380,9 +380,9 @@ function TravelerPage({ milestones, customs, empty }: { milestones: Milestone[];
           Open an Adventure Pack or log a flight to begin.
         </p>
       ) : (
-        // Milestones render first, customs after — milestones are the
-        // pinnacle aspirational stamps the kid is chasing; customs are
-        // personal moments slotted in alongside them.
+        // Milestones render first, customs after. Both at 'sm' size
+        // so the Global Stamps page fits a healthy mix without
+        // stamps drifting past the cream-paper edge.
         <ScatteredStampSheet seed="global-stamps-page">
           {milestones.map(m => (
             <MilestoneStamp
@@ -392,7 +392,7 @@ function TravelerPage({ milestones, customs, empty }: { milestones: Milestone[];
               ink={m.ink}
               date={m.earnedAt}
               shape={m.shape}
-              size="md"
+              size="sm"
               rotate={0}
             />
           ))}
@@ -401,7 +401,7 @@ function TravelerPage({ milestones, customs, empty }: { milestones: Milestone[];
               key={`c-${s.id}`}
               row={s}
               date={s.earned_at}
-              size="md"
+              size="sm"
               rotate={0}
             />
           ))}

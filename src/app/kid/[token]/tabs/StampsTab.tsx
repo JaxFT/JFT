@@ -46,7 +46,7 @@ export default function StampsTab({
   // holds the outgoing page index + direction; null once the
   // animation has finished and we've dropped the leaving layer.
   const [turning, setTurning] = useState<{ from: number; dir: 'next' | 'prev' } | null>(null)
-  const TURN_MS = 620
+  const TURN_MS = 420
 
   // Empty book (no stamps at all, no visits) — but we still show
   // the Traveler page so the empty state is at least one branded

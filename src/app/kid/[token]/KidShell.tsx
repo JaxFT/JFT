@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Stamp, Map, Globe, BookOpen, Star } from 'lucide-react'
 import type { PermissionMode } from '@/lib/passport-types'
@@ -58,8 +58,20 @@ export default function KidShell({
   const rawTab = searchParams.get('tab')
   const tab: Tab = (TABS.find(t => t.id === rawTab)?.id) ?? 'passport'
 
-  const goToTab = (id: Tab) => {
+  // While a tab-to-tab flip plays, both the outgoing tab (in an
+  // overlay layer rotating off) and the incoming tab (sitting flat
+  // behind) are mounted at once. `flipping` is cleared when the
+  // animation finishes so the overlay drops and we settle back to
+  // a single tab rendering.
+  const FLIP_MS = 420
+  const [flipping, setFlipping] = useState<{ from: Tab; dir: 'next' | 'prev' } | null>(null)
+
+  const goToTab = (id: Tab, dir?: 'next' | 'prev') => {
     if (id === tab) return
+    if (dir) {
+      setFlipping({ from: tab, dir })
+      window.setTimeout(() => setFlipping(null), FLIP_MS)
+    }
     router.push(`/kid/${token}?tab=${id}`, { scroll: false })
   }
 
@@ -74,12 +86,42 @@ export default function KidShell({
   const tabIndex = TAB_ORDER.indexOf(tab)
   const goToPrevSurface = () => {
     if (tabIndex <= 0) closePassport()
-    else goToTab(TAB_ORDER[tabIndex - 1])
+    else goToTab(TAB_ORDER[tabIndex - 1], 'prev')
   }
   const goToNextSurface = () => {
-    if (tabIndex < TAB_ORDER.length - 1) goToTab(TAB_ORDER[tabIndex + 1])
+    if (tabIndex < TAB_ORDER.length - 1) goToTab(TAB_ORDER[tabIndex + 1], 'next')
     // else: kid is on the last tab; their internal handler runs the
     // edge of the book on its own.
+  }
+
+  // Edge-cue pulse: a faint vertical strip on each side of the inside
+  // surface pulses for a few seconds after the inside mounts (i.e.
+  // after the cover opens) to telegraph where to swipe. Then it
+  // settles to a passive low-opacity strip that still hints at the
+  // page-edge metaphor.
+  const [showEdgeHint, setShowEdgeHint] = useState(true)
+  useEffect(() => {
+    const t = window.setTimeout(() => setShowEdgeHint(false), 4800)
+    return () => window.clearTimeout(t)
+  }, [])
+
+  const renderTab = (which: Tab) => {
+    switch (which) {
+      case 'passport':  return <PassportTab token={token} child={child} stats={stats} stamps={stamps} assignedPacks={assignedPacks} />
+      case 'map':       return <MapTab token={token} visits={visits} homeCountryIso2={child.home_country_iso2} />
+      case 'countries': return <CountriesTab token={token} visits={visits} stamps={stamps} assignedPacks={assignedPacks} homeCountryIso2={child.home_country_iso2} />
+      case 'journal':   return <JournalTab token={token} childName={child.name} permissionMode={child.permission_mode} entries={journal} />
+      case 'stamps':    return (
+        <StampsTab
+          token={token}
+          stamps={stamps}
+          visits={visits}
+          homeCountryIso2={child.home_country_iso2}
+          onSwipeBeforeFirstPage={goToPrevSurface}
+          onSwipeAfterLastPage={goToNextSurface}
+        />
+      )
+    }
   }
 
   // Gesture handler for the non-Stamps tabs. Stamps has its own
@@ -155,7 +197,11 @@ export default function KidShell({
                 <button
                   key={t.id}
                   type="button"
-                  onClick={() => goToTab(t.id)}
+                  onClick={() => {
+                    const targetIdx = TAB_ORDER.indexOf(t.id)
+                    if (targetIdx === tabIndex) return
+                    goToTab(t.id, targetIdx > tabIndex ? 'next' : 'prev')
+                  }}
                   className={`flex-1 inline-flex flex-col items-center gap-1 py-3 transition-colors text-xs font-semibold uppercase tracking-widest ${
                     active
                       ? 'text-white border-b-2 border-brand-300'
@@ -174,28 +220,43 @@ export default function KidShell({
 
       {/* PANEL. Swipe handlers live here so the whole passport
           reads as one book: swipe between tabs except inside Stamps,
-          which owns its own page-turn gesture. */}
+          which owns its own page-turn gesture. The edge strips sit
+          in main's padding box so they hug the visual book edges. */}
       <main
-        className="max-w-3xl mx-auto px-4 pt-6 pb-20"
+        className="relative max-w-3xl mx-auto px-4 pt-6 pb-20"
         onPointerDown={onMainPointerDown}
         onPointerUp={onMainPointerUp}
         onPointerCancel={() => { swipeStartRef.current = null }}
         style={{ touchAction: 'pan-y' }}
       >
-        {tab === 'passport'  && <PassportTab token={token} child={child} stats={stats} stamps={stamps} assignedPacks={assignedPacks} />}
-        {tab === 'map'       && <MapTab token={token} visits={visits} homeCountryIso2={child.home_country_iso2} />}
-        {tab === 'countries' && <CountriesTab token={token} visits={visits} stamps={stamps} assignedPacks={assignedPacks} homeCountryIso2={child.home_country_iso2} />}
-        {tab === 'journal'   && <JournalTab token={token} childName={child.name} permissionMode={child.permission_mode} entries={journal} />}
-        {tab === 'stamps'    && (
-          <StampsTab
-            token={token}
-            stamps={stamps}
-            visits={visits}
-            homeCountryIso2={child.home_country_iso2}
-            onSwipeBeforeFirstPage={goToPrevSurface}
-            onSwipeAfterLastPage={goToNextSurface}
-          />
-        )}
+        <div
+          aria-hidden
+          className={`absolute inset-y-0 left-0 w-3 sm:w-4 pointer-events-none ${showEdgeHint ? 'animate-page-edge-hint' : ''}`}
+          style={{
+            opacity: 0.3,
+            background: 'linear-gradient(90deg, rgba(245,230,198,0.55), transparent)',
+          }}
+        />
+        <div
+          aria-hidden
+          className={`absolute inset-y-0 right-0 w-3 sm:w-4 pointer-events-none ${showEdgeHint ? 'animate-page-edge-hint' : ''}`}
+          style={{
+            opacity: 0.3,
+            background: 'linear-gradient(-90deg, rgba(245,230,198,0.55), transparent)',
+          }}
+        />
+
+        <div className="relative">
+          {renderTab(tab)}
+          {flipping && flipping.from !== tab && (
+            <div
+              aria-hidden
+              className={`absolute inset-0 pointer-events-none ${flipping.dir === 'next' ? 'animate-page-out-next' : 'animate-page-out-prev'}`}
+            >
+              {renderTab(flipping.from)}
+            </div>
+          )}
+        </div>
       </main>
     </div>
   )

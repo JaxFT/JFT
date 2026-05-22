@@ -24,7 +24,28 @@ const DESTINATION_GENERAL = '__none'
 
 type Counts = Record<string, { likes: number; comments: number }>
 
-export default function BlogBrowser({ posts, counts = {} }: { posts: BlogPostView[]; counts?: Counts }) {
+// A guide rendered as a card on /blog. Same visual treatment as a
+// blog card, but the link goes to /guides/[slug] and there are no
+// likes/comments. Only shown to premium viewers (loaded server-side).
+export type GuideCardItem = {
+  slug: string
+  title: string
+  excerpt: string
+  coverImage: string
+  tags: string[]
+  date: string         // ISO date, used for sort
+  country: string | null
+}
+
+export default function BlogBrowser({
+  posts,
+  counts = {},
+  guides = [],
+}: {
+  posts: BlogPostView[]
+  counts?: Counts
+  guides?: GuideCardItem[]
+}) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -66,6 +87,45 @@ export default function BlogBrowser({ posts, counts = {} }: { posts: BlogPostVie
       return true
     })
   }, [posts, stage, destination, topic, q])
+
+  // Guides only carry tags + a country, not the structured stage /
+  // topic metadata blog posts have. So a stage or topic filter hides
+  // every guide; a destination filter keeps only matching countries;
+  // a free-text search hits title / excerpt / tags as you'd expect.
+  const filteredGuides = useMemo(() => {
+    const term = q.trim().toLowerCase()
+    return guides.filter(g => {
+      if (stage) return false
+      if (topic) return false
+      if (destination) {
+        if (destination === DESTINATION_GENERAL) {
+          if (g.country) return false
+        } else {
+          if (g.country !== destination) return false
+        }
+      }
+      if (term) {
+        const hay = `${g.title} ${g.excerpt} ${g.tags.join(' ')}`.toLowerCase()
+        if (!hay.includes(term)) return false
+      }
+      return true
+    })
+  }, [guides, stage, destination, topic, q])
+
+  // Combined feed sorted newest-first regardless of filter state so
+  // the default view (no filters) always leads with the most recent
+  // post or guide.
+  const combinedFeed = useMemo(() => {
+    type Item =
+      | { kind: 'post'; date: string; post: BlogPostView }
+      | { kind: 'guide'; date: string; guide: GuideCardItem }
+    const items: Item[] = [
+      ...filteredPosts.map(p => ({ kind: 'post' as const, date: p.date, post: p })),
+      ...filteredGuides.map(g => ({ kind: 'guide' as const, date: g.date, guide: g })),
+    ]
+    items.sort((a, b) => (a.date < b.date ? 1 : -1))
+    return items
+  }, [filteredPosts, filteredGuides])
 
   const livePacks = useMemo(() => PACK_META.filter(p => p.status === 'live'), [])
 
@@ -213,7 +273,8 @@ export default function BlogBrowser({ posts, counts = {} }: { posts: BlogPostVie
       {/* ACTIVE FILTER CHIPS — read-only summary line. */}
       {hasAnyFilter && (
         <p className="text-sm text-gray-500 mb-5">
-          Showing {filteredPosts.length} of {posts.length} posts
+          Showing {combinedFeed.length} of {posts.length + guides.length}
+          {guides.length > 0 ? ' posts and guides' : ' posts'}
           {stage && <> · stage <strong className="text-gray-700">{TRAVEL_STAGE_LABEL[stage]}</strong></>}
           {destination && <> · destination <strong className="text-gray-700">{destinationLabel}</strong></>}
           {topic && <> · topic <strong className="text-gray-700">{BLOG_TOPIC_LABEL[topic]}</strong></>}
@@ -221,16 +282,67 @@ export default function BlogBrowser({ posts, counts = {} }: { posts: BlogPostVie
         </p>
       )}
 
-      {/* POSTS GRID */}
-      {filteredPosts.length === 0 ? (
+      {/* COMBINED FEED — posts and (for premium viewers) published
+          web guides, sorted newest-first. */}
+      {combinedFeed.length === 0 ? (
         <p className="text-gray-400 text-sm">
           No posts match those filters yet.
         </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPosts.map(p => <BlogCard key={p.slug} post={p} counts={counts[p.slug]} />)}
+          {combinedFeed.map(item =>
+            item.kind === 'post'
+              ? <BlogCard key={`p-${item.post.slug}`} post={item.post} counts={counts[item.post.slug]} />
+              : <GuideCard key={`g-${item.guide.slug}`} guide={item.guide} />,
+          )}
         </div>
       )}
     </div>
+  )
+}
+
+// Card for a published web guide on /blog. Same visual rhythm as
+// BlogCard but routes to /guides/[slug], shows a "Guide" badge in
+// place of the Premium chip, and drops the likes / comments /
+// share footer (guides don't have those interactions).
+function GuideCard({ guide }: { guide: GuideCardItem }) {
+  return (
+    <a
+      href={`/guides/${guide.slug}`}
+      className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100"
+    >
+      {guide.coverImage && (
+        <div className="overflow-hidden h-48">
+          <img
+            src={guide.coverImage}
+            alt={guide.title}
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        </div>
+      )}
+      <div className="flex flex-col flex-1 p-5">
+        {guide.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {guide.tags.slice(0, 2).map(tag => (
+              <span key={tag} className="text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">{tag}</span>
+            ))}
+          </div>
+        )}
+        <h3 className="font-bold text-gray-900 text-base leading-snug mb-2 group-hover:text-brand-600 transition-colors line-clamp-2">
+          {guide.title}
+        </h3>
+        <p className="text-sm text-gray-500 leading-relaxed flex-1 line-clamp-3">{guide.excerpt}</p>
+        <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between gap-2 text-xs">
+          <span className="text-gray-400">
+            {new Date(guide.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+          </span>
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold tracking-wide uppercase text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full">
+            Guide
+          </span>
+        </div>
+      </div>
+    </a>
   )
 }

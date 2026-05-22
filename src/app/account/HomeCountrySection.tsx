@@ -110,7 +110,7 @@ export default function HomeCountrySection({
                 <span className="font-semibold text-gray-900 truncate">{selected.name}</span>
               </>
             ) : (
-              <span className="text-gray-700">, No home set ,</span>
+              <span className="text-gray-700">No home set</span>
             )}
           </span>
           <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`} />
@@ -168,7 +168,7 @@ export default function HomeCountrySection({
                 iso2 === null ? 'bg-brand-50 text-brand-800 font-semibold' : 'text-gray-700 hover:bg-gray-50'
               }`}
             >
-              , No home set ,
+              No home set
             </button>
 
             {filtered.length === 0 ? (

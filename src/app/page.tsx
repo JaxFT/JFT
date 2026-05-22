@@ -70,7 +70,7 @@ export default async function HomePage() {
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
                 <Link href="/work-with-us" className="btn-primary text-base px-7 py-3.5">
-                  Work with us <ArrowRight className="w-4 h-4" />
+                  How we can help <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link href="/blog" className="inline-flex items-center gap-2 text-white/80 hover:text-white font-medium transition-colors">
                   Read the blog <ArrowRight className="w-4 h-4" />

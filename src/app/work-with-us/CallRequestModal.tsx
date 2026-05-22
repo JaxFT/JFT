@@ -133,7 +133,7 @@ export default function CallRequestModal({ open, onClose, defaultName, defaultEm
         <div className="sticky top-0 bg-white border-b border-gray-100 px-6 sm:px-8 py-4 flex items-start justify-between gap-4 rounded-t-2xl">
           <div>
             <h2 className="text-xl font-bold text-gray-900">Book a 1:1 with us</h2>
-            <p className="text-xs text-gray-500 mt-0.5">No commitment yet. We'll reply with availability and pricing.</p>
+            <p className="text-xs text-gray-500 mt-0.5">No commitment yet. We'll reply with availability and confirm the £49.99 payment link once you've picked a time.</p>
           </div>
           <button
             type="button"

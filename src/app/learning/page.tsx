@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
-import Link from 'next/link'
-import { BookOpen, Lock, ArrowRight, ExternalLink, GraduationCap, Users } from 'lucide-react'
+import { BookOpen, Lock, ExternalLink, GraduationCap, Users, Compass } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -72,6 +71,17 @@ const RECOMMENDED: RecommendedSite[] = [
     cta: 'Visit Sums of Anarchy',
     icon: GraduationCap,
     image: '/images/learning/Sums-Of-Annarchy.png',
+  },
+  // Our own contribution to the worldschooling ecosystem, sitting
+  // in the same grid so it reads as a peer of the recommended sites
+  // rather than a separate ad strip below.
+  {
+    name: 'Adventure Packs',
+    url: '/adventure-packs',
+    eyebrow: 'Jax Family Travels',
+    blurb: 'Country-specific missions for your family. Language, food, geography, history, scavenger hunts and family chat cards, designed to do on the ground as you travel. France is free for every member.',
+    cta: 'Browse Adventure Packs',
+    icon: Compass,
   },
 ]
 
@@ -151,21 +161,9 @@ export default async function LearningPage() {
           </p>
         </section>
 
-        {/* ADVENTURE PACKS PROMO — sits below the people we recommend,
-            as our own contribution to the worldschooling ecosystem. */}
-        <section className="mb-4">
-          <Link
-            href="/adventure-packs"
-            className="block bg-gradient-to-br from-brand-700 to-brand-900 text-white rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow"
-          >
-            <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-2">Adventure Packs</p>
-            <h2 className="text-2xl sm:text-3xl font-bold mb-2">Country-specific missions for your family</h2>
-            <p className="text-white/80 text-sm sm:text-base leading-relaxed max-w-2xl">
-              Interactive packs covering language, food, geography, history, scavenger hunts and family chat cards, to do on the ground as you travel.
-              France is free for every member. <span className="text-white font-semibold">Browse all packs <ArrowRight className="w-4 h-4 inline -mt-0.5" /></span>
-            </p>
-          </Link>
-        </section>
+        {/* Adventure Packs now slots into the recommended-sites grid
+            above as one of the cards, alongside the third-party
+            worldschooling resources. */}
       </div>
     </div>
   )

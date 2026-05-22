@@ -132,8 +132,8 @@ export default function CountryVisitsSection({
       </div>
 
       <p className="text-sm text-gray-500 mb-5">
-        Where the family has travelled. Shared across every child in the family — adding here lights up the map on
-        every passport. We auto-add a visit when a kid first opens a pack or when you log a flight; you can also
+        Where the family has travelled. Shared across every child in the family, adding here lights up the map on
+        every passport. We auto-add a visit when a kid first opens a country&apos;s Adventure Pack, or you can
         backdate trips you took before you started using JFT.
       </p>
 

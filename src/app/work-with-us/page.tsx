@@ -51,13 +51,16 @@ export default async function WorkWithUsPage() {
           <div className="bg-brand-50 border-2 border-brand-200 rounded-2xl p-6 sm:p-8">
             <div className="flex items-center gap-2 mb-3">
               <Compass className="w-5 h-5 text-brand-700" />
-              <p className="text-xs font-bold tracking-widest uppercase text-brand-700">Start here · 5 minutes · free</p>
+              <p className="text-xs font-bold tracking-widest uppercase text-brand-700">Start here · about 5 minutes · free</p>
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 leading-tight">
               Take our pre-trip questionnaire
             </h2>
-            <p className="text-sm sm:text-base text-gray-700 leading-relaxed mb-5 max-w-xl">
-              Honest answers to your own questions, in five minutes. You&apos;ll get a readiness score, your specific strengths and gaps, recommended travel style, and a clear next step you can act on this week.
+            <p className="text-sm sm:text-base text-gray-700 leading-relaxed mb-2 max-w-xl">
+              Honest answers to your own questions, in about five minutes. You&apos;ll get a readiness score, your specific strengths and gaps, recommended travel style, and a clear next step you can act on this week.
+            </p>
+            <p className="text-xs text-gray-500 mb-5 max-w-xl">
+              Answer as honestly as you can, you only see the result if it&apos;s honest. Nothing is saved or sent anywhere, your answers live in your browser for the session and disappear when you close the tab.
             </p>
             <Link
               href="/i-want-to-travel"

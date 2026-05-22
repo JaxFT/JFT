@@ -5,7 +5,7 @@ import { Instagram, ArrowRight } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'About us · Jax Family Travels',
-  description: "We're Bec, Oli & Jax — a family from the UK who decided in October 2024 to leave the routine behind. This is our story, and why we built Jax Family Travels.",
+  description: "We're Bec, Oli & Jax, a family from the UK who decided in September 2025 to leave the routine behind. This is our story, and why we built Jax Family Travels.",
 }
 
 // About-us reads more like a blog post than a marketing page —
@@ -23,7 +23,7 @@ export default function AboutPage() {
             From one family figuring it out to another
           </h1>
           <p className="text-gray-500 mt-3 text-base">
-            Bec, Oli & Jax · UK · travelling since October 2024
+            Bec, Oli & Jax · UK · travelling since September 2025
           </p>
         </header>
 
@@ -46,7 +46,7 @@ export default function AboutPage() {
         {/* Body — long-form copy in a comfortable reading column. */}
         <div className="prose prose-lg prose-gray max-w-none prose-headings:font-bold prose-p:leading-relaxed">
           <p>
-            We&apos;re Bec, Oli &amp; Jax, a family from the UK who decided in October 2024 that we wanted more from life than the usual routine.
+            We&apos;re Bec, Oli &amp; Jax, a family from the UK who decided in September 2025 that we wanted more from life than the usual routine.
           </p>
 
           <p>

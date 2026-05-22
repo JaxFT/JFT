@@ -5541,7 +5541,7 @@ export const LITHUANIA_DATA: AdventurePackData = {
     { emoji: '🥖', name: 'Kepta duona', description: 'Fried rye bread sticks with garlic and cheese — Lithuanian pub snack at its finest.' },
     { emoji: '🥞', name: 'Bulvių blynai', description: 'Crispy fried potato pancakes with sour cream or apple sauce. Comfort food.' },
     { emoji: '🍯', name: 'Šakotis', description: 'A "tree cake" — batter dripped onto a spit and slowly rotated over an open flame, building up dripping spiky layers. Looks like a Christmas tree.' },
-    { emoji: '🍺', name: 'Kvass', description: 'A traditional fermented rye-bread drink — slightly fizzy, slightly sweet, low alcohol. Popular all over Eastern Europe.' },
+    { emoji: '🥧', name: 'Skilandis', description: 'A smoked, dry-cured pig stomach stuffed with chopped meat, garlic and pepper. Sliced thin like salami, served on dark rye bread. A traditional Lithuanian smallholding food.' },
   ],
   scavengerItems: [
     { emoji: '🏰', label: 'A castle on an island or a hill' },

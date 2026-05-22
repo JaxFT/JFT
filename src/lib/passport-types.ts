@@ -23,15 +23,14 @@ export type ChildRow = {
   qr_token: string
   permission_mode: PermissionMode
   stamp_auto_approve: boolean
-  // The ISO 3166-1 alpha-2 code of the country the kid lives in
-  // (eg. 'gb' for the UK, 'ch' for Switzerland). Excluded from
-  // "new countries explored" travel stats. Switched from the old
-  // pack-slug field so families living outside the 35 pack countries
-  // can still record where home is.
-  home_country_iso2: string | null
   created_at: string
   updated_at: string
 }
+
+// Home country now lives on the parent profile and applies to
+// every child in the family. Fetched via getParentProfile / the
+// equivalent helper in passport-db.
+export type ProfileHomeCountry = string | null
 
 // A small set of friendly quick-pick avatars. The avatar input also
 // accepts any emoji a parent types — these are just one-tap shortcuts.

@@ -30,12 +30,12 @@ type Child = {
   name: string
   avatar: string
   permission_mode: PermissionMode
-  home_country_iso2: string | null
 }
 
 export default function KidShell({
   token,
   child,
+  homeCountryIso2,
   stats,
   stamps,
   visits,
@@ -44,6 +44,7 @@ export default function KidShell({
 }: {
   token: string
   child: Child
+  homeCountryIso2: string | null
   stats: KidStats
   stamps: StampRow[]
   visits: CountryVisitRow[]
@@ -108,15 +109,15 @@ export default function KidShell({
   const renderTab = (which: Tab) => {
     switch (which) {
       case 'passport':  return <PassportTab token={token} child={child} stats={stats} stamps={stamps} assignedPacks={assignedPacks} />
-      case 'map':       return <MapTab token={token} visits={visits} homeCountryIso2={child.home_country_iso2} />
-      case 'countries': return <CountriesTab token={token} visits={visits} stamps={stamps} assignedPacks={assignedPacks} homeCountryIso2={child.home_country_iso2} />
+      case 'map':       return <MapTab token={token} visits={visits} homeCountryIso2={homeCountryIso2} />
+      case 'countries': return <CountriesTab token={token} visits={visits} stamps={stamps} assignedPacks={assignedPacks} homeCountryIso2={homeCountryIso2} />
       case 'journal':   return <JournalTab token={token} childName={child.name} permissionMode={child.permission_mode} entries={journal} />
       case 'stamps':    return (
         <StampsTab
           token={token}
           stamps={stamps}
           visits={visits}
-          homeCountryIso2={child.home_country_iso2}
+          homeCountryIso2={homeCountryIso2}
           onSwipeBeforeFirstPage={goToPrevSurface}
           onSwipeAfterLastPage={goToNextSurface}
         />

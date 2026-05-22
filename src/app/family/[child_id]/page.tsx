@@ -18,7 +18,7 @@ import PackAssignmentSection from './PackAssignmentSection'
 import CountryVisitsSection from './CountryVisitsSection'
 import StampsManagementSection from './StampsManagementSection'
 import JournalSection from './JournalSection'
-import HomeCountrySection from './HomeCountrySection'
+// HomeCountrySection moved to /family (family-level setting).
 import DeleteChildButton from './DeleteChildButton'
 
 export const dynamic = 'force-dynamic'
@@ -113,12 +113,6 @@ export default async function ChildDetailPage({
             childId={child.id}
             childName={child.name}
             initialToken={child.qr_token}
-          />
-
-          <HomeCountrySection
-            childId={child.id}
-            childName={child.name}
-            initialHomeIso2={child.home_country_iso2}
           />
 
           <PackAssignmentSection

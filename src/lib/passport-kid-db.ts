@@ -36,6 +36,21 @@ export async function getChildByToken(token: string): Promise<ChildRow | null> {
   return (data as ChildRow) ?? null
 }
 
+// Family-level home country lives on the parent profile. Kid passport
+// fetches it by the child's parent_id.
+export async function getParentHomeCountry(parentId: string): Promise<string | null> {
+  const { data, error } = await admin()
+    .from('profiles')
+    .select('home_country_iso2')
+    .eq('id', parentId)
+    .maybeSingle()
+  if (error) {
+    console.error('[passport] getParentHomeCountry', error)
+    return null
+  }
+  return ((data as { home_country_iso2?: string } | null)?.home_country_iso2 ?? null)
+}
+
 export type StampRow = {
   id: string
   child_id: string

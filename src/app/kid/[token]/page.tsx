@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import {
   getChildByToken,
   getKidStats,
+  getParentHomeCountry,
   listAwardedStampsForChild,
   listCountryVisitsForFamily,
   listAssignedPacksForChild,
@@ -36,12 +37,13 @@ export default async function KidLandingPage({
   const child = await getChildByToken(token)
   if (!child) notFound()
 
-  const [stats, stamps, visits, assignedPacks, journal] = await Promise.all([
+  const [stats, stamps, visits, assignedPacks, journal, homeCountryIso2] = await Promise.all([
     getKidStats(child.id),
     listAwardedStampsForChild(child.id),
     listCountryVisitsForFamily(child.parent_id),
     listAssignedPacksForChild(child.id),
     listJournalEntriesForChild(child.id),
+    getParentHomeCountry(child.parent_id),
   ])
 
   return (
@@ -52,8 +54,8 @@ export default async function KidLandingPage({
         name: child.name,
         avatar: child.avatar,
         permission_mode: child.permission_mode,
-        home_country_iso2: child.home_country_iso2,
       }}
+      homeCountryIso2={homeCountryIso2}
       stats={stats}
       stamps={stamps}
       visits={visits}

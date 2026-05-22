@@ -102,7 +102,7 @@ export default async function WorkWithUsPage() {
                 {
                   icon: MessageCircle,
                   title: 'Tell us a bit about you',
-                  body: 'Click the button below to open the short form, where you\'re at, what you\'d like to discuss, and the days and times that work for you. Takes 2 minutes.',
+                  body: 'Click "Book a 1:1" to open a short form. Where you\'re at, what you\'d like to discuss, and the days and times that work for you. Takes 2 minutes.',
                 },
                 {
                   icon: Mail,
@@ -112,7 +112,7 @@ export default async function WorkWithUsPage() {
                 {
                   icon: Calendar,
                   title: 'We meet on a video call',
-                  body: '60 minutes, video call. No fixed agenda, we follow your questions. You\'ll leave with concrete next steps for your family.',
+                  body: '60 minutes, video call. Your form answers become the agenda, so we use the time on the things that actually matter to your family. You\'ll leave with concrete next steps.',
                 },
               ].map((s, i) => (
                 <li key={s.title} className="flex gap-4">

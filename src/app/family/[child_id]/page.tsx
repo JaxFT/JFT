@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
 import {
-  getChildById, listChildPackAssignments, listFamilyCountryVisits,
+  getChildById, listChildPackAssignments,
   listStampsForChildParent,
 } from '@/lib/passport-db'
 import { listJournalEntriesForChildParent } from '@/lib/passport-journal-db'
@@ -15,7 +15,7 @@ import EditProfileSection from './EditProfileSection'
 import PermissionSection from './PermissionSection'
 import QRSection from './QRSection'
 import PackAssignmentSection from './PackAssignmentSection'
-import CountryVisitsSection from './CountryVisitsSection'
+// CountryVisitsSection moved to /account (family-level).
 import StampsManagementSection from './StampsManagementSection'
 import JournalSection from './JournalSection'
 // HomeCountrySection moved to /family (family-level setting).
@@ -55,9 +55,8 @@ export default async function ChildDetailPage({
   const child = await getChildById(child_id)
   if (!child) notFound()
 
-  const [assignments, visits, stamps, journal] = await Promise.all([
+  const [assignments, stamps, journal] = await Promise.all([
     listChildPackAssignments(child_id),
-    listFamilyCountryVisits(),
     listStampsForChildParent(child_id),
     listJournalEntriesForChildParent(child_id),
   ])
@@ -119,11 +118,6 @@ export default async function ChildDetailPage({
             childId={child.id}
             initialAssigned={assignments}
             allPacks={allPacks}
-          />
-
-          <CountryVisitsSection
-            childId={child.id}
-            initialVisits={visits}
           />
 
           <StampsManagementSection

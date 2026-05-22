@@ -10,8 +10,7 @@ import PremiumCancelButton from './PremiumCancelButton'
 import ResumeMembershipButton from './ResumeMembershipButton'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 import ManageBillingButton from '@/components/billing/ManageBillingButton'
-import AdventurePassportSection from './AdventurePassportSection'
-import HomeCountrySection from './HomeCountrySection'
+import FamilyPassportSections from './FamilyPassportSections'
 import DeleteAccountButton from './DeleteAccountButton'
 import { isPremiumTier } from '@/lib/profile'
 import { ensureProfile } from '@/lib/ensure-profile'
@@ -192,16 +191,9 @@ export default async function AccountPage() {
 
         {/* 2 ── FAMILY PASSPORT (premium-only) ──────────────────── */}
         {isPremium && (
-          <>
-            <div className="mb-6">
-              <AdventurePassportSection />
-            </div>
-            <div className="mb-6">
-              <HomeCountrySection
-                initialHomeIso2={(profile as { home_country_iso2?: string | null } | null)?.home_country_iso2 ?? null}
-              />
-            </div>
-          </>
+          <FamilyPassportSections
+            homeIso2={(profile as { home_country_iso2?: string | null } | null)?.home_country_iso2 ?? null}
+          />
         )}
 
         {/* 3 ── DETAILS (email / password / name) + EMAIL PREFS ── */}

@@ -21,17 +21,19 @@ type VisitRow = {
   first_visit_date: string // YYYY-MM-DD
 }
 
-// Childish ID is taken because the parent UI still lives at
-// /family/[child_id], but the visits API operates on family scope
-// (parent_id from auth). We keep the childId in the API URL for
-// backwards compat with existing routes.
+// Family-level section. The visits API routes still carry a child
+// id segment for path backwards compat, but the server scopes by
+// auth.uid() — we just pass any child id from the family (the
+// caller picks one; if there are no children yet the section
+// doesn't render).
 export default function CountryVisitsSection({
-  childId,
+  scopeChildId,
   initialVisits,
 }: {
-  childId: string
+  scopeChildId: string
   initialVisits: VisitRow[]
 }) {
+  const childId = scopeChildId
   const router = useRouter()
   const [visits, setVisits] = useState<VisitRow[]>(initialVisits)
   const [busy, setBusy] = useState<string | null>(null) // iso2 being mutated

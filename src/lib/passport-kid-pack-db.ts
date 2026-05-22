@@ -6,6 +6,7 @@
 import { createClient as createSbClient } from '@supabase/supabase-js'
 import type { AgeMode, SectionAnswers, SectionKey } from './adventurePackTypes'
 import type { ChildRow } from './passport-types'
+import { awardOrSuggestStamp } from './passport-stamps-db'
 
 function admin() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -154,6 +155,17 @@ export async function saveKidSession(
     // Ignore unique-violation if a parallel request also inserted.
     if (!visitErr || visitErr.code === '23505') {
       firstVisit = !visitErr
+    }
+    // First visit to this country earns a BRAVE_TRAVELLER stamp.
+    // Dedupe inside awardOrSuggestStamp ensures only one lands per
+    // country regardless of which path created the visit row.
+    if (firstVisit) {
+      await awardOrSuggestStamp({
+        childId,
+        type: 'BRAVE_TRAVELLER',
+        countrySlug,
+        awardedBy: 'system',
+      })
     }
   }
 

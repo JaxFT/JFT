@@ -128,6 +128,7 @@ export async function awardOrSuggestStamp(input: AwardInput): Promise<AwardResul
   // continent milestones. Pack flows already insert this row when
   // the kid first opens a pack; 23505 (unique violation) means it
   // existed already and we keep whatever date is there.
+  let wasNewVisit = false
   if (input.countrySlug) {
     const visitDate = (input.earnedAt ?? new Date().toISOString()).slice(0, 10)
     const { error: visitErr } = await sb
@@ -140,6 +141,23 @@ export async function awardOrSuggestStamp(input: AwardInput): Promise<AwardResul
     if (visitErr && visitErr.code !== '23505') {
       console.error('[stamps] linked-visit insert', visitErr)
     }
+    wasNewVisit = !visitErr
+  }
+
+  // First time visiting this country → fire a BRAVE_TRAVELLER stamp.
+  // Skipped if the stamp we just inserted IS the BRAVE_TRAVELLER
+  // (the flight log uses this path with skipDedupe; recursing here
+  // would loop). Dedupe in the recursive call ensures only one
+  // BRAVE_TRAVELLER lands per country regardless of how the visit
+  // was first created.
+  if (wasNewVisit && input.countrySlug && input.type !== 'BRAVE_TRAVELLER') {
+    await awardOrSuggestStamp({
+      childId: input.childId,
+      type: 'BRAVE_TRAVELLER',
+      countrySlug: input.countrySlug,
+      awardedBy: 'system',
+      earnedAt: input.earnedAt,
+    })
   }
 
   return { ok: true, created: true, id: data.id, status }

@@ -436,7 +436,7 @@ function CountryPage({ group, token }: {
           </Link>
         )}
       </div>
-      <ScatteredStampSheet seed={`country-${group.countrySlug ?? 'travel'}`}>
+      <ScatteredStampSheet seed={`country-${group.countrySlug ?? 'travel'}`} stampSize="md">
         {group.stamps.map(s => (
           <PassportStampFromRow
             key={s.id}

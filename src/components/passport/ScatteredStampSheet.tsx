@@ -43,19 +43,30 @@ type Props = {
   // responsive layout. Real height is derived from cols+rows so the
   // sheet grows to fit the number of stamps without clipping.
   height?: number
+  // Hint for the size of the stamps being scattered, so the sheet
+  // can pick a column count that fits the widest stamp in each cell
+  // without overflow. Defaults to 'sm'.
+  stampSize?: 'sm' | 'md'
 }
 
-// Pick how many columns we should use given the container width.
-// Numbers tuned so an 88px sm stamp plus its date label has ~120px
-// of breathing room per column at narrow widths.
-function colsFor(width: number, count: number): number {
-  if (width < 360) return Math.min(2, count)
-  if (width < 520) return Math.min(3, count)
-  if (width < 720) return Math.min(4, count)
-  return Math.min(5, count)
+// Cell dimensions per stamp size. The widest stamp shape (oval) is
+// 1.4 * base wide, so minColWidth = (base * 1.4) + a margin for
+// jitter and breathing room. cellH covers the tallest stamp height
+// plus a little vertical jitter.
+function dimsForStampSize(size: 'sm' | 'md') {
+  if (size === 'md') return { minColWidth: 210, cellH: 165 }
+  return { minColWidth: 160, cellH: 125 }
 }
 
-export default function ScatteredStampSheet({ seed, children, height: minHeight = 320 }: Props) {
+// Pick how many columns fit, given the container width and the
+// per-stamp cell width required. Never less than 1, never more than
+// the number of stamps.
+function colsFor(width: number, count: number, minColWidth: number): number {
+  const possible = Math.max(1, Math.floor(width / minColWidth))
+  return Math.min(possible, count)
+}
+
+export default function ScatteredStampSheet({ seed, children, height: minHeight = 320, stampSize = 'sm' }: Props) {
   const items = Array.isArray(children) ? children.filter(Boolean) : [children].filter(Boolean)
   const count = items.length
 
@@ -77,14 +88,12 @@ export default function ScatteredStampSheet({ seed, children, height: minHeight 
 
   const layout = useMemo(() => {
     if (count === 0) return { cols: 1, rows: 0, cellH: 0, height: 0 }
-    const cols = colsFor(width, count)
+    const dims = dimsForStampSize(stampSize)
+    const cols = colsFor(width, count, dims.minColWidth)
     const rows = Math.ceil(count / cols)
-    // Slightly more vertical room per stamp at narrower widths so
-    // the date label below the graphic doesn't bump into the row above.
-    const cellH = width < 360 ? 130 : width < 520 ? 140 : 150
-    const height = Math.max(minHeight, rows * cellH + 24)
-    return { cols, rows, cellH, height }
-  }, [width, count, minHeight])
+    const height = Math.max(minHeight, rows * dims.cellH + 24)
+    return { cols, rows, cellH: dims.cellH, height }
+  }, [width, count, minHeight, stampSize])
 
   if (count === 0) {
     return <div ref={containerRef} className="relative" style={{ height: minHeight }} aria-hidden />

@@ -142,8 +142,8 @@ export default function WaystaqCard({
   )
 }
 
-// Small wrapped <img> so callers can size it via className. Plain
-// <img> (not next/image) because the SVG is local and tiny —
+// Small wrapped <img loading="lazy"> so callers can size it via className. Plain
+// <img loading="lazy"> (not next/image) because the SVG is local and tiny —
 // next/image would just add overhead.
 function WaystaqLogo({ className = '' }: { className?: string }) {
   return (

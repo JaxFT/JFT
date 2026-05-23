@@ -62,7 +62,7 @@ export default function WebGuideView({
       <div className="relative bg-brand-950 text-white">
         {guide.cover_image ? (
           <div className="relative w-full max-w-3xl mx-auto pt-20">
-            <img
+            <img loading="lazy"
               src={proxyImageUrl(guide.cover_image)}
               alt={guide.title}
               decoding="async"

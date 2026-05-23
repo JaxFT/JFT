@@ -34,7 +34,7 @@ export default function AboutPage() {
             shot, with the red flower canopy still visible above. */}
         <div className="relative aspect-square rounded-2xl overflow-hidden mb-10 bg-gray-100 shadow-sm border border-gray-200">
           <Image
-            src="/images/us/bec-oli-jax.jpeg"
+            src="/images/us/bec-oli-jax.webp"
             alt="Bec, Oli and Jax — the family behind Jax Family Travels"
             fill
             sizes="(max-width: 768px) 100vw, 672px"

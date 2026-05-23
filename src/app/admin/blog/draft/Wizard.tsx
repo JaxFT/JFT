@@ -662,7 +662,7 @@ Do NOT add any text before or after the code block. The code block IS the entire
                           </div>
                         )}
                         {p.status === 'done' && p.url && (
-                          <img src={p.url} alt={p.caption} className="absolute inset-0 w-full h-full object-cover" />
+                          <img loading="lazy" src={p.url} alt={p.caption} className="absolute inset-0 w-full h-full object-cover" />
                         )}
                         {p.status === 'error' && (
                           <div className="absolute inset-0 flex flex-col items-center justify-center text-red-700 text-sm px-4 text-center">

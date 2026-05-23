@@ -132,7 +132,7 @@ export default function ImportForm() {
           />
           <div className="flex items-start gap-4 flex-wrap">
             {coverImage ? (
-              <img
+              <img loading="lazy"
                 src={coverImage}
                 alt="Cover preview"
                 className="w-28 h-36 object-cover rounded-lg border border-gray-200 shrink-0"

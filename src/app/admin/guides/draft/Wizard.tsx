@@ -321,7 +321,7 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
               />
               <div className="flex items-start gap-4 flex-wrap">
                 {coverImage ? (
-                  <img
+                  <img loading="lazy"
                     src={coverImage}
                     alt="Cover preview"
                     className="w-32 h-40 object-cover rounded-lg border border-gray-200 shrink-0"

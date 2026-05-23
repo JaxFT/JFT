@@ -43,7 +43,7 @@ export default async function HomePage() {
         {/* Background */}
         <div className="absolute inset-0 z-0">
           <img
-            src="/images/homepage/homepage_header_jft.jpg"
+            src="/images/homepage/homepage_header_jft.webp"
             alt="The Jax Family Travels family on the road"
             decoding="async"
             fetchPriority="high"

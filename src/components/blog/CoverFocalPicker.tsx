@@ -90,7 +90,7 @@ export default function CoverFocalPicker({
         {/* The natural-aspect preview. We use a max height so very tall
             portraits don't dominate the layout. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <img loading="lazy"
           src={src}
           alt="Cover focal point preview"
           className="block w-full max-h-96 object-contain mx-auto pointer-events-none"
@@ -147,7 +147,7 @@ function FocalPreviewBox({
         style={{ aspectRatio: aspect }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <img loading="lazy"
           src={src}
           alt={label}
           className="w-full h-full object-cover"

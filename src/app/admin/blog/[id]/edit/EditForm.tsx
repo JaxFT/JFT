@@ -831,7 +831,7 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
             />
             <div className="flex items-start gap-3 flex-wrap">
               {coverImage ? (
-                <img
+                <img loading="lazy"
                   src={coverImage}
                   alt="Cover preview"
                   className="w-24 h-24 object-cover rounded-lg border border-gray-200 shrink-0"

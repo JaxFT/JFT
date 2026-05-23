@@ -331,7 +331,7 @@ function PuzzleInner({ data, pack }: Props) {
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <span>Goal</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <img loading="lazy"
             src={url}
             alt={`${data.country} flag`}
             className="h-6 rounded-sm shadow-sm border border-gray-200"

@@ -32,7 +32,7 @@ const RECOMMENDED: RecommendedSite[] = [
     blurb: 'Adaptive maths and English for kids 4–14, on phone or tablet. Used in UK schools and brilliant on the road, short daily sessions, works offline, and the levelling keeps it appropriate without a parent hovering.',
     cta: 'Visit Doodle Learning',
     icon: GraduationCap,
-    image: '/images/learning/doodle-learning.png',
+    image: '/images/learning/doodle-learning.webp',
   },
   {
     name: 'Future Explorers Club',
@@ -41,7 +41,7 @@ const RECOMMENDED: RecommendedSite[] = [
     blurb: 'No screens, just the simple joy of having something special delivered by Snail Mail!\n\nA monthly travel subscription letter for children to ignite your child\'s passion to learn about our beautiful world, letter by letter, each packed with exciting adventures from new destinations and fun family activities.\n\nYou can choose monthly, 3 month, 6 month or 12 month subscriptions.',
     cta: 'Visit Future Explorers Club',
     icon: GraduationCap,
-    image: '/images/learning/future-explorers-club.png',
+    image: '/images/learning/future-explorers-club.webp',
     fit: 'contain',
   },
   {
@@ -51,7 +51,7 @@ const RECOMMENDED: RecommendedSite[] = [
     blurb: 'Live, one-to-one online tuition that works around your family\'s schedule, handy whether you\'re full worldschooling, supplementing local school, or keeping skills sharp during a gap.',
     cta: 'Visit Tuition-Up',
     icon: GraduationCap,
-    image: '/images/learning/tuition-up.png',
+    image: '/images/learning/tuition-up.webp',
   },
   {
     name: 'Worldschooling Club',
@@ -60,7 +60,7 @@ const RECOMMENDED: RecommendedSite[] = [
     blurb: 'A community of families travelling and worldschooling together, meet-ups, advice, and shared experience. Apply via the form to join.',
     cta: 'Apply to join',
     icon: Users,
-    image: '/images/learning/Worldschooling-club.png',
+    image: '/images/learning/Worldschooling-club.webp',
     fit: 'contain',
   },
   {
@@ -70,7 +70,7 @@ const RECOMMENDED: RecommendedSite[] = [
     blurb: "Maths.... Like you've never seen it before!",
     cta: 'Visit Sums of Anarchy',
     icon: GraduationCap,
-    image: '/images/learning/Sums-Of-Annarchy.png',
+    image: '/images/learning/Sums-Of-Annarchy.webp',
   },
   // Our own contribution to the worldschooling ecosystem, sitting
   // in the same grid so it reads as a peer of the recommended sites
@@ -82,7 +82,7 @@ const RECOMMENDED: RecommendedSite[] = [
     blurb: 'Country-specific missions for your family. Language, food, geography, history, scavenger hunts and family chat cards, designed to do on the ground as you travel. France is free for every member.',
     cta: 'Browse Adventure Packs',
     icon: Compass,
-    image: '/images/learning/adventure-passport-front-cover.png',
+    image: '/images/learning/adventure-passport-front-cover.webp',
     fit: 'contain',
   },
   {
@@ -92,7 +92,7 @@ const RECOMMENDED: RecommendedSite[] = [
     blurb: 'We are a community of families embracing alternative education for our children, whether through home education, worldschooling or a range of alternative approaches. We are made up of a mix of families that live permanently in Penang and also a large amount of families travelling through for anything from a couple of weeks to several months.',
     cta: 'Visit Penang Worldschoolers',
     icon: Users,
-    image: '/images/learning/penang-world-schoolers-ness-andy.jpg',
+    image: '/images/learning/penang-world-schoolers-ness-andy.webp',
   },
 ]
 

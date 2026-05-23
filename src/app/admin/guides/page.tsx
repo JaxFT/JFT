@@ -66,7 +66,7 @@ export default async function AdminGuidesListPage() {
                 return (
                   <li key={g.id} className="p-5 hover:bg-gray-50 transition-colors flex items-center gap-4 flex-wrap">
                     {g.cover_image ? (
-                      <img src={g.cover_image} alt={g.title} className="w-16 h-20 object-cover rounded-md shrink-0 border border-gray-200" />
+                      <img loading="lazy" src={g.cover_image} alt={g.title} className="w-16 h-20 object-cover rounded-md shrink-0 border border-gray-200" />
                     ) : (
                       <div className="w-16 h-20 rounded-md bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-300 shrink-0">
                         <Map className="w-6 h-6" />

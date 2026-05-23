@@ -292,7 +292,7 @@ function SlotRow({
         }}
       />
       {isUploaded && slot.upload && (
-        <img
+        <img loading="lazy"
           src={slot.upload.url}
           alt={slot.caption || 'uploaded'}
           className="w-10 h-10 object-cover rounded shrink-0 border border-brand-300"

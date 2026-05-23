@@ -562,7 +562,7 @@ function CoverHero({ guide }: { guide: GuideRow }) {
     <div className="relative bg-brand-950 text-white">
       {guide.cover_image ? (
         <div className="relative w-full max-w-3xl mx-auto pt-12">
-          <img
+          <img loading="lazy"
             src={guide.cover_image}
             alt={guide.title}
             className="block w-full max-h-[70vh] object-contain bg-brand-900"

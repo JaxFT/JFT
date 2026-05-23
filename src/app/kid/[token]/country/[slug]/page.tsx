@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Check, Compass } from 'lucide-react'
 import type { Metadata } from 'next'
 import KidBackButton from '@/components/passport/KidBackButton'
+import KidChrome from '../../KidChrome'
 import {
   getChildByToken,
   listCountryVisitsForFamily,
@@ -67,10 +68,20 @@ export default async function KidCountryPage({
 
   return (
     <StampModalProvider>
-    <div className="min-h-screen bg-gradient-to-b from-brand-900 to-brand-950 text-white pt-6 pb-12">
-      <div className="max-w-3xl mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-b from-brand-900 to-brand-950 text-white">
+      {/* Passport chrome: avatar + "Welcome back" + sticky tab bar.
+          Lets the kid jump straight to Map / Stamps / Journal / etc.
+          from a country page without having to back-button through
+          their visited countries one by one. */}
+      <KidChrome
+        token={token}
+        childName={child.name}
+        childAvatar={child.avatar}
+        activeTab={null}
+      />
+      <div className="max-w-3xl mx-auto px-4 pt-6 pb-12">
         <div className="mb-4">
-          <KidBackButton fallbackHref={`/kid/${token}`} label="Back" variant="onDark" />
+          <KidBackButton fallbackHref={`/kid/${token}?tab=countries`} label="Back to countries" variant="onDark" />
         </div>
 
         <PassportPage className="p-6 sm:p-10">

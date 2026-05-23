@@ -535,6 +535,15 @@ export const ANIMALS_BY_SLUG: Record<string, AnimalItem[]> = {
     { emoji: '🐱', name: 'Eurasian lynx', description: 'Rare but real. A small lynx population lives in the deepest forests of Bosnia, mostly in the south-east.', olderOnly: true },
     { emoji: '🐎', name: 'Wild Bosnian horse herd of Livno', description: 'A herd of around 500 semi-feral horses roams the high mountain plateau near Livno. Famous as a photography subject.', olderOnly: true },
   ],
+  'puerto-rico': [
+    { emoji: '🐸', name: 'Coquí tree frog', description: 'Tiny native frog the size of your thumbnail, with a distinctive two-note "ko-KEE!" call that fills Puerto Rican nights everywhere. The national symbol.' },
+    { emoji: '🐢', name: 'Hawksbill sea turtle', description: 'Nests on Culebra and Vieques beaches between April and November. Protected by strict laws.' },
+    { emoji: '🦎', name: 'Puerto Rican iguana', description: 'Big green and grey lizards common in Old San Juan parks, gardens, and parking lots. Often sunbathing on stone walls.' },
+    { emoji: '🦜', name: 'Puerto Rican parrot', description: 'A small green endemic parrot, only found in Puerto Rico. Critically endangered. Conservation programmes in El Yunque are slowly bringing the population back.' },
+    { emoji: '🦋', name: 'Tropical butterflies', description: 'Hundreds of species in El Yunque, including the bright Puerto Rican mariposa.' },
+    { emoji: '🐠', name: 'Reef fish', description: 'Bright clownfish, parrotfish, sergeant majors on the coral reefs off Culebra and the south coast.', olderOnly: true },
+    { emoji: '🐎', name: 'Paso fino horse', description: 'A small, smooth-gaited Puerto Rican horse breed famous for an extraordinarily smooth four-beat walk. Bred since Spanish colonial times.', olderOnly: true },
+  ],
   serbia: [
     { emoji: '🐗', name: 'Wild boar', description: 'Common across Serbian forests, especially in Fruška Gora and around the Tara canyon. Sometimes wander into village outskirts in winter.' },
     { emoji: '🦌', name: 'Red deer', description: 'In the Tara, Kopaonik and Đerdap national parks. The autumn rutting roar is unforgettable.' },

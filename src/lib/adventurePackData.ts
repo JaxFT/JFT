@@ -10830,6 +10830,130 @@ export const SERBIA_DATA: AdventurePackData = {
   },
 }
 
+// ── PUERTO RICO (premium, live) ──────────────────────────────────
+export const PUERTO_RICO_DATA: AdventurePackData = {
+  slug: 'puerto-rico',
+  country: 'Puerto Rico',
+  flag: '🇵🇷',
+  iso2: 'pr',
+  isFree: false,
+  heroColour: 'bg-blue-200',
+  currency: {
+    code: 'USD',
+    name: 'US Dollar',
+    symbol: '$',
+    recommendedBudget: 30,
+    budgetNote: 'Recommended: 30 USD (Puerto Rico uses US Dollars)',
+  },
+  mapQuestions: [
+    { question: 'Which continent is Puerto Rico on?', answer: 'North America, in the Caribbean. Puerto Rico is an island sitting east of the Dominican Republic and west of the US and British Virgin Islands 🌎' },
+    { question: 'What is the capital of Puerto Rico?', answer: 'San Juan, on the north coast. About 2 million people live in the wider metro area, in old colonial neighbourhoods, modern beach districts, and the iconic walled Old San Juan.' },
+    { question: 'What languages does Puerto Rico speak?', answer: 'Spanish and English are both official. Most Puerto Ricans grow up speaking Spanish first; English is widely used in business and government because Puerto Rico is a US territory.' },
+    { question: 'Why does Puerto Rico use US Dollars?', answer: 'Puerto Rico is a US territory (officially a "Commonwealth"). Puerto Ricans are US citizens with US passports, the same money, mail, and military, but the island is not a US state and Puerto Ricans living there cannot vote in US presidential elections.', olderOnly: true },
+    { question: 'What is the only tropical rainforest in the US National Forest system?', answer: 'El Yunque, in the eastern mountains of Puerto Rico. 11,000 hectares of rainforest, waterfalls, and the constant calling of the tiny coquí tree frog. The only tropical rainforest under the US National Forest banner.', olderOnly: true },
+  ],
+  phrases: [
+    { english: 'Hello', nativeScript: '¡Hola!', nativeLatin: 'Hola!', phonetic: 'OH-lah', lang: 'es' },
+    { english: 'What\'s up? (very Puerto Rican)', nativeScript: '¿Qué pasa?', nativeLatin: 'Que pasa?', phonetic: 'kay PAH-sah', lang: 'es' },
+    { english: 'Thank you', nativeScript: 'Gracias', nativeLatin: 'Gracias', phonetic: 'GRA-see-ahs', lang: 'es' },
+    { english: 'Please', nativeScript: 'Por favor', nativeLatin: 'Por favor', phonetic: 'por fah-VOR', lang: 'es' },
+    { english: 'Delicious!', nativeScript: '¡Qué rico!', nativeLatin: 'Que rico!', phonetic: 'kay REE-koh', lang: 'es' },
+    { english: 'My friend (very Puerto Rican)', nativeScript: 'Mi pana', nativeLatin: 'Mi pana', phonetic: 'mee PAH-nah', lang: 'es' },
+    { english: 'Bro / dude (Puerto Rican Spanish)', nativeScript: 'Bregón', nativeLatin: 'Bregon', phonetic: 'breh-GOHN', lang: 'es', olderOnly: true },
+    { english: 'For real / definitely', nativeScript: 'Brutal', nativeLatin: 'Brutal', phonetic: 'broo-TAHL', lang: 'es', olderOnly: true },
+  ],
+  foods: [
+    { emoji: '🍌', name: 'Mofongo', description: 'The unofficial national dish: mashed fried green plantains pounded with garlic, olive oil and pork crackling, stuffed with chicken, prawns or beef in a savoury broth. Eaten by the spoonful from a clay cup.' },
+    { emoji: '🍚', name: 'Arroz con gandules', description: 'Yellow rice cooked with pigeon peas, sofrito (a green pepper-and-herb paste) and pork. Served at every Puerto Rican family meal, especially Christmas.' },
+    { emoji: '🐖', name: 'Lechón asado', description: 'A whole pig spit-roasted slowly over a wood fire, the skin crackling to a brown crisp. The Puerto Rican party centrepiece, especially in the mountain town of Guavate ("Pork Highway").' },
+    { emoji: '🥟', name: 'Alcapurrias', description: 'Crispy fried fritters of grated green banana and yautía (taro), stuffed with seasoned beef or crab. Sold from beach shacks at Piñones.' },
+    { emoji: '🍤', name: 'Empanadillas', description: 'Half-moon deep-fried turnovers stuffed with beef, chicken, or shrimp. Different from Argentine or Colombian empanadas, smaller and crispier. A street-food favourite.' },
+    { emoji: '🥥', name: 'Coco frío', description: 'A fresh green coconut sliced open and drunk through a straw, sold from roadside coolers across the island. Sweet, cold, the ultimate beach refreshment.' },
+  ],
+  scavengerItems: [
+    { emoji: '🏰', label: 'The huge stone fort of El Morro guarding Old San Juan harbour' },
+    { emoji: '🎨', label: 'The famously colourful (and Instagrammable) blue cobblestones of Old San Juan' },
+    { emoji: '🐸', label: 'A coquí tree frog (you will hear them everywhere at night, even if you don\'t spot one)' },
+    { emoji: '🌳', label: 'El Yunque rainforest with mist rising off the canopy' },
+    { emoji: '🌊', label: 'A bioluminescent bay glowing blue in the dark (Mosquito Bay on Vieques is the brightest on Earth)' },
+    { emoji: '🎤', label: 'A Bad Bunny mural or poster (San Juan has dozens, all over Santurce)' },
+    { emoji: '🎺', label: 'Salsa or reggaeton playing from a passing car' },
+    { emoji: '🏖️', label: 'A white-sand beach with palm trees (Flamenco Beach on Culebra ranks among the world\'s best)' },
+    { emoji: '🌴', label: 'A "kiosk row" at Luquillo with 50+ tiny food stalls in a line' },
+    { emoji: '🐎', label: 'A "paso fino" horse (a small Puerto Rican breed famous for its smooth gait)', olderOnly: true },
+    { emoji: '🌌', label: 'The radio telescope at Arecibo (collapsed in 2020 but its replacement project continues)', olderOnly: true },
+    { emoji: '🛕', label: 'A Taíno petroglyph carved into a stone in the Caguana ceremonial park', olderOnly: true },
+  ],
+  geoMatches: [
+    { place: 'Old San Juan',     emoji: '🏰', description: 'The walled colonial old town. Brightly painted houses, blue cobblestone streets, the El Morro and San Cristóbal forts, and one of the most photographed places in the Caribbean.' },
+    { place: 'El Yunque',        emoji: '🌳', description: 'The only tropical rainforest in the US National Forest system. Hiking trails, waterfalls, mist-soaked ridges, and millions of tiny coquí frogs calling at dusk.' },
+    { place: 'Vieques',          emoji: '✨', description: 'A small, quiet island off the east coast, home to Mosquito Bay, the brightest bioluminescent bay anywhere on Earth.' },
+    { place: 'Culebra',          emoji: '🏖️', description: 'A tiny island off the east coast with Flamenco Beach, regularly voted one of the best beaches in the world. White sand, turquoise water, no high-rises.' },
+    { place: 'Santurce',         emoji: '🎨', description: 'San Juan\'s creative neighbourhood, packed with street art (including Bad Bunny murals), small restaurants and live-music venues.' },
+    { place: 'Ponce',            emoji: '🌆', description: 'The "Pearl of the South", a colonial town on the south coast with a famous red-and-black firehouse, art museums and a milder climate than the wet north.' },
+  ],
+  senses: {
+    smell: 'Salt and ocean spray, sweet plantain frying in oil, woodsmoke from a Guavate lechón pit, Old San Juan flagstones after tropical rain, jasmine blooming at dusk…',
+    hear:  'Coquí frogs calling "ko-KEE!" all night long, reggaeton thumping from cars, salsa horns and timbales from a Santurce bar, Bad Bunny on every other radio, Spanish flying fast and warm across markets…',
+    taste: 'Tangy garlicky mofongo, sweet crisp lechón crackling, cold coconut water straight from the shell, fresh mango slices with salt and chilli, smoky alcapurria fritters at the beach…',
+    feel:  'Warm Caribbean trade winds, hot Old San Juan flagstones underfoot, the cool spray of an El Yunque waterfall, the strange invisible glow of bioluminescent water on your skin, the bass of a reggaeton speaker in your chest…',
+    see:   'What is the most incredible thing right in front of you right now…',
+  },
+  stories: [
+    {
+      location: '📍 Across the island',
+      question: 'Why is Bad Bunny such a big deal?',
+      body: 'Benito Antonio Martínez Ocasio, known to the world as Bad Bunny, was born in 1994 in Vega Baja, a small town in northern Puerto Rico. He was bagging groceries at a supermarket while uploading songs to SoundCloud in 2016. A few years later, he was the most-streamed artist on Spotify FOUR YEARS IN A ROW (2020 through 2022), a record no other artist has matched. He raps in Spanish, refuses to switch to English to chase American audiences, and uses his platform to talk about Puerto Rican identity, the island\'s recovery from Hurricane Maria, and the statehood debate. His 2025 album "DeBí TiRAR MáS FOToS" was a deeply Puerto Rican project, with sounds from plena, bomba and Caribbean traditions woven through every track. Bad Bunny has shown a whole generation around the world that you don\'t have to leave Puerto Rico (or sing in English) to be one of the biggest artists on Earth.',
+      thinkingQuestion: 'Bad Bunny stayed proud of where he\'s from instead of changing for global audiences. What\'s something about where you\'re from that you\'d never want to change?',
+    },
+    {
+      location: '📍 Old San Juan',
+      question: 'Why is Old San Juan so beautifully blue?',
+      body: 'The cobblestones of Old San Juan are made from a strange blue-green stone called "adoquines", brought to Puerto Rico in the 1500s and 1600s as ballast in Spanish ships sailing west. Once the ships unloaded their ballast in San Juan, the stones were laid as cobblestones in the colonial streets. They came from foundries in Spain that smelted iron using volcanic slag, which gives them their distinctive blue colour. Five hundred years later, you walk on them daily in Old San Juan. The walled town also has two huge stone forts (El Morro, finished 1539, and San Cristóbal, finished 1783) that the Spanish built to defend the harbour from pirates and rival empires. UNESCO put the whole site on its World Heritage list in 1983.',
+    },
+    {
+      location: '📍 Vieques',
+      question: 'What is a bioluminescent bay?',
+      body: 'On the small island of Vieques, off Puerto Rico\'s east coast, sits Mosquito Bay, the brightest bioluminescent bay on Earth. The water glows electric blue whenever something disturbs it. Run your hand through the water and your fingers light up. Paddle a kayak and the wake trail behind you shines. The glow comes from microscopic plankton called "dinoflagellates" (specifically Pyrodinium bahamense) that flash blue when they sense movement. Mosquito Bay has up to 700,000 of them in every gallon of water, more than anywhere else on Earth. You can only visit by guided kayak or boat tour on dark moonless nights, and swimming is no longer allowed (to protect the plankton).',
+    },
+    {
+      location: '📍 Across the island',
+      question: 'How is Puerto Rico both American and not?',
+      body: 'Puerto Rico has been a US territory since 1898, when Spain handed the island over at the end of the Spanish-American War. Puerto Ricans are US citizens, carry US passports, use the dollar, send mail through the US Postal Service, and serve in the US military. But Puerto Rico is NOT a US state. Puerto Ricans living on the island cannot vote in US presidential elections, have no voting representatives in Congress, and Puerto Rican law is partly federal and partly Puerto Rican. There has been an ongoing debate for decades about whether the island should become the 51st state, become fully independent, or stay where it is. Different generations of Puerto Ricans have voted different ways. It is a unique political situation, and the island\'s identity feels distinctly Puerto Rican first, with American as a complicated second layer on top.',
+      olderOnly: true,
+    },
+    {
+      location: '📍 The mountains of central Puerto Rico',
+      question: 'Who were the Taíno people?',
+      body: 'Long before the Spanish arrived in 1493, Puerto Rico was home to the Taíno people, a Caribbean indigenous group who called the island "Borikén" (still used today, modern Puerto Ricans often call themselves "boricuas"). The Taíno lived in villages led by chiefs ("caciques"), grew cassava and corn, fished, played a ball game called "batey" on stone-marked courts, and carved spiritual symbols called "petroglyphs" into rocks all over the island. Spanish colonisation devastated the Taíno population through disease and forced labour, but Taíno DNA is still strong in modern Puerto Ricans (around 60% of islanders have Taíno ancestry). Many Puerto Rican words come from Taíno: "hammock" (hamaca), "barbecue" (barbacoa), "hurricane" (huracán), and the names of countless places on the island. You can see Taíno petroglyphs at the Caguana ceremonial park in the mountains.',
+      olderOnly: true,
+    },
+  ],
+  convoQuestions: [
+    { question: 'Best Puerto Rican food so far?' },
+    { question: 'Have you said "qué pasa" or "mi pana" to anyone yet?' },
+    { question: 'Old San Juan, beach, rainforest, bio bay, which has felt the most "Puerto Rico"?' },
+    { question: 'How many Bad Bunny songs have you heard since arriving?' },
+    { question: 'How loud were the coquí frogs at night?' },
+    { question: 'Puerto Rico is American AND not American at the same time. How does that feel as you move around?', olderOnly: true },
+  ],
+  wordSearch: {
+    hint: "Puerto Rican foods, places and things to spot.",
+    words: [
+      "PUERTORICO",
+      "SANJUAN",
+      "ELMORRO",
+      "YUNQUE",
+      "BADBUNNY",
+      "COQUI",
+      "MOFONGO",
+      "REGGAETON",
+      "BORIKEN",
+      "BEACH",
+    ],
+  },
+}
+
 // Lookup table for fully-built packs.
 const FULL_DATA: Record<string, AdventurePackData> = {
   france:           FRANCE_DATA,
@@ -10919,6 +11043,7 @@ const FULL_DATA: Record<string, AdventurePackData> = {
   'mongolia':       MONGOLIA_DATA,
   'bosnia-and-herzegovina': BOSNIA_AND_HERZEGOVINA_DATA,
   'serbia':         SERBIA_DATA,
+  'puerto-rico':    PUERTO_RICO_DATA,
 }
 
 export function getPackData(slug: string): AdventurePackData | null {

@@ -104,6 +104,11 @@ export const PACK_META: AdventurePackMeta[] = [
   { slug: 'bosnia-and-herzegovina', country: 'Bosnia and Herzegovina', flag: '🇧🇦', iso2: 'ba', isFree: false, heroColour: 'bg-blue-300', status: 'live', continent: 'Europe', hasWordSearch: true, hasTilePuzzle: true },
   { slug: 'serbia',     country: 'Serbia',     flag: '🇷🇸', iso2: 'rs', isFree: false, heroColour: 'bg-rose-300',   status: 'live', continent: 'Europe',        hasWordSearch: true, hasTilePuzzle: true },
   { slug: 'puerto-rico',country: 'Puerto Rico',flag: '🇵🇷', iso2: 'pr', isFree: false, heroColour: 'bg-blue-200',   status: 'live', continent: 'North America', hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'finland',    country: 'Finland',    flag: '🇫🇮', iso2: 'fi', isFree: false, heroColour: 'bg-blue-100',   status: 'live', continent: 'Europe',        hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'estonia',    country: 'Estonia',    flag: '🇪🇪', iso2: 'ee', isFree: false, heroColour: 'bg-zinc-300',   status: 'live', continent: 'Europe',        hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'seychelles', country: 'Seychelles', flag: '🇸🇨', iso2: 'sc', isFree: false, heroColour: 'bg-emerald-300',status: 'live', continent: 'Africa',        hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'georgia',    country: 'Georgia',    flag: '🇬🇪', iso2: 'ge', isFree: false, heroColour: 'bg-orange-300', status: 'live', continent: 'Asia',          hasWordSearch: true, hasTilePuzzle: true },
+  { slug: 'saudi-arabia',country: 'Saudi Arabia',flag: '🇸🇦', iso2: 'sa', isFree: false, heroColour: 'bg-green-300', status: 'live', continent: 'Asia',         hasWordSearch: true, hasTilePuzzle: true },
 ]
 
 export function getPackMeta(slug: string): AdventurePackMeta | null {

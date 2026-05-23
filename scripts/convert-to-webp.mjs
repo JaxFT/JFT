@@ -15,7 +15,8 @@ import { fileURLToPath } from 'node:url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..', 'public', 'images')
 const SKIP_DIRS = new Set(['stamps']) // auto-generated, not used on site
-const MIN_BYTES = 50 * 1024 // skip tiny images, not worth the conversion
+const MIN_BYTES = 15 * 1024 // skip only very small icons; WebP is still
+                            // worth it down to ~15 KB JPGs / PNGs.
 
 async function walk(dir) {
   const out = []

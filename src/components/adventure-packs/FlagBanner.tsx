@@ -41,17 +41,38 @@ export default function FlagBanner({
   as: Heading = 'h2',
 }: Props) {
   const { height, text } = SIZE_STYLES[size]
+  // Two layers:
+  //   1. A blurred, low-detail version of the flag stretched to cover
+  //      the full banner. Cropping doesn't matter here — the blur means
+  //      the result reads as a coloured backdrop, not a flag.
+  //   2. The real flag on top, with object-contain so the full thing
+  //      is visible at its natural aspect ratio (no horizontal-stripe
+  //      flags getting squished into a 1:2:1 illusion).
   return (
     <div
       className={`${fallbackColour} ${height} ${rounded ? 'rounded-2xl' : ''} relative flex items-center justify-center overflow-hidden ${className}`}
-      style={{
-        backgroundImage: `url(https://flagcdn.com/${iso2}.svg)`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
     >
+      {/* Blurred backdrop layer */}
+      <img
+        src={`https://flagcdn.com/w160/${iso2}.png`}
+        alt=""
+        aria-hidden
+        className="absolute inset-0 w-full h-full object-cover scale-125 blur-lg opacity-70"
+        loading="lazy"
+        decoding="async"
+      />
+      {/* Real flag, aspect-preserved */}
+      <img
+        src={`https://flagcdn.com/w640/${iso2}.png`}
+        srcSet={`https://flagcdn.com/w640/${iso2}.png 1x, https://flagcdn.com/w1280/${iso2}.png 2x`}
+        alt=""
+        aria-hidden
+        className="relative h-full max-w-full w-auto object-contain shadow-md"
+        loading="lazy"
+        decoding="async"
+      />
       <Heading
-        className={`${text} font-black tracking-tight uppercase text-white text-center leading-none px-4`}
+        className={`${text} font-black tracking-tight uppercase text-white text-center leading-none px-4 absolute inset-0 flex items-center justify-center`}
         style={OUTLINED_TEXT}
       >
         {country}

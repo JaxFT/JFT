@@ -9,6 +9,7 @@ import UserPackShell from '@/components/adventure-packs/UserPackShell'
 import FlagBanner from '@/components/adventure-packs/FlagBanner'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 import BuyPackButton from '@/components/adventure-packs/BuyPackButton'
+import PackJsonLd from '@/components/seo/PackJsonLd'
 
 export const dynamic = 'force-dynamic'
 
@@ -62,16 +63,16 @@ export default async function AdventurePackPage({
     )
   }
 
-  // Access gate.
+  // Access gate. Anonymous users get the same locked landing as logged-
+  // in non-premium users (instead of an immediate /login redirect) so
+  // that Google can crawl the page and visitors from social shares land
+  // on a real page with clear next steps.
   const access = await checkAdventurePackAccess(slug)
 
-  if (access.kind === 'login') {
-    redirect(`/login?next=/adventure-packs/${slug}`)
-  }
-
-  if (access.kind === 'locked') {
+  if (access.kind === 'login' || access.kind === 'locked') {
     return (
       <div className="min-h-screen bg-sand-50 pt-24 pb-20">
+        <PackJsonLd slug={slug} country={meta.country} flag={meta.flag} isFree={meta.isFree} />
         <div className="max-w-md mx-auto px-4 sm:px-6 text-center">
           <Link href="/adventure-packs" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-700 mb-6">
             <ArrowLeft className="w-4 h-4" /> All adventure packs
@@ -124,6 +125,17 @@ export default async function AdventurePackPage({
               />
             </div>
           </div>
+          {/* Anonymous visitors (no session yet) need a clear log-in
+              shortcut. Logged-in non-premium users (kind === 'locked')
+              don't need this prompt. */}
+          {access.kind === 'login' && (
+            <p className="text-sm text-gray-500 mt-5">
+              Already have an account?{' '}
+              <Link href={`/login?next=/adventure-packs/${slug}`} className="font-semibold text-brand-700 hover:text-brand-800 underline underline-offset-2">
+                Log in
+              </Link>
+            </p>
+          )}
         </div>
       </div>
     )
@@ -138,5 +150,10 @@ export default async function AdventurePackPage({
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect(`/login?next=/adventure-packs/${slug}`)
 
-  return <UserPackShell userId={user.id} data={data} />
+  return (
+    <>
+      <PackJsonLd slug={slug} country={meta.country} flag={meta.flag} isFree={meta.isFree} />
+      <UserPackShell userId={user.id} data={data} />
+    </>
+  )
 }

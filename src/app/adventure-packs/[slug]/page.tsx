@@ -130,7 +130,7 @@ export default async function AdventurePackPage({
   }
 
   // access.kind === 'allow'
-  const data = getPackData(slug)
+  const data = await getPackData(slug)
   if (!data) notFound()
 
   // Need the user id for the client hook

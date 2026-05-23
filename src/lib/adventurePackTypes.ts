@@ -151,11 +151,10 @@ export interface AdventurePackData {
   senses: SensesPlaceholders
   stories: Story[]
   convoQuestions: ConvoQuestion[]
-  // Animals are stored in a separate file (adventurePackAnimals.ts)
-  // and merged in by `getPackData`, so the individual pack data
-  // blocks don't have to inline 100+ lines of animal content. Always
-  // populated (possibly to `[]`) by the time a Section component
-  // sees the pack.
+  // Animals for the country. Stored alongside the rest of the pack
+  // in public/data/packs/<slug>.json since the JSON-refactor; always
+  // populated (possibly to []) by the time a Section component sees
+  // the pack.
   animals?: AnimalItem[]
   // Word search is rolling out one country at a time. Packs without
   // a word list don't render the section in the picker and don't

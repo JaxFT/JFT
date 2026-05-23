@@ -99,7 +99,7 @@ export default async function KidPackPage({
     )
   }
 
-  const data = getPackData(slug)
+  const data = await getPackData(slug)
   if (!data) notFound()
 
   return <KidPackShell token={token} data={data} />

@@ -13,6 +13,9 @@ export default function robots(): MetadataRoute.Robots {
           '/api/',
           '/auth/',
           '/account',
+          '/family',           // auth-bound parent dashboards
+          '/kid/',             // kid passport URLs contain QR tokens, never index
+          '/stamp-export',     // one-off internal route for PNG exports
           '/reset-password',
           '/update-password',
           '/unsubscribe',

@@ -6,6 +6,7 @@ import type { MetadataRoute } from 'next'
 import { listPublishedPosts } from '@/lib/blog-db'
 import { listPublishedWebGuides } from '@/lib/guides-content-db'
 import { listActiveGuides } from '@/lib/guides-db'
+import { PACK_META } from '@/lib/adventurePackMeta'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,5 +67,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       })),
   ]
 
-  return [...staticEntries, ...postEntries, ...guideEntries]
+  // Every live adventure pack gets its own indexable page. Coming-soon
+  // packs are excluded so search engines don't crawl placeholder pages.
+  const packEntries: MetadataRoute.Sitemap = PACK_META
+    .filter(p => p.status === 'live')
+    .map(p => ({
+      url: `${SITE}/adventure-packs/${p.slug}`,
+      lastModified: now,
+      changeFrequency: 'monthly' as const,
+      priority: p.isFree ? 0.8 : 0.7,
+    }))
+
+  return [...staticEntries, ...postEntries, ...guideEntries, ...packEntries]
 }

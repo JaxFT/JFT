@@ -27,24 +27,21 @@ export default async function BlogPage() {
   const posts = rows.map(rowToView)
   const counts = await loadCountsForSlugs(posts.map(p => p.slug))
 
-  // Premium viewers see published web guides mixed into the blog
-  // results so they can find guide content from the same search
-  // surface. Guides keep their own /guides/[slug] pages; only the
-  // listing on /blog includes them. Non-premium viewers only see
-  // blog posts.
-  let guides: GuideCardItem[] = []
-  if (isPremium) {
-    const guideRows = await listPublishedWebGuides()
-    guides = guideRows.map(g => ({
-      slug: g.slug,
-      title: g.title,
-      excerpt: g.subtitle ?? '',
-      coverImage: g.cover_image ?? '',
-      tags: g.tags,
-      date: g.published_at ?? g.created_at,
-      country: g.country,
-    }))
-  }
+  // Published web guides are mixed into the blog results so visitors
+  // can find guide content from the same search surface. Guides keep
+  // their own /guides/[slug] pages where the real paywall lives;
+  // non-premium viewers see guide cards here so they can browse what
+  // they'd unlock, but clicking through hits the per-guide paywall.
+  const guideRows = await listPublishedWebGuides()
+  const guides: GuideCardItem[] = guideRows.map(g => ({
+    slug: g.slug,
+    title: g.title,
+    excerpt: g.subtitle ?? '',
+    coverImage: g.cover_image ?? '',
+    tags: g.tags,
+    date: g.published_at ?? g.created_at,
+    country: g.country,
+  }))
 
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
@@ -57,7 +54,13 @@ export default async function BlogPage() {
           </p>
         </div>
 
-        <BlogBrowser posts={posts} counts={counts} guides={guides} isAdmin={isAdminEmail(user?.email)} />
+        <BlogBrowser
+          posts={posts}
+          counts={counts}
+          guides={guides}
+          viewerIsPremium={isPremium}
+          isAdmin={isAdminEmail(user?.email)}
+        />
       </div>
     </div>
   )

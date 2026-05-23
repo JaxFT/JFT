@@ -42,11 +42,17 @@ export default function BlogBrowser({
   posts,
   counts = {},
   guides = [],
+  viewerIsPremium = false,
   isAdmin = false,
 }: {
   posts: BlogPostView[]
   counts?: Counts
   guides?: GuideCardItem[]
+  // True if the current viewer has a premium subscription. Used to
+  // decide whether to show the "Show premium only" filter chip — that
+  // chip is a useful preview for non-premium visitors but pointless
+  // for premium viewers who already see everything.
+  viewerIsPremium?: boolean
   // Admins get an extra Premium/Free toggle to sanity-check what
   // each visitor type sees. Non-admins don't see the chip.
   isAdmin?: boolean
@@ -266,6 +272,28 @@ export default function BlogBrowser({
                 <option key={t.value} value={t.value}>{t.label}</option>
               ))}
           </select>
+        )}
+
+        {/* Non-premium viewers get a "Show premium only" chip so they
+            can browse exactly what they'd unlock by upgrading. Hidden
+            for premium viewers (they have access to everything, so the
+            chip would just be confusing). Admins always see both this
+            and the Premium/Free pair below. */}
+        {!viewerIsPremium && (
+          <button
+            type="button"
+            onClick={() => setParam('tier', tier === 'premium' ? null : 'premium')}
+            className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-md transition-colors ${
+              tier === 'premium'
+                ? 'bg-brand-600 text-white shadow-sm hover:bg-brand-700'
+                : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
+            }`}
+            aria-pressed={tier === 'premium'}
+            title="Filter to show only premium posts and guides"
+          >
+            <Crown className="w-3.5 h-3.5" />
+            {tier === 'premium' ? 'Showing premium only' : 'Show premium only'}
+          </button>
         )}
 
         {/* Admin-only Premium/Free toggle. Lets the writer sanity-

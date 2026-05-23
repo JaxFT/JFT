@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ArrowRight, Check, MessageCircle, Calendar, Mail, Compass } from 'lucide-react'
 import BookCallButton from './BookCallButton'
 import WaystaqCard from '@/components/WaystaqCard'
+import AffiliateLinks from './AffiliateLinks'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
@@ -206,12 +207,15 @@ export default async function WorkWithUsPage() {
               We work with brands that fit how we actually travel — places we&apos;d stay, gear our family really uses,
               learning tools we&apos;d recommend to friends. If that sounds like you, we&apos;d love to hear from you.
             </p>
-            <a
-              href="mailto:hello@jaxfamilytravels.com?subject=Collaboration%20%2F%20UGC%20enquiry"
-              className="inline-flex items-center gap-1.5 bg-white text-gray-900 hover:bg-gray-100 font-bold text-sm px-5 py-2.5 rounded-md"
-            >
-              <Mail className="w-4 h-4" /> Contact us about a collab
-            </a>
+            <div className="flex flex-wrap items-start gap-3 mb-2">
+              <a
+                href="mailto:hello@jaxfamilytravels.com?subject=Collaboration%20%2F%20UGC%20enquiry"
+                className="inline-flex items-center gap-1.5 bg-white text-gray-900 hover:bg-gray-100 font-bold text-sm px-5 py-2.5 rounded-md"
+              >
+                <Mail className="w-4 h-4" /> Contact us about a collab
+              </a>
+              <AffiliateLinks />
+            </div>
           </div>
         </div>
       </section>

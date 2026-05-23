@@ -73,9 +73,9 @@ export default function FrancePackHero({ signedIn, otherPacksCount }: Props) {
           </h2>
           <p className="text-gray-600 leading-relaxed text-sm sm:text-base mb-5">
             Our free pack, the same shape as the other {otherPacksCount} country packs.{' '}
-            <strong>12 missions</strong> for families exploring France together: language, food,
-            history, geography, scavenger hunts, animal spotting, and conversation cards for the
-            drive home.
+            <strong>10 missions + 2 games</strong> for families exploring France together: language,
+            food, history, geography, scavenger hunts, animal spotting, conversation cards for the
+            drive home, plus a word search and tile puzzle.
           </p>
           <Link
             href={ctaHref}

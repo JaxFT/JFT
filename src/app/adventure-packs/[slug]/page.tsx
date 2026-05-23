@@ -23,7 +23,7 @@ export async function generateMetadata({
   if (!meta) return {}
   return {
     title: `${meta.country} Adventure Pack`,
-    description: `Twelve missions for families exploring ${meta.country}: language, food, geography, history, scavenger hunts and family chat.`,
+    description: `10 missions + 2 games for families exploring ${meta.country}: language, food, geography, history, scavenger hunts, family chat, a word search and a tile puzzle.`,
   }
 }
 
@@ -96,7 +96,7 @@ export default async function AdventurePackPage({
               <Lock className="w-6 h-6 text-brand-600 mb-3" />
               <h2 className="text-lg font-bold text-gray-900 mb-1">{meta.country} Adventure Pack</h2>
               <p className="text-sm text-gray-500 leading-relaxed mb-4">
-                Twelve missions for families exploring {meta.country}, yours to keep. One-off purchase, no subscription.
+                10 missions and 2 games for families exploring {meta.country}, yours to keep. One-off purchase, no subscription.
               </p>
               <BuyPackButton slug={slug} />
             </div>

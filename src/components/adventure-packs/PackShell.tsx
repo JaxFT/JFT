@@ -136,7 +136,7 @@ export default function PackShell({
           as="h1"
         />
         <p className="text-gray-600 mt-4 text-sm sm:text-base leading-relaxed">
-          Twelve missions to do together while you&apos;re here. Save your answers as you go.
+          10 missions and 2 games to do together while you&apos;re here. Save your answers as you go.
         </p>
 
         {/* AGE TOGGLE + DATA NOTICES */}

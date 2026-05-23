@@ -526,6 +526,24 @@ export const ANIMALS_BY_SLUG: Record<string, AnimalItem[]> = {
     { emoji: '🐴', name: 'Przewalski\'s horse (takhi)', description: 'The only TRULY wild horse species in the world (others are feral domestic horses). Reintroduced to Hustai National Park after going extinct in the wild.', olderOnly: true },
     { emoji: '🐆', name: 'Snow leopard', description: 'Lives in the high Altai mountains of western Mongolia. Around 1,000 of them. Almost impossible to spot.', olderOnly: true },
   ],
+  'bosnia-and-herzegovina': [
+    { emoji: '🐻', name: 'Brown bear', description: 'Sutjeska National Park has one of the last small populations of European brown bear. Around 500 live in Bosnia and Herzegovina overall.' },
+    { emoji: '🐺', name: 'Grey wolf', description: 'Bosnia\'s deep forests still host a real wolf population in the high mountains and Sutjeska area.' },
+    { emoji: '🦌', name: 'Red deer', description: 'Common in the spruce and beech forests of central Bosnia. Listen for the autumn roaring of the bucks.' },
+    { emoji: '🐎', name: 'Bosnian mountain horse', description: 'A small sturdy local breed used by upland villages for working steep ground. Pony-sized but very strong.' },
+    { emoji: '🦅', name: 'Golden eagle', description: 'Nests in the Dinaric Alps. A few dozen pairs across the country.' },
+    { emoji: '🐱', name: 'Eurasian lynx', description: 'Rare but real. A small lynx population lives in the deepest forests of Bosnia, mostly in the south-east.', olderOnly: true },
+    { emoji: '🐎', name: 'Wild Bosnian horse herd of Livno', description: 'A herd of around 500 semi-feral horses roams the high mountain plateau near Livno. Famous as a photography subject.', olderOnly: true },
+  ],
+  serbia: [
+    { emoji: '🐗', name: 'Wild boar', description: 'Common across Serbian forests, especially in Fruška Gora and around the Tara canyon. Sometimes wander into village outskirts in winter.' },
+    { emoji: '🦌', name: 'Red deer', description: 'In the Tara, Kopaonik and Đerdap national parks. The autumn rutting roar is unforgettable.' },
+    { emoji: '🐻', name: 'Brown bear', description: 'Serbia\'s small bear population lives mostly in the Tara National Park along the Drina canyon.' },
+    { emoji: '🦅', name: 'Griffon vulture', description: 'A huge vulture with a 2.8 m wingspan. Nesting colonies on the cliffs of Uvac canyon in south-western Serbia.' },
+    { emoji: '🐺', name: 'Grey wolf', description: 'Returning to Serbian mountains, especially the Carpathians along the Romanian border.' },
+    { emoji: '🦫', name: 'European beaver', description: 'Re-introduced to the Sava and other Serbian rivers after going extinct locally. Beavers are now thriving.', olderOnly: true },
+    { emoji: '🐱', name: 'Eurasian lynx', description: 'A very small lynx population in the south-eastern mountains. Almost impossible to see.', olderOnly: true },
+  ],
 
   // ── NORTH AMERICA ───────────────────────────────────────────────
   canada: [

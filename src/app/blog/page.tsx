@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { listPublishedPosts, rowToView } from '@/lib/blog-db'
 import { loadCountsForSlugs } from '@/lib/blog-social-db'
 import { listPublishedWebGuides } from '@/lib/guides-content-db'
+import { listActiveGuides } from '@/lib/guides-db'
 import { isPremiumTier } from '@/lib/profile'
 import { isAdminEmail } from '@/lib/admin'
 import BlogBrowser, { type GuideCardItem } from './BlogBrowser'
@@ -27,21 +28,46 @@ export default async function BlogPage() {
   const posts = rows.map(rowToView)
   const counts = await loadCountsForSlugs(posts.map(p => p.slug))
 
-  // Published web guides are mixed into the blog results so visitors
-  // can find guide content from the same search surface. Guides keep
-  // their own /guides/[slug] pages where the real paywall lives;
-  // non-premium viewers see guide cards here so they can browse what
-  // they'd unlock, but clicking through hits the per-guide paywall.
-  const guideRows = await listPublishedWebGuides()
-  const guides: GuideCardItem[] = guideRows.map(g => ({
-    slug: g.slug,
-    title: g.title,
-    excerpt: g.subtitle ?? '',
-    coverImage: g.cover_image ?? '',
-    tags: g.tags,
-    date: g.published_at ?? g.created_at,
-    country: g.country,
-  }))
+  // Published guides (both modern web guides and the older PDF guides)
+  // are mixed into the blog results so visitors can find guide content
+  // from the same search surface. Guides keep their own /guides/[slug]
+  // pages where the real paywall lives; non-premium viewers see guide
+  // cards here so they can browse what they'd unlock, but clicking
+  // through hits the per-guide paywall.
+  const [webGuideRows, pdfGuideRows] = await Promise.all([
+    listPublishedWebGuides(),
+    listActiveGuides(),
+  ])
+  // If a slug exists as both a web guide and a legacy PDF guide, the
+  // web version supersedes — same precedence as the /guides page.
+  const webSlugs = new Set(webGuideRows.map(g => g.slug))
+  // PDF guides don't carry a publish date. We give them a fixed old
+  // anchor date so they sort below time-stamped blog posts and web
+  // guides in the newest-first feed (rather than jumping to the top
+  // every time the page loads).
+  const PDF_GUIDE_ANCHOR_DATE = '2024-01-01T00:00:00Z'
+  const guides: GuideCardItem[] = [
+    ...webGuideRows.map(g => ({
+      slug: g.slug,
+      title: g.title,
+      excerpt: g.subtitle ?? '',
+      coverImage: g.cover_image ?? '',
+      tags: g.tags,
+      date: g.published_at ?? g.created_at,
+      country: g.country,
+    })),
+    ...pdfGuideRows
+      .filter(g => !webSlugs.has(g.slug))
+      .map(g => ({
+        slug: g.slug,
+        title: g.name,
+        excerpt: g.subtitle ?? '',
+        coverImage: g.cover_image ?? '',
+        tags: g.tags,
+        date: PDF_GUIDE_ANCHOR_DATE,
+        country: null,
+      })),
+  ]
 
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">

@@ -13,6 +13,7 @@ import { Search, X, Crown } from 'lucide-react'
 import BlogCard from '@/components/blog/BlogCard'
 import ShareButton from '@/components/blog/ShareButton'
 import type { BlogPostView } from '@/lib/blog-db'
+import { proxyImageUrl } from '@/lib/image-proxy'
 import {
   TRAVEL_STAGES, BLOG_TOPICS,
   TRAVEL_STAGE_LABEL, BLOG_TOPIC_LABEL,
@@ -380,7 +381,7 @@ function GuideCard({ guide }: { guide: GuideCardItem }) {
       {guide.coverImage && (
         <div className="overflow-hidden h-48">
           <img
-            src={guide.coverImage}
+            src={proxyImageUrl(guide.coverImage)}
             alt={guide.title}
             loading="lazy"
             decoding="async"

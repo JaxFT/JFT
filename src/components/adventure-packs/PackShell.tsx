@@ -237,15 +237,25 @@ export default function PackShell({
           <div className="mt-8 text-center text-gray-500 text-sm">Loading your saved answers…</div>
         ) : (
           <div className="mt-6">
-            {isLocked(currentSection) ? (
+            {isLocked(currentSection) && (
               <LockedSectionCard country={data.country} packSlug={data.slug} />
-            ) : (
+            )}
+            {/* Locked sections still render the real PackSection so the
+                visitor can SEE what they'd unlock, but inside a disabled
+                fieldset (no input editing, no button taps, no saves) and
+                with reduced opacity to signal preview-only. */}
+            <fieldset
+              disabled={isLocked(currentSection)}
+              className={isLocked(currentSection)
+                ? 'opacity-60 pointer-events-none select-none'
+                : ''}
+            >
               <PackSection
                 sectionKey={currentSection}
                 data={data}
                 pack={pack}
               />
-            )}
+            </fieldset>
             {/* Prev / next nav within the pack */}
             <div className="mt-4 flex items-center justify-between gap-3">
               <button

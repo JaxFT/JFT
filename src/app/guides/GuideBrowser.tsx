@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { Map, ArrowRight, Crown, Search, X } from 'lucide-react'
 import { proxyImageUrl } from '@/lib/image-proxy'
+import { getPackMeta, getPackByIso2 } from '@/lib/adventurePackMeta'
 
 // Inlined so this client component doesn't pull guides-db (which
 // imports the server supabase client + next/headers).
@@ -22,6 +23,10 @@ export type GuideCardModel = {
   cover_image: string | null
   tags: string[]
   price_pence: number
+  // Web guides carry a country slug. PDF guides don't, so this is
+  // optional. When set, the card renders the country (flag + name) as
+  // the first chip — place leads, tags follow.
+  country?: string | null
 }
 
 type Props = {
@@ -112,18 +117,34 @@ export default function GuideBrowser({ guides, isPremium }: Props) {
                 </div>
               )}
 
-              {guide.tags.length > 0 && (
-                <div className="absolute top-4 left-4 flex flex-wrap gap-1.5 max-w-[calc(100%-2rem)]">
-                  {guide.tags.slice(0, 2).map(tag => (
-                    <span
-                      key={tag}
-                      className="text-xs font-semibold text-white bg-black/45 backdrop-blur-sm px-2.5 py-1 rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
+              {(() => {
+                // Place first (flag + country pulled from PACK_META),
+                // then up to two free-form tags. Guides don't carry the
+                // typed topics enum so tags substitute here.
+                const country = guide.country
+                  ? (getPackMeta(guide.country.toLowerCase()) ?? getPackByIso2(guide.country.toLowerCase()))
+                  : null
+                const tagChips = guide.tags.slice(0, 2)
+                if (!country && tagChips.length === 0) return null
+                return (
+                  <div className="absolute top-4 left-4 flex flex-wrap gap-1.5 max-w-[calc(100%-2rem)]">
+                    {country && (
+                      <span className="text-xs font-semibold text-white bg-black/45 backdrop-blur-sm px-2.5 py-1 rounded-full inline-flex items-center gap-1">
+                        <span aria-hidden>{country.flag}</span>
+                        {country.country}
+                      </span>
+                    )}
+                    {tagChips.map(tag => (
+                      <span
+                        key={tag}
+                        className="text-xs font-semibold text-white bg-black/45 backdrop-blur-sm px-2.5 py-1 rounded-full"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )
+              })()}
 
               <div className="absolute inset-x-0 bottom-0 bg-brand-950/85 backdrop-blur-sm text-white p-5">
                 <h3 className="font-bold leading-snug mb-1 line-clamp-2">{guide.name}</h3>

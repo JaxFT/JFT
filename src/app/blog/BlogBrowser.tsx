@@ -19,7 +19,7 @@ import {
   TRAVEL_STAGE_LABEL, BLOG_TOPIC_LABEL,
   type TravelStage, type BlogTopic,
 } from '@/lib/blog-meta'
-import { PACK_META } from '@/lib/adventurePackMeta'
+import { PACK_META, getPackMeta, getPackByIso2 } from '@/lib/adventurePackMeta'
 import { CONTINENT_ORDER, type Continent } from '@/lib/adventurePackTypes'
 
 const DESTINATION_GENERAL = '__none'
@@ -390,13 +390,29 @@ function GuideCard({ guide }: { guide: GuideCardItem }) {
         </div>
       )}
       <div className="flex flex-col flex-1 p-5">
-        {guide.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            {guide.tags.slice(0, 2).map(tag => (
-              <span key={tag} className="text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">{tag}</span>
-            ))}
-          </div>
-        )}
+        {(() => {
+          // Same shape as BlogCard chips: place first (flag + country),
+          // then up to two of the guide's free-form tags (guides don't
+          // carry the structured topics enum, so we use tags here).
+          const country = guide.country
+            ? (getPackMeta(guide.country.toLowerCase()) ?? getPackByIso2(guide.country.toLowerCase()))
+            : null
+          const tagChips = guide.tags.slice(0, 2)
+          if (!country && tagChips.length === 0) return null
+          return (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {country && (
+                <span className="text-xs font-semibold text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                  <span aria-hidden>{country.flag}</span>
+                  {country.country}
+                </span>
+              )}
+              {tagChips.map(tag => (
+                <span key={tag} className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">{tag}</span>
+              ))}
+            </div>
+          )
+        })()}
         <h3 className="font-bold text-gray-900 text-base leading-snug mb-2 group-hover:text-brand-600 transition-colors line-clamp-2">
           {guide.title}
         </h3>

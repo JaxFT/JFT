@@ -2,14 +2,35 @@ import { ArrowRight, Clock, Crown, Heart, MessageCircle } from 'lucide-react'
 import { format } from 'date-fns'
 import type { BlogPost } from '@/types'
 import { proxyImageUrl } from '@/lib/image-proxy'
+import { getPackByIso2, getPackMeta } from '@/lib/adventurePackMeta'
+import { BLOG_TOPIC_LABEL, type BlogTopic } from '@/lib/blog-meta'
 import ShareButton from './ShareButton'
+
+// BlogCard accepts the richer BlogPostView shape at runtime — both
+// callers (homepage + /blog) pass it. The type is permissive on the
+// way in so the existing BlogPost contract still compiles, but the
+// extra fields drive the meaningful place / topic tags.
+type CardPost = BlogPost & {
+  destinationCountry?: string | null
+  topics?: BlogTopic[]
+}
+
+// Resolve a country tag (flag + name) from either a pack slug
+// ("thailand") or an ISO2 ("th"). Returns null if no match — country
+// strings can be inconsistent in old data.
+function resolveCountry(value: string | null | undefined): { flag: string; country: string } | null {
+  if (!value) return null
+  const v = value.trim().toLowerCase()
+  if (!v) return null
+  return getPackMeta(v) ?? getPackByIso2(v)
+}
 
 // Plain <a> (not next/link) to avoid the brief unstyled-flash that
 // CSR navigation produced on this card. Tradeoff: ~300 ms slower per
 // click, worth it for a clean transition.
 
 type Props = {
-  post: BlogPost
+  post: CardPost
   // Optional counts — listing pages pass these in via the batched
   // loadCountsForSlugs query. Cards render without counts gracefully
   // if the prop isn't provided.
@@ -17,6 +38,13 @@ type Props = {
 }
 
 export default function BlogCard({ post, counts }: Props) {
+  // Tag chips: place first (flag + country), then up to two topic
+  // labels from the typed topics enum. The free-form `tags` array is
+  // intentionally NOT rendered here — those were a grab-bag of random
+  // words and didn't tell a reader anything useful at a glance.
+  const place = resolveCountry(post.destinationCountry)
+  const topicChips = (post.topics ?? []).slice(0, 2)
+
   return (
     <a href={`/blog/${post.slug}`} className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100">
       {post.coverImage && (
@@ -32,10 +60,16 @@ export default function BlogCard({ post, counts }: Props) {
         </div>
       )}
       <div className="flex flex-col flex-1 p-5">
-        {post.tags.length > 0 && (
+        {(place || topicChips.length > 0) && (
           <div className="flex flex-wrap gap-1.5 mb-3">
-            {post.tags.slice(0, 2).map(tag => (
-              <span key={tag} className="text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">{tag}</span>
+            {place && (
+              <span className="text-xs font-semibold text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                <span aria-hidden>{place.flag}</span>
+                {place.country}
+              </span>
+            )}
+            {topicChips.map(t => (
+              <span key={t} className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">{BLOG_TOPIC_LABEL[t]}</span>
             ))}
           </div>
         )}

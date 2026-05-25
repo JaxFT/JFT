@@ -36,6 +36,7 @@ export default async function GuidesPage() {
       cover_image: g.cover_image,
       tags: g.tags,
       price_pence: g.price_pence,
+      country: g.country,
     })),
     ...pdfGuides
       .filter(g => !webSlugs.has(g.slug))
@@ -46,6 +47,7 @@ export default async function GuidesPage() {
         cover_image: g.cover_image,
         tags: g.tags,
         price_pence: g.price_pence,
+        country: null,
       })),
   ]
 

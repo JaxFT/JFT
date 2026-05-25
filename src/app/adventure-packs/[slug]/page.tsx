@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { checkAdventurePackAccess } from '@/lib/adventure-pack-access'
 import { getPackData, getPackMeta } from '@/lib/adventurePackData'
 import UserPackShell from '@/components/adventure-packs/UserPackShell'
+import AnonymousPackShell from '@/components/adventure-packs/AnonymousPackShell'
 import FlagBanner from '@/components/adventure-packs/FlagBanner'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 import BuyPackButton from '@/components/adventure-packs/BuyPackButton'
@@ -63,10 +64,31 @@ export default async function AdventurePackPage({
     )
   }
 
-  // Access gate. Anonymous users get the same locked landing as logged-
-  // in non-premium users (instead of an immediate /login redirect) so
-  // that Google can crawl the page and visitors from social shares land
-  // on a real page with clear next steps.
+  // Free packs (currently just France) are open to anyone, including
+  // anonymous visitors. We render an anonymous shell that persists
+  // progress to localStorage so a casual first-touch visitor can try
+  // the product without signing up. They keep their progress on this
+  // device until they create an account (at which point a future
+  // migration could move it server-side — not yet wired).
+  if (meta.isFree) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      const data = await getPackData(slug)
+      if (!data) notFound()
+      return (
+        <>
+          <PackJsonLd slug={slug} country={meta.country} flag={meta.flag} isFree={meta.isFree} />
+          <AnonymousPackShell data={data} />
+        </>
+      )
+    }
+  }
+
+  // Access gate for the gated packs. Anonymous users get the same
+  // locked landing as logged-in non-premium users (instead of an
+  // immediate /login redirect) so Google can crawl the page and
+  // social-share visitors land on a real page with clear next steps.
   const access = await checkAdventurePackAccess(slug)
 
   if (access.kind === 'login' || access.kind === 'locked') {

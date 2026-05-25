@@ -9,7 +9,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Trash2, Check, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Trash2, Check, ChevronLeft, ChevronRight, Lock } from 'lucide-react'
 import { useAdventurePack } from '@/hooks/useAdventurePack'
 import type { AdventurePackData, SectionKey } from '@/lib/adventurePackTypes'
 import { SECTION_LABELS, SECTION_EMOJI, getPackSections } from '@/lib/adventurePackTypes'
@@ -19,6 +19,7 @@ import DataNotice from './DataNotice'
 import ClearDataModal from './ClearDataModal'
 import PackSection from './PackSection'
 import FlagBanner from './FlagBanner'
+import LockedSectionCard from './LockedSectionCard'
 
 // PackShell is the pure UI for a pack. Both the user (adult) flow and
 // the kid flow render the same shell — they differ only in where the
@@ -32,6 +33,11 @@ type Props = {
   // "Back to my passport".
   backHref?: string
   backLabel?: string
+  // If set, only these sections are interactive. Any other section
+  // shows a lock badge in the picker and renders a sign-up CTA in
+  // place of the mission body. Used by AnonymousPackShell for the
+  // free-taster experience on France.
+  freeSections?: SectionKey[]
 }
 
 function formatExpiry(iso: string | null): string | null {
@@ -46,7 +52,13 @@ export default function PackShell({
   data,
   backHref = '/adventure-packs',
   backLabel = 'All adventure packs',
+  freeSections,
 }: Props) {
+  // Section is locked when a free-taster set is supplied and this key
+  // isn't on it. Empty / undefined freeSections means everything is
+  // unlocked (standard signed-in user flow).
+  const isLocked = (k: SectionKey): boolean =>
+    !!freeSections && !freeSections.includes(k)
   const router = useRouter()
   const [showClear, setShowClear] = useState(false)
 
@@ -77,9 +89,14 @@ export default function PackShell({
 
   useEffect(() => {
     if (pack.loading || hasJumpedToFirstIncomplete) return
-    const firstIncomplete = sections.find(k => !pack.isMissionComplete(k))
+    // Skip auto-jumping into locked sections — the anonymous user
+    // shouldn't land on the upsell card on first load.
+    const firstIncomplete = sections.find(k => !pack.isMissionComplete(k) && !isLocked(k))
     if (firstIncomplete) setCurrentSection(firstIncomplete)
     setHasJumpedToFirstIncomplete(true)
+    // isLocked depends on freeSections which is stable per render of
+    // the parent, so it's safe to omit from deps here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pack.loading, pack.isMissionComplete, hasJumpedToFirstIncomplete, sections])
 
   const goToSection = (key: SectionKey) => {
@@ -175,6 +192,7 @@ export default function PackShell({
             {sections.map(k => {
               const isCurrent = currentSection === k
               const isDone = pack.isMissionComplete(k)
+              const locked = isLocked(k)
               return (
                 <button
                   key={k}
@@ -183,15 +201,24 @@ export default function PackShell({
                   className={`relative flex flex-col items-center justify-center gap-1 px-2 py-3 rounded-xl border text-xs font-semibold transition-colors min-h-[5rem] ${
                     isCurrent
                       ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
-                      : isDone
-                        ? 'bg-brand-50 text-brand-800 border-brand-200 hover:bg-brand-100'
-                        : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-brand-300 hover:bg-white'
+                      : locked
+                        ? 'bg-gray-50 text-gray-500 border-gray-200 hover:border-brand-300 hover:bg-white'
+                        : isDone
+                          ? 'bg-brand-50 text-brand-800 border-brand-200 hover:bg-brand-100'
+                          : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-brand-300 hover:bg-white'
                   }`}
                   aria-current={isCurrent ? 'true' : undefined}
+                  aria-label={locked ? `${SECTION_LABELS[k]} (locked — sign up to unlock)` : undefined}
                 >
-                  <span className="text-2xl leading-none" aria-hidden>{SECTION_EMOJI[k]}</span>
+                  <span className={`text-2xl leading-none ${locked ? 'opacity-50' : ''}`} aria-hidden>{SECTION_EMOJI[k]}</span>
                   <span className="text-[11px] leading-tight text-center">{SECTION_LABELS[k]}</span>
-                  {isDone && (
+                  {locked ? (
+                    <span className={`absolute top-1 right-1 inline-flex items-center justify-center w-4 h-4 rounded-full ${
+                      isCurrent ? 'bg-white text-brand-700' : 'bg-gray-200 text-gray-600'
+                    }`}>
+                      <Lock className="w-2.5 h-2.5" strokeWidth={3} />
+                    </span>
+                  ) : isDone && (
                     <span className={`absolute top-1 right-1 inline-flex items-center justify-center w-4 h-4 rounded-full ${
                       isCurrent ? 'bg-white text-brand-700' : 'bg-brand-600 text-white'
                     }`}>
@@ -210,11 +237,15 @@ export default function PackShell({
           <div className="mt-8 text-center text-gray-500 text-sm">Loading your saved answers…</div>
         ) : (
           <div className="mt-6">
-            <PackSection
-              sectionKey={currentSection}
-              data={data}
-              pack={pack}
-            />
+            {isLocked(currentSection) ? (
+              <LockedSectionCard country={data.country} packSlug={data.slug} />
+            ) : (
+              <PackSection
+                sectionKey={currentSection}
+                data={data}
+                pack={pack}
+              />
+            )}
             {/* Prev / next nav within the pack */}
             <div className="mt-4 flex items-center justify-between gap-3">
               <button

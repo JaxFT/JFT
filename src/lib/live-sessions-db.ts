@@ -38,12 +38,17 @@ export async function recordHeartbeat(sessionId: string, pathname: string): Prom
 export async function getLiveSessionCount(): Promise<number> {
   const sb = admin()
   const sweepCutoff = new Date(Date.now() - SWEEP_WINDOW_SECONDS * 1000).toISOString()
+  // Sweep failures are non-fatal — the table just stays a bit bigger
+  // until the next read. We still throw if the active-count query
+  // itself errors so the admin card shows "Count unavailable" instead
+  // of pretending the site is empty (the original bug).
   await sb.from('live_sessions').delete().lt('last_seen', sweepCutoff)
 
   const activeCutoff = new Date(Date.now() - ACTIVE_WINDOW_SECONDS * 1000).toISOString()
-  const { count } = await sb
+  const { count, error } = await sb
     .from('live_sessions')
     .select('session_id', { count: 'exact', head: true })
     .gte('last_seen', activeCutoff)
+  if (error) throw new Error(error.message)
   return count ?? 0
 }

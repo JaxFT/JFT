@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
+import LiveHeartbeat from '@/components/LiveHeartbeat'
 import { getCurrentUser } from '@/lib/auth'
 
 export const metadata: Metadata = {
@@ -67,6 +68,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
         <main>{children}</main>
         <Footer />
+        <LiveHeartbeat />
       </body>
     </html>
   )

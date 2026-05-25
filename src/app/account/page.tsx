@@ -6,6 +6,7 @@ import WaystaqCard from '@/components/WaystaqCard'
 import type { Metadata } from 'next'
 import SignOutButton from './SignOutButton'
 import AccountEditor from './AccountEditor'
+import LiveTrafficAdminCard from './LiveTrafficAdminCard'
 import PremiumCancelButton from './PremiumCancelButton'
 import ResumeMembershipButton from './ResumeMembershipButton'
 import UpgradeButton from '@/components/billing/UpgradeButton'
@@ -133,6 +134,8 @@ export default async function AccountPage() {
     ? new Date(profile.created_at).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
     : 'recently'
 
+  const isAdmin = isAdminEmail(user.email)
+
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -146,6 +149,10 @@ export default async function AccountPage() {
           </div>
           <SignOutButton />
         </div>
+
+        {/* Admin-only live traffic card. Sits at the top so opening
+            /account doubles as a quick check on who's on the site. */}
+        {isAdmin && <LiveTrafficAdminCard />}
 
         {/* 1 ── SUBSCRIPTION / TIER STATUS ─────────────────────── */}
         <div className={`rounded-2xl p-6 mb-6 ${isPremium ? 'bg-brand-950 text-white' : 'bg-white border border-gray-100 shadow-sm'}`}>
@@ -221,7 +228,7 @@ export default async function AccountPage() {
             initialUsername={(profile as { username?: string | null } | null)?.username ?? null}
             initialUsernameIsInstagram={!!(profile as { username_is_instagram?: boolean } | null)?.username_is_instagram}
             initialInstagramHandle={(profile as { instagram_handle?: string | null } | null)?.instagram_handle ?? null}
-            isAdmin={isAdminEmail(user.email)}
+            isAdmin={isAdmin}
           />
         </div>
 

@@ -199,7 +199,7 @@ export default async function HomePage() {
       {/* Waystaq cross-promo — bold hero variant for the homepage so
           it actually catches a visitor's eye. Brand-styled (Waystaq
           gradient + colours, not JFT's), real logo. */}
-      <WaystaqCard variant="hero" />
+      <WaystaqCard variant="hero" userIsPremium={isPremium} />
     </>
   )
 }

@@ -12,18 +12,27 @@
 
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
+import WaystaqDiscountButton from './WaystaqDiscountButton'
 
 type Variant = 'hero' | 'compact' | 'inline'
 
 type Props = {
   variant?: Variant
-  // Where the CTA points. Defaults to https://waystaq.com which is
-  // their live site. Override when we wire the SSO bundle later.
+  // Where the CTA points for non-premium / logged-out viewers.
+  // Premium JFT members go through the discount bridge instead and
+  // never see this URL on click.
   ctaHref?: string
-  // Override the title / body if the surface wants a different pitch.
+  // Override the title / body / CTA label.
   title?: string
   body?: string
   ctaLabel?: string
+  // True if the current viewer is a paid JFT premium member. When
+  // true, the CTA swaps to the £25 WayStaq Premium discount button
+  // (server endpoint mints an HMAC token and redirects through
+  // WayStaq's bridge). When false / omitted, the standard link
+  // renders. Always passed in from a server component that has the
+  // user's subscription state.
+  userIsPremium?: boolean
 }
 
 // The blog post that explains why we built Waystaq and how it has
@@ -45,11 +54,16 @@ export default function WaystaqCard({
   title,
   body,
   ctaLabel,
+  userIsPremium = false,
 }: Props) {
   const subtitle = DEFAULTS.subtitle
   const finalTitle = title ?? DEFAULTS.title
   const finalBody = body ?? DEFAULTS.body
-  const finalCtaLabel = ctaLabel ?? DEFAULTS.ctaLabel
+  // Premium viewers see the discount CTA label by default; non-premium
+  // see the standard "Open Waystaq" CTA. Explicit ctaLabel override
+  // wins in both cases.
+  const finalCtaLabel = ctaLabel
+    ?? (userIsPremium ? 'Get Waystaq for £25 (Premium member)' : DEFAULTS.ctaLabel)
 
   if (variant === 'hero') {
     return (
@@ -81,15 +95,24 @@ export default function WaystaqCard({
             </Link>
             .
           </p>
-          <a
-            href={ctaHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 font-bold text-sm px-5 py-2.5 rounded-md transition-colors"
-            style={{ background: '#FFFFFF', color: '#0066FF' }}
-          >
-            {finalCtaLabel} <ArrowRight className="w-4 h-4" />
-          </a>
+          {userIsPremium ? (
+            <WaystaqDiscountButton
+              label={finalCtaLabel}
+              fallbackHref={ctaHref}
+              className="inline-flex items-center gap-1.5 font-bold text-sm px-5 py-2.5 rounded-md transition-colors disabled:opacity-60"
+              style={{ background: '#FFFFFF', color: '#0066FF' }}
+            />
+          ) : (
+            <a
+              href={ctaHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 font-bold text-sm px-5 py-2.5 rounded-md transition-colors"
+              style={{ background: '#FFFFFF', color: '#0066FF' }}
+            >
+              {finalCtaLabel} <ArrowRight className="w-4 h-4" />
+            </a>
+          )}
         </div>
       </section>
     )
@@ -128,15 +151,24 @@ export default function WaystaqCard({
           </Link>
           .
         </p>
-        <a
-          href={ctaHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-sm font-bold rounded-md px-3.5 py-2 transition-colors"
-          style={{ background: '#0066FF', color: '#FFFFFF' }}
-        >
-          {finalCtaLabel} <ArrowRight className="w-3.5 h-3.5" />
-        </a>
+        {userIsPremium ? (
+          <WaystaqDiscountButton
+            label={finalCtaLabel}
+            fallbackHref={ctaHref}
+            className="inline-flex items-center gap-1.5 text-sm font-bold rounded-md px-3.5 py-2 transition-colors disabled:opacity-60"
+            style={{ background: '#0066FF', color: '#FFFFFF' }}
+          />
+        ) : (
+          <a
+            href={ctaHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm font-bold rounded-md px-3.5 py-2 transition-colors"
+            style={{ background: '#0066FF', color: '#FFFFFF' }}
+          >
+            {finalCtaLabel} <ArrowRight className="w-3.5 h-3.5" />
+          </a>
+        )}
       </div>
     </div>
   )

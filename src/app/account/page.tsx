@@ -297,7 +297,7 @@ export default async function AccountPage() {
             Compact, brand-styled. When bundle pricing ships, swap to
             a tier-aware copy / title. */}
         <div className="mt-6">
-          <WaystaqCard variant="compact" />
+          <WaystaqCard variant="compact" userIsPremium={isPremium} />
         </div>
 
         {/* 5 ── HELP & LEGAL ────────────────────────────────────── */}

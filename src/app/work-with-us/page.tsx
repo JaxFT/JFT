@@ -5,6 +5,7 @@ import BookCallButton from './BookCallButton'
 import WaystaqCard from '@/components/WaystaqCard'
 import AffiliateLinks from './AffiliateLinks'
 import { createClient } from '@/lib/supabase/server'
+import { isPremiumTier } from '@/lib/profile'
 
 export const metadata: Metadata = {
   title: 'Work With Us, 1:1 family travel call',
@@ -17,13 +18,15 @@ export default async function WorkWithUsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   let viewerName: string | null = null
+  let isPremium = false
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('full_name')
+      .select('full_name, subscription_tier')
       .eq('id', user.id)
       .maybeSingle()
     viewerName = (profile as { full_name?: string | null } | null)?.full_name ?? null
+    isPremium = isPremiumTier((profile as { subscription_tier?: string | null } | null)?.subscription_tier)
   }
   const viewerEmail = user?.email ?? null
   return (
@@ -188,6 +191,7 @@ export default async function WorkWithUsPage() {
             title="Waystaq is brilliant — you should use it too"
             body="Three apps in one: a trip planner that lays out every leg of your route, a daily expense tracker that shows where the money's actually going, and a task manager that keeps the admin and logistics from falling through the cracks. We use it every day, on the road and at home planning the next leg."
             ctaLabel="Try Waystaq free"
+            userIsPremium={isPremium}
           />
         </div>
       </section>

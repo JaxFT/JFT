@@ -24,6 +24,18 @@ import { CONTINENT_ORDER, type Continent } from '@/lib/adventurePackTypes'
 
 const DESTINATION_GENERAL = '__none'
 
+// Normalise a country value (which may be a pack slug like "nepal" or
+// an ISO2 like "np", or null) to a canonical pack slug so it compares
+// cleanly against the destination dropdown value (always a pack slug).
+// Without this, guides stored with ISO2 codes never matched the
+// destination filter.
+function toPackSlug(value: string | null | undefined): string | null {
+  if (!value) return null
+  const v = value.trim().toLowerCase()
+  if (!v) return null
+  return (getPackMeta(v) ?? getPackByIso2(v))?.slug ?? null
+}
+
 type Counts = Record<string, { likes: number; comments: number }>
 
 // A guide rendered as a card on /blog. Same visual treatment as a
@@ -88,10 +100,11 @@ export default function BlogBrowser({
     return posts.filter(p => {
       if (stage && !p.travelStages.includes(stage)) return false
       if (destination) {
+        const postSlug = toPackSlug(p.destinationCountry)
         if (destination === DESTINATION_GENERAL) {
-          if (p.destinationCountry) return false
+          if (postSlug) return false
         } else {
-          if (p.destinationCountry !== destination) return false
+          if (postSlug !== destination) return false
         }
       }
       if (topic && !p.topics.includes(topic)) return false
@@ -118,10 +131,11 @@ export default function BlogBrowser({
       if (stage) return false
       if (topic) return false
       if (destination) {
+        const guideSlug = toPackSlug(g.country)
         if (destination === DESTINATION_GENERAL) {
-          if (g.country) return false
+          if (guideSlug) return false
         } else {
-          if (g.country !== destination) return false
+          if (guideSlug !== destination) return false
         }
       }
       if (term) {
@@ -169,12 +183,19 @@ export default function BlogBrowser({
     const set = new Set<string>()           // either DESTINATION_GENERAL or a pack slug
     let hasGeneral = false
     for (const p of posts) {
-      if (p.destinationCountry) set.add(p.destinationCountry)
+      const slug = toPackSlug(p.destinationCountry)
+      if (slug) set.add(slug)
       else hasGeneral = true
+    }
+    // Guides count toward the dropdown too — otherwise a country that
+    // only has a guide (no blog post) wouldn't be selectable.
+    for (const g of guides) {
+      const slug = toPackSlug(g.country)
+      if (slug) set.add(slug)
     }
     if (hasGeneral) set.add(DESTINATION_GENERAL)
     return set
-  }, [posts])
+  }, [posts, guides])
 
   const groupedDestinations = useMemo(() => {
     const byContinent = new Map<Continent, typeof livePacks>()

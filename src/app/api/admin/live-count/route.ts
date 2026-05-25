@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient as createSbClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
-import { isAdminEmail } from '@/lib/admin'
+import { isAdminEmail, EXCLUDED_FROM_USER_COUNTS } from '@/lib/admin'
 import { getLiveSessionCount } from '@/lib/live-sessions-db'
 
 export const dynamic = 'force-dynamic'
@@ -49,9 +49,12 @@ export async function GET() {
     // count. Trailing-whitespace edge cases will under-count slightly
     // but that's rare enough to ignore.
     const premiumQ = sb.from('profiles').select('id', { count: 'exact', head: true }).ilike('subscription_tier', 'premium')
-    if (adminIds.length > 0) {
+    // Exclude admin profiles AND hand-picked test/dummy accounts from
+    // both counts so the headline numbers reflect real members only.
+    const excludedIds = [...adminIds, ...EXCLUDED_FROM_USER_COUNTS]
+    if (excludedIds.length > 0) {
       // PostgREST not-in syntax: not.in.(id1,id2,...)
-      const csv = `(${adminIds.join(',')})`
+      const csv = `(${excludedIds.join(',')})`
       totalQ.not('id', 'in', csv)
       premiumQ.not('id', 'in', csv)
     }

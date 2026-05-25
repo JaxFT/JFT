@@ -17,6 +17,7 @@ import { proxyImageUrl } from '@/lib/image-proxy'
 import {
   TRAVEL_STAGES, BLOG_TOPICS,
   TRAVEL_STAGE_LABEL, BLOG_TOPIC_LABEL,
+  VALID_TRAVEL_STAGES, VALID_BLOG_TOPICS,
   type TravelStage, type BlogTopic,
 } from '@/lib/blog-meta'
 import { PACK_META, getPackMeta, getPackByIso2 } from '@/lib/adventurePackMeta'
@@ -34,6 +35,36 @@ function toPackSlug(value: string | null | undefined): string | null {
   const v = value.trim().toLowerCase()
   if (!v) return null
   return (getPackMeta(v) ?? getPackByIso2(v))?.slug ?? null
+}
+
+// Normalised version of a free-form tag, used for matching guides
+// against the structured stage / topic filters. Lowercases and
+// collapses hyphens/underscores to spaces so "long-term-life" and
+// "long term life" hit each other.
+function normTag(t: string): string {
+  return t.toLowerCase().replace(/[-_]+/g, ' ').trim()
+}
+
+// Build a list of keywords that should make a guide match this stage
+// or topic. Includes the filter value itself ("planning") plus
+// meaningful words from the human label ("Money & budget" → ["money",
+// "budget"]). Words shorter than 3 chars are dropped so "&" and "to"
+// don't trigger false positives.
+function filterKeywords(value: string, label: string): string[] {
+  const out = new Set<string>()
+  out.add(normTag(value))
+  for (const w of label.toLowerCase().split(/[^a-z0-9]+/)) {
+    if (w.length >= 3) out.add(w)
+  }
+  return Array.from(out)
+}
+
+// Does any of the guide's free-form tags contain any of the supplied
+// keywords? Substring match so "saving money" matches "money" and
+// "pre-trip planning" matches "planning".
+function guideTagsMatch(tags: string[], keywords: string[]): boolean {
+  const haystack = tags.map(normTag)
+  return haystack.some(t => keywords.some(k => t.includes(k)))
 }
 
 type Counts = Record<string, { likes: number; comments: number }>
@@ -118,18 +149,22 @@ export default function BlogBrowser({
     })
   }, [posts, stage, destination, topic, q, tier])
 
-  // Guides only carry tags + a country, not the structured stage /
-  // topic metadata blog posts have. So a stage or topic filter hides
-  // every guide; a destination filter keeps only matching countries;
-  // a free-text search hits title / excerpt / tags as you'd expect.
+  // Guides only carry free-form tags, not the typed stage / topic
+  // enums blog posts have. Match stage / topic by checking the tag
+  // list against the filter value AND the words from its human label
+  // ("Money & budget" → matches a tag like "saving money" or "budget").
+  // A destination filter normalises to a pack slug; free-text search
+  // hits title / excerpt / tags as you'd expect.
   const filteredGuides = useMemo(() => {
     const term = q.trim().toLowerCase()
     // Guides are premium-only content, so the admin "free" filter
     // hides every guide; "premium" keeps them.
     if (tier === 'free') return []
+    const stageKeywords = stage ? filterKeywords(stage, TRAVEL_STAGE_LABEL[stage]) : null
+    const topicKeywords = topic ? filterKeywords(topic, BLOG_TOPIC_LABEL[topic]) : null
     return guides.filter(g => {
-      if (stage) return false
-      if (topic) return false
+      if (stageKeywords && !guideTagsMatch(g.tags, stageKeywords)) return false
+      if (topicKeywords && !guideTagsMatch(g.tags, topicKeywords)) return false
       if (destination) {
         const guideSlug = toPackSlug(g.country)
         if (destination === DESTINATION_GENERAL) {
@@ -170,14 +205,26 @@ export default function BlogBrowser({
   const usedStages = useMemo(() => {
     const set = new Set<TravelStage>()
     for (const p of posts) for (const s of p.travelStages) set.add(s)
+    // Also surface stages that only a guide's tags hit, so the option
+    // stays selectable when no blog post uses it yet.
+    for (const s of VALID_TRAVEL_STAGES) {
+      if (set.has(s)) continue
+      const keywords = filterKeywords(s, TRAVEL_STAGE_LABEL[s])
+      if (guides.some(g => guideTagsMatch(g.tags, keywords))) set.add(s)
+    }
     return set
-  }, [posts])
+  }, [posts, guides])
 
   const usedTopics = useMemo(() => {
     const set = new Set<BlogTopic>()
     for (const p of posts) for (const t of p.topics) set.add(t)
+    for (const t of VALID_BLOG_TOPICS) {
+      if (set.has(t)) continue
+      const keywords = filterKeywords(t, BLOG_TOPIC_LABEL[t])
+      if (guides.some(g => guideTagsMatch(g.tags, keywords))) set.add(t)
+    }
     return set
-  }, [posts])
+  }, [posts, guides])
 
   const usedDestinations = useMemo(() => {
     const set = new Set<string>()           // either DESTINATION_GENERAL or a pack slug

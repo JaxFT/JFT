@@ -200,8 +200,22 @@ export default function BlogBrowser({
 
   const hasAnyFilter = Boolean(stage || destination || topic || q.trim() || tier)
 
+  // Live tally of what the current filters leave on screen. Always
+  // visible above the filter bar so a reader can see "30 blogs and 6
+  // guides" with no filters, then watch the numbers shrink as they
+  // narrow down. Singular/plural handled because "1 blogs" reads off.
+  const blogWord = filteredPosts.length === 1 ? 'blog' : 'blogs'
+  const guideWord = filteredGuides.length === 1 ? 'guide' : 'guides'
+
   return (
     <div>
+      {/* LIVE COUNT — updates as filters change. */}
+      <p className="text-sm text-gray-500 mb-3">
+        <strong className="text-gray-700">{filteredPosts.length}</strong> {blogWord}
+        {' '}and{' '}
+        <strong className="text-gray-700">{filteredGuides.length}</strong> {guideWord}
+      </p>
+
       {/* FILTER BAR */}
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-3 mb-6 flex flex-wrap items-center gap-2">
         {/* Search */}
@@ -337,15 +351,14 @@ export default function BlogBrowser({
         )}
       </div>
 
-      {/* ACTIVE FILTER CHIPS — read-only summary line. */}
-      {hasAnyFilter && (
+      {/* ACTIVE FILTER LABELS — context for the live count above. */}
+      {hasAnyFilter && (stage || destination || topic || q.trim()) && (
         <p className="text-sm text-gray-500 mb-5">
-          Showing {combinedFeed.length} of {posts.length + guides.length}
-          {guides.length > 0 ? ' posts and guides' : ' posts'}
-          {stage && <> · stage <strong className="text-gray-700">{TRAVEL_STAGE_LABEL[stage]}</strong></>}
-          {destination && <> · destination <strong className="text-gray-700">{destinationLabel}</strong></>}
-          {topic && <> · topic <strong className="text-gray-700">{BLOG_TOPIC_LABEL[topic]}</strong></>}
-          {q.trim() && <> · matching <strong className="text-gray-700">&ldquo;{q.trim()}&rdquo;</strong></>}
+          Filtered by
+          {stage && <> stage <strong className="text-gray-700">{TRAVEL_STAGE_LABEL[stage]}</strong></>}
+          {destination && <>{stage ? ' ·' : ''} destination <strong className="text-gray-700">{destinationLabel}</strong></>}
+          {topic && <>{stage || destination ? ' ·' : ''} topic <strong className="text-gray-700">{BLOG_TOPIC_LABEL[topic]}</strong></>}
+          {q.trim() && <>{stage || destination || topic ? ' ·' : ''} matching <strong className="text-gray-700">&ldquo;{q.trim()}&rdquo;</strong></>}
         </p>
       )}
 

@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
+import { createClient as createSbClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { getCountryByIso2 } from '@/lib/countries'
-import { autoAssignPackForVisit } from '@/lib/passport-stamps-db'
+import { getPackByIso2 } from '@/lib/adventurePackMeta'
+import { autoAssignPackForVisit, awardOrSuggestStamp } from '@/lib/passport-stamps-db'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -77,6 +79,44 @@ export async function POST(
   // already have it. No-op for non-pack countries.
   if (isNewVisit) {
     await autoAssignPackForVisit(user.id, iso2Raw)
+
+    // Award a BRAVE_TRAVELLER stamp to every child in the family,
+    // dated to the visit date the parent entered. Mirrors what the
+    // flight-log path used to do: adding a country = the kids "went"
+    // there, which is a brave-traveller moment. Only fires when the
+    // country has a pack (BRAVE_TRAVELLER stamps in the system are
+    // scoped by pack slug; non-pack countries don't have a passport
+    // page for the stamp to sit against anyway).
+    const pack = getPackByIso2(iso2Raw)
+    if (pack && pack.status === 'live') {
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+      if (serviceKey) {
+        const admin = createSbClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          serviceKey,
+          { auth: { persistSession: false, autoRefreshToken: false } },
+        )
+        const { data: kidsData } = await admin
+          .from('children')
+          .select('id')
+          .eq('parent_id', user.id)
+        const kidIds = ((kidsData ?? []) as Array<{ id: string }>).map(k => k.id)
+        // Date-only → noon UTC so it lands on the right calendar day
+        // regardless of the viewer's timezone.
+        const earnedAt = `${date}T12:00:00.000Z`
+        await Promise.all(
+          kidIds.map(childId =>
+            awardOrSuggestStamp({
+              childId,
+              type: 'BRAVE_TRAVELLER',
+              countrySlug: pack.slug,
+              awardedBy: 'system',
+              earnedAt,
+            }),
+          ),
+        )
+      }
+    }
   }
 
   return NextResponse.json({ ok: true })

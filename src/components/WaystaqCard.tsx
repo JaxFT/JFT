@@ -113,6 +113,21 @@ export default function WaystaqCard({
               {finalCtaLabel} <ArrowRight className="w-4 h-4" />
             </a>
           )}
+          {/* Premium upsell — visible to non-premium viewers. Says
+              exactly what they'd unlock by upgrading on the JFT side. */}
+          {!userIsPremium && (
+            <p className="text-xs text-white/70 mt-4 max-w-xl leading-relaxed">
+              <span className="font-semibold text-white">JFT Premium members get Waystaq for £25/year</span>
+              {' '}— half the standard £50.{' '}
+              <Link
+                href="/account"
+                className="font-semibold text-white underline underline-offset-2 hover:text-white/90"
+              >
+                Become a Premium member
+              </Link>
+              {' '}to unlock the discount.
+            </p>
+          )}
         </div>
       </section>
     )
@@ -168,6 +183,21 @@ export default function WaystaqCard({
           >
             {finalCtaLabel} <ArrowRight className="w-3.5 h-3.5" />
           </a>
+        )}
+        {/* Premium upsell — visible to non-premium viewers only. */}
+        {!userIsPremium && (
+          <p className="text-xs leading-relaxed mt-3" style={{ color: '#0A1628', opacity: 0.75 }}>
+            <span className="font-semibold" style={{ color: '#0A1628', opacity: 1 }}>JFT Premium members get Waystaq for £25/year</span>
+            {' '}— half the standard £50.{' '}
+            <Link
+              href="/account"
+              className="font-semibold underline underline-offset-2"
+              style={{ color: '#0066FF' }}
+            >
+              Become a Premium member
+            </Link>
+            {' '}to unlock the discount.
+          </p>
         )}
       </div>
     </div>

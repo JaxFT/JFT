@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Check } from 'lucide-react'
 import Logo from '@/components/branding/Logo'
+import { titleCaseName } from '@/lib/format-name'
 
 export default function SignupPage() {
   const [email, setEmail] = useState('')
@@ -23,13 +24,17 @@ export default function SignupPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
+    const normalisedName = titleCaseName(fullName)
+    // Reflect the corrected version in the field so the user sees what
+    // got saved if anything fails downstream.
+    if (normalisedName !== fullName) setFullName(normalisedName)
     const { error } = await supabase.auth.signUp({
       email, password,
       options: {
         // marketing_opt_in rides in user metadata until the user confirms
         // their email. The welcome endpoint then syncs it across to the
         // profiles row via service role.
-        data: { full_name: fullName, marketing_opt_in: marketingOptIn },
+        data: { full_name: normalisedName, marketing_opt_in: marketingOptIn },
         emailRedirectTo: `${window.location.origin}/auth/callback?next=/account`,
       },
     })
@@ -67,7 +72,9 @@ export default function SignupPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Full name</label>
               <input
-                type="text" required value={fullName} onChange={e => setFullName(e.target.value)}
+                type="text" required value={fullName}
+                onChange={e => setFullName(e.target.value)}
+                onBlur={e => setFullName(titleCaseName(e.target.value))}
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 placeholder="Your name"
               />

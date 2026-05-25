@@ -13,6 +13,7 @@
 
 import { createClient as createSbClient } from '@supabase/supabase-js'
 import type { User } from '@supabase/supabase-js'
+import { titleCaseName } from './format-name'
 
 export async function ensureProfile(user: User): Promise<void> {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -29,7 +30,8 @@ export async function ensureProfile(user: User): Promise<void> {
     .eq('id', user.id)
     .maybeSingle()
 
-  const metaName = (user.user_metadata?.full_name as string | undefined)?.trim() || null
+  const rawMetaName = (user.user_metadata?.full_name as string | undefined)?.trim() || null
+  const metaName = rawMetaName ? titleCaseName(rawMetaName) : null
 
   if (!existing) {
     // Row missing, create it. Pull whatever we know from auth metadata.

@@ -8,6 +8,7 @@ import {
   validateUsername, validateInstagram,
   normaliseUsername, normaliseInstagram,
 } from '@/lib/usernames'
+import { titleCaseName } from '@/lib/format-name'
 
 type Props = {
   initialFullName: string
@@ -48,8 +49,11 @@ export default function AccountEditor({
     setNameError(null)
     setNameSaved(false)
     try {
-      const trimmed = name.trim()
+      const trimmed = titleCaseName(name)
       if (!trimmed) throw new Error('Name cannot be empty')
+      // Reflect the corrected version in the field so the user can see
+      // exactly what got saved.
+      if (trimmed !== name) setName(trimmed)
 
       // Update both the profile row AND user_metadata so navbar/header stay in sync
       const { data: { user } } = await supabase.auth.getUser()
@@ -413,6 +417,7 @@ export default function AccountEditor({
               <input
                 value={name}
                 onChange={e => setName(e.target.value)}
+                onBlur={e => setName(titleCaseName(e.target.value))}
                 className={input}
                 placeholder="Your name"
               />

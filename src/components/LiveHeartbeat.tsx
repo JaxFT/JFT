@@ -42,10 +42,13 @@ async function ping(sessionId: string, pathname: string) {
   }
 }
 
-export default function LiveHeartbeat() {
+export default function LiveHeartbeat({ disabled = false }: { disabled?: boolean }) {
   const pathname = usePathname()
 
   useEffect(() => {
+    // Admin tabs skip the heartbeat so they don't inflate the live
+    // browsers count the admin themselves is looking at.
+    if (disabled) return
     const sessionId = getSessionId()
     // Fire immediately on mount + path change, then on the interval.
     ping(sessionId, pathname ?? '/')
@@ -53,7 +56,7 @@ export default function LiveHeartbeat() {
       ping(sessionId, pathname ?? '/')
     }, INTERVAL_MS)
     return () => window.clearInterval(id)
-  }, [pathname])
+  }, [pathname, disabled])
 
   return null
 }

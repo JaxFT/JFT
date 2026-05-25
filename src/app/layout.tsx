@@ -4,6 +4,7 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import LiveHeartbeat from '@/components/LiveHeartbeat'
 import { getCurrentUser } from '@/lib/auth'
+import { isAdminEmail } from '@/lib/admin'
 
 export const metadata: Metadata = {
   title: { default: 'Jax Family Travels', template: '%s | Jax Family Travels' },
@@ -68,7 +69,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
         <main>{children}</main>
         <Footer />
-        <LiveHeartbeat />
+        <LiveHeartbeat disabled={isAdminEmail(user?.email)} />
       </body>
     </html>
   )

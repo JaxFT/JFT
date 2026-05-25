@@ -11,8 +11,14 @@ import { Activity, ExternalLink } from 'lucide-react'
 const POLL_MS = 20_000
 const CF_DASHBOARD_URL = 'https://dash.cloudflare.com/d8da36f93ce355293addf1f155b2afd6/dashboards/26b69e55-309a-491e-990c-412640545611'
 
+type Stats = {
+  count: number | null
+  freeUsers: number | null
+  premiumUsers: number | null
+}
+
 export default function LiveTrafficAdminCard() {
-  const [count, setCount] = useState<number | null>(null)
+  const [stats, setStats] = useState<Stats>({ count: null, freeUsers: null, premiumUsers: null })
   const [error, setError] = useState(false)
 
   useEffect(() => {
@@ -22,9 +28,13 @@ export default function LiveTrafficAdminCard() {
       try {
         const res = await fetch('/api/admin/live-count', { cache: 'no-store' })
         if (!res.ok) throw new Error('bad status')
-        const json = (await res.json()) as { count?: number }
+        const json = (await res.json()) as { count?: number; freeUsers?: number; premiumUsers?: number }
         if (cancelled) return
-        setCount(typeof json.count === 'number' ? json.count : 0)
+        setStats({
+          count: typeof json.count === 'number' ? json.count : 0,
+          freeUsers: typeof json.freeUsers === 'number' ? json.freeUsers : 0,
+          premiumUsers: typeof json.premiumUsers === 'number' ? json.premiumUsers : 0,
+        })
         setError(false)
       } catch {
         if (!cancelled) setError(true)
@@ -39,6 +49,12 @@ export default function LiveTrafficAdminCard() {
     }
   }, [])
 
+  const renderHeadline = () => {
+    if (error) return 'Count unavailable'
+    if (stats.count === null) return 'Checking…'
+    return <>{stats.count} {stats.count === 1 ? 'browser tab' : 'browser tabs'} on the site</>
+  }
+
   return (
     <div className="bg-brand-950 text-white rounded-2xl p-5 mb-8 flex items-center gap-4 flex-wrap">
       <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
@@ -46,15 +62,18 @@ export default function LiveTrafficAdminCard() {
       </div>
       <div className="flex-1 min-w-[12rem]">
         <p className="text-[10px] font-bold tracking-widest uppercase text-white/60 mb-0.5">Admin · live traffic</p>
-        <p className="font-bold text-lg leading-tight">
-          {error
-            ? 'Count unavailable'
-            : count === null
-              ? 'Checking…'
-              : <>{count} {count === 1 ? 'browser tab' : 'browser tabs'} on the site</>}
-        </p>
-        <p className="text-xs text-white/55 leading-relaxed">
-          Updates every 20s. Includes everyone browsing anonymously.
+        <p className="font-bold text-lg leading-tight">{renderHeadline()}</p>
+        {/* Member counts under the live browsers — total registered
+            users split by tier. Excludes admin accounts on both lines. */}
+        {!error && stats.freeUsers !== null && stats.premiumUsers !== null && (
+          <p className="text-xs text-white/70 leading-relaxed mt-1">
+            <span className="font-semibold text-white">{stats.premiumUsers}</span> premium
+            <span className="text-white/40 mx-1.5">·</span>
+            <span className="font-semibold text-white">{stats.freeUsers}</span> free
+          </p>
+        )}
+        <p className="text-xs text-white/55 leading-relaxed mt-1">
+          Updates every 20s. Admin accounts excluded.
         </p>
       </div>
       <a

@@ -52,28 +52,18 @@ export async function POST(request: Request) {
 
   const sb = admin()
 
-  // Clean up data we own, in the right order so foreign-key cascades
-  // play nicely even if cascading is mis-configured on any table.
-  // The auth user delete at the end will also cascade via FK, but
-  // doing this first means no orphan rows if the auth call fails.
-  const cleanup = [
-    sb.from('journal_entries').delete().eq('parent_id', user.id),
-    sb.from('stamps').delete().eq('parent_id', user.id),
-    sb.from('family_country_visits').delete().eq('parent_id', user.id),
-    sb.from('pack_assignments').delete().eq('parent_id', user.id),
-    sb.from('kid_pack_state').delete().eq('parent_id', user.id),
-    sb.from('children').delete().eq('parent_id', user.id),
-    sb.from('purchases').delete().eq('user_id', user.id),
-    sb.from('profiles').delete().eq('id', user.id),
-  ]
-
-  // Best-effort: ignore individual errors (table might not exist on
-  // this env, row might not exist). The auth delete is the source of
-  // truth. Wrap in async IIFE so we can use try/catch on each.
-  await Promise.all(cleanup.map(async p => {
-    try { await p } catch { /* ignore */ }
-  }))
-
+  // Cascade chain does the cleanup:
+  //   auth.users ── ON DELETE CASCADE ──▶ profiles
+  //   profiles   ── ON DELETE CASCADE ──▶ children
+  //   children   ── ON DELETE CASCADE ──▶ stamps, kid_adventure_pack_*,
+  //                                       child_pack_assignments,
+  //                                       journal_entries
+  //   profiles   ── ON DELETE CASCADE ──▶ family_country_visits,
+  //                                       purchases, jax_pack_purchases,
+  //                                       web_guide_purchases
+  // So a single deleteUser call wipes every row this user owns. If
+  // the auth delete fails we leave everything intact rather than
+  // half-delete, which is the right behaviour.
   const { error } = await sb.auth.admin.deleteUser(user.id)
   if (error) {
     return NextResponse.json(

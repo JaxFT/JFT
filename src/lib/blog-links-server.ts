@@ -38,7 +38,11 @@ export async function getAutoLinkPhrases(): Promise<AutoLinkPhrase[]> {
   }
   for (const tag of tagSet) {
     if (curatedLower.has(tag.toLowerCase())) continue
-    phrases.push({ phrase: tag, url: `/blog?tag=${encodeURIComponent(tag)}` })
+    // Route through the free-text `q` filter so the landing page
+    // shows posts AND guides that mention the tag in title, excerpt
+    // or tag list. The previous `?tag=` URL wasn't read by the
+    // filter UI and dumped readers on the full unfiltered listing.
+    phrases.push({ phrase: tag, url: `/blog?q=${encodeURIComponent(tag)}` })
   }
 
   return phrases

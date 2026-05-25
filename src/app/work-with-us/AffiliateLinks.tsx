@@ -61,6 +61,43 @@ const AFFILIATES: Affiliate[] = [
     url: 'https://omio.tpx.lt/jMKpMgZC',
     logo: '/images/affiliates/omio.png',
   },
+  {
+    name: 'Skyscanner',
+    blurb: 'A flight comparison search pulling fares from 1,200+ airlines and online travel agents in one query. Strong on flexible-date browsing and finding cheap stopover routes.',
+    url: 'https://skyscanner.pxf.io/c/5251474/1027991/13416',
+    logo: '/images/affiliates/skyscanner.png',
+  },
+  {
+    name: 'Get Your Guide (app)',
+    blurb: 'Install the Get Your Guide app. Tickets sit on your phone for offline access at the venue, no printing required, and the app surfaces nearby activities once you arrive.',
+    url: 'https://gyg.me/jaxfamilytravels-app',
+    logo: '/images/affiliates/getyourguide.png',
+  },
+  {
+    name: 'Billion Connect',
+    blurb: 'Travel connectivity provider with eSIMs and pocket Wi-Fi rentals across 100+ countries. Pay-as-you-go data plans for shorter trips, longer subscriptions for families on the move.',
+    url: 'https://weitaigetechnologycolimited.pxf.io/7XbmjQ',
+    logo: '/images/affiliates/billionconnect.png',
+    code: 'JAXJAX',
+  },
+  {
+    name: 'British Airways Amex',
+    blurb: 'The British Airways American Express Classic Credit Card. Earn Avios on everyday spend and redeem against BA and partner-airline flights. Sign up via this link for the current welcome bonus, usually around 10,000 Avios.',
+    url: 'https://americanexpress.com/en-gb/referral/ba-classic-credit?ref=oLIVELtl1I&XL=MIMNS',
+    logo: '/images/affiliates/amexba.png',
+  },
+  {
+    name: 'Collab Away (for creators)',
+    blurb: 'A collaboration platform that connects travel creators with hotels and brands for content-for-stay partnerships. Apply as a creator through this link.',
+    url: 'https://www.collabawayhq.com/auth/apply?via=rebecca',
+    logo: '/images/affiliates/collabaway.png',
+  },
+  {
+    name: 'Get Your Guide partner (for creators)',
+    blurb: 'Get Your Guide’s creator partner programme. If you have 3,000+ followers across social, sign up here to earn commission on the activities you recommend.',
+    url: 'https://partner.getyourguide.com/en-us/signup?partner_id=SJSZ38K&cmp=communityreferral',
+    logo: '/images/affiliates/getyourguide.png',
+  },
 ]
 
 function CopyCodeButton({ code }: { code: string }) {

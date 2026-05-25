@@ -17,6 +17,7 @@ import { loadBlogPostSocial, getViewerProfile } from '@/lib/blog-social-db'
 import { isAdminEmail } from '@/lib/admin'
 import BlogSocial from '@/components/blog/BlogSocial'
 import ShareButton from '@/components/blog/ShareButton'
+import BlogPostViewTracker from '@/components/blog/BlogPostViewTracker'
 
 export const dynamic = 'force-dynamic'
 
@@ -103,6 +104,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   return (
     <div className="min-h-screen bg-white pt-20">
+      {/* Fire-and-forget view tracker. The component itself skips
+          admin viewers server-side via the API endpoint. */}
+      <BlogPostViewTracker slug={slug} />
       <ArticleJsonLd
         url={`${siteUrl}/blog/${row.slug}`}
         headline={row.title}

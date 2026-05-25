@@ -42,6 +42,7 @@ export type BlogPostRow = {
   destination_country: string | null
   topics: BlogTopic[]
   homepage_featured: boolean
+  view_count: number
   published_at: string | null
   created_at: string
   updated_at: string
@@ -106,6 +107,7 @@ function normaliseRow(raw: unknown): BlogPostRow {
       : null,
     topics: sanitizeBlogTopics(r.topics),
     homepage_featured: Boolean(r.homepage_featured),
+    view_count: Number(r.view_count ?? 0),
     published_at: (r.published_at as string | null) ?? null,
     created_at: r.created_at as string,
     updated_at: r.updated_at as string,

@@ -1,7 +1,8 @@
 import Link from 'next/link'
-import { Plus, FileText, ExternalLink, ShieldCheck, Upload, Crown, Link2, Pin } from 'lucide-react'
+import { Plus, FileText, ExternalLink, ShieldCheck, Upload, Crown, Link2, Pin, Eye, Heart, MessageCircle } from 'lucide-react'
 import type { Metadata } from 'next'
 import { listAllPostsForAdmin, MAX_HOMEPAGE_FEATURED } from '@/lib/blog-db'
+import { loadCountsForSlugs } from '@/lib/blog-social-db'
 import HomepagePinButton from './HomepagePinButton'
 
 export const metadata: Metadata = {
@@ -15,6 +16,11 @@ export default async function AdminBlogListPage() {
   const posts = await listAllPostsForAdmin()
   const featuredCount = posts.filter(p => p.homepage_featured).length
   const homepageFull = featuredCount >= MAX_HOMEPAGE_FEATURED
+
+  // Per-slug likes + comments aggregation. Views live on the post
+  // row itself (blog_posts.view_count) so they come back with the
+  // posts query directly.
+  const socialCounts = await loadCountsForSlugs(posts.map(p => p.slug))
 
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
@@ -91,8 +97,18 @@ export default async function AdminBlogListPage() {
                       <Link href={`/admin/blog/${post.id}/edit`} className="font-bold text-gray-900 hover:text-brand-700">
                         {post.title}
                       </Link>
-                      <p className="text-xs text-gray-500 mt-1">
-                        /{post.slug} · updated {updated}
+                      <p className="text-xs text-gray-500 mt-1 inline-flex items-center gap-2.5 flex-wrap">
+                        <span>updated {updated}</span>
+                        <span className="text-gray-300">·</span>
+                        <span className="inline-flex items-center gap-1" title="Views">
+                          <Eye className="w-3.5 h-3.5" /> {post.view_count}
+                        </span>
+                        <span className="inline-flex items-center gap-1" title="Likes">
+                          <Heart className="w-3.5 h-3.5" /> {socialCounts[post.slug]?.likes ?? 0}
+                        </span>
+                        <span className="inline-flex items-center gap-1" title="Comments">
+                          <MessageCircle className="w-3.5 h-3.5" /> {socialCounts[post.slug]?.comments ?? 0}
+                        </span>
                       </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">

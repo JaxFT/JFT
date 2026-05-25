@@ -22,12 +22,13 @@ const SWEEP_WINDOW_SECONDS = 5 * 60
 
 export async function recordHeartbeat(sessionId: string, pathname: string): Promise<void> {
   const sb = admin()
-  await sb
+  const { error } = await sb
     .from('live_sessions')
     .upsert(
       { session_id: sessionId, pathname, last_seen: new Date().toISOString() },
       { onConflict: 'session_id' },
     )
+  if (error) throw new Error(error.message)
 }
 
 // Count of sessions seen in the last ACTIVE_WINDOW_SECONDS, plus a

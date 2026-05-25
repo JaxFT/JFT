@@ -32,8 +32,9 @@ export async function POST(request: Request) {
   try {
     await recordHeartbeat(sessionId, safePathname)
   } catch (err) {
+    const message = err instanceof Error ? err.message : 'Server error'
     console.error('[heartbeat]', err)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    return NextResponse.json({ error: message }, { status: 500 })
   }
   return NextResponse.json({ ok: true })
 }

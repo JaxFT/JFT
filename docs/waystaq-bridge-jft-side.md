@@ -166,4 +166,10 @@ So if the visitor reaches WayStaq with a token at all, it passed the JFT-side au
 5. WayStaq side: parse token, verify signature with `JFT_BRIDGE_SECRET`, check expiry, re-check Stripe, redirect to £25 Payment Link
 6. User pays £25, gets WayStaq Premium
 
-If step 5 sees an expired / forged / Stripe-not-premium token, the WayStaq side should redirect to the standard £50 page rather than 4xx-ing — the visitor still gets to WayStaq, just at the normal price.
+## Failure handling — always land on waystaq.com
+
+If anything goes wrong at step 5 (no token, expired, forged signature, Stripe says not-premium, missing env var, anything else), the WayStaq side should **redirect the visitor to `https://waystaq.com/` — the WayStaq homepage — and never render an error page**. The visitor explores WayStaq normally and can sign up at the standard £50 anywhere on the site if they choose.
+
+JFT already follows the same rule on its side: if the JFT endpoint returns any non-2xx (visitor not signed in, not premium, secret missing, anything), the button JS falls back to `window.location.href = 'https://waystaq.com'`. No JFT-side error page is ever shown either.
+
+So the user's worst-case experience is: "I clicked the button on JFT, I ended up on the WayStaq homepage." Never "I clicked the button on JFT and got a 4xx / 5xx page."

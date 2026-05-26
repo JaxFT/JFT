@@ -3,6 +3,7 @@ import './globals.css'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import LiveHeartbeat from '@/components/LiveHeartbeat'
+import SignupNudgeMounted from '@/components/SignupNudgeMounted'
 import { getCurrentUser } from '@/lib/auth'
 import { isAdminEmail } from '@/lib/admin'
 
@@ -70,6 +71,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <main>{children}</main>
         <Footer />
         <LiveHeartbeat disabled={isAdminEmail(user?.email)} />
+        <SignupNudgeMounted initialIsSignedIn={!!user} />
       </body>
     </html>
   )

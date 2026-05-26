@@ -4,9 +4,11 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Check } from 'lucide-react'
+import { Check, Crown } from 'lucide-react'
 import Logo from '@/components/branding/Logo'
 import { titleCaseName } from '@/lib/format-name'
+
+type Tier = 'free' | 'premium'
 
 export default function SignupPage() {
   const [email, setEmail] = useState('')
@@ -14,6 +16,10 @@ export default function SignupPage() {
   const [fullName, setFullName] = useState('')
   // Unticked by default, UK GDPR/PECR requires affirmative consent.
   const [marketingOptIn, setMarketingOptIn] = useState(false)
+  // 'free' goes to /account after email confirm; 'premium' carries a
+  // premium_intent flag in user_metadata that the auth callback page
+  // picks up and turns into a Stripe checkout redirect.
+  const [tier, setTier] = useState<Tier>('free')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
@@ -31,10 +37,16 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signUp({
       email, password,
       options: {
-        // marketing_opt_in rides in user metadata until the user confirms
-        // their email. The welcome endpoint then syncs it across to the
-        // profiles row via service role.
-        data: { full_name: normalisedName, marketing_opt_in: marketingOptIn },
+        // marketing_opt_in + premium_intent ride in user metadata
+        // until the user confirms their email. The welcome endpoint
+        // syncs marketing_opt_in to the profiles row, and the auth
+        // callback page reads premium_intent and bounces the new
+        // signin straight to Stripe checkout instead of /account.
+        data: {
+          full_name: normalisedName,
+          marketing_opt_in: marketingOptIn,
+          premium_intent: tier === 'premium',
+        },
         emailRedirectTo: `${window.location.origin}/auth/callback?next=/account`,
       },
     })
@@ -49,7 +61,10 @@ export default function SignupPage() {
           <Check className="w-7 h-7 text-green-600" />
         </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Check your email</h1>
-        <p className="text-gray-500 text-sm">We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account.</p>
+        <p className="text-gray-500 text-sm">
+          We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account
+          {tier === 'premium' ? ' and start your Premium checkout.' : '.'}
+        </p>
         <Link href="/login" className="btn-primary mt-6 inline-flex justify-center">Back to login</Link>
       </div>
     </div>
@@ -69,6 +84,49 @@ export default function SignupPage() {
           <p className="text-sm text-gray-500 mb-6">Free to join, premium access from £49.99/year</p>
 
           <form onSubmit={handleSignup} className="space-y-4">
+            {/* Tier choice — sits at the top so it's the first
+                decision a signing-up visitor makes. Picking Premium
+                doesn't charge anything yet; it just routes them
+                through Stripe checkout after they confirm their email. */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Account type</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTier('free')}
+                  aria-pressed={tier === 'free'}
+                  className={`text-left rounded-lg border p-3 transition-colors ${
+                    tier === 'free'
+                      ? 'border-brand-500 bg-brand-50/60 ring-2 ring-brand-200'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <p className="font-semibold text-sm text-gray-900">Free account</p>
+                  <p className="text-xs text-gray-500 leading-snug mt-0.5">Full France Adventure Pack, like and comment on every post.</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTier('premium')}
+                  aria-pressed={tier === 'premium'}
+                  className={`text-left rounded-lg border p-3 transition-colors ${
+                    tier === 'premium'
+                      ? 'border-brand-500 bg-brand-50/60 ring-2 ring-brand-200'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <p className="font-semibold text-sm text-gray-900 inline-flex items-center gap-1">
+                    <Crown className="w-3.5 h-3.5 text-brand-600" /> Premium <span className="font-normal text-gray-500">£49.99/yr</span>
+                  </p>
+                  <p className="text-xs text-gray-500 leading-snug mt-0.5">All 80+ Adventure Packs, the Adventure Passport, every premium blog and guide.</p>
+                </button>
+              </div>
+              {tier === 'premium' && (
+                <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                  You&apos;ll confirm your email, then land on Stripe checkout to start your Premium membership.
+                </p>
+              )}
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Full name</label>
               <input

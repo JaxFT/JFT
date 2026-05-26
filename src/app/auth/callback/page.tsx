@@ -38,9 +38,36 @@ function AuthCallbackHandler() {
     }
 
     let settled = false
-    const goToNext = () => {
+
+    // If the signup flow stashed a premium_intent flag in user
+    // metadata, route the now-signed-in user straight to Stripe
+    // checkout instead of /account. Clears the flag first so a later
+    // login (e.g. cancelled checkout, came back tomorrow) doesn't
+    // keep re-launching the same checkout session.
+    const goToCheckoutOrNext = async () => {
       if (settled) return
       settled = true
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        const meta = user?.user_metadata as { premium_intent?: boolean } | null
+        if (meta?.premium_intent) {
+          // Clear the flag so future logins don't keep firing checkout.
+          await supabase.auth.updateUser({ data: { premium_intent: false } }).catch(() => null)
+          const res = await fetch('/api/stripe/subscribe', { method: 'POST' })
+          if (res.ok) {
+            const json = await res.json() as { url?: string }
+            if (json.url) {
+              window.location.replace(json.url)
+              return
+            }
+          }
+          // Subscribe call failed (already premium, missing price id,
+          // network blip). Fall through to /account where the user
+          // can hit "Go Premium" manually.
+        }
+      } catch {
+        // Same fall-through.
+      }
       router.replace(next)
     }
 
@@ -59,13 +86,13 @@ function AuthCallbackHandler() {
         // Only fire welcome on the actual sign-in event, not on token
         // refresh / password recovery flows.
         if (event === 'SIGNED_IN') fireWelcome()
-        goToNext()
+        void goToCheckoutOrNext()
       }
     })
 
     // Existing-session shortcut (in case the user is already logged in)
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) goToNext()
+      if (data.session) void goToCheckoutOrNext()
     })
 
     // Give the URL-parsing a few seconds before declaring failure

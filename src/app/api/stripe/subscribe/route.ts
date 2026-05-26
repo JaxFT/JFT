@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { stripeClient } from '@/lib/stripe'
+import { readWaystaqDiscount } from '@/lib/waystaq-discount'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -26,13 +27,31 @@ export async function POST(request: Request) {
       )
     }
 
-    const priceId = process.env.STRIPE_PRICE_PREMIUM_ANNUAL
+    let priceId = process.env.STRIPE_PRICE_PREMIUM_ANNUAL
     console.log('[subscribe] priceId', priceId ? 'set' : 'MISSING')
     if (!priceId) {
       return NextResponse.json(
         { error: 'Premium price is not configured (STRIPE_PRICE_PREMIUM_ANNUAL).' },
         { status: 500 },
       )
+    }
+
+    // WayStaq member discount: a valid £25 discount cookie swaps in the
+    // discounted annual price, but ONLY when this account's email matches
+    // the email the discount was verified for on WayStaq. That stops the
+    // browser-scoped cookie from discounting an unrelated account.
+    // Everything else (user_id metadata, the webhook that flips the profile
+    // to premium) is unchanged, so access is granted exactly as it is for a
+    // full-price subscription.
+    const discount = await readWaystaqDiscount()
+    if (discount && discount.email.toLowerCase() === (user.email ?? '').toLowerCase()) {
+      const discountPrice = process.env.WAYSTAQ_DISCOUNT_PRICE_ID
+      if (discountPrice) {
+        priceId = discountPrice
+        console.log('[subscribe] WayStaq £25 discount applied')
+      } else {
+        console.error('[subscribe] discount cookie present but WAYSTAQ_DISCOUNT_PRICE_ID not set')
+      }
     }
 
     const { data: profile, error: profileError } = await supabase

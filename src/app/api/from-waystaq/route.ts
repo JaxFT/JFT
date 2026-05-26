@@ -7,16 +7,25 @@
 //
 // We (1) verify the signature with WAYSTAQ_BRIDGE_SECRET, (2) reject
 // expired / future-dated tokens, (3) independently re-check Stripe that
-// the email really is a paid WayStaq Premium subscriber (so a leaked or
-// shared token can't be redeemed for a different email inside the
-// 15-minute window), then redirect to the £25 JFT Premium payment link
-// with the email prefilled.
+// the email really is a paid WayStaq Premium subscriber. If all of that
+// passes we drop a short-lived signed discount cookie and land them on the
+// JFT homepage to browse. The £25 price is then applied at the Premium
+// checkout (and shown in a banner) for as long as the cookie is valid,
+// see src/lib/waystaq-discount.ts.
 //
-// On ANY failure we redirect to the JFT homepage. We never render an
-// error page: the worst case is the visitor lands on the site and
-// browses normally. Same fail-safe behaviour as the outbound direction.
+// On ANY failure we redirect to the JFT homepage with no cookie. We never
+// render an error page: the worst case is the visitor browses normally at
+// the standard price.
 
 import { NextResponse } from 'next/server'
+import {
+  WAYSTAQ_DISCOUNT_COOKIE,
+  WAYSTAQ_DISCOUNT_WINDOW_MS,
+  signDiscountCookie,
+  hmacSha256Hex,
+  constantTimeEqual,
+  base64urlDecode,
+} from '@/lib/waystaq-discount'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -34,25 +43,18 @@ const WAYSTAQ_PREMIUM_PRICE_IDS = [
   'price_1TanozBedsajl0238lHDbrzd',
 ]
 
-// Conservative email shape check. Also keeps stray quotes / whitespace
-// out of the Stripe `customers/search` query below.
+// Conservative email shape check. Also keeps stray quotes / whitespace out
+// of the Stripe `customers/search` query below.
 const EMAIL_RE = /^[^\s@"]+@[^\s@"]+\.[^\s@"]+$/
 
 export async function GET(request: Request) {
   const token = new URL(request.url).searchParams.get('token')
   const secret = process.env.WAYSTAQ_BRIDGE_SECRET
   const stripeKey = process.env.STRIPE_SECRET_KEY
-  // The verified £25 JFT Premium Stripe payment link. Read from env on
-  // purpose, not hard-coded: the money destination should be set
-  // deliberately by an operator who has confirmed the link in JFT's own
-  // Stripe dashboard. If it's unset the endpoint just falls back to the
-  // homepage.
-  const discountLink = process.env.WAYSTAQ_DISCOUNT_PAYMENT_LINK
 
-  if (!token || !secret || !stripeKey || !discountLink) {
+  if (!token || !secret || !stripeKey) {
     if (!secret) console.error('[from-waystaq] WAYSTAQ_BRIDGE_SECRET not set')
     if (!stripeKey) console.error('[from-waystaq] STRIPE_SECRET_KEY not set')
-    if (!discountLink) console.error('[from-waystaq] WAYSTAQ_DISCOUNT_PAYMENT_LINK not set')
     return NextResponse.redirect(FALLBACK_HOMEPAGE, 302)
   }
 
@@ -82,19 +84,43 @@ export async function GET(request: Request) {
 
   // Defence in depth: a valid signature alone isn't enough. Re-check
   // Stripe that this email is actually a paid WayStaq Premium subscriber.
+  //
+  // Exception: WAYSTAQ_BRIDGE_BYPASS_EMAILS is a small allowlist of admin /
+  // comped accounts that WayStaq treats as premium WITHOUT a real Stripe
+  // subscription (WayStaq skips its own Stripe check for these too). Their
+  // token is still HMAC-verified above, so only WayStaq can mint one, but
+  // there's no Stripe sub for the re-check to find. Keep this list tiny and
+  // limited to accounts you control.
+  const bypassEmails = (process.env.WAYSTAQ_BRIDGE_BYPASS_EMAILS ?? '')
+    .split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
+
   let eligible = false
-  try {
-    eligible = await isPaidWayStaqSubscriber(stripeKey, email)
-  } catch (e) {
-    console.error('[from-waystaq] Stripe re-check failed', e)
-    return NextResponse.redirect(FALLBACK_HOMEPAGE, 302)
+  if (bypassEmails.includes(email.toLowerCase())) {
+    eligible = true
+  } else {
+    try {
+      eligible = await isPaidWayStaqSubscriber(stripeKey, email)
+    } catch (e) {
+      console.error('[from-waystaq] Stripe re-check failed', e)
+      return NextResponse.redirect(FALLBACK_HOMEPAGE, 302)
+    }
   }
   if (!eligible) return NextResponse.redirect(FALLBACK_HOMEPAGE, 302)
 
-  // All checks passed. Send them to the £25 link with email prefilled.
-  const dest = new URL(discountLink)
-  dest.searchParams.set('prefilled_email', email)
-  return NextResponse.redirect(dest.toString(), 302)
+  // Verified. Drop a signed, short-lived discount cookie and send them to
+  // the site to browse. The cookie carries the email + its own expiry,
+  // both signed, so it can't be forged or extended.
+  const expiresAt = now + WAYSTAQ_DISCOUNT_WINDOW_MS
+  const cookieValue = await signDiscountCookie(email, expiresAt, secret)
+  const res = NextResponse.redirect(FALLBACK_HOMEPAGE, 302)
+  res.cookies.set(WAYSTAQ_DISCOUNT_COOKIE, cookieValue, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: Math.floor(WAYSTAQ_DISCOUNT_WINDOW_MS / 1000),
+  })
+  return res
 }
 
 async function isPaidWayStaqSubscriber(stripeKey: string, email: string): Promise<boolean> {
@@ -121,37 +147,4 @@ async function isPaidWayStaqSubscriber(stripeKey: string, email: string): Promis
     }
   }
   return false
-}
-
-async function hmacSha256Hex(secret: string, message: string): Promise<string> {
-  const enc = new TextEncoder()
-  const key = await crypto.subtle.importKey(
-    'raw',
-    enc.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  )
-  const sigBuf = await crypto.subtle.sign('HMAC', key, enc.encode(message))
-  return Array.from(new Uint8Array(sigBuf))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('')
-}
-
-function constantTimeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false
-  let diff = 0
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
-  return diff === 0
-}
-
-// Symmetric with the byte-safe base64url encoder in
-// /api/waystaq/upgrade-link, so tokens minted by either side decode the
-// same way even if an email ever carries non-ASCII bytes.
-function base64urlDecode(s: string): string {
-  const b64 = s.replace(/-/g, '+').replace(/_/g, '/')
-  const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4)
-  const binary = atob(padded)
-  const bytes = Uint8Array.from(binary, c => c.charCodeAt(0))
-  return new TextDecoder().decode(bytes)
 }

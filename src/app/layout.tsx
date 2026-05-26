@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
+import WaystaqDiscountBanner from '@/components/WaystaqDiscountBanner'
 import LiveHeartbeat from '@/components/LiveHeartbeat'
 import SignupNudgeMounted from '@/components/SignupNudgeMounted'
 import { getCurrentUser } from '@/lib/auth'
@@ -70,6 +71,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
         <main>{children}</main>
         <Footer />
+        <WaystaqDiscountBanner />
         <LiveHeartbeat disabled={isAdminEmail(user?.email)} />
         <SignupNudgeMounted initialIsSignedIn={!!user} />
       </body>

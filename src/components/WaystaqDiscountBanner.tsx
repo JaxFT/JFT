@@ -2,6 +2,9 @@ import Link from 'next/link'
 import { Crown } from 'lucide-react'
 import { readWaystaqDiscount } from '@/lib/waystaq-discount'
 import { getCurrentUser } from '@/lib/auth'
+import { createClient } from '@/lib/supabase/server'
+import { isAdminEmail } from '@/lib/admin'
+import { isPremiumTier } from '@/lib/profile'
 
 // Slim promo bar shown while a WayStaq member's £25 discount cookie is
 // live. Pinned to the bottom of the viewport: the top is taken by the
@@ -12,16 +15,27 @@ export default async function WaystaqDiscountBanner() {
   const discount = await readWaystaqDiscount()
   if (!discount) return null
 
-  // The £25 is tied to the verified WayStaq email. If someone is logged
-  // into a JFT account whose email doesn't match, the discount won't apply
-  // at checkout, so don't dangle it, hide the banner. Logged-out visitors
-  // still see it; signup pre-fills the matching email.
   const user = await getCurrentUser()
-  if (user && user.email?.toLowerCase() !== discount.email.toLowerCase()) return null
-
-  // Logged-in (matching) users go straight to checkout via /upgrade; new
-  // visitors go to signup with Premium pre-selected, which auto-launches
-  // checkout after email confirmation. Either way it's one joined flow.
+  if (user) {
+    // The £25 is tied to the verified WayStaq email. If this account's
+    // email doesn't match, the discount won't apply at checkout, so don't
+    // dangle it.
+    if (user.email?.toLowerCase() !== discount.email.toLowerCase()) return null
+    // Admins and anyone already on Premium have nothing to buy, so hide it
+    // for them too (this is why our own admin accounts shouldn't see it).
+    if (isAdminEmail(user.email)) return null
+    const supabase = await createClient()
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('subscription_tier')
+      .eq('id', user.id)
+      .maybeSingle()
+    if (isPremiumTier(profile?.subscription_tier)) return null
+  }
+  // Logged-out visitors still see it (signup pre-fills the matching email).
+  // Logged-in (matching, non-premium) users go straight to checkout via
+  // /upgrade; new visitors go to signup with Premium pre-selected, which
+  // auto-launches checkout after email confirmation. One joined flow.
   const href = user ? '/upgrade' : '/signup?plan=premium'
 
   return (

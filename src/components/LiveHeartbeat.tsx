@@ -1,24 +1,27 @@
 'use client'
 
 // Tiny client island that mounts once per tab and pings /api/heartbeat
-// every ~30s so the admin live-count card can show how many people
-// are on the site right now. Anonymous: the session id is a random
-// UUID held in sessionStorage so it dies with the tab.
+// every ~30s so the admin live-traffic card can show how many people
+// are on the site right now plus rolling 24h / 7d / 30d viewer counts.
+//
+// The session id lives in localStorage so the same browser across
+// days / tabs counts as one "viewer". sessionStorage would create a
+// new id every tab and overcount real visitors.
 
 import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 
-const HEARTBEAT_KEY = 'jft.live.sessionId'
+const HEARTBEAT_KEY = 'jft.live.visitorId'
 const INTERVAL_MS = 30_000
 
 function getSessionId(): string {
   try {
-    const existing = sessionStorage.getItem(HEARTBEAT_KEY)
+    const existing = localStorage.getItem(HEARTBEAT_KEY)
     if (existing) return existing
     const fresh = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
       ? crypto.randomUUID()
       : `${Date.now()}-${Math.random().toString(36).slice(2)}`
-    sessionStorage.setItem(HEARTBEAT_KEY, fresh)
+    localStorage.setItem(HEARTBEAT_KEY, fresh)
     return fresh
   } catch {
     // Private mode / blocked storage — fall back to an ephemeral id

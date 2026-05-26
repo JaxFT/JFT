@@ -13,12 +13,20 @@ const CF_DASHBOARD_URL = 'https://dash.cloudflare.com/d8da36f93ce355293addf1f155
 
 type Stats = {
   count: number | null
+  last24h: number | null
+  last7d: number | null
+  last30d: number | null
   freeUsers: number | null
   premiumUsers: number | null
 }
 
+const EMPTY: Stats = {
+  count: null, last24h: null, last7d: null, last30d: null,
+  freeUsers: null, premiumUsers: null,
+}
+
 export default function LiveTrafficAdminCard() {
-  const [stats, setStats] = useState<Stats>({ count: null, freeUsers: null, premiumUsers: null })
+  const [stats, setStats] = useState<Stats>(EMPTY)
   const [error, setError] = useState(false)
 
   useEffect(() => {
@@ -28,10 +36,13 @@ export default function LiveTrafficAdminCard() {
       try {
         const res = await fetch('/api/admin/live-count', { cache: 'no-store' })
         if (!res.ok) throw new Error('bad status')
-        const json = (await res.json()) as { count?: number; freeUsers?: number; premiumUsers?: number }
+        const json = (await res.json()) as Partial<Record<keyof Stats, number>>
         if (cancelled) return
         setStats({
           count: typeof json.count === 'number' ? json.count : 0,
+          last24h: typeof json.last24h === 'number' ? json.last24h : 0,
+          last7d: typeof json.last7d === 'number' ? json.last7d : 0,
+          last30d: typeof json.last30d === 'number' ? json.last30d : 0,
           freeUsers: typeof json.freeUsers === 'number' ? json.freeUsers : 0,
           premiumUsers: typeof json.premiumUsers === 'number' ? json.premiumUsers : 0,
         })
@@ -52,38 +63,58 @@ export default function LiveTrafficAdminCard() {
   const renderHeadline = () => {
     if (error) return 'Count unavailable'
     if (stats.count === null) return 'Checking…'
-    return <>{stats.count} {stats.count === 1 ? 'browser tab' : 'browser tabs'} on the site</>
+    return <>{stats.count} {stats.count === 1 ? 'browser tab' : 'browser tabs'} on the site right now</>
   }
 
+  const haveWindows =
+    !error && stats.last24h !== null && stats.last7d !== null && stats.last30d !== null
+
   return (
-    <div className="bg-brand-950 text-white rounded-2xl p-5 mb-8 flex items-center gap-4 flex-wrap">
-      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
-        <Activity className="w-5 h-5 text-emerald-300" />
-      </div>
-      <div className="flex-1 min-w-[12rem]">
-        <p className="text-[10px] font-bold tracking-widest uppercase text-white/60 mb-0.5">Admin · live traffic</p>
-        <p className="font-bold text-lg leading-tight">{renderHeadline()}</p>
-        {/* Member counts under the live browsers — total registered
-            users split by tier. Excludes admin accounts on both lines. */}
-        {!error && stats.freeUsers !== null && stats.premiumUsers !== null && (
-          <p className="text-xs text-white/70 leading-relaxed mt-1">
-            <span className="font-semibold text-white">{stats.premiumUsers}</span> premium
-            <span className="text-white/40 mx-1.5">·</span>
-            <span className="font-semibold text-white">{stats.freeUsers}</span> free
+    <div className="bg-brand-950 text-white rounded-2xl p-5 mb-8">
+      <div className="flex items-start gap-4 flex-wrap">
+        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+          <Activity className="w-5 h-5 text-emerald-300" />
+        </div>
+        <div className="flex-1 min-w-[12rem]">
+          <p className="text-[10px] font-bold tracking-widest uppercase text-white/60 mb-0.5">Admin · live traffic</p>
+          <p className="font-bold text-lg leading-tight">{renderHeadline()}</p>
+          <p className="text-xs text-white/55 leading-relaxed mt-1">
+            Counts unique browsers (one per device). Updates every 20s. Admin browsers excluded.
           </p>
-        )}
-        <p className="text-xs text-white/55 leading-relaxed mt-1">
-          Updates every 20s. Admin accounts excluded.
-        </p>
+        </div>
+        <a
+          href={CF_DASHBOARD_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold bg-white/10 hover:bg-white/20 transition-colors px-4 py-2 rounded-md"
+        >
+          Cloudflare analytics <ExternalLink className="w-3.5 h-3.5" />
+        </a>
       </div>
-      <a
-        href={CF_DASHBOARD_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 text-sm font-semibold bg-white/10 hover:bg-white/20 transition-colors px-4 py-2 rounded-md"
-      >
-        Cloudflare analytics <ExternalLink className="w-3.5 h-3.5" />
-      </a>
+
+      {/* Rolling windows + member tiers — three viewer numbers and the
+          two account numbers, laid out as a small stat strip. */}
+      {haveWindows && (
+        <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <Stat label="Last 24h" value={stats.last24h ?? 0} unit="viewers" />
+          <Stat label="Last 7 days" value={stats.last7d ?? 0} unit="viewers" />
+          <Stat label="Last 30 days" value={stats.last30d ?? 0} unit="viewers" />
+          <Stat label="Premium members" value={stats.premiumUsers ?? 0} />
+          <Stat label="Free members" value={stats.freeUsers ?? 0} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Stat({ label, value, unit }: { label: string; value: number; unit?: string }) {
+  return (
+    <div>
+      <p className="text-[10px] font-bold tracking-widest uppercase text-white/55 mb-0.5">{label}</p>
+      <p className="font-bold text-xl leading-tight">
+        {value}
+        {unit && <span className="text-xs font-normal text-white/55 ml-1">{unit}</span>}
+      </p>
     </div>
   )
 }

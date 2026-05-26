@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient as createSbClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { isAdminEmail, EXCLUDED_FROM_USER_COUNTS } from '@/lib/admin'
-import { getLiveSessionCount } from '@/lib/live-sessions-db'
+import { getVisitorCounts } from '@/lib/live-sessions-db'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,8 +59,8 @@ export async function GET() {
       premiumQ.not('id', 'in', csv)
     }
 
-    const [browsers, totalRes, premiumRes] = await Promise.all([
-      getLiveSessionCount(),
+    const [visitors, totalRes, premiumRes] = await Promise.all([
+      getVisitorCounts(),
       totalQ,
       premiumQ,
     ])
@@ -68,9 +68,16 @@ export async function GET() {
     const premiumUsers = premiumRes.count ?? 0
     const freeUsers = Math.max(0, totalUsers - premiumUsers)
     // Admin browsers self-exclude (LiveHeartbeat skips pinging when
-    // the viewer is an admin), so the live count is already
+    // the viewer is an admin), so the visitor numbers are already
     // admin-free without filtering here.
-    return NextResponse.json({ count: browsers, freeUsers, premiumUsers })
+    return NextResponse.json({
+      count: visitors.active,
+      last24h: visitors.last24h,
+      last7d: visitors.last7d,
+      last30d: visitors.last30d,
+      freeUsers,
+      premiumUsers,
+    })
   } catch (err) {
     console.error('[live-count]', err)
     return NextResponse.json({ error: 'Server error' }, { status: 500 })

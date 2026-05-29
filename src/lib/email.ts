@@ -390,3 +390,101 @@ Bec & Oli`
 
   return { subject, html: emailShell(subject, bodyHtml), text }
 }
+
+// Pre-trip "Family Way" calculator result, sent when a visitor clicks
+// "Email me my result" on /i-want-to-travel. Transactional, fired by their
+// explicit action, so it goes regardless of the marketing opt-in. Voice
+// stays honest and observational; one primary CTA (Premium, with the
+// WayStaq £25 perk mentioned inline) and one quieter 1:1 mention.
+export function buildFamilyWayResultEmail(p: {
+  name: string | null
+  siteUrl: string
+  score: number
+  band: string
+  tagline: string
+  style: string
+  familyDesc: string
+  paceText: string
+  strengths: string[]
+  challenges: string[]
+  actions: string[]
+  nextStep: { title: string; body: string }
+}): { subject: string; html: string; text: string } {
+  const subject = `Your Family Way result, ${p.score}/100`
+  const greeting = p.name?.trim()
+    ? `Hi ${escapeHtml(p.name.split(' ')[0])},`
+    : 'Hi there,'
+
+  const liHtml = (items: string[], fallback: string) =>
+    (items.length ? items : [fallback]).map(s => `<li>${escapeHtml(s)}</li>`).join('')
+  const linesText = (xs: string[], fallback: string) =>
+    (xs.length ? xs : [fallback]).map(s => `- ${s}`).join('\n')
+
+  const bodyHtml = `
+    <p>${greeting}</p>
+    <p>Here's the result from your I Want To Travel assessment, kept in your inbox so you can come back to it.</p>
+
+    <div class="kv">
+      <div class="kv-row"><div class="kv-label">Score</div><div class="kv-value">${p.score}/100, ${escapeHtml(p.band)}</div></div>
+      <div class="kv-row"><div class="kv-label">Tagline</div><div class="kv-value">${escapeHtml(p.tagline)}</div></div>
+      <div class="kv-row"><div class="kv-label">Travel style</div><div class="kv-value">${escapeHtml(p.style)}</div></div>
+      <div class="kv-row"><div class="kv-label">Ideal pace</div><div class="kv-value">${escapeHtml(p.paceText)}</div></div>
+      <div class="kv-row"><div class="kv-label">Your family</div><div class="kv-value">${escapeHtml(p.familyDesc)}</div></div>
+    </div>
+
+    <p><strong>What's working for you</strong></p>
+    <ul>${liHtml(p.strengths, 'No specific strengths flagged from your answers.')}</ul>
+
+    <p><strong>Areas to work on</strong></p>
+    <ul>${liHtml(p.challenges, 'No significant challenges identified.')}</ul>
+
+    <p><strong>Concrete next actions</strong></p>
+    <ul>${liHtml(p.actions, 'Take a 2-week trip together as a stress test before committing to anything longer.')}</ul>
+
+    <p><strong>${escapeHtml(p.nextStep.title)}</strong></p>
+    <p>${escapeHtml(p.nextStep.body)}</p>
+
+    <p style="margin-top:24px"><strong>Where to go next on the site</strong></p>
+    <p>Premium membership unlocks the guides, Adventure Packs, and posts that go deeper on the parts of your result that matter most. £49.99 a year for the whole family. If you're already a WayStaq Premium member you can pick up JFT Premium at £25 a year through the member link inside WayStaq.</p>
+    <p><a class="btn" href="${p.siteUrl}/account">See what Premium unlocks</a></p>
+
+    <p style="margin-top:20px">If you'd rather talk it through, we run a 60-minute 1:1 video call, £49.99 flat. <a href="${p.siteUrl}/work-with-us">Book one here</a>.</p>
+
+    <p>Reply to this email any time. It comes through to us.</p>
+    <p style="margin-top:22px">Bec &amp; Oli</p>
+  `
+
+  const text = `${greeting.replace(/&[a-z#0-9]+;/g, '')}
+
+Here's the result from your I Want To Travel assessment, kept in your inbox so you can come back to it.
+
+Score: ${p.score}/100, ${p.band}
+Tagline: ${p.tagline}
+Travel style: ${p.style}
+Ideal pace: ${p.paceText}
+Your family: ${p.familyDesc}
+
+What's working for you:
+${linesText(p.strengths, 'No specific strengths flagged from your answers.')}
+
+Areas to work on:
+${linesText(p.challenges, 'No significant challenges identified.')}
+
+Concrete next actions:
+${linesText(p.actions, 'Take a 2-week trip together as a stress test before committing to anything longer.')}
+
+${p.nextStep.title}
+${p.nextStep.body}
+
+Where to go next on the site:
+Premium membership unlocks the guides, Adventure Packs, and posts that go deeper on the parts of your result that matter most. £49.99 a year for the whole family. If you're already a WayStaq Premium member you can pick up JFT Premium at £25 a year through the member link inside WayStaq.
+${p.siteUrl}/account
+
+If you'd rather talk it through, we run a 60-minute 1:1 video call, £49.99 flat. Book one here: ${p.siteUrl}/work-with-us
+
+Reply to this email any time. It comes through to us.
+
+Bec & Oli`
+
+  return { subject, html: emailShell(subject, bodyHtml), text }
+}

@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server'
 import { createClient as createSbClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { isAdminEmail } from '@/lib/admin'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -35,11 +36,16 @@ export async function POST(request: Request) {
   } catch {}
 
   // Best-effort: record the user id if they happen to be signed in. Most
-  // visitors at this point are logged out.
+  // visitors at this point are logged out. Admins are excluded from the
+  // count so our own testing doesn't skew the number, mirroring how
+  // LiveHeartbeat self-excludes admin browsers from visitor counts.
   let userId: string | null = null
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
+    if (user && isAdminEmail(user.email)) {
+      return NextResponse.json({ ok: true, skipped: 'admin' })
+    }
     userId = user?.id ?? null
   } catch {}
 

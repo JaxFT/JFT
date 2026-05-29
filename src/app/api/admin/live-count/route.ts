@@ -67,6 +67,26 @@ export async function GET() {
     const totalUsers = totalRes.count ?? 0
     const premiumUsers = premiumRes.count ?? 0
     const freeUsers = Math.max(0, totalUsers - premiumUsers)
+
+    // Family Way completions, defensive: if the table doesn't exist yet
+    // (migration not applied) leave both null so the admin card hides the
+    // calculator section without breaking the rest of the response.
+    let familyWayCompletions: number | null = null
+    let familyWayCompletions24h: number | null = null
+    try {
+      const totalFw = await sb
+        .from('family_way_completions')
+        .select('id', { count: 'exact', head: true })
+      if (!totalFw.error) familyWayCompletions = totalFw.count ?? 0
+      const last24Fw = await sb
+        .from('family_way_completions')
+        .select('id', { count: 'exact', head: true })
+        .gte('completed_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      if (!last24Fw.error) familyWayCompletions24h = last24Fw.count ?? 0
+    } catch (e) {
+      console.error('[live-count] family_way_completions', e)
+    }
+
     // Admin browsers self-exclude (LiveHeartbeat skips pinging when
     // the viewer is an admin), so the visitor numbers are already
     // admin-free without filtering here.
@@ -77,6 +97,8 @@ export async function GET() {
       last30d: visitors.last30d,
       freeUsers,
       premiumUsers,
+      familyWayCompletions,
+      familyWayCompletions24h,
     })
   } catch (err) {
     console.error('[live-count]', err)

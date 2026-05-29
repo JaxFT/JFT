@@ -1464,6 +1464,16 @@
     document.getElementById('nextStepCard').innerHTML = '<h3>' + ns.title + '</h3><p>' + ns.body + '</p>';
 
     showScreen('results');
+
+    // Tell the parent JFT page that the user reached the results
+    // screen so it can record one anonymous completion. sessionStorage
+    // guard stops a page refresh or revisit from double-counting.
+    try {
+      if (!sessionStorage.getItem('jft-family-way-recorded')) {
+        sessionStorage.setItem('jft-family-way-recorded', '1');
+        window.parent.postMessage({ type: 'jft.family-way.completed', score: score }, '*');
+      }
+    } catch (e) {}
   }
 
   // ───── RESTART ─────

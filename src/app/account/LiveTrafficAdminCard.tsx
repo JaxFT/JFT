@@ -18,11 +18,14 @@ type Stats = {
   last30d: number | null
   freeUsers: number | null
   premiumUsers: number | null
+  familyWayCompletions: number | null
+  familyWayCompletions24h: number | null
 }
 
 const EMPTY: Stats = {
   count: null, last24h: null, last7d: null, last30d: null,
   freeUsers: null, premiumUsers: null,
+  familyWayCompletions: null, familyWayCompletions24h: null,
 }
 
 export default function LiveTrafficAdminCard() {
@@ -45,6 +48,10 @@ export default function LiveTrafficAdminCard() {
           last30d: typeof json.last30d === 'number' ? json.last30d : 0,
           freeUsers: typeof json.freeUsers === 'number' ? json.freeUsers : 0,
           premiumUsers: typeof json.premiumUsers === 'number' ? json.premiumUsers : 0,
+          // Preserve null when the server couldn't read the table (migration
+          // not yet applied), so the calculator section can hide itself.
+          familyWayCompletions: typeof json.familyWayCompletions === 'number' ? json.familyWayCompletions : null,
+          familyWayCompletions24h: typeof json.familyWayCompletions24h === 'number' ? json.familyWayCompletions24h : null,
         })
         setError(false)
       } catch {
@@ -92,7 +99,7 @@ export default function LiveTrafficAdminCard() {
         </a>
       </div>
 
-      {/* Rolling windows + member tiers — three viewer numbers and the
+      {/* Rolling windows + member tiers, three viewer numbers and the
           two account numbers, laid out as a small stat strip. */}
       {haveWindows && (
         <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -101,6 +108,18 @@ export default function LiveTrafficAdminCard() {
           <Stat label="Last 30 days" value={stats.last30d ?? 0} unit="viewers" />
           <Stat label="Premium members" value={stats.premiumUsers ?? 0} />
           <Stat label="Free members" value={stats.freeUsers ?? 0} />
+        </div>
+      )}
+
+      {/* Feature usage. Family Way / pre-trip calculator completions: one
+          row per visitor who reached the results screen. */}
+      {!error && stats.familyWayCompletions !== null && (
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <p className="text-[10px] font-bold tracking-widest uppercase text-white/55 mb-2">Pre-trip calculator</p>
+          <div className="grid grid-cols-2 gap-3">
+            <Stat label="Total completions" value={stats.familyWayCompletions ?? 0} />
+            <Stat label="Last 24h" value={stats.familyWayCompletions24h ?? 0} />
+          </div>
         </div>
       )}
     </div>

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { FAMILY_WAY_HTML } from './family-way'
+import FamilyWayCompletionTracker from './FamilyWayCompletionTracker'
 
 export const metadata: Metadata = {
   title: 'I Want To Travel',
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
 export default function IWantToTravelPage() {
   return (
     <div className="pt-16 bg-sand-50">
+      <FamilyWayCompletionTracker />
       <iframe
         srcDoc={FAMILY_WAY_HTML}
         title="Family Way questionnaire"

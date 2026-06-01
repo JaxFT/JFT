@@ -391,6 +391,45 @@ Bec & Oli`
   return { subject, html: emailShell(subject, bodyHtml), text }
 }
 
+// New blog-comment notification, fired from POST /api/blog/[slug]/comments
+// after a successful insert. Sent to ADMIN_NOTIFY so Bec / Oli see new
+// activity in their shared inbox. The commenter's address goes in
+// reply-to, so hitting Reply in Gmail responds to them directly.
+export function buildNewCommentNotificationEmail(p: {
+  postTitle: string
+  postSlug: string
+  siteUrl: string
+  username: string
+  commenterEmail: string
+  commentBody: string
+  commentId: string
+}): { subject: string; html: string; text: string } {
+  const subject = `New comment from ${p.username} on "${p.postTitle}"`
+  const url = `${p.siteUrl}/blog/${p.postSlug}#comment-${p.commentId}`
+  const excerpt = p.commentBody.length > 600
+    ? p.commentBody.slice(0, 600).trimEnd() + '…'
+    : p.commentBody
+
+  const bodyHtml = `
+    <p><strong>${escapeHtml(p.username)}</strong> just commented on <a href="${url}">${escapeHtml(p.postTitle)}</a>:</p>
+    <blockquote style="border-left:3px solid #2d6b4f; padding:8px 14px; margin:12px 0; background:#f5f4f1; font-size:14px; color:#1a1a18;">
+      ${escapeHtml(excerpt).replace(/\n/g, '<br>')}
+    </blockquote>
+    <p><a class="btn" href="${url}">Open the comment</a></p>
+    <p style="font-size:12px; color:#888; margin-top:16px;">
+      Commenter: ${escapeHtml(p.commenterEmail)}. Reply to this email and Gmail will route your reply to them.
+    </p>
+  `
+  const text = `${p.username} commented on "${p.postTitle}":
+
+"${excerpt}"
+
+Open: ${url}
+Commenter: ${p.commenterEmail}
+`
+  return { subject, html: emailShell(subject, bodyHtml), text }
+}
+
 // Pre-trip "Family Way" calculator result, sent when a visitor clicks
 // "Email me my result" on /i-want-to-travel. Transactional, fired by their
 // explicit action, so it goes regardless of the marketing opt-in. Voice

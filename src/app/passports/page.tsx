@@ -10,6 +10,7 @@ import { PACK_META } from '@/lib/adventurePackMeta'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 import PassportPage from '@/components/passport/PassportPage'
 import PassportStamp from '@/components/passport/PassportStamp'
+import { getWaystaqDiscountState } from '@/lib/waystaq-discount'
 // ScatteredStampSheet retired from the marketing mockups; the actual
 // kid passport country pages now use a flex-wrap layout, and the
 // mockups follow.
@@ -34,6 +35,7 @@ export default async function PassportsLanding() {
       .maybeSingle()
     isPremium = isPremiumTier(profile?.subscription_tier)
   }
+  const { active: wsDiscount } = await getWaystaqDiscountState()
 
   // Count live country packs once and reuse in both copy spots so a
   // new live pack never leaves the page stating an out-of-date number.
@@ -289,8 +291,11 @@ export default async function PassportsLanding() {
               Free for every child you add.
             </h2>
             <p className="text-white/70 text-base leading-relaxed mb-6 max-w-md mx-auto">
-              Included with Premium membership. £49.99 a year covers the whole family — every child, every Adventure Pack,
-              every guide, every premium blog post.
+              Included with Premium membership.{' '}
+              {wsDiscount ? (
+                <>£25 a year <span className="text-white/40 line-through">£49.99</span></>
+              ) : '£49.99 a year'}
+              {' '}covers the whole family, every child, every Adventure Pack, every guide, every premium blog post.
             </p>
             <ul className="text-sm text-white/80 inline-flex flex-col gap-2 mb-7 text-left">
               <li className="inline-flex items-center gap-2"><Check className="w-4 h-4 text-brand-300 shrink-0" /> Unlimited children per family</li>

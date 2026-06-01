@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
 import { getGuideBySlug, userHasPurchased, formatPrice } from '@/lib/guides-db'
+import { getWaystaqDiscountState } from '@/lib/waystaq-discount'
 import { ArticleJsonLd } from '@/components/seo/JsonLd'
 import { getPublishedWebGuideBySlug } from '@/lib/guides-content-db'
 import { userHasPurchasedWebGuide } from '@/lib/web-guide-purchases-db'
@@ -91,12 +92,14 @@ export default async function GuidePage({
   // auto-link phrases are only used for the web-guide path, but firing
   // them eagerly is cheaper than serialising, the web path is the
   // hot path now that the PDF flow is being retired.
-  const [webGuide, supabase, aboutUs, autoLinkPhrases] = await Promise.all([
+  const [webGuide, supabase, aboutUs, autoLinkPhrases, wsDiscountState] = await Promise.all([
     getPublishedWebGuideBySlug(slug),
     createClient(),
     getAboutUs(),
     getAutoLinkPhrases(),
+    getWaystaqDiscountState(),
   ])
+  const wsDiscount = wsDiscountState.active
 
   // ─── New web-rendered guides win if a row exists. ───
   if (webGuide) {
@@ -158,6 +161,7 @@ export default async function GuidePage({
           hasPurchasedDownload={hasPurchasedDownload}
           isAdmin={adminWeb}
           freshPurchase={freshPurchase}
+          wsDiscount={wsDiscount}
         />
       </>
     )
@@ -259,7 +263,11 @@ export default async function GuidePage({
                 <Crown className="w-5 h-5 text-brand-300" />
                 <p className="text-xs font-bold tracking-widest uppercase text-brand-300">Or unlock everything</p>
               </div>
-              <h3 className="text-2xl font-bold mb-1">£49.99 / year</h3>
+              <h3 className="text-2xl font-bold mb-1">
+                {wsDiscount ? (
+                  <>£25 / year <span className="text-white/40 line-through font-normal text-lg">£49.99</span></>
+                ) : '£49.99 / year'}
+              </h3>
               <p className="text-sm text-white/70 mb-5 flex-1">A year of access to every premium blog post, every guide, and every adventure pack.</p>
               {user ? (
                 <UpgradeButton className="btn-primary w-full justify-center !text-sm" />

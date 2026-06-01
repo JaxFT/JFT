@@ -5,6 +5,8 @@
 
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { sendEmail, HELLO_FROM, ADMIN_NOTIFY, buildNewCommentNotificationEmail } from '@/lib/email'
+import { isAdminEmail } from '@/lib/admin'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -51,6 +53,19 @@ export async function POST(
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+  // Fire-and-forget admin notification. Skip when the commenter is an
+  // admin (no point emailing ourselves about our own comments). Same
+  // pattern as the Stripe webhook's 1:1-call-paid notification.
+  if (user.email && !isAdminEmail(user.email)) {
+    void notifyAdminsOfComment({
+      slug,
+      commentId: data.id as string,
+      body: text,
+      username: profile.username,
+      commenterEmail: user.email,
+    })
+  }
+
   return NextResponse.json({
     ok: true,
     comment: {
@@ -61,4 +76,42 @@ export async function POST(
       username: profile.username,
     },
   })
+}
+
+async function notifyAdminsOfComment(p: {
+  slug: string
+  commentId: string
+  body: string
+  username: string
+  commenterEmail: string
+}): Promise<void> {
+  try {
+    const supabase = await createClient()
+    const { data: post } = await supabase
+      .from('blog_posts')
+      .select('title')
+      .eq('slug', p.slug)
+      .maybeSingle()
+    const postTitle = (post as { title?: string } | null)?.title ?? p.slug
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
+    const { subject, html, text } = buildNewCommentNotificationEmail({
+      postTitle,
+      postSlug: p.slug,
+      siteUrl,
+      username: p.username,
+      commenterEmail: p.commenterEmail,
+      commentBody: p.body,
+      commentId: p.commentId,
+    })
+    await sendEmail({
+      from: HELLO_FROM,
+      to: ADMIN_NOTIFY,
+      subject,
+      html,
+      text,
+      replyTo: p.commenterEmail,
+    })
+  } catch (e) {
+    console.error('[comments] admin notify failed', e)
+  }
 }

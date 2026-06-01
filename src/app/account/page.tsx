@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Crown, ShoppingBag, ArrowRight, Calendar, ShieldCheck, FileText, Mail, Users } from 'lucide-react'
 import WaystaqCard from '@/components/WaystaqCard'
+import { getWaystaqDiscountState } from '@/lib/waystaq-discount'
 import type { Metadata } from 'next'
 import SignOutButton from './SignOutButton'
 import AccountEditor from './AccountEditor'
@@ -64,6 +65,7 @@ export default async function AccountPage() {
   const purchases = (purchasesData ?? []) as unknown as PurchaseRow[]
   const packPurchases = (packPurchasesData ?? []) as Array<{ id: string; country_slug: string; purchased_at: string }>
   const isPremium = isPremiumTier(profile?.subscription_tier)
+  const { active: wsDiscount } = await getWaystaqDiscountState()
 
   // Normalise the two ledgers into a single list for display. Pack
   // purchases are always £4.99 (flat price), so we don't need to
@@ -168,9 +170,16 @@ export default async function AccountPage() {
                 {isPremium ? 'You have full access' : 'Upgrade to Premium'}
               </h2>
               <p className={`mt-2 text-sm leading-relaxed max-w-md ${isPremium ? 'text-white/70' : 'text-gray-500'}`}>
-                {isPremium
-                  ? 'Every premium blog post, every guide, every Adventure Pack, and the full Adventure Passport are included.'
-                  : 'A year of access to every premium blog post, every guide, every Adventure Pack, and the Adventure Passport, £49.99/year.'}
+                {isPremium ? (
+                  'Every premium blog post, every guide, every Adventure Pack, and the full Adventure Passport are included.'
+                ) : (
+                  <>
+                    A year of access to every premium blog post, every guide, every Adventure Pack, and the Adventure Passport,{' '}
+                    {wsDiscount ? (
+                      <>£25/year <span className="text-gray-400 line-through">£49.99</span></>
+                    ) : '£49.99/year'}.
+                  </>
+                )}
               </p>
               {isPremium && profile?.cancellation_requested_at && (
                 <p className="mt-3 text-xs text-amber-200 bg-amber-950/30 border border-amber-700/40 rounded-md px-3 py-2 inline-block">

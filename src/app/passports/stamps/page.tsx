@@ -4,6 +4,7 @@ import { Stamp, Wand2, UserCheck, Sparkles, Crown, ArrowRight, ListChecks, Award
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
 import UpgradeButton from '@/components/billing/UpgradeButton'
+import { getWaystaqDiscountState } from '@/lib/waystaq-discount'
 import PassportStamp from '@/components/passport/PassportStamp'
 import { STAMP_META, AUTO_STAMP_TYPES, PERMISSION_LABELS, PERMISSION_DESCRIPTIONS, type StampType, type PermissionMode } from '@/lib/passport-types'
 
@@ -48,6 +49,7 @@ export default async function StampsExplainerPage() {
       .maybeSingle()
     isPremium = isPremiumTier(profile?.subscription_tier)
   }
+  const { active: wsDiscount } = await getWaystaqDiscountState()
 
   const videoId = process.env.NEXT_PUBLIC_STAMPS_VIDEO_YOUTUBE_ID || null
 
@@ -237,7 +239,11 @@ export default async function StampsExplainerPage() {
           <div className="bg-brand-950 text-white rounded-2xl p-6 sm:p-8 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold mb-3">Ready to start your family&apos;s passport?</h2>
             <p className="text-white/70 max-w-md mx-auto leading-relaxed mb-6">
-              Adventure Passports come with Premium, £49.99 a year for every child in your family, every Adventure Pack, every guide, every premium blog post.
+              Adventure Passports come with Premium,{' '}
+              {wsDiscount ? (
+                <>£25 a year <span className="text-white/40 line-through">£49.99</span></>
+              ) : '£49.99 a year'}
+              {' '}for every child in your family, every Adventure Pack, every guide, every premium blog post.
             </p>
             <div className="flex flex-col items-center gap-2">
               {isPremium ? (

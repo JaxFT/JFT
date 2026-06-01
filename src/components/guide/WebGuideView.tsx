@@ -24,9 +24,12 @@ type Props = {
   isAdmin?: boolean
   // Set when the visitor has JUST returned from Stripe Checkout.
   // The session_id from the URL authorises the download against
-  // Stripe directly — no account needed. We auto-trigger the file
+  // Stripe directly, no account needed. We auto-trigger the file
   // download as soon as the page mounts.
   freshPurchase: { sessionId: string; email: string | null } | null
+  // True when the WayStaq £25 discount applies to this viewer; flips the
+  // Premium price callout from £49.99 to £25.
+  wsDiscount?: boolean
 }
 
 function anchor(s: string): string {
@@ -43,7 +46,7 @@ function blockAnchor(b: GuideContentBlock): string {
 }
 
 export default function WebGuideView({
-  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, isPremium, hasPurchasedDownload, isAdmin, freshPurchase,
+  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, isPremium, hasPurchasedDownload, isAdmin, freshPurchase, wsDiscount = false,
 }: Props) {
   const hideAbout = !!guide.sections.hideAbout
   // Admin gets the same UI treatment as a buyer — "Download my copy"
@@ -138,6 +141,7 @@ export default function WebGuideView({
             canViewFull={canViewFull}
             isLoggedIn={isLoggedIn}
             hideAbout={hideAbout}
+            wsDiscount={wsDiscount}
           />
         )
         : (
@@ -148,6 +152,7 @@ export default function WebGuideView({
             canViewFull={canViewFull}
             isLoggedIn={isLoggedIn}
             hideAbout={hideAbout}
+            wsDiscount={wsDiscount}
           />
         )}
 
@@ -199,7 +204,7 @@ function IntroSection({ markdown, autoLinkPhrases }: { markdown: string; autoLin
 // New default: render guide.body_markdown as one continuous doc with
 // an auto-built TOC from H2 headings and a percentage-based paywall.
 function SingleDocBody({
-  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, hideAbout,
+  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, hideAbout, wsDiscount = false,
 }: {
   guide: GuideRow
   aboutUsMarkdown: string
@@ -207,6 +212,7 @@ function SingleDocBody({
   canViewFull: boolean
   isLoggedIn: boolean
   hideAbout: boolean
+  wsDiscount?: boolean
 }) {
   const fullMd = guide.body_markdown
   const visibleMd = canViewFull
@@ -268,6 +274,7 @@ function SingleDocBody({
             hiddenLabel={`${100 - guide.preview_percent}% more`}
             hasOneOff={guide.price_pence > 0}
             priceLabel={formatPrice(guide.price_pence)}
+            wsDiscount={wsDiscount}
           />
         )}
       </div>
@@ -279,7 +286,7 @@ function SingleDocBody({
 // Kept so existing block-based guides (Sri Lanka) keep rendering
 // unchanged. Identical to the previous WebGuideView body.
 function BlocksBody({
-  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, hideAbout,
+  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, hideAbout, wsDiscount = false,
 }: {
   guide: GuideRow
   aboutUsMarkdown: string
@@ -287,6 +294,7 @@ function BlocksBody({
   canViewFull: boolean
   isLoggedIn: boolean
   hideAbout: boolean
+  wsDiscount?: boolean
 }) {
   const blocks = (guide.sections.blocks ?? []).slice().sort((a, b) => a.order - b.order)
 
@@ -362,6 +370,7 @@ function BlocksBody({
             hiddenLabel={`${hiddenCount} more section${hiddenCount === 1 ? '' : 's'}`}
             hasOneOff={guide.price_pence > 0}
             priceLabel={formatPrice(guide.price_pence)}
+            wsDiscount={wsDiscount}
           />
         )}
       </div>
@@ -389,13 +398,14 @@ function GuideSection({
 }
 
 function Paywall({
-  isLoggedIn, slug, hiddenLabel, hasOneOff, priceLabel,
+  isLoggedIn, slug, hiddenLabel, hasOneOff, priceLabel, wsDiscount = false,
 }: {
   isLoggedIn: boolean
   slug: string
   hiddenLabel: string
   hasOneOff: boolean
   priceLabel: string
+  wsDiscount?: boolean
 }) {
   return (
     <div className="relative mt-2">
@@ -405,7 +415,10 @@ function Paywall({
         </span>
         <h3 className="text-2xl sm:text-3xl font-bold mb-3">Keep reading with Premium</h3>
         <p className="text-white/70 leading-relaxed max-w-md mx-auto mb-6">
-          A year of access to every premium blog post, every guide, and every adventure pack. £49.99, cancel any time.
+          A year of access to every premium blog post, every guide, and every adventure pack.{' '}
+          {wsDiscount ? (
+            <>£25 <span className="text-white/40 line-through">£49.99</span></>
+          ) : '£49.99'}, cancel any time.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
           {isLoggedIn ? (

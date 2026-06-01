@@ -9,6 +9,10 @@
 // expiry is baked into the signed payload so it can't be extended either.
 
 import { cookies } from 'next/headers'
+import { getCurrentUser } from '@/lib/auth'
+import { isAdminEmail } from '@/lib/admin'
+import { isPremiumTier } from '@/lib/profile'
+import { createClient as createServerSupabase } from '@/lib/supabase/server'
 
 export const WAYSTAQ_DISCOUNT_COOKIE = 'jft_ws_discount'
 // How long the £25 price stays available after arriving from WayStaq.
@@ -49,6 +53,32 @@ export async function readWaystaqDiscount(): Promise<{ email: string; expiresAt:
   const value = (await cookies()).get(WAYSTAQ_DISCOUNT_COOKIE)?.value
   if (!value) return null
   return verifyDiscountCookie(value, secret)
+}
+
+// Should we currently advertise the £25 WayStaq price to this viewer?
+//
+// Active when there's a valid discount cookie AND either:
+//   - they're logged out (signup pre-fills the matching email), or
+//   - they're logged in, their account email matches the cookie, they
+//     aren't an admin, and they don't already have Premium.
+//
+// Used by the bottom banner and the various premium-price displays
+// around the site so the gating logic stays in one place.
+export async function getWaystaqDiscountState(): Promise<{ active: boolean }> {
+  const discount = await readWaystaqDiscount()
+  if (!discount) return { active: false }
+  const user = await getCurrentUser()
+  if (!user) return { active: true }
+  if (user.email?.toLowerCase() !== discount.email.toLowerCase()) return { active: false }
+  if (isAdminEmail(user.email)) return { active: false }
+  const supabase = await createServerSupabase()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('subscription_tier')
+    .eq('id', user.id)
+    .maybeSingle()
+  if (isPremiumTier(profile?.subscription_tier)) return { active: false }
+  return { active: true }
 }
 
 // ── crypto / encoding helpers (shared with /api/from-waystaq) ──────────

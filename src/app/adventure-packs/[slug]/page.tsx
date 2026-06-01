@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { checkAdventurePackAccess } from '@/lib/adventure-pack-access'
 import { getPackData, getPackMeta } from '@/lib/adventurePackData'
+import { getWaystaqDiscountState } from '@/lib/waystaq-discount'
 import UserPackShell from '@/components/adventure-packs/UserPackShell'
 import AnonymousPackShell from '@/components/adventure-packs/AnonymousPackShell'
 import FlagBanner from '@/components/adventure-packs/FlagBanner'
@@ -90,6 +91,7 @@ export default async function AdventurePackPage({
   // immediate /login redirect) so Google can crawl the page and
   // social-share visitors land on a real page with clear next steps.
   const access = await checkAdventurePackAccess(slug)
+  const { active: wsDiscount } = await getWaystaqDiscountState()
 
   if (access.kind === 'login' || access.kind === 'locked') {
     return (
@@ -127,7 +129,11 @@ export default async function AdventurePackPage({
               <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-2 inline-flex items-center gap-1.5">
                 <Crown className="w-3.5 h-3.5" /> Or get everything with Premium
               </p>
-              <h3 className="text-lg font-bold mb-3 leading-tight">£49.99 a year for the whole site.</h3>
+              <h3 className="text-lg font-bold mb-3 leading-tight">
+                {wsDiscount ? (
+                  <>£25 a year <span className="text-white/40 line-through font-normal">£49.99</span> for the whole site.</>
+                ) : '£49.99 a year for the whole site.'}
+              </h3>
               <ul className="space-y-1.5 text-sm text-white/85 mb-5">
                 {[
                   'Every Adventure Pack, in every country we have',

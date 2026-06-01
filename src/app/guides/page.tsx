@@ -7,6 +7,7 @@ import { listActiveGuides } from '@/lib/guides-db'
 import { listPublishedWebGuides } from '@/lib/guides-content-db'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 import GuideBrowser, { type GuideCardModel } from './GuideBrowser'
+import { getWaystaqDiscountState } from '@/lib/waystaq-discount'
 
 export const metadata: Metadata = { title: 'Guides' }
 export const dynamic = 'force-dynamic'
@@ -69,6 +70,7 @@ export default async function GuidesPage() {
       .single()
     isPremium = isPremiumTier(profile?.subscription_tier)
   }
+  const { active: wsDiscount } = await getWaystaqDiscountState()
 
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
@@ -92,7 +94,12 @@ export default async function GuidesPage() {
         ) : (
           <div className="bg-brand-950 text-white rounded-2xl p-6 mb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
-              <p className="font-bold text-lg">Premium, £49.99/year</p>
+              <p className="font-bold text-lg">
+                Premium,{' '}
+                {wsDiscount ? (
+                  <>£25/year <span className="font-normal text-white/40 line-through">£49.99</span></>
+                ) : '£49.99/year'}
+              </p>
               <p className="text-white/60 text-sm">
                 A year of access to every premium blog post, every guide, and every adventure pack. View on the site, no downloads.
               </p>

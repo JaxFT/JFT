@@ -8,6 +8,7 @@ import { ArrowRight, Map, BookOpen, Compass, Crown, Sparkles } from 'lucide-reac
 import { isPremiumTier } from '@/lib/profile'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 import WaystaqCard from '@/components/WaystaqCard'
+import { getWaystaqDiscountState } from '@/lib/waystaq-discount'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,6 +36,7 @@ export default async function HomePage() {
       .single()
     isPremium = isPremiumTier(profile?.subscription_tier)
   }
+  const { active: wsDiscount } = await getWaystaqDiscountState()
 
   return (
     <>
@@ -179,7 +181,12 @@ export default async function HomePage() {
           ) : (
             <>
               <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-4">Premium membership</p>
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4">Everything, for £49.99 a year</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+                Everything, for{' '}
+                {wsDiscount ? (
+                  <>£25 a year <span className="text-white/40 line-through font-normal text-2xl sm:text-3xl">£49.99</span></>
+                ) : '£49.99 a year'}
+              </h2>
               <p className="text-white/70 text-lg mb-8 leading-relaxed">
                 A year of access to every premium blog post, every guide, and every adventure pack. Cancel any time.
               </p>

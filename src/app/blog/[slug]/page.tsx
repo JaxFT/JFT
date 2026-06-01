@@ -8,6 +8,7 @@ import type { Metadata } from 'next'
 import { getPublishedPostBySlug, rowToView } from '@/lib/blog-db'
 import { proxyImageUrl } from '@/lib/image-proxy'
 import { createClient } from '@/lib/supabase/server'
+import { getWaystaqDiscountState } from '@/lib/waystaq-discount'
 import { isPremiumTier } from '@/lib/profile'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 import { ArticleJsonLd } from '@/components/seo/JsonLd'
@@ -101,6 +102,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   ])
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
+  const { active: wsDiscount } = await getWaystaqDiscountState()
 
   return (
     <div className="min-h-screen bg-white pt-20">
@@ -203,7 +205,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             </span>
             <h2 className="text-2xl sm:text-3xl font-bold mb-3">Keep reading with Premium</h2>
             <p className="text-white/70 leading-relaxed max-w-md mx-auto mb-6">
-              A year of access to every premium blog post, every guide, and every adventure pack, £49.99, cancel any time.
+              A year of access to every premium blog post, every guide, and every adventure pack,{' '}
+              {wsDiscount ? (
+                <>£25 <span className="text-white/40 line-through">£49.99</span></>
+              ) : '£49.99'}, cancel any time.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
               {user ? (

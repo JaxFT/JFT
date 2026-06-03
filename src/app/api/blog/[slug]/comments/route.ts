@@ -3,7 +3,7 @@
 // set on the profile — the UI nudges users through the username
 // modal before letting them submit.
 
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail, HELLO_FROM, ADMIN_NOTIFY, buildNewCommentNotificationEmail } from '@/lib/email'
 import { isAdminEmail } from '@/lib/admin'
@@ -53,16 +53,23 @@ export async function POST(
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Fire-and-forget admin notification. Skip when the commenter is an
-  // admin (no point emailing ourselves about our own comments). Same
-  // pattern as the Stripe webhook's 1:1-call-paid notification.
+  // Fire admin notification via `after()` so the work outlives the
+  // request response on Cloudflare Workers (a plain `void` Promise gets
+  // cancelled when the Worker context tears down). Skip when the
+  // commenter is an admin (no point emailing ourselves about our own
+  // comments).
   if (user.email && !isAdminEmail(user.email)) {
-    void notifyAdminsOfComment({
-      slug,
-      commentId: data.id as string,
-      body: text,
-      username: profile.username,
-      commenterEmail: user.email,
+    const username = profile.username
+    const commenterEmail = user.email
+    const commentId = data.id as string
+    after(async () => {
+      await notifyAdminsOfComment({
+        slug,
+        commentId,
+        body: text,
+        username,
+        commenterEmail,
+      })
     })
   }
 

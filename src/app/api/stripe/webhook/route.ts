@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { createClient as createSbClient, type SupabaseClient } from '@supabase/supabase-js'
 import { stripeClient } from '@/lib/stripe'
 import { claimWebGuidePurchase } from '@/lib/claim-web-guide-purchase'
@@ -240,13 +240,15 @@ async function handleCallRequestPayment(
     <p>Send them a confirmation with the agreed date and time, the thread now has a 'Send confirmation' button.</p>
     <p style="margin-top:18px"><a href="${adminUrl}" style="background:#2d6b4f; color:#fff; padding:10px 16px; border-radius:6px; text-decoration:none; font-weight:bold; display:inline-block;">Open the thread</a></p>
   `)
-  void sendEmail({
-    from: HELLO_FROM,
-    to: ADMIN_NOTIFY,
-    subject,
-    html,
-    text: `${row.name} (${row.email}) just paid for their 1:1 call. Open ${adminUrl} to send the confirmation.`,
-    replyTo: row.email,
+  after(async () => {
+    await sendEmail({
+      from: HELLO_FROM,
+      to: ADMIN_NOTIFY,
+      subject,
+      html,
+      text: `${row.name} (${row.email}) just paid for their 1:1 call. Open ${adminUrl} to send the confirmation.`,
+      replyTo: row.email,
+    })
   })
 }
 
@@ -268,13 +270,15 @@ async function handleWaystaqTripViewPurchase(session: Stripe.Checkout.Session): 
     <p style="font-size:13px; color:#555;">The actual access grant is handled on WayStaq's side, they're listening to the same Stripe account for this metadata kind. This email is just so the sale is visible without refreshing the Stripe Dashboard.</p>
     <p style="margin-top:14px"><a href="${siteUrl}/asia-adventures" style="color:#2d6b4f;">Open the landing page</a></p>
   `)
-  void sendEmail({
-    from: HELLO_FROM,
-    to: ADMIN_NOTIFY,
-    subject,
-    html,
-    text: `Trip-view sale on ${tripSlug}\nBuyer: ${buyerEmail}\nAmount: ${amountStr}\nStripe session: ${session.id}`,
-    replyTo: buyerEmail !== 'unknown' ? buyerEmail : undefined,
+  after(async () => {
+    await sendEmail({
+      from: HELLO_FROM,
+      to: ADMIN_NOTIFY,
+      subject,
+      html,
+      text: `Trip-view sale on ${tripSlug}\nBuyer: ${buyerEmail}\nAmount: ${amountStr}\nStripe session: ${session.id}`,
+      replyTo: buyerEmail !== 'unknown' ? buyerEmail : undefined,
+    })
   })
 }
 
@@ -302,13 +306,15 @@ async function notifyAdminOfPremiumSubscription(session: Stripe.Checkout.Session
        <strong>Stripe session:</strong> ${escapeForEmail(session.id)}</p>
     <p style="margin-top:14px"><a href="${siteUrl}/admin" style="color:#2d6b4f;">Open admin</a></p>
   `)
-  void sendEmail({
-    from: HELLO_FROM,
-    to: ADMIN_NOTIFY,
-    subject,
-    html,
-    text: `Premium signup\nBuyer: ${buyerEmail}\nAmount: ${amountStr}${discountHint}\nStripe session: ${session.id}`,
-    replyTo: buyerEmail !== 'unknown' ? buyerEmail : undefined,
+  after(async () => {
+    await sendEmail({
+      from: HELLO_FROM,
+      to: ADMIN_NOTIFY,
+      subject,
+      html,
+      text: `Premium signup\nBuyer: ${buyerEmail}\nAmount: ${amountStr}${discountHint}\nStripe session: ${session.id}`,
+      replyTo: buyerEmail !== 'unknown' ? buyerEmail : undefined,
+    })
   })
 }
 
@@ -332,13 +338,15 @@ async function notifyAdminOfWebGuideSale(session: Stripe.Checkout.Session): Prom
        <strong>Stripe session:</strong> ${escapeForEmail(session.id)}</p>
     <p style="margin-top:14px"><a href="${siteUrl}/admin/guides" style="color:#2d6b4f;">Open admin guides</a></p>
   `)
-  void sendEmail({
-    from: HELLO_FROM,
-    to: ADMIN_NOTIFY,
-    subject,
-    html,
-    text: `Web guide sold: ${guideSlug}\nBuyer: ${buyerEmail}\nAmount: ${amountStr}\nStripe session: ${session.id}`,
-    replyTo: buyerEmail !== 'unknown' ? buyerEmail : undefined,
+  after(async () => {
+    await sendEmail({
+      from: HELLO_FROM,
+      to: ADMIN_NOTIFY,
+      subject,
+      html,
+      text: `Web guide sold: ${guideSlug}\nBuyer: ${buyerEmail}\nAmount: ${amountStr}\nStripe session: ${session.id}`,
+      replyTo: buyerEmail !== 'unknown' ? buyerEmail : undefined,
+    })
   })
 }
 
@@ -358,13 +366,15 @@ async function notifyAdminOfAdventurePackSale(session: Stripe.Checkout.Session):
        <strong>Stripe session:</strong> ${escapeForEmail(session.id)}</p>
     <p style="margin-top:14px"><a href="${siteUrl}/adventure-packs/${encodeURIComponent(country)}" style="color:#2d6b4f;">Open the pack landing</a></p>
   `)
-  void sendEmail({
-    from: HELLO_FROM,
-    to: ADMIN_NOTIFY,
-    subject,
-    html,
-    text: `Adventure Pack sold: ${country}\nBuyer: ${buyerEmail}\nAmount: ${amountStr}\nStripe session: ${session.id}`,
-    replyTo: buyerEmail !== 'unknown' ? buyerEmail : undefined,
+  after(async () => {
+    await sendEmail({
+      from: HELLO_FROM,
+      to: ADMIN_NOTIFY,
+      subject,
+      html,
+      text: `Adventure Pack sold: ${country}\nBuyer: ${buyerEmail}\nAmount: ${amountStr}\nStripe session: ${session.id}`,
+      replyTo: buyerEmail !== 'unknown' ? buyerEmail : undefined,
+    })
   })
 }
 

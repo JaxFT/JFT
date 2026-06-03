@@ -60,6 +60,22 @@ export async function POST(request: Request) {
     if (!session.url) {
       return NextResponse.json({ error: 'Stripe did not return a checkout URL' }, { status: 500 })
     }
+
+    // Stamp purchase_id = session.id onto the session + payment intent
+    // metadata so WayStaq's webhook can dedupe retries on it. session.id
+    // isn't known at create time, so this has to be a second call.
+    // Best-effort: if the patch fails, WayStaq can still dedupe on
+    // event.data.object.id directly from the webhook payload.
+    try {
+      const withPurchaseId = { ...metadata, purchase_id: session.id }
+      await stripe.checkout.sessions.update(session.id, { metadata: withPurchaseId })
+      if (typeof session.payment_intent === 'string') {
+        await stripe.paymentIntents.update(session.payment_intent, { metadata: withPurchaseId })
+      }
+    } catch (e) {
+      console.error('[checkout-trip-view] purchase_id stamp failed', e)
+    }
+
     return NextResponse.json({ url: session.url })
   } catch (e) {
     return NextResponse.json(

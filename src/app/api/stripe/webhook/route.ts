@@ -195,6 +195,12 @@ async function handleAdventurePackPurchase(
   if (error && error.code !== '23505') {
     console.error('[stripe webhook] adventure_pack insert failed', error)
   }
+  // Fire admin notify only on first time (no error), not on a 23505
+  // unique-violation retry, so Stripe webhook re-deliveries don't
+  // duplicate the email.
+  if (!error) {
+    void notifyAdminOfAdventurePackSale(session)
+  }
 }
 
 async function handleCallRequestPayment(
@@ -272,6 +278,96 @@ async function handleWaystaqTripViewPurchase(session: Stripe.Checkout.Session): 
   })
 }
 
+// Admin notifications for the three remaining purchase types. Same
+// fire-and-forget pattern as handleWaystaqTripViewPurchase and the 1:1
+// call paid email above, so each new sale lands in the shared inbox
+// without anyone having to refresh the Stripe Dashboard. Keep templates
+// inline rather than in lib/email, the data shape per sale is different
+// enough that a generic helper would add more confusion than reuse.
+
+async function notifyAdminOfPremiumSubscription(session: Stripe.Checkout.Session): Promise<void> {
+  const buyerEmail = session.customer_details?.email ?? session.customer_email ?? 'unknown'
+  const amountPence = session.amount_total ?? 0
+  const amountStr = `£${(amountPence / 100).toFixed(2)}`
+  // Heuristic: anything under £40 on a Premium signup is almost
+  // certainly the £25 WayStaq member price, flag it inline so the inbox
+  // makes the source obvious at a glance.
+  const discountHint = amountPence > 0 && amountPence < 4000 ? ' (looks like the WayStaq £25 member price)' : ''
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
+
+  const subject = `Premium signup: ${buyerEmail} (${amountStr})`
+  const html = emailShell(subject, `
+    <p><strong>${escapeForEmail(buyerEmail)}</strong> just started a JFT Premium subscription.</p>
+    <p><strong>Amount:</strong> ${amountStr}${discountHint}<br>
+       <strong>Stripe session:</strong> ${escapeForEmail(session.id)}</p>
+    <p style="margin-top:14px"><a href="${siteUrl}/admin" style="color:#2d6b4f;">Open admin</a></p>
+  `)
+  void sendEmail({
+    from: HELLO_FROM,
+    to: ADMIN_NOTIFY,
+    subject,
+    html,
+    text: `Premium signup\nBuyer: ${buyerEmail}\nAmount: ${amountStr}${discountHint}\nStripe session: ${session.id}`,
+    replyTo: buyerEmail !== 'unknown' ? buyerEmail : undefined,
+  })
+}
+
+async function notifyAdminOfWebGuideSale(session: Stripe.Checkout.Session): Promise<void> {
+  const buyerEmail = session.customer_details?.email ?? session.customer_email ?? 'unknown'
+  const amountPence = session.amount_total ?? 0
+  const amountStr = `£${(amountPence / 100).toFixed(2)}`
+  // checkout-web-guide stamps guide_slug into session metadata; fall
+  // back to "(unknown)" if absent so the email still goes out.
+  const guideSlug = typeof session.metadata?.guide_slug === 'string'
+    ? session.metadata.guide_slug
+    : typeof session.metadata?.slug === 'string'
+      ? session.metadata.slug
+      : '(unknown)'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
+
+  const subject = `Web guide sold: ${guideSlug} (${buyerEmail})`
+  const html = emailShell(subject, `
+    <p><strong>${escapeForEmail(buyerEmail)}</strong> just bought the web guide <strong>${escapeForEmail(guideSlug)}</strong>.</p>
+    <p><strong>Amount:</strong> ${amountStr}<br>
+       <strong>Stripe session:</strong> ${escapeForEmail(session.id)}</p>
+    <p style="margin-top:14px"><a href="${siteUrl}/admin/guides" style="color:#2d6b4f;">Open admin guides</a></p>
+  `)
+  void sendEmail({
+    from: HELLO_FROM,
+    to: ADMIN_NOTIFY,
+    subject,
+    html,
+    text: `Web guide sold: ${guideSlug}\nBuyer: ${buyerEmail}\nAmount: ${amountStr}\nStripe session: ${session.id}`,
+    replyTo: buyerEmail !== 'unknown' ? buyerEmail : undefined,
+  })
+}
+
+async function notifyAdminOfAdventurePackSale(session: Stripe.Checkout.Session): Promise<void> {
+  const buyerEmail = session.customer_details?.email ?? session.customer_email ?? 'unknown'
+  const amountPence = session.amount_total ?? 0
+  const amountStr = `£${(amountPence / 100).toFixed(2)}`
+  const country = typeof session.metadata?.country_slug === 'string'
+    ? session.metadata.country_slug
+    : '(unknown)'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
+
+  const subject = `Adventure Pack sold: ${country} (${buyerEmail})`
+  const html = emailShell(subject, `
+    <p><strong>${escapeForEmail(buyerEmail)}</strong> just bought the <strong>${escapeForEmail(country)}</strong> Adventure Pack.</p>
+    <p><strong>Amount:</strong> ${amountStr}<br>
+       <strong>Stripe session:</strong> ${escapeForEmail(session.id)}</p>
+    <p style="margin-top:14px"><a href="${siteUrl}/adventure-packs/${encodeURIComponent(country)}" style="color:#2d6b4f;">Open the pack landing</a></p>
+  `)
+  void sendEmail({
+    from: HELLO_FROM,
+    to: ADMIN_NOTIFY,
+    subject,
+    html,
+    text: `Adventure Pack sold: ${country}\nBuyer: ${buyerEmail}\nAmount: ${amountStr}\nStripe session: ${session.id}`,
+    replyTo: buyerEmail !== 'unknown' ? buyerEmail : undefined,
+  })
+}
+
 // Tiny local helper, the email module exports emailShell but not its
 // own escaper. Keep it private here so the webhook file stays
 // self-contained.
@@ -293,6 +389,10 @@ async function handleWebGuidePurchase(
   if (!r.ok) {
     return NextResponse.json({ error: r.error, session: session.id }, { status: r.status })
   }
+  // Admin notify on every success. The underlying claim is idempotent
+  // (re-runs are silent), but doesn't expose a first-vs-retry flag, so
+  // a rare Stripe redelivery could send a duplicate email. Acceptable.
+  void notifyAdminOfWebGuideSale(session)
   return null
 }
 
@@ -310,6 +410,18 @@ async function handleSubscriptionCheckout(
   const subscriptionId = typeof session.subscription === 'string'
     ? session.subscription
     : session.subscription?.id ?? null
+
+  // Snapshot the profile's existing subscription id BEFORE we overwrite
+  // it, so we can tell a brand-new signup apart from a Stripe webhook
+  // retry on the same subscription id, and only email the admin in the
+  // brand-new case.
+  const { data: priorProfile } = await admin
+    .from('profiles')
+    .select('stripe_subscription_id')
+    .eq('id', userId)
+    .maybeSingle()
+  const priorSubId = (priorProfile as { stripe_subscription_id?: string | null } | null)?.stripe_subscription_id ?? null
+  const isFirstTimeSubscription = !priorSubId || (!!subscriptionId && priorSubId !== subscriptionId)
 
   // Stamp the customer id immediately. The expiry + tier will be set by
   // the customer.subscription.created event that fires alongside this one,
@@ -330,6 +442,9 @@ async function handleSubscriptionCheckout(
       .from('profiles')
       .update({ stripe_subscription_id: subscriptionId })
       .eq('id', userId)
+  }
+  if (isFirstTimeSubscription) {
+    void notifyAdminOfPremiumSubscription(session)
   }
 }
 

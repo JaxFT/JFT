@@ -127,6 +127,16 @@ async function handleOneOffCheckout(
     return null
   }
 
+  // `kind: 'waystaq_trip_view'` is set by /api/stripe/checkout-trip-view
+  // when someone buys view-only access to a JFT trip on WayStaq. The
+  // grant itself happens on WayStaq's side, they listen to the same
+  // Stripe account; on the JFT side we just nudge the admin inbox so
+  // the sale is visible without having to refresh the Stripe Dashboard.
+  if (session.metadata?.kind === 'waystaq_trip_view') {
+    await handleWaystaqTripViewPurchase(session)
+    return null
+  }
+
   const userId = session.metadata?.user_id
   const productId = session.metadata?.product_id
   const amount = session.amount_total
@@ -231,6 +241,34 @@ async function handleCallRequestPayment(
     html,
     text: `${row.name} (${row.email}) just paid for their 1:1 call. Open ${adminUrl} to send the confirmation.`,
     replyTo: row.email,
+  })
+}
+
+async function handleWaystaqTripViewPurchase(session: Stripe.Checkout.Session): Promise<void> {
+  if (session.payment_status !== 'paid') return
+
+  const tripSlug = typeof session.metadata?.trip_slug === 'string' ? session.metadata.trip_slug : 'unknown'
+  const buyerEmail = session.customer_details?.email ?? session.customer_email ?? 'unknown'
+  const amountPence = session.amount_total ?? 0
+  const amountStr = `£${(amountPence / 100).toFixed(2)}`
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
+
+  const subject = `Trip-view sale: ${tripSlug} (${buyerEmail})`
+  const html = emailShell(subject, `
+    <p>Someone just bought view-only access to <strong>${escapeForEmail(tripSlug)}</strong> on WayStaq.</p>
+    <p><strong>Buyer:</strong> ${escapeForEmail(buyerEmail)}<br>
+       <strong>Amount:</strong> ${amountStr}<br>
+       <strong>Stripe session:</strong> ${escapeForEmail(session.id)}</p>
+    <p style="font-size:13px; color:#555;">The actual access grant is handled on WayStaq's side, they're listening to the same Stripe account for this metadata kind. This email is just so the sale is visible without refreshing the Stripe Dashboard.</p>
+    <p style="margin-top:14px"><a href="${siteUrl}/asia-adventures" style="color:#2d6b4f;">Open the landing page</a></p>
+  `)
+  void sendEmail({
+    from: HELLO_FROM,
+    to: ADMIN_NOTIFY,
+    subject,
+    html,
+    text: `Trip-view sale on ${tripSlug}\nBuyer: ${buyerEmail}\nAmount: ${amountStr}\nStripe session: ${session.id}`,
+    replyTo: buyerEmail !== 'unknown' ? buyerEmail : undefined,
   })
 }
 

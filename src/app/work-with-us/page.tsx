@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, Check, MessageCircle, Calendar, Mail, Compass } from 'lucide-react'
+import { ArrowRight, Check, MessageCircle, Calendar, Mail, Compass, Eye } from 'lucide-react'
 import BookCallButton from './BookCallButton'
 import WaystaqCard from '@/components/WaystaqCard'
 import AffiliateLinks from './AffiliateLinks'
@@ -76,7 +76,35 @@ export default async function WorkWithUsPage() {
         </div>
       </section>
 
-      {/* CALL INTRO — dark card, mirrors the "Book a 1:1" CTA in the
+      {/* SMALLER WAY IN, the £4.99 trip-view product. Positioned above
+          the 1:1 card so visitors see the lower-friction option first;
+          the call is still the deeper one if they want to talk through
+          their own family rather than read ours. */}
+      <section className="pb-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:gap-6 gap-4">
+            <div className="flex-1">
+              <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2 inline-flex items-center gap-1.5">
+                <Eye className="w-3.5 h-3.5" /> A smaller way in, £4.99
+              </p>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 leading-tight">
+                Walk through our actual Asia trip
+              </h2>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Want a less-talk option? Get view-only access to the whole Asia Adventures trip on WayStaq, every accommodation, every cost, every decision, for the price of a coffee.
+              </p>
+            </div>
+            <Link
+              href="/asia-adventures"
+              className="btn-outline shrink-0"
+            >
+              See what&apos;s in it <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* CALL INTRO, dark card, mirrors the "Book a 1:1" CTA in the
           questionnaire results so anyone arriving from either funnel
           sees the same pitch. */}
       <section className="pb-12 px-4 sm:px-6 lg:px-8">

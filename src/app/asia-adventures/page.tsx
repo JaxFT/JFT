@@ -1,19 +1,16 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Check, MapPin, Receipt, Calendar, ArrowRight, Compass } from 'lucide-react'
+import { Check, MapPin, Receipt, Calendar, ArrowRight, Compass, Mountain } from 'lucide-react'
 import BuyTripViewButton from './BuyTripViewButton'
 
-// Landing page for the Asia Adventures trip-view product. £4.99 buys
-// view-only access to the actual JFT trip on WayStaq. WayStaq's webhook
-// listener grants access; this page is the sales surface on the JFT side.
-//
-// Copy spots marked with [TRIP-FACTS] need Bec / Oli to drop the real
-// numbers in. Everything else is the steady-state JFT voice for the
-// product, light and specific, no hype.
+// Landing page for the "Our Total Spending and Trip plan" product: £4.99
+// view-only access to JFT's ongoing two-year Asia trip on WayStaq.
+// WayStaq's webhook listener grants access; this page is the sales
+// surface on the JFT side.
 
 export const metadata: Metadata = {
-  title: 'Asia Adventures, our actual trip on WayStaq',
-  description: 'Walk through our family\'s real trip across Asia on WayStaq. Every accommodation, every transport leg, every cost, every decision we made. £4.99 for view-only access.',
+  title: 'Our Total Spending and Trip plan, two years across Asia on WayStaq',
+  description: 'Walk through our family\'s actual two-year Asia trip on WayStaq. Every accommodation, every transport leg, every cost, every decision, updated as we keep going. £4.99 for view-only access.',
 }
 
 export const dynamic = 'force-dynamic'
@@ -26,14 +23,13 @@ export default function AsiaAdventuresLanding() {
         {/* HEADER */}
         <div className="text-center mb-10">
           <p className="inline-flex items-center gap-1.5 text-xs font-bold tracking-widest uppercase text-brand-600 mb-3">
-            <Compass className="w-3.5 h-3.5" /> Asia Adventures
+            <Compass className="w-3.5 h-3.5" /> Our Total Spending and Trip plan
           </p>
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-3">
-            Walk through our actual Asia trip
+            Two years across Asia, opened up for you
           </h1>
           <p className="text-gray-600 max-w-xl mx-auto leading-relaxed">
-            {/* [TRIP-FACTS] one-line summary, e.g. "Three months across Vietnam, Cambodia, Thailand, Japan and Indonesia." */}
-            Three months across Asia, every accommodation we booked, every transport leg, every cost, and the decisions we made along the way, opened up for you to look at on WayStaq.
+            We&apos;ve been on the road since September 2025. Morocco, Thailand, Sri Lanka, the Maldives, India, Nepal and Malaysia so far, with more to come. Every accommodation we&apos;ve booked, every transport leg, every cost, every decision we&apos;ve made along the way, opened up for you to look at on WayStaq. Updated as we keep going.
           </p>
         </div>
 
@@ -45,18 +41,33 @@ export default function AsiaAdventuresLanding() {
                 View-only access · one-off purchase
               </p>
               <h2 className="text-2xl sm:text-3xl font-bold mb-3 leading-tight">
-                The whole trip, opened up for you to read.
+                The whole trip and the real numbers, opened up for you.
               </h2>
               <p className="text-white/80 leading-relaxed text-sm sm:text-base mb-5">
-                We use WayStaq to plan and track every trip we take as a family. For £4.99 you get view-only access to the full Asia Adventures trip plan, the real one, not a cleaned-up version. After you pay, you can sign up for a free WayStaq account (or sign in to your existing one) with the same email and you&apos;re in.
+                We use WayStaq to plan and track our family&apos;s travel. £4.99 gives you view-only access to the whole Asia trip: the route, the bookings, the costs we paid, and the decisions we made (and the ones we&apos;d undo). The trip is ongoing, so you&apos;ll see new entries as we keep going. After you pay, you can sign up for a free WayStaq account (or sign in to an existing one) with the same email and you&apos;re in.
               </p>
               <BuyTripViewButton className="btn-primary bg-white !text-brand-700 hover:bg-white/90" />
               <p className="text-white/60 text-xs mt-3">
-                One-time payment. View access doesn&apos;t expire.
+                One-time payment. View access doesn&apos;t expire and updates as the trip continues.
               </p>
             </div>
           </div>
         </div>
+
+        {/* AT A GLANCE (public, deliberately rounded so the per-day spend
+            stays inside the paid product). */}
+        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 mb-10">
+          <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-4">At a glance</p>
+          <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <Stat label="Trip length" value="2 years" />
+            <Stat label="Started" value="Sep 2025" />
+            <Stat label="Countries so far" value="7" />
+            <Stat label="Spent so far" value="£30k+" />
+          </dl>
+          <p className="text-xs text-gray-400 mt-4 italic">
+            The per-night, per-country and per-day numbers, plus what each leg cost individually, are inside.
+          </p>
+        </section>
 
         {/* WHAT YOU GET */}
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 mb-10">
@@ -66,7 +77,7 @@ export default function AsiaAdventuresLanding() {
               {
                 icon: MapPin,
                 title: 'The full route, day by day',
-                body: 'Every country, every city, every move, with the dates we were there and how long we stayed in each spot.',
+                body: 'Every country, every city, every move so far, with the dates we were there and how long we stayed in each spot. Plus what we&apos;ve got planned for the next leg.',
               },
               {
                 icon: Receipt,
@@ -76,7 +87,7 @@ export default function AsiaAdventuresLanding() {
               {
                 icon: Calendar,
                 title: 'The decisions, including the ones we\'d undo',
-                body: 'Where we wished we\'d stayed longer, where two nights was plenty, where the budget guesthouse beat the nicer place, and the bookings we made early that we\'d skip next time.',
+                body: 'Where we wished we&apos;d stayed longer, where two nights was plenty, where the budget guesthouse beat the nicer place, and the bookings we made early that we&apos;d skip next time.',
               },
             ].map(s => (
               <li key={s.title} className="flex gap-3">
@@ -85,26 +96,47 @@ export default function AsiaAdventuresLanding() {
                 </div>
                 <div className="pt-1">
                   <p className="font-semibold text-gray-900 mb-0.5">{s.title}</p>
-                  <p className="text-sm text-gray-600 leading-relaxed">{s.body}</p>
+                  <p className="text-sm text-gray-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: s.body }} />
                 </div>
               </li>
             ))}
           </ul>
         </section>
 
-        {/* TRIP HIGHLIGHTS (placeholder facts) */}
+        {/* THREE THINGS FROM INSIDE, honest highlights pulled from the
+            actual trip so the reader gets a sense of the voice, not a
+            sanitised brochure. */}
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 mb-10">
-          <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-4">At a glance</p>
-          {/* [TRIP-FACTS] replace these with the real numbers from the trip */}
-          <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <Stat label="Duration" value="3 months" />
-            <Stat label="Countries" value="5" />
-            <Stat label="Total cost" value="£TBC" />
-            <Stat label="Cost per day" value="£TBC" />
-          </dl>
-          <p className="text-xs text-gray-400 mt-4 italic">
-            (Final numbers visible inside the trip on WayStaq.)
-          </p>
+          <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-4">A few honest things from inside</p>
+          <ul className="space-y-4 text-sm text-gray-700">
+            <li className="flex gap-3">
+              <div className="w-9 h-9 bg-brand-100 rounded-lg flex items-center justify-center shrink-0">
+                <Mountain className="w-4 h-4 text-brand-700" />
+              </div>
+              <div className="pt-1">
+                <p className="font-semibold text-gray-900 mb-0.5">The standout so far: the intro Annapurna trek from Pokhara</p>
+                <p className="leading-relaxed">Probably the best day or two of the whole trip up to now. You&apos;ll see how we set it up, what it cost, and what we&apos;d do differently if we did it again.</p>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <div className="w-9 h-9 bg-amber-50 rounded-lg flex items-center justify-center shrink-0">
+                <Compass className="w-4 h-4 text-amber-700" />
+              </div>
+              <div className="pt-1">
+                <p className="font-semibold text-gray-900 mb-0.5">Where we&apos;d cut: Fez, Morocco</p>
+                <p className="leading-relaxed">Worth a look once, but for us probably a souk too many. It didn&apos;t feel different enough from other places we&apos;d already been. Honesty included.</p>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <div className="w-9 h-9 bg-brand-100 rounded-lg flex items-center justify-center shrink-0">
+                <Receipt className="w-4 h-4 text-brand-700" />
+              </div>
+              <div className="pt-1">
+                <p className="font-semibold text-gray-900 mb-0.5">The number that surprised us most</p>
+                <p className="leading-relaxed">What we paid per night for accommodation in Malaysia. We&apos;d quietly assumed it would be one thing, it ended up being another. The actual figure is inside the plan.</p>
+              </div>
+            </li>
+          </ul>
         </section>
 
         {/* HOW IT WORKS */}
@@ -121,8 +153,8 @@ export default function AsiaAdventuresLanding() {
                 body: 'After payment we send you over to WayStaq. If you already have an account, just sign in. If not, the sign-up is free and takes a minute.',
               },
               {
-                title: 'The Asia Adventures trip is in your account',
-                body: 'View-only, but otherwise the full thing. You can read every detail, copy ideas into your own plans, and come back to it whenever.',
+                title: 'The trip is in your account',
+                body: 'View-only, but otherwise the full thing. You can read every detail, copy ideas into your own plans, and come back to it whenever. As we keep going, new entries appear in your view.',
               },
             ].map((s, i) => (
               <li key={s.title} className="flex gap-4">
@@ -138,13 +170,13 @@ export default function AsiaAdventuresLanding() {
           </ol>
         </section>
 
-        {/* HONEST CAVEATS (very JFT voice) */}
+        {/* HONEST CAVEATS */}
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 mb-10">
           <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-3">Worth knowing before you buy</p>
           <ul className="space-y-2.5 text-sm text-gray-700">
-            <li className="flex gap-2.5"><Check className="w-4 h-4 text-brand-700 mt-0.5 shrink-0" /> It&apos;s a real trip we did, not a generic itinerary. So some of it will fit your family, some of it won&apos;t.</li>
+            <li className="flex gap-2.5"><Check className="w-4 h-4 text-brand-700 mt-0.5 shrink-0" /> It&apos;s a real trip we&apos;re still on, not a finished generic itinerary. Some of it will fit your family, some of it won&apos;t.</li>
             <li className="flex gap-2.5"><Check className="w-4 h-4 text-brand-700 mt-0.5 shrink-0" /> The costs are what we paid, in the months we paid them. Prices have moved since.</li>
-            <li className="flex gap-2.5"><Check className="w-4 h-4 text-brand-700 mt-0.5 shrink-0" /> You&apos;re viewing it inside WayStaq, our planning tool, so the UI is theirs. A free account is required to read it.</li>
+            <li className="flex gap-2.5"><Check className="w-4 h-4 text-brand-700 mt-0.5 shrink-0" /> You&apos;re viewing it inside WayStaq, our planning tool, so the UI is theirs. A free WayStaq account is required to read it.</li>
             <li className="flex gap-2.5"><Check className="w-4 h-4 text-brand-700 mt-0.5 shrink-0" /> View-only means you can read everything but can&apos;t edit our copy. That&apos;s the point, you can fork ideas into your own trip in your own WayStaq account.</li>
           </ul>
         </section>

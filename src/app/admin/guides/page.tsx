@@ -64,71 +64,87 @@ export default async function AdminGuidesListPage() {
                 const destCount = g.sections.destinations?.length ?? 0
                 const themedCount = g.sections.themedSections?.length ?? 0
                 return (
-                  <li key={g.id} className="p-5 hover:bg-gray-50 transition-colors flex items-center gap-4 flex-wrap">
-                    {g.cover_image ? (
-                      <img loading="lazy" src={g.cover_image} alt={g.title} className="w-16 h-20 object-cover rounded-md shrink-0 border border-gray-200" />
-                    ) : (
-                      <div className="w-16 h-20 rounded-md bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-300 shrink-0">
-                        <Map className="w-6 h-6" />
+                  <li key={g.id} className="p-4 sm:p-5 hover:bg-gray-50 transition-colors">
+                    {/* On mobile this is a vertical stack: cover + title at
+                        the top, actions below. On sm+ the actions float
+                        right of the content. Mirrors AdminBlogBrowser. */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 gap-3">
+                      <div className="flex gap-3 flex-1 min-w-0">
+                        {g.cover_image ? (
+                          <img loading="lazy" src={g.cover_image} alt={g.title} className="w-16 h-20 object-cover rounded-md shrink-0 border border-gray-200" />
+                        ) : (
+                          <div className="w-16 h-20 rounded-md bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-300 shrink-0">
+                            <Map className="w-6 h-6" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+                            <span className={`text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full ${
+                              g.status === 'published'
+                                ? 'bg-brand-100 text-brand-800'
+                                : 'bg-amber-50 text-amber-700'
+                            }`}>
+                              {g.status}
+                            </span>
+                            <span className="text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full bg-gray-900 text-white">
+                              {g.is_premium
+                                ? 'Premium'
+                                : g.price_pence > 0
+                                  ? `£${(g.price_pence / 100).toFixed(2)}`
+                                  : 'Free'}
+                            </span>
+                            {g.country && <span className="text-[10px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{g.country}</span>}
+                            {g.tags.slice(0, 3).map(tag => (
+                              <span key={tag} className="text-[10px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{tag}</span>
+                            ))}
+                          </div>
+                          <Link href={`/admin/guides/${g.id}/edit`} className="font-bold text-gray-900 hover:text-brand-700 leading-snug block">
+                            {g.title}
+                          </Link>
+                          <p className="text-xs text-gray-500 mt-1 flex items-center gap-2.5 flex-wrap">
+                            <span>/{g.slug}</span>
+                            <span className="text-gray-300">·</span>
+                            <span>
+                              {destCount} destination{destCount === 1 ? '' : 's'}
+                              {themedCount > 0 ? `, ${themedCount} themed` : ''}
+                            </span>
+                            <span className="text-gray-300">·</span>
+                            <span>updated {updated}</span>
+                            <span className="text-gray-300">·</span>
+                            <span className="inline-flex items-center gap-1" title="Views">
+                              <Eye className="w-3.5 h-3.5" /> {g.view_count}
+                            </span>
+                          </p>
+                        </div>
                       </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className={`text-xs font-bold tracking-widest uppercase px-2 py-0.5 rounded-full ${
-                          g.status === 'published'
-                            ? 'bg-brand-100 text-brand-800'
-                            : 'bg-amber-50 text-amber-700'
-                        }`}>
-                          {g.status}
-                        </span>
-                        <span className="text-xs font-bold tracking-widest uppercase px-2 py-0.5 rounded-full bg-gray-900 text-white">
-                          {g.is_premium
-                            ? 'Premium'
-                            : g.price_pence > 0
-                              ? `£${(g.price_pence / 100).toFixed(2)}`
-                              : 'Free'}
-                        </span>
-                        {g.country && <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{g.country}</span>}
-                        {g.tags.slice(0, 3).map(tag => (
-                          <span key={tag} className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{tag}</span>
-                        ))}
-                      </div>
-                      <Link href={`/admin/guides/${g.id}/edit`} className="font-bold text-gray-900 hover:text-brand-700">
-                        {g.title}
-                      </Link>
-                      <p className="text-xs text-gray-500 mt-1 inline-flex items-center gap-x-2 flex-wrap">
-                        <span>/{g.slug} · {destCount} destination{destCount === 1 ? '' : 's'}
-                          {themedCount > 0 ? ` · ${themedCount} themed` : ''}
-                          {' · updated '}{updated}</span>
-                        <span className="inline-flex items-center gap-1 text-gray-600">
-                          <Eye className="w-3.5 h-3.5" /> {g.view_count}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {g.status === 'published' && (
+
+                      {/* Actions row. Stretches full-width on mobile so
+                          buttons don't squash; floats right on sm+. */}
+                      <div className="flex items-center gap-2 flex-wrap sm:shrink-0">
+                        {g.status === 'published' && (
+                          <Link
+                            href={`/guides/${g.slug}`}
+                            target="_blank"
+                            className="inline-flex items-center gap-1 text-xs font-medium text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md border border-gray-200 hover:bg-white"
+                          >
+                            View <ExternalLink className="w-3 h-3" />
+                          </Link>
+                        )}
                         <Link
-                          href={`/guides/${g.slug}`}
-                          target="_blank"
-                          className="inline-flex items-center gap-1 text-xs font-medium text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md border border-gray-200 hover:bg-white"
+                          href={`/admin/guides/${g.id}/pdf-builder`}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md border border-gray-200 hover:bg-white"
+                          title="Open the PDF builder, set image sizes and page breaks, then print to PDF"
                         >
-                          View <ExternalLink className="w-3 h-3" />
+                          <Download className="w-3 h-3" /> PDF
                         </Link>
-                      )}
-                      <Link
-                        href={`/admin/guides/${g.id}/pdf-builder`}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md border border-gray-200 hover:bg-white"
-                        title="Open the PDF builder — set image sizes and page breaks, then print to PDF"
-                      >
-                        <Download className="w-3 h-3" /> PDF
-                      </Link>
-                      <Link
-                        href={`/admin/guides/${g.id}/edit`}
-                        className="text-xs font-semibold text-brand-600 hover:text-brand-700 px-3 py-2 rounded-md border border-brand-200 hover:bg-brand-50"
-                      >
-                        Edit
-                      </Link>
-                      <DeleteGuideButton id={g.id} title={g.title} status={g.status} />
+                        <Link
+                          href={`/admin/guides/${g.id}/edit`}
+                          className="text-xs font-semibold text-brand-600 hover:text-brand-700 px-3 py-2 rounded-md border border-brand-200 hover:bg-brand-50"
+                        >
+                          Edit
+                        </Link>
+                        <DeleteGuideButton id={g.id} title={g.title} status={g.status} />
+                      </div>
                     </div>
                   </li>
                 )

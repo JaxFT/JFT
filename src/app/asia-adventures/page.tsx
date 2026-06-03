@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
-import { Check, MapPin, Receipt, Calendar, ArrowRight, Compass, Mountain } from 'lucide-react'
+import { Check, MapPin, Receipt, Calendar, Compass, Mountain } from 'lucide-react'
 import BuyTripViewButton from './BuyTripViewButton'
 
 // Landing page for the "Our Total Spending and Trip plan" product: £4.99
@@ -234,9 +233,9 @@ export default function AsiaAdventuresLanding() {
           <BuyTripViewButton className="btn-primary text-base px-7 py-3" />
           <p className="text-xs text-gray-500 mt-3">
             Got a question first?{' '}
-            <Link href="/work-with-us" className="text-brand-700 font-semibold hover:underline">
-              Send us a note <ArrowRight className="w-3 h-3 inline -mt-0.5" />
-            </Link>
+            <a href="mailto:hello@jaxfamilytravels.com" className="text-brand-700 font-semibold hover:underline">
+              hello@jaxfamilytravels.com
+            </a>
           </p>
         </div>
       </div>

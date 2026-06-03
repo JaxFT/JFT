@@ -4,7 +4,7 @@ import { loadCountsForSlugs } from '@/lib/blog-social-db'
 import BlogCard from '@/components/blog/BlogCard'
 import HeroBlogStack from '@/components/blog/HeroBlogStack'
 import { createClient } from '@/lib/supabase/server'
-import { ArrowRight, Map, BookOpen, Compass, Crown, Sparkles } from 'lucide-react'
+import { ArrowRight, Map, BookOpen, Compass, Crown, Sparkles, Plane } from 'lucide-react'
 import { isPremiumTier } from '@/lib/profile'
 import UpgradeButton from '@/components/billing/UpgradeButton'
 import WaystaqCard from '@/components/WaystaqCard'
@@ -99,11 +99,12 @@ export default async function HomePage() {
             </h2>
             <p className="text-xs font-bold tracking-widest uppercase text-brand-600">What we offer</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             {[
               { icon: Compass, title: 'I Want To Travel', desc: 'Our decision tool that tells you honestly if long-term family travel is realistic for you right now.', href: '/i-want-to-travel', premiumFeature: false },
               { icon: Map, title: 'Guides', desc: 'Destination guides written from real family experience, what actually worked, what didn\'t.', href: '/guides', premiumFeature: false },
               { icon: BookOpen, title: 'Adventure Packs', desc: 'Country-specific missions for your family, language, food, geography, scavenger hunts and family chat cards.', href: '/adventure-packs', premiumFeature: true },
+              { icon: Plane, title: 'Our Asia Trip', desc: 'Walk through our family\'s two-year Asia trip on WayStaq, every accommodation, every cost, every decision. View-only access, £4.99.', href: '/asia-adventures', premiumFeature: false },
             ].map(item => {
               const showBadge = item.premiumFeature
               const badgeText = isPremium ? 'Included' : 'Premium'

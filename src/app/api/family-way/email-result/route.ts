@@ -8,12 +8,51 @@
 // email body or inject HTML; escaping happens in the template.
 
 import { NextResponse } from 'next/server'
+import { createClient as createSbClient } from '@supabase/supabase-js'
 import { sendEmail, HELLO_FROM, buildFamilyWayResultEmail } from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 const EMAIL_RE = /^[^\s@"]+@[^\s@"]+\.[^\s@"]+$/
+
+// IP rate limit: at most this many sends per hour from the same client.
+// Generous enough that a legitimate visitor can resend if they made a
+// typo, tight enough that nobody can use this as a free email blaster.
+const RATE_LIMIT_PER_HOUR = 5
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000
+
+// Service-role client for the rate-limit table. RLS denies everything
+// to anon/authenticated; only this route reads/writes it.
+function admin() {
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set.')
+  return createSbClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    serviceKey,
+    { auth: { persistSession: false, autoRefreshToken: false } },
+  )
+}
+
+function getClientIp(req: Request): string {
+  return (
+    req.headers.get('cf-connecting-ip')
+    ?? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    ?? '0.0.0.0'
+  )
+}
+
+// We don't store raw IPs. The prefix is a soft application-specific salt
+// so a leaked hash dump can't be reversed via a generic IPv4 rainbow
+// table; the table is service-role-only via RLS anyway.
+async function hashIp(ip: string): Promise<string> {
+  const data = new TextEncoder().encode(`fwer:${ip}`)
+  const buf = await crypto.subtle.digest('SHA-256', data)
+  return Array.from(new Uint8Array(buf))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
+    .slice(0, 32)
+}
 
 export async function POST(request: Request) {
   let body: unknown
@@ -34,6 +73,35 @@ export async function POST(request: Request) {
   const result = normaliseResult(b.result)
   if (!result) {
     return NextResponse.json({ error: 'Result missing or invalid' }, { status: 400 })
+  }
+
+  // IP-keyed rate limit. Check the window first; on success record the
+  // attempt before sending so concurrent bursts can't slip through. If
+  // Supabase is unreachable we let the send through rather than block a
+  // legitimate visitor on a transient failure (the abuse window is hours,
+  // not seconds, so the occasional bypass is acceptable).
+  const ipHash = await hashIp(getClientIp(request))
+  try {
+    const sb = admin()
+    const since = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString()
+    const { count, error: countErr } = await sb
+      .from('family_way_email_rate_limit')
+      .select('id', { count: 'exact', head: true })
+      .eq('ip_hash', ipHash)
+      .gte('sent_at', since)
+    if (!countErr && (count ?? 0) >= RATE_LIMIT_PER_HOUR) {
+      return NextResponse.json(
+        { error: 'Too many requests, please try again in an hour.' },
+        { status: 429 },
+      )
+    }
+    // Reserve a slot before sending, so two parallel requests both count.
+    if (!countErr) {
+      await sb.from('family_way_email_rate_limit').insert({ ip_hash: ipHash })
+    }
+  } catch (e) {
+    console.error('[family-way/email-result] rate-limit check failed', e)
+    // Fall through and still send.
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'

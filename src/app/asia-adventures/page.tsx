@@ -68,6 +68,54 @@ export default function AsiaAdventuresLanding() {
           </p>
         </section>
 
+        {/* A PEEK INSIDE, redacted WayStaq screenshots so buyers see the
+            structure of what they're getting without the specifics. The
+            three images are portrait-oriented, so the layout constrains
+            the main one and pairs the other two side-by-side. */}
+        <section className="mb-10">
+          <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-4 text-center">A peek inside (everything specific is blurred here)</p>
+          <div className="space-y-4">
+            <figure className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mx-auto max-w-md">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/asia-adventures/trip-landing.jpeg"
+                alt="The trip overview in WayStaq, showing the route and stops across Asia, with specifics blurred"
+                className="w-full block"
+                loading="lazy"
+              />
+              <figcaption className="px-4 py-3 text-xs text-gray-500 border-t border-gray-100 text-center">
+                The trip overview, every leg in one place.
+              </figcaption>
+            </figure>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <figure className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/asia-adventures/open-stop.jpeg"
+                  alt="One stop in WayStaq opened up, with accommodation, transport and cost fields visible but blurred"
+                  className="w-full block"
+                  loading="lazy"
+                />
+                <figcaption className="px-4 py-3 text-xs text-gray-500 border-t border-gray-100 text-center">
+                  One stop opened up. The fields are recorded for every leg.
+                </figcaption>
+              </figure>
+              <figure className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/asia-adventures/spend-breakdown.jpeg"
+                  alt="WayStaq spending breakdown by category, with the £ amounts blurred"
+                  className="w-full block"
+                  loading="lazy"
+                />
+                <figcaption className="px-4 py-3 text-xs text-gray-500 border-t border-gray-100 text-center">
+                  Spending broken down. The £ amounts live inside.
+                </figcaption>
+              </figure>
+            </div>
+          </div>
+        </section>
+
         {/* WHAT YOU GET */}
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 mb-10">
           <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-4">What you&apos;ll see</p>

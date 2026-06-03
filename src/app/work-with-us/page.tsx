@@ -88,10 +88,10 @@ export default async function WorkWithUsPage() {
                 <Eye className="w-3.5 h-3.5" /> A smaller way in, £4.99
               </p>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 leading-tight">
-                Walk through our actual two-year Asia trip
+                Walk through our live two-year Asia trip
               </h2>
               <p className="text-sm text-gray-600 leading-relaxed">
-                Want a less-talk option? Get view-only access to our family&apos;s ongoing two-year Asia trip on WayStaq, every accommodation, every cost, every decision, updated as we keep going. For the price of a coffee.
+                Want a less-talk option? Get view-only access to our family&apos;s live two-year Asia trip on WayStaq, every accommodation, every cost, every day on the road. New stops appear as we keep going. For the price of a coffee.
               </p>
             </div>
             <Link

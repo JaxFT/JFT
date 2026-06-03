@@ -9,8 +9,8 @@ import BuyTripViewButton from './BuyTripViewButton'
 // surface on the JFT side.
 
 export const metadata: Metadata = {
-  title: 'Our Total Spending and Trip plan, two years across Asia on WayStaq',
-  description: 'Walk through our family\'s actual two-year Asia trip on WayStaq. Every accommodation, every transport leg, every cost, every decision, updated as we keep going. £4.99 for view-only access.',
+  title: 'Our Total Spending and Trip plan, a live two-year Asia trip on WayStaq',
+  description: 'A live view of our family\'s actual two-year Asia trip on WayStaq. Every accommodation, every transport leg, every cost, every day on the road, updated as we keep going. £4.99 for view-only access.',
 }
 
 export const dynamic = 'force-dynamic'
@@ -29,7 +29,7 @@ export default function AsiaAdventuresLanding() {
             Two years across Asia, opened up for you
           </h1>
           <p className="text-gray-600 max-w-xl mx-auto leading-relaxed">
-            We&apos;ve been on the road since September 2025. Morocco, Thailand, Sri Lanka, the Maldives, India, Nepal and Malaysia so far, with more to come. Every accommodation we&apos;ve booked, every transport leg, every cost, every decision we&apos;ve made along the way, opened up for you to look at on WayStaq. Updated as we keep going.
+            We&apos;ve been on the road since September 2025. Morocco, Thailand, Sri Lanka, the Maldives, India, Nepal and Malaysia so far, with more to come. Every accommodation we&apos;ve booked, every transport leg, every cost, every day on the road, opened up for you to look at on WayStaq. A live view that updates as we keep going.
           </p>
         </div>
 
@@ -41,10 +41,10 @@ export default function AsiaAdventuresLanding() {
                 View-only access · one-off purchase
               </p>
               <h2 className="text-2xl sm:text-3xl font-bold mb-3 leading-tight">
-                The whole trip and the real numbers, opened up for you.
+                A live view of the whole trip and the real numbers.
               </h2>
               <p className="text-white/80 leading-relaxed text-sm sm:text-base mb-5">
-                We use WayStaq to plan and track our family&apos;s travel. £4.99 gives you view-only access to the whole Asia trip: the route, the bookings, the costs we paid, and the decisions we made (and the ones we&apos;d undo). The trip is ongoing, so you&apos;ll see new entries as we keep going. After you pay, you can sign up for a free WayStaq account (or sign in to an existing one) with the same email and you&apos;re in.
+                We use WayStaq to plan and track our family&apos;s travel. £4.99 gives you view-only access to the whole Asia trip: the route, the bookings we made, the transport, and what each leg cost us. This is the live trip plan, not a finished retrospective, so you&apos;ll see new stops, new bookings and new costs appear as we keep going. After you pay, you can sign up for a free WayStaq account (or sign in to an existing one) with the same email and you&apos;re in.
               </p>
               <BuyTripViewButton className="btn-primary bg-white !text-brand-700 hover:bg-white/90" />
               <p className="text-white/60 text-xs mt-3">
@@ -133,8 +133,8 @@ export default function AsiaAdventuresLanding() {
               },
               {
                 icon: Calendar,
-                title: 'The decisions, including the ones we\'d undo',
-                body: 'Where we wished we&apos;d stayed longer, where two nights was plenty, where the budget guesthouse beat the nicer place, and the bookings we made early that we&apos;d skip next time.',
+                title: 'Live updates as we keep going',
+                body: 'This isn&apos;t a finished retrospective. We add new stops, new bookings and new costs as the trip continues, so the view you buy today keeps growing for as long as we&apos;re on the road.',
               },
             ].map(s => (
               <li key={s.title} className="flex gap-3">
@@ -150,11 +150,12 @@ export default function AsiaAdventuresLanding() {
           </ul>
         </section>
 
-        {/* THREE THINGS FROM INSIDE, honest highlights pulled from the
-            actual trip so the reader gets a sense of the voice, not a
-            sanitised brochure. */}
+        {/* HONEST HIGHLIGHTS, our take on the trip so far. Reframed so
+            none of it implies the buyer will see this commentary inside
+            WayStaq, the trip view they get is the factual record, not
+            our retrospective. The commentary lives here on the landing. */}
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 mb-10">
-          <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-4">A few honest things from inside</p>
+          <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-4">Honest highlights, from us</p>
           <ul className="space-y-4 text-sm text-gray-700">
             <li className="flex gap-3">
               <div className="w-9 h-9 bg-brand-100 rounded-lg flex items-center justify-center shrink-0">
@@ -162,7 +163,7 @@ export default function AsiaAdventuresLanding() {
               </div>
               <div className="pt-1">
                 <p className="font-semibold text-gray-900 mb-0.5">The standout so far: the intro Annapurna trek from Pokhara</p>
-                <p className="leading-relaxed">Probably the best day or two of the whole trip up to now. You&apos;ll see how we set it up, what it cost, and what we&apos;d do differently if we did it again.</p>
+                <p className="leading-relaxed">Probably our best day or two of the whole trip up to now. The cost, the booking and the route are all inside the trip view.</p>
               </div>
             </li>
             <li className="flex gap-3">
@@ -171,7 +172,7 @@ export default function AsiaAdventuresLanding() {
               </div>
               <div className="pt-1">
                 <p className="font-semibold text-gray-900 mb-0.5">Where we&apos;d cut: Fez, Morocco</p>
-                <p className="leading-relaxed">Worth a look once, but for us probably a souk too many. It didn&apos;t feel different enough from other places we&apos;d already been. Honesty included.</p>
+                <p className="leading-relaxed">Worth a look once, but for us probably a souk too many. It didn&apos;t feel different enough from other places we&apos;d already been. That&apos;s our take; the trip view itself just shows what we booked, when, and what it cost.</p>
               </div>
             </li>
             <li className="flex gap-3">

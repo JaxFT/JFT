@@ -104,7 +104,7 @@ export default async function HomePage() {
               { icon: Compass, title: 'I Want To Travel', desc: 'Our decision tool that tells you honestly if long-term family travel is realistic for you right now.', href: '/i-want-to-travel', premiumFeature: false },
               { icon: Map, title: 'Guides', desc: 'Destination guides written from real family experience, what actually worked, what didn\'t.', href: '/guides', premiumFeature: false },
               { icon: BookOpen, title: 'Adventure Packs', desc: 'Country-specific missions for your family, language, food, geography, scavenger hunts and family chat cards.', href: '/adventure-packs', premiumFeature: true },
-              { icon: Plane, title: 'Our Asia Trip', desc: 'Walk through our family\'s two-year Asia trip on WayStaq, every accommodation, every cost, every decision. View-only access, £4.99.', href: '/asia-adventures', premiumFeature: false },
+              { icon: Plane, title: 'Our Asia Trip', desc: 'A live view of our family\'s two-year Asia trip on WayStaq, every accommodation, every cost, every day on the road. Updates as we keep going. £4.99.', href: '/asia-adventures', premiumFeature: false },
             ].map(item => {
               const showBadge = item.premiumFeature
               const badgeText = isPremium ? 'Included' : 'Premium'

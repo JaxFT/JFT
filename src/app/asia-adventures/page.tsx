@@ -54,18 +54,17 @@ export default function AsiaAdventuresLanding() {
           </div>
         </div>
 
-        {/* AT A GLANCE (public, deliberately rounded so the per-day spend
-            stays inside the paid product). */}
+        {/* AT A GLANCE. Total spent is deliberately kept off the public
+            page so the day-rate stays inside the paid product. */}
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 mb-10">
           <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-4">At a glance</p>
-          <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <dl className="grid grid-cols-3 gap-4">
             <Stat label="Trip length" value="2 years" />
             <Stat label="Started" value="Sep 2025" />
             <Stat label="Countries so far" value="7" />
-            <Stat label="Spent so far" value="£30k+" />
           </dl>
           <p className="text-xs text-gray-400 mt-4 italic">
-            The per-night, per-country and per-day numbers, plus what each leg cost individually, are inside.
+            The total spend, per-night rates, per-country and per-day numbers, plus what each leg cost individually, are all inside.
           </p>
         </section>
 

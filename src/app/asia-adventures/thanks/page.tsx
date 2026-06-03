@@ -1,18 +1,16 @@
+import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
-import { Check, Mail, ArrowRight } from 'lucide-react'
 import { stripeClient } from '@/lib/stripe'
 
-// Post-Stripe-success landing. We DO NOT auto-redirect to WayStaq's
-// /redeem URL: their endpoint expects a tokenised link delivered via
-// their confirmation email, and bouncing the buyer there without a
-// token throws "Missing pass token". So we land them here, tell them
-// what's happening, and let WayStaq's email do the actual claim hop.
-//
-// The Stripe session lookup is just to surface the buyer's email back
-// to them so they know which inbox to check.
+// Server-side bounce from Stripe success into WayStaq's /redeem page
+// with the buyer's email pre-filled. We need this hop because Stripe's
+// success_url interpolation only supports {CHECKOUT_SESSION_ID}, not
+// {CUSTOMER_EMAIL}; we look the email up here from the session, then
+// redirect (307) on. End user just sees Stripe success, a beat, then
+// WayStaq's thanks-and-sign-in screen.
 
 export const metadata: Metadata = {
-  title: 'Thanks, your access is on its way',
+  title: 'Thanks, redirecting to WayStaq',
   robots: { index: false, follow: false },
 }
 
@@ -36,42 +34,9 @@ export default async function AsiaAdventuresThanks({
     }
   }
 
-  return (
-    <div className="min-h-screen bg-sand-50 flex items-center justify-center px-4 py-20">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
-          <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check className="w-7 h-7 text-green-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Payment received</h1>
-          <p className="text-gray-600 text-sm leading-relaxed mb-5">
-            Thanks. WayStaq will send you a link to your inbox in the next few minutes with everything you need to open the trip.
-          </p>
-          {email && (
-            <div className="bg-sand-50 border border-sand-200 rounded-lg px-3 py-2 mb-5 inline-flex items-center gap-2 max-w-full">
-              <Mail className="w-4 h-4 text-gray-500 shrink-0" />
-              <span className="text-sm text-gray-700 truncate">
-                Sent to <strong>{email}</strong>
-              </span>
-            </div>
-          )}
-          <p className="text-xs text-gray-500 mb-5 leading-relaxed">
-            Check your spam folder if you don&apos;t see it. If it hasn&apos;t arrived within an hour, email us at{' '}
-            <a href="mailto:hello@jaxfamilytravels.com" className="text-brand-700 font-semibold hover:underline">
-              hello@jaxfamilytravels.com
-            </a>{' '}
-            and we&apos;ll sort it.
-          </p>
-          <a
-            href="https://waystaq.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-primary w-full justify-center py-2.5"
-          >
-            Open WayStaq <ArrowRight className="w-4 h-4" />
-          </a>
-        </div>
-      </div>
-    </div>
-  )
+  const base = process.env.WAYSTAQ_ASIA_ADVENTURES_URL || 'https://waystaq.com/redeem?trip=asia-adventures'
+  const sep = base.includes('?') ? '&' : '?'
+  const dest = email ? `${base}${sep}email=${encodeURIComponent(email)}` : base
+
+  redirect(dest)
 }

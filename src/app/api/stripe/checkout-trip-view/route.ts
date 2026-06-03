@@ -44,6 +44,12 @@ export async function POST(request: Request) {
     trip_slug: TRIP_SLUG,
   }
   if (user?.id) metadata.jft_user_id = user.id
+  // Stamp buyer_email up front when we know it (logged-in JFT user) so
+  // WayStaq's webhook handler can read it directly from metadata rather
+  // than relying on session.customer_details.email. Guest checkouts don't
+  // have an email at this point; WayStaq's handler should fall back to
+  // session.customer_details.email which Stripe populates after pay.
+  if (user?.email) metadata.buyer_email = user.email
 
   try {
     const session = await stripe.checkout.sessions.create({

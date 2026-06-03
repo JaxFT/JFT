@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Map, ExternalLink, ShieldCheck, Users, BookOpen, FileText, Plus, Download } from 'lucide-react'
+import { Map, ExternalLink, ShieldCheck, Users, BookOpen, FileText, Plus, Download, Eye } from 'lucide-react'
 import type { Metadata } from 'next'
 import { listAllWebGuidesForAdmin } from '@/lib/guides-content-db'
 import { listAllLegacyGuidesForAdmin } from '@/lib/guides-db'
@@ -96,10 +96,13 @@ export default async function AdminGuidesListPage() {
                       <Link href={`/admin/guides/${g.id}/edit`} className="font-bold text-gray-900 hover:text-brand-700">
                         {g.title}
                       </Link>
-                      <p className="text-xs text-gray-500 mt-1">
-                        /{g.slug} · {destCount} destination{destCount === 1 ? '' : 's'}
-                        {themedCount > 0 ? ` · ${themedCount} themed` : ''}
-                        {' · updated '}{updated}
+                      <p className="text-xs text-gray-500 mt-1 inline-flex items-center gap-x-2 flex-wrap">
+                        <span>/{g.slug} · {destCount} destination{destCount === 1 ? '' : 's'}
+                          {themedCount > 0 ? ` · ${themedCount} themed` : ''}
+                          {' · updated '}{updated}</span>
+                        <span className="inline-flex items-center gap-1 text-gray-600">
+                          <Eye className="w-3.5 h-3.5" /> {g.view_count}
+                        </span>
                       </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">

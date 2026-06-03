@@ -14,6 +14,7 @@ import { isAdminEmail } from '@/lib/admin'
 import { getAboutUs } from '@/lib/app-settings'
 import { getAutoLinkPhrases } from '@/lib/blog-links-server'
 import WebGuideView from '@/components/guide/WebGuideView'
+import GuideViewTracker from '@/components/guide/GuideViewTracker'
 import GuideViewer from './GuideViewer'
 import BuyButton from './BuyButton'
 import UpgradeButton from '@/components/billing/UpgradeButton'
@@ -151,6 +152,7 @@ export default async function GuidePage({
           dateModified={webGuide.updated_at}
           tags={webGuide.tags}
         />
+        <GuideViewTracker slug={webGuide.slug} />
         <WebGuideView
           guide={webGuide}
           aboutUsMarkdown={aboutUs}

@@ -71,6 +71,9 @@ export type GuideRow = {
   published_at: string | null
   created_at: string
   updated_at: string
+  // Total non-admin view count, updated via the increment_guide_view RPC
+  // each time /api/web-guides/[slug]/view fires from the guide page.
+  view_count: number
 }
 
 // Truncate a markdown doc to roughly `percent` of its character length,

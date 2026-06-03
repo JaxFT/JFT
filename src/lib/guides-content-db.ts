@@ -97,6 +97,7 @@ function normaliseRow(row: unknown): GuideRow {
     published_at: (r.published_at as string | null) ?? null,
     created_at: r.created_at as string,
     updated_at: r.updated_at as string,
+    view_count: Number(r.view_count ?? 0),
   }
 }
 

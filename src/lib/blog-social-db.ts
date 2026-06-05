@@ -3,6 +3,24 @@
 // the blog post page and API routes share the same shapes.
 
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
+
+// Service-role client for reading commenters' public profile fields.
+// The profiles table is locked down by RLS (profiles_select_own), so a
+// normal viewer can only read their OWN profile — which would make
+// everyone else's comments show as "anon". We read author profiles
+// server-side with the service role and only ever forward the public
+// fields (username, and instagram_handle for admins) to the client.
+// Returns null if the key isn't configured (e.g. local dev), in which
+// case names fall back to "anon" rather than crashing.
+function getServiceClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) return null
+  return createServiceClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+}
 
 export type BlogCommentRow = {
   id: string
@@ -41,13 +59,12 @@ export async function loadBlogPostSocial(
   const supabase = await createClient()
 
   const [commentsRes, postLikesRes, postLikedByMeRes] = await Promise.all([
-    // Comments with author profile fields joined.
+    // Comments. Author profile fields are fetched separately via the
+    // service role below, because profiles RLS blocks reading other
+    // users' rows (an embedded join would null them out).
     supabase
       .from('blog_comments')
-      .select(`
-        id, post_slug, user_id, body, created_at, parent_id,
-        profiles:user_id ( username, username_is_instagram, instagram_handle )
-      `)
+      .select('id, post_slug, user_id, body, created_at, parent_id')
       .eq('post_slug', postSlug)
       .order('created_at', { ascending: true }),
     supabase
@@ -64,26 +81,37 @@ export async function loadBlogPostSocial(
       : Promise.resolve({ data: null }),
   ])
 
-  // Supabase's generated types treat foreign-key joins as arrays even
-  // for one-to-one relations. Normalise here so the rest of the file
-  // can stay readable.
-  type ProfileJoin = {
-    username: string | null
-    username_is_instagram: boolean | null
-    instagram_handle: string | null
-  }
-  const rawComments = ((commentsRes.data ?? []) as unknown as Array<{
+  const rawComments = (commentsRes.data ?? []) as Array<{
     id: string
     post_slug: string
     user_id: string
     body: string
     created_at: string
     parent_id: string | null
-    profiles: ProfileJoin | ProfileJoin[] | null
-  }>).map(c => ({
-    ...c,
-    profiles: Array.isArray(c.profiles) ? (c.profiles[0] ?? null) : c.profiles,
-  }))
+  }>
+
+  // Pull each commenter's public profile fields with the service role
+  // (RLS would otherwise hide everyone but the viewer). Keyed by user
+  // id for the mapping below.
+  type ProfileFields = {
+    username: string | null
+    username_is_instagram: boolean | null
+    instagram_handle: string | null
+  }
+  const profileById = new Map<string, ProfileFields>()
+  const authorIds = [...new Set(rawComments.map(c => c.user_id))]
+  if (authorIds.length > 0) {
+    const service = getServiceClient()
+    if (service) {
+      const { data: profs } = await service
+        .from('profiles')
+        .select('id, username, username_is_instagram, instagram_handle')
+        .in('id', authorIds)
+      for (const p of (profs ?? []) as Array<{ id: string } & ProfileFields>) {
+        profileById.set(p.id, p)
+      }
+    }
+  }
 
   // Comment-like counts + per-viewer state in one go per page.
   const commentIds = rawComments.map(c => c.id)
@@ -104,19 +132,22 @@ export async function loadBlogPostSocial(
     }
   }
 
-  const comments: BlogCommentRow[] = rawComments.map(c => ({
-    id: c.id,
-    post_slug: c.post_slug,
-    user_id: c.user_id,
-    body: c.body,
-    created_at: c.created_at,
-    parent_id: c.parent_id ?? null,
-    username: c.profiles?.username ?? null,
-    username_is_instagram: !!c.profiles?.username_is_instagram,
-    instagram_handle: viewerIsAdmin ? (c.profiles?.instagram_handle ?? null) : null,
-    like_count: likeCounts.get(c.id) ?? 0,
-    liked_by_me: likedByMe.has(c.id),
-  }))
+  const comments: BlogCommentRow[] = rawComments.map(c => {
+    const prof = profileById.get(c.user_id)
+    return {
+      id: c.id,
+      post_slug: c.post_slug,
+      user_id: c.user_id,
+      body: c.body,
+      created_at: c.created_at,
+      parent_id: c.parent_id ?? null,
+      username: prof?.username ?? null,
+      username_is_instagram: !!prof?.username_is_instagram,
+      instagram_handle: viewerIsAdmin ? (prof?.instagram_handle ?? null) : null,
+      like_count: likeCounts.get(c.id) ?? 0,
+      liked_by_me: likedByMe.has(c.id),
+    }
+  })
 
   return {
     comments,

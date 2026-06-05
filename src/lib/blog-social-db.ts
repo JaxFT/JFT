@@ -10,6 +10,8 @@ export type BlogCommentRow = {
   user_id: string
   body: string
   created_at: string
+  // Null for top-level comments; the parent comment id for replies.
+  parent_id: string | null
   // Joined from profiles for display.
   username: string | null
   username_is_instagram: boolean
@@ -43,7 +45,7 @@ export async function loadBlogPostSocial(
     supabase
       .from('blog_comments')
       .select(`
-        id, post_slug, user_id, body, created_at,
+        id, post_slug, user_id, body, created_at, parent_id,
         profiles:user_id ( username, username_is_instagram, instagram_handle )
       `)
       .eq('post_slug', postSlug)
@@ -76,6 +78,7 @@ export async function loadBlogPostSocial(
     user_id: string
     body: string
     created_at: string
+    parent_id: string | null
     profiles: ProfileJoin | ProfileJoin[] | null
   }>).map(c => ({
     ...c,
@@ -107,6 +110,7 @@ export async function loadBlogPostSocial(
     user_id: c.user_id,
     body: c.body,
     created_at: c.created_at,
+    parent_id: c.parent_id ?? null,
     username: c.profiles?.username ?? null,
     username_is_instagram: !!c.profiles?.username_is_instagram,
     instagram_handle: viewerIsAdmin ? (c.profiles?.instagram_handle ?? null) : null,

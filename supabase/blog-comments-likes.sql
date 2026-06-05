@@ -26,11 +26,15 @@ create table if not exists public.blog_comments (
   post_slug   text        not null,
   user_id     uuid        not null references public.profiles(id) on delete cascade,
   body        text        not null check (char_length(body) between 1 and 2000),
+  -- Self-referential parent for one-level reply threads. NULL = a
+  -- top-level comment. See supabase/blog-comment-replies.sql.
+  parent_id   uuid        references public.blog_comments(id) on delete cascade,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
 create index if not exists blog_comments_post_idx on public.blog_comments(post_slug, created_at desc);
 create index if not exists blog_comments_user_idx on public.blog_comments(user_id);
+create index if not exists blog_comments_parent_idx on public.blog_comments(parent_id);
 
 alter table public.blog_comments enable row level security;
 

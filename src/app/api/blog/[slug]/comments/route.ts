@@ -36,7 +36,7 @@ export async function POST(
     return NextResponse.json({ error: 'Pick a username first.', code: 'no_username' }, { status: 422 })
   }
 
-  let body: { body?: string } = {}
+  let body: { body?: string; parent_id?: string | null } = {}
   try { body = await request.json() } catch {}
   const text = (body.body ?? '').trim()
   if (text.length < MIN_LENGTH) {
@@ -46,10 +46,27 @@ export async function POST(
     return NextResponse.json({ error: `Comments are capped at ${MAX_LENGTH} characters.` }, { status: 400 })
   }
 
+  // Resolve the parent for replies. We keep threads one level deep, so
+  // a reply to a reply attaches to that reply's own parent (the
+  // top-level comment). Validate the parent exists on this same post.
+  let parentId: string | null = null
+  const rawParent = body.parent_id ?? null
+  if (rawParent) {
+    const { data: parent } = await supabase
+      .from('blog_comments')
+      .select('id, post_slug, parent_id')
+      .eq('id', rawParent)
+      .maybeSingle()
+    if (!parent || parent.post_slug !== slug) {
+      return NextResponse.json({ error: 'That comment no longer exists.' }, { status: 400 })
+    }
+    parentId = parent.parent_id ?? parent.id
+  }
+
   const { data, error } = await supabase
     .from('blog_comments')
-    .insert({ post_slug: slug, user_id: user.id, body: text })
-    .select('id, body, created_at')
+    .insert({ post_slug: slug, user_id: user.id, body: text, parent_id: parentId })
+    .select('id, body, created_at, parent_id')
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
@@ -79,6 +96,7 @@ export async function POST(
       id: data.id,
       body: data.body,
       created_at: data.created_at,
+      parent_id: data.parent_id ?? null,
       user_id: user.id,
       username: profile.username,
     },

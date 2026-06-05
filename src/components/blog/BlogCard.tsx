@@ -46,7 +46,13 @@ export default function BlogCard({ post, counts }: Props) {
   const topicChips = (post.topics ?? []).slice(0, 2)
 
   return (
-    <a href={`/blog/${post.slug}`} className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+    // Stretched-link card: the title link's `after:inset-0` pseudo
+    // stretches over the whole card so clicking anywhere opens the post
+    // at the top, while interactive bits (comments link, share) sit
+    // above it with `relative z-10` and handle their own clicks. This
+    // lets the comments count deep-link to #comments without nesting
+    // anchors (invalid HTML).
+    <div className="group relative flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100">
       {post.coverImage && (
         <div className="overflow-hidden h-48">
           <img
@@ -73,8 +79,18 @@ export default function BlogCard({ post, counts }: Props) {
             ))}
           </div>
         )}
-        <h3 className="font-bold text-gray-900 text-base leading-snug mb-2 group-hover:text-brand-600 transition-colors line-clamp-2">
-          {post.title}
+        {/* Title is the card's primary link. The `after:absolute
+            after:inset-0` stretches its clickable area over the whole
+            card (→ top of the post), so the card stays one accessible,
+            focusable link. Interactive bits below use z-10 to sit on
+            top of this stretched hit area. */}
+        <h3 className="font-bold text-gray-900 text-base leading-snug mb-2 line-clamp-2">
+          <a
+            href={`/blog/${post.slug}`}
+            className="after:absolute after:inset-0 after:z-0 group-hover:text-brand-600 transition-colors"
+          >
+            {post.title}
+          </a>
         </h3>
         <p className="text-sm text-gray-500 leading-relaxed flex-1 line-clamp-3">{post.excerpt}</p>
         <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
@@ -101,18 +117,25 @@ export default function BlogCard({ post, counts }: Props) {
               <span className="inline-flex items-center gap-1">
                 <Heart className="w-3.5 h-3.5" /> {counts?.likes ?? 0}
               </span>
-              <span className="inline-flex items-center gap-1">
+              {/* Comments count opens the post scrolled to the comments,
+                  not the top. Sits above the overlay link via z-10. */}
+              <a
+                href={`/blog/${post.slug}#comments`}
+                className="relative z-10 inline-flex items-center gap-1 hover:text-brand-600 transition-colors"
+                aria-label={`${counts?.comments ?? 0} comments — jump to comments`}
+              >
                 <MessageCircle className="w-3.5 h-3.5" /> {counts?.comments ?? 0}
-              </span>
+              </a>
             </div>
             <ShareButton
               url={`/blog/${post.slug}`}
               title={post.title}
               text={post.excerpt ?? undefined}
+              className="relative z-10"
             />
           </div>
         </div>
       </div>
-    </a>
+    </div>
   )
 }

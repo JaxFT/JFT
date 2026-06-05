@@ -395,7 +395,10 @@ export default function BlogSocial({
       </div>
 
       {/* COMMENTS HEADER */}
-      <div className="flex items-center gap-2 mb-6">
+      {/* id + scroll margin so deep links (#comments from blog cards,
+          and #comment-<id> from notification emails) land here without
+          the sticky navbar covering the heading. */}
+      <div id="comments" className="flex items-center gap-2 mb-6 scroll-mt-24">
         <MessageCircle className="w-5 h-5 text-brand-700" />
         <h2 className="text-xl font-bold text-gray-900">
           {comments.length === 0 ? 'No comments yet' : comments.length === 1 ? '1 comment' : `${comments.length} comments`}
@@ -455,12 +458,12 @@ export default function BlogSocial({
         {threads.map(({ root, replies }) => {
           const replyOpen = replyTo?.rootId === root.id
           return (
-            <li key={root.id}>
+            <li key={root.id} id={`comment-${root.id}`} className="scroll-mt-24">
               {renderComment(root, false)}
               {(replies.length > 0 || replyOpen) && (
                 <ul className="mt-4 ml-12 space-y-4 border-l-2 border-gray-100 pl-4">
                   {replies.map(r => (
-                    <li key={r.id}>{renderComment(r, true)}</li>
+                    <li key={r.id} id={`comment-${r.id}`} className="scroll-mt-24">{renderComment(r, true)}</li>
                   ))}
                   {replyOpen && <li>{renderReplyForm()}</li>}
                 </ul>

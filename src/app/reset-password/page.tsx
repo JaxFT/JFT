@@ -96,7 +96,7 @@ function ResetPasswordForm() {
                   type="text"
                   inputMode="numeric"
                   autoComplete="one-time-code"
-                  maxLength={6}
+                  maxLength={10}
                   autoFocus
                   required
                   value={code}

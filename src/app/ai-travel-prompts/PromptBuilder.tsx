@@ -10,7 +10,7 @@
 // users. Home airport pre-fills the flight "Flying from?" fields and
 // home currency is injected into money prompts.
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
   Sparkles, Copy, Check, Globe, Bot, ChevronDown, Users, Wand2, Plus, X, BookOpen, Lock,
@@ -51,6 +51,10 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
 
   const [activeCat, setActiveCat] = useState<CategoryId>('route')
   const [openId, setOpenId] = useState<string | null>(null)
+  // The prompt list, so picking a category can scroll it into view
+  // (on small screens the grid fills the viewport and the change is
+  // otherwise below the fold).
+  const listRef = useRef<HTMLUListElement>(null)
   const [answers, setAnswers] = useState<Record<string, Record<string, string>>>({})
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
@@ -406,7 +410,13 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
               <button
                 key={c.id}
                 type="button"
-                onClick={() => { setActiveCat(c.id); setOpenId(null) }}
+                onClick={() => {
+                  setActiveCat(c.id)
+                  setOpenId(null)
+                  requestAnimationFrame(() =>
+                    listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+                  )
+                }}
                 aria-pressed={active}
                 className={`flex flex-col items-start gap-1 p-3 rounded-xl border text-left transition-colors ${
                   active
@@ -425,7 +435,7 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
         </div>
 
         {/* PROMPT CARDS */}
-        <ul className="space-y-3">
+        <ul ref={listRef} className="space-y-3 scroll-mt-24">
           {visiblePrompts.map(p => {
             const open = openId === p.id
             const canCopy = requiredFilled(p)

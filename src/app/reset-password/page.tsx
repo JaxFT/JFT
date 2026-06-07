@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft, Loader2 } from 'lucide-react'
@@ -18,7 +18,10 @@ export default function ResetPasswordPage() {
 function ResetPasswordForm() {
   const supabase = createClient()
   const router = useRouter()
-  const [email, setEmail] = useState('')
+  const searchParams = useSearchParams()
+  // Prefill from ?email= so users coming from the login screen don't
+  // have to retype it.
+  const [email, setEmail] = useState(searchParams.get('email') ?? '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   // 'form' = enter email, 'otp' = enter the 6-digit reset code.

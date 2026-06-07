@@ -67,7 +67,7 @@ function LoginForm() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-sm font-medium text-gray-700">Password</label>
-                <Link href="/reset-password" className="text-xs font-medium text-brand-600 hover:text-brand-700 hover:underline">
+                <Link href={`/reset-password${email ? `?email=${encodeURIComponent(email)}` : ''}`} className="text-xs font-medium text-brand-600 hover:text-brand-700 hover:underline">
                   Forgot password?
                 </Link>
               </div>

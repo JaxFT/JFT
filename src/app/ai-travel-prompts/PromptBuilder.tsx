@@ -259,11 +259,18 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
             <Sparkles className="w-4 h-4" /> AI Travel Prompt Builder
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight">
-            Travel smarter with AI prompts
+            AI won&apos;t replace local know-how, but it can help you plan smarter
           </h1>
-          <p className="text-gray-500 mt-2 leading-relaxed">
-            Answer a few questions and we&apos;ll build a sharp, ready-to-use prompt.
-            Copy it into ChatGPT, Claude or any AI tool to plan better trips in seconds.
+          <p className="text-gray-600 mt-4 leading-relaxed">
+            Nothing beats talking to locals and travellers who have actually been there,
+            and AI is no substitute for that. But used well it is a brilliant planning
+            tool, if you know not just what to ask, but how to ask it, so you get honest,
+            useful answers instead of a yes-machine that agrees with everything you say.
+          </p>
+          <p className="text-gray-600 mt-3 leading-relaxed">
+            Set your travel party, choose what you want to ask, answer a few quick
+            questions, and we&apos;ll generate the perfect prompt to paste into the AI of
+            your choice.
           </p>
         </div>
 

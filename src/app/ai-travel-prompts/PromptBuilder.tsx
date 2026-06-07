@@ -13,7 +13,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
-  Sparkles, Copy, Check, Globe, Bot, ChevronDown, Users, Wand2, Lock, Plus, X, BookOpen,
+  Sparkles, Copy, Check, Globe, Bot, ChevronDown, Users, Wand2, Plus, X, BookOpen,
 } from 'lucide-react'
 import { COUNTRIES } from '@/lib/countries'
 import {
@@ -248,11 +248,6 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        {/* Admin-only work-in-progress banner. Goes away with the gate. */}
-        <div className="mb-6 inline-flex items-center gap-2 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full">
-          <Lock className="w-3.5 h-3.5" /> Admin preview, hidden from the public
-        </div>
 
         {/* INTRO */}
         <div className="mb-8">

@@ -46,8 +46,8 @@ const TOOLS = [
   },
   {
     href: '/ai-travel-prompts',
-    title: 'AI Prompt Builder (preview)',
-    desc: 'Work in progress, admin-only for now. The AI travel prompt builder: pick a prompt, answer a few questions, copy an engineered prompt for your own AI. Hidden from the public until we launch.',
+    title: 'AI Prompt Builder',
+    desc: 'The live AI travel prompt builder: pick a prompt, answer a few questions, copy an engineered prompt for your own AI. Also linked in the main nav for everyone.',
     icon: Sparkles,
   },
 ]

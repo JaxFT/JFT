@@ -20,6 +20,7 @@ const navLinks = [
   { label: 'About',              href: '/about' },
   { label: 'Blog',               href: '/blog' },
   { label: 'Guides',             href: '/guides' },
+  { label: 'AI Prompts',         href: '/ai-travel-prompts' },
   { label: 'How We Can Help',    href: '/work-with-us' },
   { label: 'Adventure Packs',    href: '/adventure-packs' },
   { label: 'Adventure Passport', href: '/passports' },

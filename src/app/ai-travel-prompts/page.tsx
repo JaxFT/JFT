@@ -1,7 +1,5 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { isAdminEmail } from '@/lib/admin'
 import { EMPTY_PROFILE, type FamilyProfile, type RelatedContentItem } from '@/lib/jft-prompts'
 import { listPublishedWebGuides } from '@/lib/guides-content-db'
 import { listPublishedPosts } from '@/lib/blog-db'
@@ -10,8 +8,7 @@ import PromptBuilder from './PromptBuilder'
 
 export const metadata: Metadata = {
   title: 'AI Travel Prompt Builder',
-  // Keep it out of search while it's admin-only and a work in progress.
-  robots: { index: false, follow: false },
+  description: 'Free AI travel prompts for families. Answer a few questions and copy a ready-made prompt into ChatGPT, Claude or any AI to plan smarter trips.',
 }
 
 export const dynamic = 'force-dynamic'
@@ -19,16 +16,6 @@ export const dynamic = 'force-dynamic'
 export default async function AiTravelPromptsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-
-  // ── TEMPORARY ADMIN GATE ──────────────────────────────────────────
-  // While we build this in the dark, the page does not exist for anyone
-  // but admins. To launch publicly, delete this block (and flip the
-  // metadata robots above). The page is already built to work with no
-  // login, so nothing else changes at launch.
-  if (!isAdminEmail(user?.email)) {
-    notFound()
-  }
-  // ──────────────────────────────────────────────────────────────────
 
   // Load the viewer's saved family profile so the builder pre-fills.
   let initialProfile: FamilyProfile = EMPTY_PROFILE

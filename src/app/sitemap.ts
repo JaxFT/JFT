@@ -16,6 +16,7 @@ const STATIC_ROUTES: Array<{ path: string; priority?: number; freq?: MetadataRou
   { path: '/',                  priority: 1.0, freq: 'weekly' },
   { path: '/blog',              priority: 0.9, freq: 'daily' },
   { path: '/guides',            priority: 0.9, freq: 'weekly' },
+  { path: '/ai-travel-prompts', priority: 0.8, freq: 'monthly' },
   { path: '/i-want-to-travel',  priority: 0.7, freq: 'monthly' },
   { path: '/adventure-packs',   priority: 0.8, freq: 'monthly' },
   { path: '/learning',          priority: 0.6, freq: 'monthly' },

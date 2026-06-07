@@ -61,27 +61,61 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
   // Guards the draft save so we don't overwrite the stored draft with
   // empty state before the restore effect has run.
   const draftHydrated = useRef(false)
+  const profileHydrated = useRef(false)
   const [answers, setAnswers] = useState<Record<string, Record<string, string>>>({})
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
-  // First mount: if the server gave us nothing, hydrate from localStorage.
+  // Push a profile object straight to the account (used to migrate a
+  // guest's locally-saved profile up to their new account on first login).
+  const persistProfileToAccount = (p: FamilyProfile) => {
+    fetch('/api/family-profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adults: p.adults,
+        kids_ages: p.kidsAges,
+        home_country: p.homeCountry,
+        home_airport: p.homeAirport,
+        home_currency: p.homeCurrency,
+        travel_style: p.travelStyle,
+      }),
+    }).catch(() => null)
+  }
+
+  // First mount: prefer the server profile; otherwise fall back to the
+  // guest profile saved on this device. If the user has just signed in
+  // and only has a local profile, migrate it up to their account.
   useEffect(() => {
-    if (!isEmptyProfile(initialProfile)) return
-    try {
-      const raw = localStorage.getItem(LS_KEY)
-      if (!raw) return
-      const p = JSON.parse(raw) as FamilyProfile
-      const merged: FamilyProfile = {
-        ...EMPTY_PROFILE,
-        ...p,
-        kidsAges: Array.isArray(p.kidsAges) ? p.kidsAges : [],
-        travelStyle: Array.isArray(p.travelStyle) ? p.travelStyle : [],
-      }
-      setProfile(merged)
-      setKids(merged.kidsAges.length ? merged.kidsAges.map(String) : [''])
-    } catch {}
+    if (isEmptyProfile(initialProfile)) {
+      try {
+        const raw = localStorage.getItem(LS_KEY)
+        if (raw) {
+          const p = JSON.parse(raw) as FamilyProfile
+          const merged: FamilyProfile = {
+            ...EMPTY_PROFILE,
+            ...p,
+            kidsAges: Array.isArray(p.kidsAges) ? p.kidsAges : [],
+            travelStyle: Array.isArray(p.travelStyle) ? p.travelStyle : [],
+          }
+          setProfile(merged)
+          setKids(merged.kidsAges.length ? merged.kidsAges.map(String) : [''])
+          if (isLoggedIn && !isEmptyProfile(merged)) persistProfileToAccount(merged)
+        }
+      } catch {}
+    }
+    profileHydrated.current = true
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Keep the family profile saved to this device as it changes, so it
+  // survives navigating away (e.g. to sign up) without an explicit Save.
+  useEffect(() => {
+    if (!profileHydrated.current) return
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({ ...profile, kidsAges: parseKids(kids) }))
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, kids])
 
   // Restore any in-progress prompt on mount (e.g. after signing up).
   useEffect(() => {

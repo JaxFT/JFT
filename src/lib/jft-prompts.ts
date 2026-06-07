@@ -24,17 +24,12 @@ export type Question = {
   // Free-text suggestions shown via a datalist (user can still type
   // anything). Used to make vague fields like "region" less daunting.
   suggestions?: string[]
-  // When set and the user hasn't typed an answer yet, the field
-  // pre-fills from this saved profile value (e.g. home airport into
-  // "Flying from?"). The user can still overwrite it.
-  prefillFrom?: 'homeAirport' | 'homeCountry'
 }
 
 export type FamilyProfile = {
   adults: number | null
   kidsAges: number[]
   homeCountry: string | null
-  homeAirport: string | null
   homeCurrency: string | null
   travelStyle: string[]
 }
@@ -43,7 +38,6 @@ export const EMPTY_PROFILE: FamilyProfile = {
   adults: null,
   kidsAges: [],
   homeCountry: null,
-  homeAirport: null,
   homeCurrency: null,
   travelStyle: [],
 }
@@ -54,21 +48,17 @@ export const TRAVEL_STYLES = [
 ] as const
 
 // Home currency picker. Label is what we drop into prompts verbatim.
+// Common ones first, then a broad alphabetical spread.
 export const CURRENCIES = [
   'GBP (£)', 'USD ($)', 'EUR (€)', 'AUD (A$)', 'CAD (C$)', 'NZD (NZ$)',
-  'CHF', 'JPY (¥)', 'SGD (S$)', 'AED (د.إ)', 'ZAR (R)', 'INR (₹)',
-] as const
-
-// A short list of major hubs for the home-airport datalist. Free text
-// is still allowed for anywhere not listed.
-export const MAJOR_AIRPORTS = [
-  'London Heathrow (LHR)', 'London Gatwick (LGW)', 'London Stansted (STN)',
-  'Manchester (MAN)', 'Birmingham (BHX)', 'Edinburgh (EDI)', 'Glasgow (GLA)',
-  'Bristol (BRS)', 'Dublin (DUB)', 'Belfast (BFS)', 'Newcastle (NCL)',
-  'Liverpool (LPL)', 'Leeds Bradford (LBA)', 'East Midlands (EMA)',
-  'Paris CDG (CDG)', 'Amsterdam (AMS)', 'Frankfurt (FRA)', 'Madrid (MAD)',
-  'New York JFK (JFK)', 'Los Angeles (LAX)', 'Toronto (YYZ)',
-  'Sydney (SYD)', 'Dubai (DXB)', 'Singapore (SIN)',
+  'AED (د.إ)', 'ARS ($)', 'BDT (৳)', 'BHD (BD)', 'BRL (R$)', 'CHF (Fr)',
+  'CLP ($)', 'CNY (¥)', 'COP ($)', 'CZK (Kč)', 'DKK (kr)', 'EGP (E£)',
+  'GHS (₵)', 'HKD (HK$)', 'HUF (Ft)', 'IDR (Rp)', 'ILS (₪)', 'INR (₹)',
+  'ISK (kr)', 'JPY (¥)', 'KES (KSh)', 'KRW (₩)', 'KWD (KD)', 'LKR (Rs)',
+  'MAD (DH)', 'MXN (Mex$)', 'MYR (RM)', 'NGN (₦)', 'NOK (kr)', 'NPR (Rs)',
+  'OMR (﷼)', 'PEN (S/)', 'PHP (₱)', 'PKR (₨)', 'PLN (zł)', 'QAR (﷼)',
+  'RON (lei)', 'RUB (₽)', 'SAR (﷼)', 'SEK (kr)', 'SGD (S$)', 'THB (฿)',
+  'TRY (₺)', 'TWD (NT$)', 'VND (₫)', 'ZAR (R)',
 ] as const
 
 // Region suggestions for the shoulder-season builder's "region" field.
@@ -275,7 +265,7 @@ FORMAT: Playful, 150-200 words + 3 "things to look out for".`),
     badge: 'any',
     useCase: 'A day-by-day sleep and light plan to get the kids adjusted fast.',
     questions: [
-      { id: 'origin', label: 'Flying from?', type: 'text', placeholder: 'e.g. London', prefillFrom: 'homeAirport' },
+      { id: 'origin', label: 'Flying from?', type: 'text', placeholder: 'e.g. London' },
       { id: 'destination', label: 'Flying to?', type: 'text', placeholder: 'e.g. Bali' },
       { id: 'arrival', label: 'Arrival date & local time?', type: 'text', placeholder: 'e.g. 12 Feb, 6am' },
     ],
@@ -313,7 +303,7 @@ FORMAT: Revised timeline + one-line "why" per change.`),
     badge: 'web',
     useCase: 'Lowest TOTAL cost, nearby airports, split tickets, bags and fees included.',
     questions: [
-      { id: 'origin', label: 'Flying from?', type: 'text', placeholder: 'e.g. Manchester', prefillFrom: 'homeAirport' },
+      { id: 'origin', label: 'Flying from?', type: 'text', placeholder: 'e.g. Manchester' },
       { id: 'destination', label: 'Flying to?', type: 'text', placeholder: 'e.g. Bali' },
       { id: 'dateRange', label: 'Date range?', type: 'text', placeholder: 'e.g. early Feb 2027' },
       { id: 'bags', label: 'Checked bags?', type: 'number', placeholder: 'e.g. 2' },
@@ -333,7 +323,7 @@ FORMAT: Ranked options, total cost, route, why.`),
     badge: 'web',
     useCase: 'Finds the cheapest dates in your window and explains why they\'re cheaper.',
     questions: [
-      { id: 'origin', label: 'Flying from?', type: 'text', placeholder: 'e.g. London', prefillFrom: 'homeAirport' },
+      { id: 'origin', label: 'Flying from?', type: 'text', placeholder: 'e.g. London' },
       { id: 'destination', label: 'Flying to?', type: 'text', placeholder: 'e.g. Tokyo' },
       { id: 'target', label: 'Target date?', type: 'text', placeholder: 'e.g. 15 April 2027' },
       { id: 'window', label: 'Flexible by how many days?', type: 'number', placeholder: 'e.g. 5' },
@@ -351,7 +341,7 @@ FORMAT: Cheapest 3 date sets, total cost + reason.`),
     badge: 'web',
     useCase: 'Prioritises short travel time and kid-friendly timings over headline fares.',
     questions: [
-      { id: 'origin', label: 'Flying from?', type: 'text', placeholder: 'e.g. Manchester', prefillFrom: 'homeAirport' },
+      { id: 'origin', label: 'Flying from?', type: 'text', placeholder: 'e.g. Manchester' },
       { id: 'destination', label: 'Flying to?', type: 'text', placeholder: 'e.g. Orlando' },
       { id: 'dates', label: 'Dates?', type: 'text', placeholder: 'e.g. school summer holidays 2027' },
     ],

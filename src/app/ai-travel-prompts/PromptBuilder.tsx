@@ -7,8 +7,7 @@
 // (adults, kids' ages, home country/airport/currency, travel style) is
 // captured once and reused across every prompt; it lives in
 // localStorage for everyone and also syncs to Supabase for signed-in
-// users. Home airport pre-fills the flight "Flying from?" fields and
-// home currency is injected into money prompts.
+// users. Home currency is injected into money prompts.
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
@@ -18,7 +17,7 @@ import {
 import { COUNTRIES } from '@/lib/countries'
 import {
   CATEGORIES, PROMPTS, BADGE_LABEL, BADGE_NOTE, EMPTY_PROFILE, TRAVEL_STYLES,
-  CURRENCIES, MAJOR_AIRPORTS, relatedFor,
+  CURRENCIES, relatedFor,
   type CategoryId, type FamilyProfile, type PromptDef, type Question, type RelatedContentItem,
 } from '@/lib/jft-prompts'
 
@@ -41,7 +40,7 @@ type Props = {
 
 function isEmptyProfile(p: FamilyProfile): boolean {
   return !p.adults && p.kidsAges.length === 0 && !p.homeCountry
-    && !p.homeAirport && !p.homeCurrency && p.travelStyle.length === 0
+    && !p.homeCurrency && p.travelStyle.length === 0
 }
 
 export default function PromptBuilder({ isLoggedIn, initialProfile, related }: Props) {
@@ -75,7 +74,6 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
         adults: p.adults,
         kids_ages: p.kidsAges,
         home_country: p.homeCountry,
-        home_airport: p.homeAirport,
         home_currency: p.homeCurrency,
         travel_style: p.travelStyle,
       }),
@@ -186,7 +184,6 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
             adults: toSave.adults,
             kids_ages: toSave.kidsAges,
             home_country: toSave.homeCountry,
-            home_airport: toSave.homeAirport,
             home_currency: toSave.homeCurrency,
             travel_style: toSave.travelStyle,
           }),
@@ -214,14 +211,7 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
     setAnswer(pid, qid, next.join(', '))
   }
 
-  // Effective value: typed answer if present, else a profile pre-fill.
-  const eff = (p: PromptDef, q: Question): string => {
-    const a = answers[p.id]?.[q.id]
-    if (a !== undefined) return a
-    if (q.prefillFrom === 'homeAirport') return profile.homeAirport ?? ''
-    if (q.prefillFrom === 'homeCountry') return profile.homeCountry ?? ''
-    return ''
-  }
+  const eff = (p: PromptDef, q: Question): string => answers[p.id]?.[q.id] ?? ''
 
   const effAnswers = (p: PromptDef): Record<string, string> => {
     const out: Record<string, string> = {}
@@ -425,21 +415,6 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
               </label>
             </div>
 
-            {/* Home airport, datalist autocomplete, free text allowed */}
-            <label className="text-sm block">
-              <span className="block text-xs font-semibold text-gray-600 mb-1">Home airport <span className="text-gray-400 font-normal">(optional)</span></span>
-              <input
-                type="text"
-                list="jft-airports"
-                value={profile.homeAirport ?? ''}
-                onChange={e => updateProfile({ homeAirport: e.target.value || null })}
-                placeholder="Start typing, e.g. Manchester"
-                className={`${inputCls} sm:w-1/2`}
-              />
-              <datalist id="jft-airports">
-                {MAJOR_AIRPORTS.map(a => <option key={a} value={a} />)}
-              </datalist>
-            </label>
 
             {/* Travel style, multi-select */}
             <div>

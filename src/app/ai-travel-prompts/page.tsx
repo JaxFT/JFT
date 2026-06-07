@@ -22,7 +22,7 @@ export default async function AiTravelPromptsPage() {
   if (user) {
     const { data } = await supabase
       .from('family_profiles')
-      .select('adults, kids_ages, home_country, home_airport, home_currency, travel_style')
+      .select('adults, kids_ages, home_country, home_currency, travel_style')
       .eq('user_id', user.id)
       .maybeSingle()
     if (data) {
@@ -30,7 +30,6 @@ export default async function AiTravelPromptsPage() {
         adults: data.adults ?? null,
         kidsAges: (data.kids_ages ?? []) as number[],
         homeCountry: data.home_country ?? null,
-        homeAirport: data.home_airport ?? null,
         homeCurrency: data.home_currency ?? null,
         travelStyle: (data.travel_style ?? []) as string[],
       }

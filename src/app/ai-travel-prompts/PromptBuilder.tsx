@@ -13,7 +13,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
-  Sparkles, Copy, Check, Globe, Bot, ChevronDown, Users, Wand2, Plus, X, BookOpen,
+  Sparkles, Copy, Check, Globe, Bot, ChevronDown, Users, Wand2, Plus, X, BookOpen, Lock,
 } from 'lucide-react'
 import { COUNTRIES } from '@/lib/countries'
 import {
@@ -475,20 +475,33 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
                           <span className="text-xs font-semibold text-gray-600 inline-flex items-center gap-1.5">
                             <Wand2 className="w-3.5 h-3.5 text-brand-600" /> Your prompt
                           </span>
-                          <button
-                            type="button"
-                            onClick={() => copyPrompt(p)}
-                            className="btn-primary !text-xs !py-1.5 !px-3"
-                          >
-                            {copiedId === p.id
-                              ? <><Check className="w-3.5 h-3.5" /> Copied</>
-                              : <><Copy className="w-3.5 h-3.5" /> Copy</>}
-                          </button>
+                          {isLoggedIn ? (
+                            <button
+                              type="button"
+                              onClick={() => copyPrompt(p)}
+                              className="btn-primary !text-xs !py-1.5 !px-3"
+                            >
+                              {copiedId === p.id
+                                ? <><Check className="w-3.5 h-3.5" /> Copied</>
+                                : <><Copy className="w-3.5 h-3.5" /> Copy</>}
+                            </button>
+                          ) : (
+                            <Link href="/signup" className="btn-primary !text-xs !py-1.5 !px-3">
+                              <Lock className="w-3.5 h-3.5" /> Free account to copy
+                            </Link>
+                          )}
                         </div>
                         <pre className="text-xs text-gray-700 bg-gray-50 border border-gray-200 rounded-md p-3 whitespace-pre-wrap font-mono leading-relaxed">
 {generated(p)}
                         </pre>
                         <p className="text-[11px] text-gray-400 mt-2">{BADGE_NOTE[p.badge]}</p>
+                        {!isLoggedIn && (
+                          <p className="text-[11px] text-gray-600 mt-2 bg-brand-50 border border-brand-100 rounded-md px-2.5 py-1.5 leading-relaxed">
+                            Copying needs a free account, which also saves your family profile and prompts so you never re-type them.{' '}
+                            <Link href="/signup" className="text-brand-600 font-semibold hover:underline">Create one free</Link>{' '}
+                            or <Link href="/login?next=/ai-travel-prompts" className="text-brand-600 font-semibold hover:underline">log in</Link>.
+                          </p>
+                        )}
                       </div>
                     ) : (
                       <p className="text-xs text-gray-400">Fill in the questions above to build your prompt.</p>

@@ -93,6 +93,19 @@ export type PromptDef = {
   useCase: string
   questions: Question[]
   build: (a: Record<string, string>, p: FamilyProfile) => string
+  // Optional soft cross-link to our own products, shown in the panel
+  // (human-facing only — never injected into the AI prompt).
+  crossLink?: { text: string; links: { label: string; href: string }[] }
+}
+
+// Reused on the kid-experience prompts: nudges parents toward our own
+// Adventure Packs / Passport without polluting the generated prompt.
+const ADVENTURE_CROSSLINK = {
+  text: 'Turn it into an adventure for the kids with our',
+  links: [
+    { label: 'Adventure Packs', href: '/adventure-packs' },
+    { label: 'Adventure Passport', href: '/passports' },
+  ],
 }
 
 export type CategoryId =
@@ -215,6 +228,7 @@ TASK: Sort ${a.attractions ? `these places:\n${a.attractions}` : 'the top things
   1) GENUINE KID JOY  2) JUST A PHOTO OP  3) REALLY FOR ADULTS
 Judge from the view of kids these exact ages.
 FORMAT: Three labelled groups, one-line reason each.`),
+    crossLink: ADVENTURE_CROSSLINK,
   },
   {
     id: 'will-remember',
@@ -231,6 +245,7 @@ FORMAT: Three labelled groups, one-line reason each.`),
 CONTEXT: ${a.destination} | kids aged ${agesStr(p.kidsAges)}.
 TASK: Predict which experiences ${a.highlights ? `from my list:\n${a.highlights}` : 'typical there'} kids these ages will actually remember in 10 years vs forget. Add 3 cheap, high-memory moments.
 FORMAT: "Will remember" / "Won't" / "Add these".`),
+    crossLink: ADVENTURE_CROSSLINK,
   },
   {
     id: 'excite-kids',
@@ -246,6 +261,7 @@ FORMAT: "Will remember" / "Won't" / "Add these".`),
 CONTEXT: Audience = kids aged ${agesStr(p.kidsAges)}. Destination = ${a.destination}.
 TASK: Short, exciting, age-appropriate explainer of what's cool, weird and fun there, to build anticipation.
 FORMAT: Playful, 150–200 words + 3 "things to look out for".`),
+    crossLink: ADVENTURE_CROSSLINK,
   },
   {
     id: 'jet-lag',

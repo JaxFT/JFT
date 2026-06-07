@@ -487,6 +487,21 @@ export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
                       <p className="text-xs text-gray-400">Fill in the questions above to build your prompt.</p>
                     )}
 
+                    {/* Soft cross-link to our own products (human-facing). */}
+                    {p.crossLink && (
+                      <div className="text-xs bg-brand-50 border border-brand-100 rounded-md px-3 py-2 text-gray-600 leading-relaxed">
+                        <Sparkles className="inline w-3.5 h-3.5 text-brand-600 mr-1 -mt-0.5" />
+                        {p.crossLink.text}{' '}
+                        {p.crossLink.links.map((l, i) => (
+                          <span key={l.href}>
+                            {i > 0 && <span className="text-gray-400"> &amp; </span>}
+                            <Link href={l.href} className="text-brand-600 font-semibold hover:underline">{l.label}</Link>
+                          </span>
+                        ))}
+                        .
+                      </div>
+                    )}
+
                     {/* Clear / start over */}
                     <div className="flex justify-end pt-1">
                       <button

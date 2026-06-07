@@ -133,6 +133,27 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── AI PROMPT BUILDER TEASER ── */}
+      <section className="py-20 bg-brand-50">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-3xl border border-brand-100 shadow-sm p-8 sm:p-12 text-center">
+            <div className="inline-flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-brand-600 mb-4">
+              <Sparkles className="w-4 h-4" /> Free tool
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 max-w-2xl mx-auto leading-tight mb-4">
+              Plan smarter with AI travel prompts
+            </h2>
+            <p className="text-gray-600 leading-relaxed max-w-2xl mx-auto mb-8">
+              Answer a few quick questions and get a sharp, ready-to-use prompt for ChatGPT,
+              Claude or any AI, tuned for family travel. Free, no sign-up needed.
+            </p>
+            <Link href="/ai-travel-prompts" className="btn-primary text-base px-7 py-3.5">
+              Build a prompt <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── LATEST BLOG POSTS ── */}
       {posts.length > 0 && (
         <section className="py-20 bg-sand-100">

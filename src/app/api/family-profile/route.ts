@@ -32,6 +32,18 @@ function cleanStr(v: unknown, max = 80): string | null {
   return s.length ? s : null
 }
 
+// Travel style is multi-select: array of short strings, max 6, deduped.
+function cleanStyles(v: unknown): string[] {
+  if (!Array.isArray(v)) return []
+  const seen = new Set<string>()
+  for (const x of v) {
+    if (typeof x !== 'string') continue
+    const s = x.trim().slice(0, 40)
+    if (s) seen.add(s)
+  }
+  return [...seen].slice(0, 6)
+}
+
 export async function GET() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -39,7 +51,7 @@ export async function GET() {
 
   const { data } = await supabase
     .from('family_profiles')
-    .select('adults, kids_ages, home_airport, travel_style')
+    .select('adults, kids_ages, home_country, home_airport, travel_style')
     .eq('user_id', user.id)
     .maybeSingle()
 
@@ -58,8 +70,9 @@ export async function PUT(request: Request) {
     user_id: user.id,
     adults: cleanAdults(body.adults),
     kids_ages: cleanAges(body.kids_ages),
+    home_country: cleanStr(body.home_country),
     home_airport: cleanStr(body.home_airport),
-    travel_style: cleanStr(body.travel_style),
+    travel_style: cleanStyles(body.travel_style),
   }
 
   const { error } = await supabase

@@ -4,18 +4,20 @@
 //
 // Browse categories → open a prompt → answer its guided questions →
 // copy the engineered prompt for your own AI. The "family profile"
-// (adults + kids' ages etc.) is captured once and reused across every
-// prompt; it lives in localStorage for everyone and also syncs to
-// Supabase for signed-in users so it follows them across devices.
+// (adults, kids' ages, home country/airport, travel style) is captured
+// once and reused across every prompt; it lives in localStorage for
+// everyone and also syncs to Supabase for signed-in users so it follows
+// them across devices. Home airport pre-fills the flight "Flying from?"
+// fields.
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
-  Sparkles, Copy, Check, Globe, Bot, ChevronDown, Users, Wand2, Lock,
+  Sparkles, Copy, Check, Globe, Bot, ChevronDown, Users, Wand2, Lock, Plus, X,
 } from 'lucide-react'
 import {
-  CATEGORIES, PROMPTS, BADGE_LABEL, BADGE_NOTE, EMPTY_PROFILE,
-  type CategoryId, type FamilyProfile, type PromptDef,
+  CATEGORIES, PROMPTS, BADGE_LABEL, BADGE_NOTE, EMPTY_PROFILE, TRAVEL_STYLES,
+  type CategoryId, type FamilyProfile, type PromptDef, type Question,
 } from '@/lib/jft-prompts'
 
 const LS_KEY = 'jft-family-profile'
@@ -26,13 +28,17 @@ type Props = {
 }
 
 function isEmptyProfile(p: FamilyProfile): boolean {
-  return !p.adults && p.kidsAges.length === 0 && !p.homeAirport && !p.travelStyle
+  return !p.adults && p.kidsAges.length === 0 && !p.homeCountry && !p.homeAirport && p.travelStyle.length === 0
 }
 
 export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
   const [profile, setProfile] = useState<FamilyProfile>(initialProfile)
-  // Kids' ages edited as free text ("4, 7") then parsed into numbers.
-  const [agesText, setAgesText] = useState(initialProfile.kidsAges.join(', '))
+  // Kids' ages are edited as a dynamic list of strings (one input per
+  // kid) then parsed to numbers for saving/building. Start with one
+  // empty row when there are none.
+  const [kids, setKids] = useState<string[]>(
+    initialProfile.kidsAges.length ? initialProfile.kidsAges.map(String) : [''],
+  )
   const [profileSaved, setProfileSaved] = useState(false)
   const [savingProfile, setSavingProfile] = useState(false)
 
@@ -41,35 +47,57 @@ export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
   const [answers, setAnswers] = useState<Record<string, Record<string, string>>>({})
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
-  // On first mount, if the server gave us nothing (signed out, or no
-  // saved row), hydrate from localStorage.
+  // First mount: if the server gave us nothing, hydrate from localStorage.
   useEffect(() => {
     if (!isEmptyProfile(initialProfile)) return
     try {
       const raw = localStorage.getItem(LS_KEY)
       if (!raw) return
       const p = JSON.parse(raw) as FamilyProfile
-      setProfile({ ...EMPTY_PROFILE, ...p, kidsAges: Array.isArray(p.kidsAges) ? p.kidsAges : [] })
-      setAgesText((p.kidsAges ?? []).join(', '))
+      const merged: FamilyProfile = {
+        ...EMPTY_PROFILE,
+        ...p,
+        kidsAges: Array.isArray(p.kidsAges) ? p.kidsAges : [],
+        travelStyle: Array.isArray(p.travelStyle) ? p.travelStyle : [],
+      }
+      setProfile(merged)
+      setKids(merged.kidsAges.length ? merged.kidsAges.map(String) : [''])
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const parseAges = (text: string): number[] =>
-    text
-      .split(/[,\s]+/)
+  const parseKids = (list: string[]): number[] =>
+    list
       .map(s => parseInt(s, 10))
       .filter(n => Number.isFinite(n) && n >= 0 && n <= 17)
       .slice(0, 10)
+
+  // Profile with the live kid list folded in, used for building prompts.
+  const liveProfile = (): FamilyProfile => ({ ...profile, kidsAges: parseKids(kids) })
 
   const updateProfile = (patch: Partial<FamilyProfile>) => {
     setProfile(prev => ({ ...prev, ...patch }))
     setProfileSaved(false)
   }
 
+  const addKid = () => { setKids(k => [...k, '']); setProfileSaved(false) }
+  const removeKid = (i: number) => { setKids(k => k.filter((_, idx) => idx !== i)); setProfileSaved(false) }
+  const updateKid = (i: number, v: string) => { setKids(k => k.map((x, idx) => idx === i ? v : x)); setProfileSaved(false) }
+
+  const toggleStyle = (s: string) => {
+    setProfile(prev => ({
+      ...prev,
+      travelStyle: prev.travelStyle.includes(s)
+        ? prev.travelStyle.filter(x => x !== s)
+        : [...prev.travelStyle, s],
+    }))
+    setProfileSaved(false)
+  }
+
   const saveProfile = async () => {
-    const toSave: FamilyProfile = { ...profile, kidsAges: parseAges(agesText) }
+    const toSave = liveProfile()
     setProfile(toSave)
+    setKids(toSave.kidsAges.length ? toSave.kidsAges.map(String) : [''])
     setSavingProfile(true)
     try {
       localStorage.setItem(LS_KEY, JSON.stringify(toSave))
@@ -80,6 +108,7 @@ export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
           body: JSON.stringify({
             adults: toSave.adults,
             kids_ages: toSave.kidsAges,
+            home_country: toSave.homeCountry,
             home_airport: toSave.homeAirport,
             travel_style: toSave.travelStyle,
           }),
@@ -88,7 +117,7 @@ export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
       setProfileSaved(true)
       setTimeout(() => setProfileSaved(false), 2500)
     } catch {
-      /* localStorage at least succeeded for most cases */
+      /* localStorage at least succeeded in most cases */
     } finally {
       setSavingProfile(false)
     }
@@ -97,11 +126,26 @@ export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
   const setAnswer = (pid: string, qid: string, val: string) =>
     setAnswers(prev => ({ ...prev, [pid]: { ...prev[pid], [qid]: val } }))
 
-  const requiredFilled = (p: PromptDef): boolean =>
-    p.questions.every(q => q.optional || (answers[p.id]?.[q.id] ?? '').trim().length > 0)
+  // Effective value for a question: the typed answer if present,
+  // otherwise a pre-fill from the saved profile (e.g. home airport).
+  const eff = (p: PromptDef, q: Question): string => {
+    const a = answers[p.id]?.[q.id]
+    if (a !== undefined) return a
+    if (q.prefillFrom === 'homeAirport') return profile.homeAirport ?? ''
+    if (q.prefillFrom === 'homeCountry') return profile.homeCountry ?? ''
+    return ''
+  }
 
-  const generated = (p: PromptDef): string =>
-    p.build(answers[p.id] ?? {}, { ...profile, kidsAges: parseAges(agesText) })
+  const effAnswers = (p: PromptDef): Record<string, string> => {
+    const out: Record<string, string> = {}
+    for (const q of p.questions) out[q.id] = eff(p, q)
+    return out
+  }
+
+  const requiredFilled = (p: PromptDef): boolean =>
+    p.questions.every(q => q.optional || eff(p, q).trim().length > 0)
+
+  const generated = (p: PromptDef): string => p.build(effAnswers(p), liveProfile())
 
   const copyPrompt = async (p: PromptDef) => {
     try {
@@ -117,6 +161,8 @@ export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
     () => PROMPTS.filter(p => p.category === activeCat),
     [activeCat],
   )
+
+  const inputCls = 'w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500'
 
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
@@ -150,53 +196,106 @@ export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
           <p className="text-xs text-gray-500 mb-4">
             Set this once and every prompt fills it in for you.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label className="text-sm">
+
+          <div className="space-y-4">
+            {/* Adults */}
+            <div className="sm:w-1/2 sm:pr-1.5">
               <span className="block text-xs font-semibold text-gray-600 mb-1">Adults</span>
               <input
                 type="number" min={1} max={12}
                 value={profile.adults ?? ''}
                 onChange={e => updateProfile({ adults: e.target.value ? parseInt(e.target.value, 10) : null })}
                 placeholder="e.g. 2"
-                className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className={inputCls}
               />
-            </label>
-            <label className="text-sm">
+            </div>
+
+            {/* Kids — one input per kid + add another */}
+            <div>
               <span className="block text-xs font-semibold text-gray-600 mb-1">Kids&apos; ages</span>
-              <input
-                type="text"
-                value={agesText}
-                onChange={e => { setAgesText(e.target.value); setProfileSaved(false) }}
-                placeholder="e.g. 4, 7"
-                className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-              />
-            </label>
-            <label className="text-sm">
-              <span className="block text-xs font-semibold text-gray-600 mb-1">Home airport <span className="text-gray-400 font-normal">(optional)</span></span>
-              <input
-                type="text"
-                value={profile.homeAirport ?? ''}
-                onChange={e => updateProfile({ homeAirport: e.target.value || null })}
-                placeholder="e.g. Manchester (MAN)"
-                className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-              />
-            </label>
-            <label className="text-sm">
-              <span className="block text-xs font-semibold text-gray-600 mb-1">Travel style <span className="text-gray-400 font-normal">(optional)</span></span>
-              <select
-                value={profile.travelStyle ?? ''}
-                onChange={e => updateProfile({ travelStyle: e.target.value || null })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+              <div className="space-y-2">
+                {kids.map((age, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      type="number" min={0} max={17}
+                      value={age}
+                      onChange={e => updateKid(i, e.target.value)}
+                      placeholder={`Kid ${i + 1} age`}
+                      className={`${inputCls} sm:w-1/2`}
+                    />
+                    {kids.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeKid(i)}
+                        aria-label={`Remove kid ${i + 1}`}
+                        className="text-gray-400 hover:text-red-600 p-1"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={addKid}
+                className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700"
               >
-                <option value="">No preference</option>
-                <option>Budget</option>
-                <option>Mid-range</option>
-                <option>Comfort</option>
-                <option>Slow travel</option>
-              </select>
-            </label>
+                <Plus className="w-3.5 h-3.5" /> Add another kid
+              </button>
+            </div>
+
+            {/* Home country + airport */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label className="text-sm">
+                <span className="block text-xs font-semibold text-gray-600 mb-1">Home country <span className="text-gray-400 font-normal">(optional)</span></span>
+                <input
+                  type="text"
+                  value={profile.homeCountry ?? ''}
+                  onChange={e => updateProfile({ homeCountry: e.target.value || null })}
+                  placeholder="e.g. United Kingdom"
+                  className={inputCls}
+                />
+              </label>
+              <label className="text-sm">
+                <span className="block text-xs font-semibold text-gray-600 mb-1">Home airport <span className="text-gray-400 font-normal">(optional)</span></span>
+                <input
+                  type="text"
+                  value={profile.homeAirport ?? ''}
+                  onChange={e => updateProfile({ homeAirport: e.target.value || null })}
+                  placeholder="e.g. Manchester (MAN)"
+                  className={inputCls}
+                />
+              </label>
+            </div>
+
+            {/* Travel style — multi-select */}
+            <div>
+              <span className="block text-xs font-semibold text-gray-600 mb-1">Travel style <span className="text-gray-400 font-normal">(pick any)</span></span>
+              <div className="flex flex-wrap gap-2">
+                {TRAVEL_STYLES.map(s => {
+                  const on = profile.travelStyle.includes(s)
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => toggleStyle(s)}
+                      aria-pressed={on}
+                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                        on
+                          ? 'bg-brand-600 text-white border-brand-600'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-brand-300'
+                      }`}
+                    >
+                      {on && <Check className="w-3 h-3" />} {s}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
           </div>
-          <div className="mt-4 flex items-center gap-3 flex-wrap">
+
+          <div className="mt-5 flex items-center gap-3 flex-wrap">
             <button
               type="button"
               onClick={saveProfile}
@@ -278,16 +377,16 @@ export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
                         {q.type === 'textarea' ? (
                           <textarea
                             rows={4}
-                            value={answers[p.id]?.[q.id] ?? ''}
+                            value={eff(p, q)}
                             onChange={e => setAnswer(p.id, q.id, e.target.value)}
                             placeholder={q.placeholder}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 leading-relaxed"
+                            className={`${inputCls} leading-relaxed`}
                           />
                         ) : q.type === 'select' ? (
                           <select
-                            value={answers[p.id]?.[q.id] ?? ''}
+                            value={eff(p, q)}
                             onChange={e => setAnswer(p.id, q.id, e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                            className={`${inputCls} bg-white`}
                           >
                             <option value="" disabled>Choose…</option>
                             {q.options?.map(o => <option key={o}>{o}</option>)}
@@ -295,10 +394,10 @@ export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
                         ) : (
                           <input
                             type={q.type === 'number' ? 'number' : 'text'}
-                            value={answers[p.id]?.[q.id] ?? ''}
+                            value={eff(p, q)}
                             onChange={e => setAnswer(p.id, q.id, e.target.value)}
                             placeholder={q.placeholder}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                            className={inputCls}
                           />
                         )}
                       </label>

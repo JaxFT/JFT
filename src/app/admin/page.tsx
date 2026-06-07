@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { PenLine, ArrowRight, ShieldCheck, FileText, Upload, MessageCircle, BookOpen, Users } from 'lucide-react'
+import { PenLine, ArrowRight, ShieldCheck, FileText, Upload, MessageCircle, BookOpen, Users, Sparkles } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -43,6 +43,12 @@ const TOOLS = [
     title: '1:1 Call Requests',
     desc: 'People asking to book a call. Review their details, email them back with availability and pricing, track status.',
     icon: MessageCircle,
+  },
+  {
+    href: '/jft-prompt-builder',
+    title: 'AI Prompt Builder (preview)',
+    desc: 'Work in progress, admin-only for now. The AI travel prompt builder: pick a prompt, answer a few questions, copy an engineered prompt for your own AI. Hidden from the public until we launch.',
+    icon: Sparkles,
   },
 ]
 

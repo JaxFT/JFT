@@ -21,21 +21,32 @@ export type Question = {
   placeholder?: string
   options?: string[]
   optional?: boolean
+  // When set and the user hasn't typed an answer yet, the field
+  // pre-fills from this saved profile value (e.g. home airport into
+  // "Flying from?"). The user can still overwrite it.
+  prefillFrom?: 'homeAirport' | 'homeCountry'
 }
 
 export type FamilyProfile = {
   adults: number | null
   kidsAges: number[]
+  homeCountry: string | null
   homeAirport: string | null
-  travelStyle: string | null
+  travelStyle: string[]
 }
 
 export const EMPTY_PROFILE: FamilyProfile = {
   adults: null,
   kidsAges: [],
+  homeCountry: null,
   homeAirport: null,
-  travelStyle: null,
+  travelStyle: [],
 }
+
+// Options for the multi-select travel-style chips.
+export const TRAVEL_STYLES = [
+  'Budget', 'Mid-range', 'Comfort', 'Slow travel', 'Adventure', 'Luxury',
+] as const
 
 export type PromptDef = {
   id: string
@@ -206,7 +217,7 @@ FORMAT: Playful, 150–200 words + 3 "things to look out for".`),
     badge: 'any',
     useCase: 'A day-by-day sleep and light plan to get the kids adjusted fast.',
     questions: [
-      { id: 'origin', label: 'Flying from?', type: 'text', placeholder: 'e.g. London' },
+      { id: 'origin', label: 'Flying from?', type: 'text', placeholder: 'e.g. London', prefillFrom: 'homeAirport' },
       { id: 'destination', label: 'Flying to?', type: 'text', placeholder: 'e.g. Bali' },
       { id: 'arrival', label: 'Arrival date & local time?', type: 'text', placeholder: 'e.g. 12 Feb, 6am' },
     ],
@@ -244,7 +255,7 @@ FORMAT: Revised timeline + one-line "why" per change.`),
     badge: 'web',
     useCase: 'Lowest TOTAL cost — nearby airports, split tickets, bags and fees included.',
     questions: [
-      { id: 'origin', label: 'Flying from?', type: 'text', placeholder: 'e.g. Manchester' },
+      { id: 'origin', label: 'Flying from?', type: 'text', placeholder: 'e.g. Manchester', prefillFrom: 'homeAirport' },
       { id: 'destination', label: 'Flying to?', type: 'text', placeholder: 'e.g. Bali' },
       { id: 'dateRange', label: 'Date range?', type: 'text', placeholder: 'e.g. early Feb 2027' },
       { id: 'bags', label: 'Checked bags?', type: 'number', placeholder: 'e.g. 2' },
@@ -264,7 +275,7 @@ FORMAT: Ranked options — total cost, route, why.`),
     badge: 'web',
     useCase: 'Finds the cheapest dates in your window and explains why they\'re cheaper.',
     questions: [
-      { id: 'origin', label: 'Flying from?', type: 'text', placeholder: 'e.g. London' },
+      { id: 'origin', label: 'Flying from?', type: 'text', placeholder: 'e.g. London', prefillFrom: 'homeAirport' },
       { id: 'destination', label: 'Flying to?', type: 'text', placeholder: 'e.g. Tokyo' },
       { id: 'target', label: 'Target date?', type: 'text', placeholder: 'e.g. 15 April 2027' },
       { id: 'window', label: 'Flexible by how many days?', type: 'number', placeholder: 'e.g. 5' },
@@ -282,7 +293,7 @@ FORMAT: Cheapest 3 date sets — total cost + reason.`),
     badge: 'web',
     useCase: 'Prioritises short travel time and kid-friendly timings over headline fares.',
     questions: [
-      { id: 'origin', label: 'Flying from?', type: 'text', placeholder: 'e.g. Manchester' },
+      { id: 'origin', label: 'Flying from?', type: 'text', placeholder: 'e.g. Manchester', prefillFrom: 'homeAirport' },
       { id: 'destination', label: 'Flying to?', type: 'text', placeholder: 'e.g. Orlando' },
       { id: 'dates', label: 'Dates?', type: 'text', placeholder: 'e.g. school summer holidays 2027' },
     ],

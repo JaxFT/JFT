@@ -12,8 +12,9 @@ create table if not exists public.family_profiles (
   user_id      uuid primary key references public.profiles(id) on delete cascade,
   adults       integer,
   kids_ages    integer[]   not null default '{}',
+  home_country text,
   home_airport text,
-  travel_style text,
+  travel_style text[]      not null default '{}',  -- multi-select
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
 );

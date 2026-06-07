@@ -45,7 +45,7 @@ const TOOLS = [
     icon: MessageCircle,
   },
   {
-    href: '/jft-prompt-builder',
+    href: '/ai-travel-prompts',
     title: 'AI Prompt Builder (preview)',
     desc: 'Work in progress, admin-only for now. The AI travel prompt builder: pick a prompt, answer a few questions, copy an engineered prompt for your own AI. Hidden from the public until we launch.',
     icon: Sparkles,

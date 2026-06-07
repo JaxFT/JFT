@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
-export default async function JftPromptBuilderPage() {
+export default async function AiTravelPromptsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 

@@ -12,7 +12,7 @@
 // the watermark. To tweak wording, edit the strings here.
 
 export type Badge = 'web' | 'any'
-export type QuestionType = 'text' | 'textarea' | 'select' | 'number'
+export type QuestionType = 'text' | 'textarea' | 'select' | 'number' | 'multiselect'
 
 export type Question = {
   id: string
@@ -21,6 +21,9 @@ export type Question = {
   placeholder?: string
   options?: string[]
   optional?: boolean
+  // Free-text suggestions shown via a datalist (user can still type
+  // anything). Used to make vague fields like "region" less daunting.
+  suggestions?: string[]
   // When set and the user hasn't typed an answer yet, the field
   // pre-fills from this saved profile value (e.g. home airport into
   // "Flying from?"). The user can still overwrite it.
@@ -32,6 +35,7 @@ export type FamilyProfile = {
   kidsAges: number[]
   homeCountry: string | null
   homeAirport: string | null
+  homeCurrency: string | null
   travelStyle: string[]
 }
 
@@ -40,6 +44,7 @@ export const EMPTY_PROFILE: FamilyProfile = {
   kidsAges: [],
   homeCountry: null,
   homeAirport: null,
+  homeCurrency: null,
   travelStyle: [],
 }
 
@@ -47,6 +52,38 @@ export const EMPTY_PROFILE: FamilyProfile = {
 export const TRAVEL_STYLES = [
   'Budget', 'Mid-range', 'Comfort', 'Slow travel', 'Adventure', 'Luxury',
 ] as const
+
+// Home currency picker. Label is what we drop into prompts verbatim.
+export const CURRENCIES = [
+  'GBP (£)', 'USD ($)', 'EUR (€)', 'AUD (A$)', 'CAD (C$)', 'NZD (NZ$)',
+  'CHF', 'JPY (¥)', 'SGD (S$)', 'AED (د.إ)', 'ZAR (R)', 'INR (₹)',
+] as const
+
+// A short list of major hubs for the home-airport datalist. Free text
+// is still allowed for anywhere not listed.
+export const MAJOR_AIRPORTS = [
+  'London Heathrow (LHR)', 'London Gatwick (LGW)', 'London Stansted (STN)',
+  'Manchester (MAN)', 'Birmingham (BHX)', 'Edinburgh (EDI)', 'Glasgow (GLA)',
+  'Bristol (BRS)', 'Dublin (DUB)', 'Belfast (BFS)', 'Newcastle (NCL)',
+  'Liverpool (LPL)', 'Leeds Bradford (LBA)', 'East Midlands (EMA)',
+  'Paris CDG (CDG)', 'Amsterdam (AMS)', 'Frankfurt (FRA)', 'Madrid (MAD)',
+  'New York JFK (JFK)', 'Los Angeles (LAX)', 'Toronto (YYZ)',
+  'Sydney (SYD)', 'Dubai (DXB)', 'Singapore (SIN)',
+] as const
+
+// Region suggestions for the shoulder-season builder's "region" field.
+const REGION_SUGGESTIONS = [
+  'Southeast Asia', 'South Asia', 'East Asia', 'Central Asia',
+  'Europe', 'Eastern Europe', 'The Balkans', 'Central America',
+  'South America', 'The Caribbean', 'North Africa', 'Sub-Saharan Africa',
+  'Middle East', 'Oceania / Pacific',
+]
+
+// Currency directive appended to money-related prompts so the AI
+// answers in the family's home currency, not USD by default.
+function moneyRule(p: FamilyProfile): string {
+  return `\nCURRENCY: Report all costs in ${p.homeCurrency || 'GBP (£)'}.`
+}
 
 export type PromptDef = {
   id: string
@@ -263,7 +300,7 @@ FORMAT: Revised timeline + one-line "why" per change.`),
     ],
     build: (a, p) => wrap(
 `ROLE: Expert flight-deal researcher with live web access.
-CONTEXT: ${a.origin} -> ${a.destination} | ${a.dateRange} | ${travellersStr(p)} | ${a.bags} checked bags | nearby airports: ${a.nearby}.
+CONTEXT: ${a.origin} -> ${a.destination} | ${a.dateRange} | ${travellersStr(p)} | ${a.bags} checked bags | nearby airports: ${a.nearby}.${moneyRule(p)}
 TASK: Find the cheapest REALISTIC routing incl. nearby airports and split-ticket options. Price the TOTAL (fares + bags + fees).
 RULES: Use current data; cite sources; flag risky self-transfers.
 FORMAT: Ranked options — total cost, route, why.`),
@@ -282,7 +319,7 @@ FORMAT: Ranked options — total cost, route, why.`),
     ],
     build: (a, p) => wrap(
 `ROLE: Flight pricing analyst with live web access.
-CONTEXT: ${a.origin} -> ${a.destination} | target ${a.target} ± ${a.window} days | ${travellersStr(p)}.
+CONTEXT: ${a.origin} -> ${a.destination} | target ${a.target} ± ${a.window} days | ${travellersStr(p)}.${moneyRule(p)}
 TASK: Find the cheapest date combinations in that window and explain WHY those dates are cheaper.
 FORMAT: Cheapest 3 date sets — total cost + reason.`),
   },
@@ -299,7 +336,7 @@ FORMAT: Cheapest 3 date sets — total cost + reason.`),
     ],
     build: (a, p) => wrap(
 `ROLE: Family flight expert with live web access.
-CONTEXT: ${a.origin} -> ${a.destination} | ${a.dates} | ${travellersStr(p)}.
+CONTEXT: ${a.origin} -> ${a.destination} | ${a.dates} | ${travellersStr(p)}.${moneyRule(p)}
 TASK: Recommend flights prioritising short total travel time, minimal overnight layovers, and child-friendly departure times — not just lowest fare.
 FORMAT: Top 3 — times, layovers, why it suits these ages.`),
   },
@@ -328,16 +365,16 @@ FORMAT: Timeline + "day bag" checklist.`),
     badge: 'web',
     useCase: 'Sequences a long trip so you hit shoulder season (good weather, fewer crowds) in each country.',
     questions: [
-      { id: 'region', label: 'Region (or countries in mind)?', type: 'text', placeholder: 'e.g. Southeast Asia' },
+      { id: 'region', label: 'Region, or specific countries?', type: 'text', placeholder: 'Start typing or pick a region', suggestions: REGION_SUGGESTIONS },
       { id: 'start', label: 'When do you leave?', type: 'text', placeholder: 'e.g. September 2027' },
       { id: 'duration', label: 'How long in total?', type: 'text', placeholder: 'e.g. 6 months' },
-      { id: 'priority', label: 'Top priority?', type: 'select', options: ['Best weather', 'Fewest crowds', 'Lowest cost'] },
+      { id: 'priority', label: 'What matters most? (pick any)', type: 'multiselect', options: ['Best weather', 'Low cost', 'Fewer crowds', 'Cultural immersion', 'Beaches & coast', 'Worldschooling hubs', 'Great for kids', 'Nature & wildlife', 'Food'] },
       { id: 'pace', label: 'Pace?', type: 'select', options: ['Fewer countries, deeper', 'More countries, faster'] },
     ],
     build: (a, p) => wrap(
 `ROLE: Expert long-term family route planner.
-CONTEXT: ${a.region} | start ${a.start} | ${a.duration} | ${travellersStr(p)}.
-GOAL: Recommend countries + weeks in each, sequenced to hit shoulder season (good weather, lower crowds/prices) as we move. Top priority: ${a.priority}.
+CONTEXT: ${a.region} | start ${a.start} | ${a.duration} | ${travellersStr(p)}.${moneyRule(p)}
+GOAL: Recommend countries + weeks in each, sequenced to hit shoulder season (good weather, lower crowds/prices) as we move. Priorities: ${a.priority}.
 CONSTRAINTS: Minimise backtracking; logical overland/short-haul flow; family pace (${a.pace}).
 OUTPUT: Chronological list — month, weeks in each, one-line why the timing works. Flag any country to skip for that season.`),
   },
@@ -372,7 +409,7 @@ FORMAT: Ordered stops — nights, transport between, one-line why.`),
     ],
     build: (a, p) => wrap(
 `ROLE: Regional transport expert with live web access.
-CONTEXT: ${a.from} -> ${a.to} | ${travellersStr(p)} | priority ${a.priority}.
+CONTEXT: ${a.from} -> ${a.to} | ${travellersStr(p)} | priority ${a.priority}.${moneyRule(p)}
 TASK: Compare ALL options — flight, train, bus, private transfer — for a family.
 FORMAT: Table — option, cost, duration, family ease (1–5), verdict.`),
   },
@@ -391,7 +428,7 @@ FORMAT: Table — option, cost, duration, family ease (1–5), verdict.`),
     ],
     build: (a, p) => wrap(
 `ROLE: Realistic family-travel budgeter with live web access.
-CONTEXT: ${a.destination} | ${a.length} | ${travellersStr(p)} | ${a.style}.
+CONTEXT: ${a.destination} | ${a.length} | ${travellersStr(p)} | ${a.style}.${moneyRule(p)}
 TASK: Break down the full realistic cost — flights, accommodation, food, transport, activities. Highlight HIDDEN costs people forget.
 FORMAT: Itemised table — cost + notes. Total + daily average.`),
   },
@@ -406,7 +443,7 @@ FORMAT: Itemised table — cost + notes. Total + daily average.`),
     ],
     build: (a, p) => wrap(
 `ROLE: Savvy family-travel expert.
-CONTEXT: ${a.destination} | ${travellersStr(p)}.
+CONTEXT: ${a.destination} | ${travellersStr(p)}.${moneyRule(p)}
 TASK: Explain where it's worth spending more vs where to save without hurting the experience — specific to here and these ages.
 FORMAT: "Worth it" / "Save", bullets + one-line why.`),
   },
@@ -421,7 +458,7 @@ FORMAT: "Worth it" / "Save", bullets + one-line why.`),
     ],
     build: (a, p) => wrap(
 `ROLE: Local-savvy travel money expert with live web access.
-CONTEXT: ${a.destination} | ${travellersStr(p)}.
+CONTEXT: ${a.destination} | ${travellersStr(p)}.${moneyRule(p)}
 TASK: Brief me — cash vs card norms, tipping, common tourist scams, and a realistic daily family spend.
 FORMAT: 4 short sections.`),
   },

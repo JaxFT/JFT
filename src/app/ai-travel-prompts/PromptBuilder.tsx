@@ -4,23 +4,31 @@
 //
 // Browse categories → open a prompt → answer its guided questions →
 // copy the engineered prompt for your own AI. The "family profile"
-// (adults, kids' ages, home country/airport, travel style) is captured
-// once and reused across every prompt; it lives in localStorage for
-// everyone and also syncs to Supabase for signed-in users so it follows
-// them across devices. Home airport pre-fills the flight "Flying from?"
-// fields.
+// (adults, kids' ages, home country/airport/currency, travel style) is
+// captured once and reused across every prompt; it lives in
+// localStorage for everyone and also syncs to Supabase for signed-in
+// users. Home airport pre-fills the flight "Flying from?" fields and
+// home currency is injected into money prompts.
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
   Sparkles, Copy, Check, Globe, Bot, ChevronDown, Users, Wand2, Lock, Plus, X,
 } from 'lucide-react'
+import { COUNTRIES } from '@/lib/countries'
 import {
   CATEGORIES, PROMPTS, BADGE_LABEL, BADGE_NOTE, EMPTY_PROFILE, TRAVEL_STYLES,
+  CURRENCIES, MAJOR_AIRPORTS,
   type CategoryId, type FamilyProfile, type PromptDef, type Question,
 } from '@/lib/jft-prompts'
 
 const LS_KEY = 'jft-family-profile'
+
+// Full country list (minus Antarctica) for the home-country picker.
+const COUNTRY_NAMES = COUNTRIES
+  .filter(c => c.continent !== 'Antarctica')
+  .map(c => c.name)
+  .sort((a, b) => a.localeCompare(b))
 
 type Props = {
   isLoggedIn: boolean
@@ -28,14 +36,12 @@ type Props = {
 }
 
 function isEmptyProfile(p: FamilyProfile): boolean {
-  return !p.adults && p.kidsAges.length === 0 && !p.homeCountry && !p.homeAirport && p.travelStyle.length === 0
+  return !p.adults && p.kidsAges.length === 0 && !p.homeCountry
+    && !p.homeAirport && !p.homeCurrency && p.travelStyle.length === 0
 }
 
 export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
   const [profile, setProfile] = useState<FamilyProfile>(initialProfile)
-  // Kids' ages are edited as a dynamic list of strings (one input per
-  // kid) then parsed to numbers for saving/building. Start with one
-  // empty row when there are none.
   const [kids, setKids] = useState<string[]>(
     initialProfile.kidsAges.length ? initialProfile.kidsAges.map(String) : [''],
   )
@@ -72,7 +78,6 @@ export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
       .filter(n => Number.isFinite(n) && n >= 0 && n <= 17)
       .slice(0, 10)
 
-  // Profile with the live kid list folded in, used for building prompts.
   const liveProfile = (): FamilyProfile => ({ ...profile, kidsAges: parseKids(kids) })
 
   const updateProfile = (patch: Partial<FamilyProfile>) => {
@@ -110,6 +115,7 @@ export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
             kids_ages: toSave.kidsAges,
             home_country: toSave.homeCountry,
             home_airport: toSave.homeAirport,
+            home_currency: toSave.homeCurrency,
             travel_style: toSave.travelStyle,
           }),
         })
@@ -126,8 +132,17 @@ export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
   const setAnswer = (pid: string, qid: string, val: string) =>
     setAnswers(prev => ({ ...prev, [pid]: { ...prev[pid], [qid]: val } }))
 
-  // Effective value for a question: the typed answer if present,
-  // otherwise a pre-fill from the saved profile (e.g. home airport).
+  const clearPrompt = (pid: string) =>
+    setAnswers(prev => { const n = { ...prev }; delete n[pid]; return n })
+
+  // Toggle one value in a comma-joined multiselect answer.
+  const toggleMulti = (pid: string, qid: string, opt: string) => {
+    const cur = (answers[pid]?.[qid] ?? '').split(',').map(s => s.trim()).filter(Boolean)
+    const next = cur.includes(opt) ? cur.filter(x => x !== opt) : [...cur, opt]
+    setAnswer(pid, qid, next.join(', '))
+  }
+
+  // Effective value: typed answer if present, else a profile pre-fill.
   const eff = (p: PromptDef, q: Question): string => {
     const a = answers[p.id]?.[q.id]
     if (a !== undefined) return a
@@ -163,6 +178,71 @@ export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
   )
 
   const inputCls = 'w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500'
+  const chipCls = (on: boolean) =>
+    `inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+      on ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-gray-600 border-gray-200 hover:border-brand-300'
+    }`
+
+  // One question's input control (multiselect chips / textarea / select
+  // / text+datalist / number).
+  const renderField = (p: PromptDef, q: Question) => {
+    if (q.type === 'multiselect') {
+      const selected = eff(p, q).split(',').map(s => s.trim()).filter(Boolean)
+      return (
+        <div className="flex flex-wrap gap-2">
+          {q.options?.map(o => {
+            const on = selected.includes(o)
+            return (
+              <button key={o} type="button" onClick={() => toggleMulti(p.id, q.id, o)} aria-pressed={on} className={chipCls(on)}>
+                {on && <Check className="w-3 h-3" />} {o}
+              </button>
+            )
+          })}
+        </div>
+      )
+    }
+    if (q.type === 'textarea') {
+      return (
+        <textarea
+          rows={4}
+          value={eff(p, q)}
+          onChange={e => setAnswer(p.id, q.id, e.target.value)}
+          placeholder={q.placeholder}
+          className={`${inputCls} leading-relaxed`}
+        />
+      )
+    }
+    if (q.type === 'select') {
+      return (
+        <select
+          value={eff(p, q)}
+          onChange={e => setAnswer(p.id, q.id, e.target.value)}
+          className={`${inputCls} bg-white`}
+        >
+          <option value="" disabled>Choose…</option>
+          {q.options?.map(o => <option key={o}>{o}</option>)}
+        </select>
+      )
+    }
+    const listId = q.suggestions ? `dl-${p.id}-${q.id}` : undefined
+    return (
+      <>
+        <input
+          type={q.type === 'number' ? 'number' : 'text'}
+          list={listId}
+          value={eff(p, q)}
+          onChange={e => setAnswer(p.id, q.id, e.target.value)}
+          placeholder={q.placeholder}
+          className={inputCls}
+        />
+        {q.suggestions && (
+          <datalist id={listId}>
+            {q.suggestions.map(s => <option key={s} value={s} />)}
+          </datalist>
+        )}
+      </>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
@@ -245,52 +325,57 @@ export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
               </button>
             </div>
 
-            {/* Home country + airport */}
+            {/* Home country + currency (pickers, no free typing) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label className="text-sm">
                 <span className="block text-xs font-semibold text-gray-600 mb-1">Home country <span className="text-gray-400 font-normal">(optional)</span></span>
-                <input
-                  type="text"
+                <select
                   value={profile.homeCountry ?? ''}
                   onChange={e => updateProfile({ homeCountry: e.target.value || null })}
-                  placeholder="e.g. United Kingdom"
-                  className={inputCls}
-                />
+                  className={`${inputCls} bg-white`}
+                >
+                  <option value="">Select…</option>
+                  {COUNTRY_NAMES.map(n => <option key={n}>{n}</option>)}
+                </select>
               </label>
               <label className="text-sm">
-                <span className="block text-xs font-semibold text-gray-600 mb-1">Home airport <span className="text-gray-400 font-normal">(optional)</span></span>
-                <input
-                  type="text"
-                  value={profile.homeAirport ?? ''}
-                  onChange={e => updateProfile({ homeAirport: e.target.value || null })}
-                  placeholder="e.g. Manchester (MAN)"
-                  className={inputCls}
-                />
+                <span className="block text-xs font-semibold text-gray-600 mb-1">Home currency <span className="text-gray-400 font-normal">(optional)</span></span>
+                <select
+                  value={profile.homeCurrency ?? ''}
+                  onChange={e => updateProfile({ homeCurrency: e.target.value || null })}
+                  className={`${inputCls} bg-white`}
+                >
+                  <option value="">Select…</option>
+                  {CURRENCIES.map(c => <option key={c}>{c}</option>)}
+                </select>
               </label>
             </div>
+
+            {/* Home airport — datalist autocomplete, free text allowed */}
+            <label className="text-sm block">
+              <span className="block text-xs font-semibold text-gray-600 mb-1">Home airport <span className="text-gray-400 font-normal">(optional)</span></span>
+              <input
+                type="text"
+                list="jft-airports"
+                value={profile.homeAirport ?? ''}
+                onChange={e => updateProfile({ homeAirport: e.target.value || null })}
+                placeholder="Start typing, e.g. Manchester"
+                className={`${inputCls} sm:w-1/2`}
+              />
+              <datalist id="jft-airports">
+                {MAJOR_AIRPORTS.map(a => <option key={a} value={a} />)}
+              </datalist>
+            </label>
 
             {/* Travel style — multi-select */}
             <div>
               <span className="block text-xs font-semibold text-gray-600 mb-1">Travel style <span className="text-gray-400 font-normal">(pick any)</span></span>
               <div className="flex flex-wrap gap-2">
-                {TRAVEL_STYLES.map(s => {
-                  const on = profile.travelStyle.includes(s)
-                  return (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => toggleStyle(s)}
-                      aria-pressed={on}
-                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
-                        on
-                          ? 'bg-brand-600 text-white border-brand-600'
-                          : 'bg-white text-gray-600 border-gray-200 hover:border-brand-300'
-                      }`}
-                    >
-                      {on && <Check className="w-3 h-3" />} {s}
-                    </button>
-                  )
-                })}
+                {TRAVEL_STYLES.map(s => (
+                  <button key={s} type="button" onClick={() => toggleStyle(s)} aria-pressed={profile.travelStyle.includes(s)} className={chipCls(profile.travelStyle.includes(s))}>
+                    {profile.travelStyle.includes(s) && <Check className="w-3 h-3" />} {s}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
@@ -351,9 +436,7 @@ export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
                       <h3 className="font-bold text-gray-900">{p.title}</h3>
                       <span
                         className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                          p.badge === 'web'
-                            ? 'bg-sky-50 text-sky-700'
-                            : 'bg-violet-50 text-violet-700'
+                          p.badge === 'web' ? 'bg-sky-50 text-sky-700' : 'bg-violet-50 text-violet-700'
                         }`}
                         title={BADGE_NOTE[p.badge]}
                       >
@@ -370,37 +453,12 @@ export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
                 {open && (
                   <div className="px-5 pb-5 border-t border-gray-100 pt-4 space-y-4">
                     {p.questions.map(q => (
-                      <label key={q.id} className="block">
+                      <div key={q.id}>
                         <span className="block text-xs font-semibold text-gray-600 mb-1">
                           {q.label}{q.optional && <span className="text-gray-400 font-normal"> (optional)</span>}
                         </span>
-                        {q.type === 'textarea' ? (
-                          <textarea
-                            rows={4}
-                            value={eff(p, q)}
-                            onChange={e => setAnswer(p.id, q.id, e.target.value)}
-                            placeholder={q.placeholder}
-                            className={`${inputCls} leading-relaxed`}
-                          />
-                        ) : q.type === 'select' ? (
-                          <select
-                            value={eff(p, q)}
-                            onChange={e => setAnswer(p.id, q.id, e.target.value)}
-                            className={`${inputCls} bg-white`}
-                          >
-                            <option value="" disabled>Choose…</option>
-                            {q.options?.map(o => <option key={o}>{o}</option>)}
-                          </select>
-                        ) : (
-                          <input
-                            type={q.type === 'number' ? 'number' : 'text'}
-                            value={eff(p, q)}
-                            onChange={e => setAnswer(p.id, q.id, e.target.value)}
-                            placeholder={q.placeholder}
-                            className={inputCls}
-                          />
-                        )}
-                      </label>
+                        {renderField(p, q)}
+                      </div>
                     ))}
 
                     {/* Live preview + copy */}
@@ -428,6 +486,17 @@ export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
                     ) : (
                       <p className="text-xs text-gray-400">Fill in the questions above to build your prompt.</p>
                     )}
+
+                    {/* Clear / start over */}
+                    <div className="flex justify-end pt-1">
+                      <button
+                        type="button"
+                        onClick={() => clearPrompt(p.id)}
+                        className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700"
+                      >
+                        <X className="w-3.5 h-3.5" /> Clear &amp; start over
+                      </button>
+                    </div>
                   </div>
                 )}
               </li>

@@ -51,7 +51,7 @@ export async function GET() {
 
   const { data } = await supabase
     .from('family_profiles')
-    .select('adults, kids_ages, home_country, home_airport, travel_style')
+    .select('adults, kids_ages, home_country, home_airport, home_currency, travel_style')
     .eq('user_id', user.id)
     .maybeSingle()
 
@@ -72,6 +72,7 @@ export async function PUT(request: Request) {
     kids_ages: cleanAges(body.kids_ages),
     home_country: cleanStr(body.home_country),
     home_airport: cleanStr(body.home_airport),
+    home_currency: cleanStr(body.home_currency),
     travel_style: cleanStyles(body.travel_style),
   }
 

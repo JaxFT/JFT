@@ -14,6 +14,7 @@ create table if not exists public.family_profiles (
   kids_ages    integer[]   not null default '{}',
   home_country text,
   home_airport text,
+  home_currency text,
   travel_style text[]      not null default '{}',  -- multi-select
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()

@@ -471,29 +471,26 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
                     {/* Live preview + copy */}
                     {canCopy ? (
                       <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-semibold text-gray-600 inline-flex items-center gap-1.5">
-                            <Wand2 className="w-3.5 h-3.5 text-brand-600" /> Your prompt
+                        <div className="bg-gray-50 border border-gray-200 rounded-md p-4 flex items-center justify-between gap-3 flex-wrap">
+                          <span className="text-sm font-semibold text-gray-800 inline-flex items-center gap-2">
+                            <Wand2 className="w-4 h-4 text-brand-600" /> Your prompt is ready
                           </span>
                           {isLoggedIn ? (
                             <button
                               type="button"
                               onClick={() => copyPrompt(p)}
-                              className="btn-primary !text-xs !py-1.5 !px-3"
+                              className="btn-primary !text-sm !py-2 !px-4"
                             >
                               {copiedId === p.id
-                                ? <><Check className="w-3.5 h-3.5" /> Copied</>
-                                : <><Copy className="w-3.5 h-3.5" /> Copy</>}
+                                ? <><Check className="w-4 h-4" /> Copied</>
+                                : <><Copy className="w-4 h-4" /> Copy prompt</>}
                             </button>
                           ) : (
-                            <Link href="/signup" className="btn-primary !text-xs !py-1.5 !px-3">
-                              <Lock className="w-3.5 h-3.5" /> Free account to copy
+                            <Link href="/signup" className="btn-primary !text-sm !py-2 !px-4">
+                              <Lock className="w-4 h-4" /> Free account to copy
                             </Link>
                           )}
                         </div>
-                        <pre className="text-xs text-gray-700 bg-gray-50 border border-gray-200 rounded-md p-3 whitespace-pre-wrap font-mono leading-relaxed">
-{generated(p)}
-                        </pre>
                         <p className="text-[11px] text-gray-400 mt-2">{BADGE_NOTE[p.badge]}</p>
                         {!isLoggedIn && (
                           <p className="text-[11px] text-gray-600 mt-2 bg-brand-50 border border-brand-100 rounded-md px-2.5 py-1.5 leading-relaxed">

@@ -1,6 +1,6 @@
 'use client'
 
-// JFT Prompt Builder — client island.
+// JFT Prompt Builder, client island.
 //
 // Browse categories → open a prompt → answer its guided questions →
 // copy the engineered prompt for your own AI. The "family profile"
@@ -251,7 +251,7 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
 
         {/* Admin-only work-in-progress banner. Goes away with the gate. */}
         <div className="mb-6 inline-flex items-center gap-2 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full">
-          <Lock className="w-3.5 h-3.5" /> Admin preview — hidden from the public
+          <Lock className="w-3.5 h-3.5" /> Admin preview, hidden from the public
         </div>
 
         {/* INTRO */}
@@ -291,7 +291,7 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
               />
             </div>
 
-            {/* Kids — one input per kid + add another */}
+            {/* Kids, one input per kid + add another */}
             <div>
               <span className="block text-xs font-semibold text-gray-600 mb-1">Kids&apos; ages</span>
               <div className="space-y-2">
@@ -352,7 +352,7 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
               </label>
             </div>
 
-            {/* Home airport — datalist autocomplete, free text allowed */}
+            {/* Home airport, datalist autocomplete, free text allowed */}
             <label className="text-sm block">
               <span className="block text-xs font-semibold text-gray-600 mb-1">Home airport <span className="text-gray-400 font-normal">(optional)</span></span>
               <input
@@ -368,7 +368,7 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
               </datalist>
             </label>
 
-            {/* Travel style — multi-select */}
+            {/* Travel style, multi-select */}
             <div>
               <span className="block text-xs font-semibold text-gray-600 mb-1">Travel style <span className="text-gray-400 font-normal">(pick any)</span></span>
               <div className="flex flex-wrap gap-2">
@@ -401,7 +401,7 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
           </div>
         </div>
 
-        {/* CATEGORY GRID — every category visible at once, no sideways
+        {/* CATEGORY GRID, every category visible at once, no sideways
             scrolling. 2 columns on phones, 3 on larger screens. */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-6">
           {CATEGORIES.map(c => {
@@ -437,7 +437,7 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
             const rel = open ? relatedFor(related, effAnswers(p)) : []
             return (
               <li key={p.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                {/* Card header — toggles open */}
+                {/* Card header, toggles open */}
                 <button
                   type="button"
                   onClick={() => setOpenId(open ? null : p.id)}

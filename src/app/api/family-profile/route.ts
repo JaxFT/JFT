@@ -9,14 +9,14 @@ import { createClient } from '@/lib/supabase/server'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-// Clamp adults to a sane 1–12; null when not provided.
+// Clamp adults to a sane 1-12; null when not provided.
 function cleanAdults(v: unknown): number | null {
   const n = Number(v)
   if (!Number.isFinite(n)) return null
   return Math.max(1, Math.min(12, Math.round(n)))
 }
 
-// Kids' ages: array of 0–17, max 10 kids, ignore junk.
+// Kids' ages: array of 0-17, max 10 kids, ignore junk.
 function cleanAges(v: unknown): number[] {
   if (!Array.isArray(v)) return []
   return v

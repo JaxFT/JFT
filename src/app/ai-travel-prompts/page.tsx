@@ -67,7 +67,7 @@ export default async function AiTravelPromptsPage() {
     const dc = b.destination_country
     if (dc) {
       terms.push(dc.toLowerCase())
-      // destination_country can be a pack slug or ISO2 — resolve to a
+      // destination_country can be a pack slug or ISO2, resolve to a
       // proper country name so "Sri Lanka" matches "lk"/"sri-lanka".
       const meta = getPackMeta(dc) ?? getPackByIso2(dc)
       if (meta?.country) terms.push(meta.country.toLowerCase())

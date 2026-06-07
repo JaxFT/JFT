@@ -4,7 +4,7 @@
 // the answers + the saved family profile into an ENGINEERED prompt
 // (ROLE / CONTEXT / TASK / FORMAT) for the user to paste into their own
 // AI. The output is deliberately structured and token-efficient, not
-// chatty — that engineering is the value the builder adds. Every output
+// chatty, that engineering is the value the builder adds. Every output
 // ends with the branded watermark.
 //
 // Principles (see spec): Tier B (no on-site AI), no [brackets] shown to
@@ -94,7 +94,7 @@ export type PromptDef = {
   questions: Question[]
   build: (a: Record<string, string>, p: FamilyProfile) => string
   // Optional soft cross-link to our own products, shown in the panel
-  // (human-facing only — never injected into the AI prompt).
+  // (human-facing only, never injected into the AI prompt).
   crossLink?: { text: string; links: { label: string; href: string }[] }
 }
 
@@ -110,6 +110,7 @@ const ADVENTURE_CROSSLINK = {
 
 export type CategoryId =
   | 'family' | 'flights' | 'route' | 'budget' | 'itinerary'
+  | 'stay' | 'slow' | 'packing' | 'decide'
 
 export type Category = { id: CategoryId; label: string; emoji: string }
 
@@ -119,6 +120,10 @@ export const CATEGORIES: Category[] = [
   { id: 'budget',    label: 'Budget & money',       emoji: '💰' },
   { id: 'itinerary', label: 'Planning & itinerary', emoji: '🗓️' },
   { id: 'family',    label: 'Family & kids',        emoji: '👨‍👩‍👧‍👦' },
+  { id: 'stay',      label: 'Where to stay',                emoji: '🏠' },
+  { id: 'slow',      label: 'Slow travel & worldschooling', emoji: '🌍' },
+  { id: 'packing',   label: 'Packing & food',               emoji: '🧳' },
+  { id: 'decide',    label: 'Should we go?',                 emoji: '🤔' },
 ]
 
 export const BADGE_LABEL: Record<Badge, string> = {
@@ -127,19 +132,19 @@ export const BADGE_LABEL: Record<Badge, string> = {
 }
 
 export const BADGE_NOTE: Record<Badge, string> = {
-  web: 'Best used in an AI with live web access — ChatGPT (search on), Perplexity, Gemini, or Claude with web. Double-check any prices yourself.',
-  any: 'Works in any AI — ChatGPT, Claude, Gemini, Copilot, etc.',
+  web: 'Best used in an AI with live web access, ChatGPT (search on), Perplexity, Gemini, or Claude with web. Double-check any prices yourself.',
+  any: 'Works in any AI, ChatGPT, Claude, Gemini, Copilot, etc.',
 }
 
 const WATERMARK =
-  '\n\n—\nPrompt by Jax Family Travels · family travel experts · jaxfamilytravels.com'
+  '\n\nPrompt by Jax Family Travels · family travel experts · jaxfamilytravels.com'
 
 // Trim the engineered body and append the human-facing watermark.
 function wrap(body: string): string {
   return body.trim() + WATERMARK
 }
 
-// "2 adults + kids aged 4 & 7" — falls back gracefully when the profile
+// "2 adults + kids aged 4 & 7", falls back gracefully when the profile
 // is incomplete so prompts still read sensibly.
 export function travellersStr(p: FamilyProfile): string {
   const parts: string[] = []
@@ -156,14 +161,14 @@ export function agesStr(ages: number[]): string {
 
 // ── PROMPTS ────────────────────────────────────────────────────────
 export const PROMPTS: PromptDef[] = [
-  // PLANNING & ITINERARY — cross-cutting "starter" prompts (these used
+  // PLANNING & ITINERARY, cross-cutting "starter" prompts (these used
   // to be a "Start here" category; they now live under Planning).
   {
     id: 'interview-first',
     category: 'itinerary',
     title: 'Make the AI interview you first',
     badge: 'any',
-    useCase: 'Best when you don\'t even know what to ask — the AI draws it out of you.',
+    useCase: 'Best when you don\'t even know what to ask, the AI draws it out of you.',
     questions: [
       { id: 'destination', label: 'Where are you going?', type: 'text', placeholder: 'e.g. Vietnam' },
       { id: 'dates', label: 'When, and for how long?', type: 'text', placeholder: 'e.g. March 2027, 3 weeks' },
@@ -206,7 +211,7 @@ FORMAT: Numbered list, one line each. No preamble.`),
 CONTEXT: ${a.destination} | ${travellersStr(p)}.
 INPUT:
 ${a.itinerary}
-TASK: 1) Roast it — what's unrealistic, over-packed, or stressful for these ages. 2) Rebuild it calmer and realistic.
+TASK: 1) Roast it, what's unrealistic, over-packed, or stressful for these ages. 2) Rebuild it calmer and realistic.
 FORMAT: "The roast" (bullets), then "The fix" (day-by-day).`),
   },
 
@@ -235,7 +240,7 @@ FORMAT: Three labelled groups, one-line reason each.`),
     category: 'family',
     title: 'Will they remember it in 10 years?',
     badge: 'any',
-    useCase: 'Predicts which moments actually stick — and 3 cheap ones that punch above their weight.',
+    useCase: 'Predicts which moments actually stick, and 3 cheap ones that punch above their weight.',
     questions: [
       { id: 'destination', label: 'Where are you going?', type: 'text', placeholder: 'e.g. Thailand' },
       { id: 'highlights', label: 'Paste your planned highlights', type: 'textarea', optional: true, placeholder: 'Leave blank for typical highlights there' },
@@ -260,7 +265,7 @@ FORMAT: "Will remember" / "Won't" / "Add these".`),
 `ROLE: Fun storyteller for children.
 CONTEXT: Audience = kids aged ${agesStr(p.kidsAges)}. Destination = ${a.destination}.
 TASK: Short, exciting, age-appropriate explainer of what's cool, weird and fun there, to build anticipation.
-FORMAT: Playful, 150–200 words + 3 "things to look out for".`),
+FORMAT: Playful, 150-200 words + 3 "things to look out for".`),
     crossLink: ADVENTURE_CROSSLINK,
   },
   {
@@ -278,7 +283,7 @@ FORMAT: Playful, 150–200 words + 3 "things to look out for".`),
 `ROLE: Family sleep & jet-lag expert.
 CONTEXT: ${a.origin} -> ${a.destination} | arrive ${a.arrival} | kids aged ${agesStr(p.kidsAges)}.
 TASK: Day-by-day sleep + light-exposure plan to adjust the kids, from 3 days BEFORE flying to 3 days after arrival. Work out the time difference yourself.
-FORMAT: Table by day — bedtime, wake, naps, light/dark actions.`),
+FORMAT: Table by day, bedtime, wake, naps, light/dark actions.`),
   },
   {
     id: 'nap-proof',
@@ -288,7 +293,7 @@ FORMAT: Table by day — bedtime, wake, naps, light/dark actions.`),
     useCase: 'Reworks a day plan around a toddler\'s nap without losing the good stuff.',
     questions: [
       { id: 'destination', label: 'Where is this?', type: 'text', placeholder: 'e.g. Rome' },
-      { id: 'nap', label: 'Nap window?', type: 'text', placeholder: 'e.g. 1–3pm' },
+      { id: 'nap', label: 'Nap window?', type: 'text', placeholder: 'e.g. 1-3pm' },
       { id: 'plan', label: 'Paste your day plan', type: 'textarea', placeholder: 'Morning: ...\nAfternoon: ...' },
     ],
     build: (a, p) => wrap(
@@ -296,7 +301,7 @@ FORMAT: Table by day — bedtime, wake, naps, light/dark actions.`),
 CONTEXT: ${a.destination} | kids aged ${agesStr(p.kidsAges)} | nap window ${a.nap}.
 INPUT:
 ${a.plan}
-TASK: Rework the day to protect the nap — cut, move, or do-on-the-go (stroller/transit naps). Stay realistic.
+TASK: Rework the day to protect the nap, cut, move, or do-on-the-go (stroller/transit naps). Stay realistic.
 FORMAT: Revised timeline + one-line "why" per change.`),
   },
 
@@ -306,7 +311,7 @@ FORMAT: Revised timeline + one-line "why" per change.`),
     category: 'flights',
     title: 'Cheapest realistic flight finder',
     badge: 'web',
-    useCase: 'Lowest TOTAL cost — nearby airports, split tickets, bags and fees included.',
+    useCase: 'Lowest TOTAL cost, nearby airports, split tickets, bags and fees included.',
     questions: [
       { id: 'origin', label: 'Flying from?', type: 'text', placeholder: 'e.g. Manchester', prefillFrom: 'homeAirport' },
       { id: 'destination', label: 'Flying to?', type: 'text', placeholder: 'e.g. Bali' },
@@ -319,7 +324,7 @@ FORMAT: Revised timeline + one-line "why" per change.`),
 CONTEXT: ${a.origin} -> ${a.destination} | ${a.dateRange} | ${travellersStr(p)} | ${a.bags} checked bags | nearby airports: ${a.nearby}.${moneyRule(p)}
 TASK: Find the cheapest REALISTIC routing incl. nearby airports and split-ticket options. Price the TOTAL (fares + bags + fees).
 RULES: Use current data; cite sources; flag risky self-transfers.
-FORMAT: Ranked options — total cost, route, why.`),
+FORMAT: Ranked options, total cost, route, why.`),
   },
   {
     id: 'flexible-dates',
@@ -337,7 +342,7 @@ FORMAT: Ranked options — total cost, route, why.`),
 `ROLE: Flight pricing analyst with live web access.
 CONTEXT: ${a.origin} -> ${a.destination} | target ${a.target} ± ${a.window} days | ${travellersStr(p)}.${moneyRule(p)}
 TASK: Find the cheapest date combinations in that window and explain WHY those dates are cheaper.
-FORMAT: Cheapest 3 date sets — total cost + reason.`),
+FORMAT: Cheapest 3 date sets, total cost + reason.`),
   },
   {
     id: 'family-flight',
@@ -353,8 +358,8 @@ FORMAT: Cheapest 3 date sets — total cost + reason.`),
     build: (a, p) => wrap(
 `ROLE: Family flight expert with live web access.
 CONTEXT: ${a.origin} -> ${a.destination} | ${a.dates} | ${travellersStr(p)}.${moneyRule(p)}
-TASK: Recommend flights prioritising short total travel time, minimal overnight layovers, and child-friendly departure times — not just lowest fare.
-FORMAT: Top 3 — times, layovers, why it suits these ages.`),
+TASK: Recommend flights prioritising short total travel time, minimal overnight layovers, and child-friendly departure times, not just lowest fare.
+FORMAT: Top 3, times, layovers, why it suits these ages.`),
   },
   {
     id: 'long-haul',
@@ -369,7 +374,7 @@ FORMAT: Top 3 — times, layovers, why it suits these ages.`),
     build: (a, p) => wrap(
 `ROLE: Veteran parent + long-haul flight expert.
 CONTEXT: ${a.hours}-hour ${a.timing} | kids aged ${agesStr(p.kidsAges)}.
-TASK: Hour-by-hour survival plan — sleep timing, snack/meal spacing, screen-free activities, ear-pain at take-off/landing, plus a day-bag checklist.
+TASK: Hour-by-hour survival plan, sleep timing, snack/meal spacing, screen-free activities, ear-pain at take-off/landing, plus a day-bag checklist.
 FORMAT: Timeline + "day bag" checklist.`),
   },
 
@@ -392,7 +397,7 @@ FORMAT: Timeline + "day bag" checklist.`),
 CONTEXT: ${a.region} | start ${a.start} | ${a.duration} | ${travellersStr(p)}.${moneyRule(p)}
 GOAL: Recommend countries + weeks in each, sequenced to hit shoulder season (good weather, lower crowds/prices) as we move. Priorities: ${a.priority}.
 CONSTRAINTS: Minimise backtracking; logical overland/short-haul flow; family pace (${a.pace}).
-OUTPUT: Chronological list — month, weeks in each, one-line why the timing works. Flag any country to skip for that season.`),
+OUTPUT: Chronological list, month, weeks in each, one-line why the timing works. Flag any country to skip for that season.`),
   },
   {
     id: 'multi-country',
@@ -410,7 +415,7 @@ OUTPUT: Chronological list — month, weeks in each, one-line why the timing wor
 `ROLE: Expert family route planner.
 CONTEXT: ${a.start} -> ${a.end} | ${a.duration} | ${travellersStr(p)} | pace ${a.pace}.
 TASK: Route for minimal backtracking, efficient transport, family pace. Suggest nights per stop.
-FORMAT: Ordered stops — nights, transport between, one-line why.`),
+FORMAT: Ordered stops, nights, transport between, one-line why.`),
   },
   {
     id: 'transport-compare',
@@ -426,8 +431,8 @@ FORMAT: Ordered stops — nights, transport between, one-line why.`),
     build: (a, p) => wrap(
 `ROLE: Regional transport expert with live web access.
 CONTEXT: ${a.from} -> ${a.to} | ${travellersStr(p)} | priority ${a.priority}.${moneyRule(p)}
-TASK: Compare ALL options — flight, train, bus, private transfer — for a family.
-FORMAT: Table — option, cost, duration, family ease (1–5), verdict.`),
+TASK: Compare ALL options, flight, train, bus, private transfer, for a family.
+FORMAT: Table, option, cost, duration, family ease (1 to 5), verdict.`),
   },
 
   // 5. 💰 BUDGET & MONEY
@@ -445,8 +450,8 @@ FORMAT: Table — option, cost, duration, family ease (1–5), verdict.`),
     build: (a, p) => wrap(
 `ROLE: Realistic family-travel budgeter with live web access.
 CONTEXT: ${a.destination} | ${a.length} | ${travellersStr(p)} | ${a.style}.${moneyRule(p)}
-TASK: Break down the full realistic cost — flights, accommodation, food, transport, activities. Highlight HIDDEN costs people forget.
-FORMAT: Itemised table — cost + notes. Total + daily average.`),
+TASK: Break down the full realistic cost, flights, accommodation, food, transport, activities. Highlight HIDDEN costs people forget.
+FORMAT: Itemised table, cost + notes. Total + daily average.`),
   },
   {
     id: 'spend-vs-save',
@@ -460,7 +465,7 @@ FORMAT: Itemised table — cost + notes. Total + daily average.`),
     build: (a, p) => wrap(
 `ROLE: Savvy family-travel expert.
 CONTEXT: ${a.destination} | ${travellersStr(p)}.${moneyRule(p)}
-TASK: Explain where it's worth spending more vs where to save without hurting the experience — specific to here and these ages.
+TASK: Explain where it's worth spending more vs where to save without hurting the experience, specific to here and these ages.
 FORMAT: "Worth it" / "Save", bullets + one-line why.`),
   },
   {
@@ -475,17 +480,17 @@ FORMAT: "Worth it" / "Save", bullets + one-line why.`),
     build: (a, p) => wrap(
 `ROLE: Local-savvy travel money expert with live web access.
 CONTEXT: ${a.destination} | ${travellersStr(p)}.${moneyRule(p)}
-TASK: Brief me — cash vs card norms, tipping, common tourist scams, and a realistic daily family spend.
+TASK: Brief me, cash vs card norms, tipping, common tourist scams, and a realistic daily family spend.
 FORMAT: 4 short sections.`),
   },
 
-  // 🗓️ PLANNING & ITINERARY (continued) — review/pacing prompts
+  // 🗓️ PLANNING & ITINERARY (continued), review/pacing prompts
   {
     id: 'itinerary-critique',
     category: 'itinerary',
     title: 'Itinerary critique',
     badge: 'any',
-    useCase: 'Flags what\'s unrealistic, stressful or unnecessary — and fixes it.',
+    useCase: 'Flags what\'s unrealistic, stressful or unnecessary, and fixes it.',
     questions: [
       { id: 'destination', label: 'Where is this trip?', type: 'text', placeholder: 'e.g. Portugal' },
       { id: 'itinerary', label: 'Paste your itinerary', type: 'textarea', placeholder: 'Day 1: ...\nDay 2: ...' },
@@ -513,7 +518,7 @@ FORMAT: Issue -> fix, bullets.`),
 CONTEXT: ${a.destination} | ${travellersStr(p)}.
 INPUT:
 ${a.plan}
-TASK: Identify anything MISSING that could cause stress, delays, or surprise costs — logistics, timing, gaps, bookings needed.
+TASK: Identify anything MISSING that could cause stress, delays, or surprise costs, logistics, timing, gaps, bookings needed.
 FORMAT: Checklist of gaps + the fix.`),
   },
   {
@@ -533,6 +538,230 @@ INPUT:
 ${a.itinerary}
 TASK: Is there enough downtime, or will we come home exhausted? Where to add rest/buffer days.
 FORMAT: Verdict + specific tweaks.`),
+  },
+
+  // 🏠 WHERE TO STAY
+  {
+    id: 'family-safe-stay',
+    category: 'stay',
+    title: 'Is this place family-safe?',
+    badge: 'web',
+    useCase: 'Paste a listing and get the family red flags before you book.',
+    questions: [
+      { id: 'destination', label: 'Where is it?', type: 'text', placeholder: 'e.g. Lisbon' },
+      { id: 'listing', label: 'Paste the listing description or link', type: 'textarea', placeholder: 'Paste the property description, amenities, location…' },
+    ],
+    build: (a, p) => wrap(
+`ROLE: Cautious family-travel expert with live web access.
+CONTEXT: ${a.destination} | kids aged ${agesStr(p.kidsAges)}.
+INPUT (listing):
+${a.listing}
+TASK: Flag family red flags such as an unfenced pool, balcony/stair/window risks, no cot, far from food or transport, or a noisy/unsafe area. Then list what to ask the host before booking.
+FORMAT: "Red flags", "Ask the host", "Verdict".`),
+  },
+  {
+    id: 'neighbourhood-picker',
+    category: 'stay',
+    title: 'Neighbourhood picker',
+    badge: 'web',
+    useCase: 'The best areas to base a family, by safety, walkability and what is nearby.',
+    questions: [
+      { id: 'destination', label: 'Which city?', type: 'text', placeholder: 'e.g. Barcelona' },
+      { id: 'areas', label: 'Paste areas you are considering', type: 'textarea', optional: true, placeholder: 'Leave blank and we will suggest the best ones' },
+    ],
+    build: (a, p) => wrap(
+`ROLE: Local-savvy family-travel expert with live web access.
+CONTEXT: ${a.destination} | ${travellersStr(p)}.
+TASK: ${a.areas ? `Compare these areas:\n${a.areas}` : 'Recommend the best areas'} for a family, judged on safety, walkability, noise, and closeness to parks, supermarkets and transport.
+FORMAT: Per area, list pros, cons, and who it suits.`),
+  },
+  {
+    id: 'long-stay-base',
+    category: 'stay',
+    title: 'Long-stay base check',
+    badge: 'web',
+    useCase: 'Which area suits basing for weeks or months with kids.',
+    questions: [
+      { id: 'destination', label: 'Which city?', type: 'text', placeholder: 'e.g. Chiang Mai' },
+      { id: 'duration', label: 'How long are you basing?', type: 'text', placeholder: 'e.g. 2 months' },
+    ],
+    build: (a, p) => wrap(
+`ROLE: Slow-travel family expert with live web access.
+CONTEXT: ${a.destination} | basing for ${a.duration} | kids aged ${agesStr(p.kidsAges)}.
+TASK: Recommend which area suits a family basing here, considering quiet streets, routines, parks, groceries, reliable wifi, a community of other families, and things to do with kids.
+FORMAT: Top 2 to 3 areas with why, plus any to avoid.`),
+  },
+
+  // 🌍 SLOW TRAVEL & WORLDSCHOOLING
+  {
+    id: 'roadschool-unit',
+    category: 'slow',
+    title: 'Roadschool mini-unit',
+    badge: 'any',
+    useCase: 'A week of light, hands-on learning tied to where you are.',
+    questions: [
+      { id: 'destination', label: 'Where are you?', type: 'text', placeholder: 'e.g. Egypt' },
+      { id: 'focus', label: 'Any focus?', type: 'select', options: ['Any', 'History', 'Science', 'Culture', 'Nature', 'Language'] },
+    ],
+    build: (a, p) => wrap(
+`ROLE: Worldschooling curriculum designer.
+CONTEXT: ${a.destination} | kids aged ${agesStr(p.kidsAges)}.${a.focus && a.focus !== 'Any' ? `\nFOCUS: ${a.focus}.` : ''}
+TASK: Design a one-week learning mini-unit tied to this destination, with light hands-on activities we can do as we travel. Tie it to what we will actually see and do here.
+FORMAT: A theme, then 5 daily activities, each with a one-line "what they learn".`),
+    crossLink: ADVENTURE_CROSSLINK,
+  },
+  {
+    id: 'worldschooling-hubs',
+    category: 'slow',
+    title: 'Worldschooling hub finder',
+    badge: 'web',
+    useCase: 'Where to find other travelling families and co-learning in a region.',
+    questions: [
+      { id: 'region', label: 'Region, or specific countries?', type: 'text', placeholder: 'Start typing or pick a region', suggestions: REGION_SUGGESTIONS },
+    ],
+    build: (a, p) => wrap(
+`ROLE: Worldschooling community expert with live web access.
+CONTEXT: ${a.region} | kids aged ${agesStr(p.kidsAges)}.
+TASK: Recommend the best worldschooling and family-nomad hubs in this region, the kind with other travelling families, co-learning, kids activities and good base infrastructure. Note the best months to be in each.
+FORMAT: Ranked hubs, each with why, the community, and the best season.`),
+    crossLink: ADVENTURE_CROSSLINK,
+  },
+  {
+    id: 'slow-rhythm',
+    category: 'slow',
+    title: 'Slow-travel rhythm planner',
+    badge: 'any',
+    useCase: 'A sustainable weekly rhythm so you do not burn out on the road.',
+    questions: [
+      { id: 'destination', label: 'Where are you basing?', type: 'text', placeholder: 'e.g. Da Nang' },
+      { id: 'duration', label: 'How long?', type: 'text', placeholder: 'e.g. 6 weeks' },
+    ],
+    build: (a, p) => wrap(
+`ROLE: Slow-travel family expert.
+CONTEXT: ${a.destination} | staying ${a.duration} | kids aged ${agesStr(p.kidsAges)}.
+TASK: Suggest a sustainable weekly rhythm for slow travel here, balancing schooling, exploring, downtime, chores and rest, so we do not burn out.
+FORMAT: A sample week from Monday to Sunday, plus 3 tips for keeping routine on the road.`),
+  },
+
+  // 🧳 PACKING & FOOD
+  {
+    id: 'capsule-packing',
+    category: 'packing',
+    title: 'Capsule packing list',
+    badge: 'web',
+    useCase: 'A minimal, climate-right packing list grouped by person.',
+    questions: [
+      { id: 'destination', label: 'Where are you going?', type: 'text', placeholder: 'e.g. Iceland' },
+      { id: 'month', label: 'Which month?', type: 'text', placeholder: 'e.g. July' },
+      { id: 'bags', label: 'Luggage?', type: 'select', options: ['Carry-on only', 'One checked bag each', 'Two checked bags'] },
+      { id: 'laundry', label: 'Laundry access?', type: 'select', options: ['Every few days', 'Weekly', 'Rarely'] },
+    ],
+    build: (a, p) => wrap(
+`ROLE: Minimalist family packing expert with live web access.
+CONTEXT: ${a.destination} | ${a.month} | ${travellersStr(p)} | luggage: ${a.bags} | laundry: ${a.laundry}.
+TASK: Build a minimal capsule packing list grouped by person. Flag anything hard to buy there and anything the climate that month demands.
+FORMAT: A list per person, plus a "buy it there" note.`),
+  },
+  {
+    id: 'medical-kit',
+    category: 'packing',
+    title: 'Family medical kit',
+    badge: 'web',
+    useCase: 'What to pack for the destination and your kids ages, with a buy-there note.',
+    questions: [
+      { id: 'destination', label: 'Where are you going?', type: 'text', placeholder: 'e.g. Peru' },
+    ],
+    build: (a, p) => wrap(
+`ROLE: Family travel-health expert with live web access.
+CONTEXT: ${a.destination} | kids aged ${agesStr(p.kidsAges)}.
+TASK: List what to pack in our family medical kit for here, given the kids ages, common local health risks, and what is easy or hard to buy at local pharmacies.
+RULES: Note anything needing a doctor or prescription. This is not medical advice, so tell me to confirm with our GP.
+FORMAT: A checklist grouped by purpose.`),
+  },
+  {
+    id: 'picky-eater',
+    category: 'packing',
+    title: 'Picky-eater menu',
+    badge: 'web',
+    useCase: 'Local dishes your kids will actually eat, and how to order them.',
+    questions: [
+      { id: 'destination', label: 'Where are you going?', type: 'text', placeholder: 'e.g. Japan' },
+      { id: 'eat', label: 'What do your kids usually eat?', type: 'textarea', placeholder: 'e.g. plain rice, chicken, pasta, fruit' },
+      { id: 'language', label: 'Local language?', type: 'text', optional: true, placeholder: 'e.g. Japanese' },
+    ],
+    build: (a, p) => wrap(
+`ROLE: Family food expert with live web access.
+CONTEXT: ${a.destination} | kids aged ${agesStr(p.kidsAges)}.
+KIDS USUALLY EAT: ${a.eat}
+TASK: Suggest local dishes these kids are likely to actually eat, safe go-to options, and how to ask for plain or kid versions${a.language ? ` in ${a.language}` : ''}.
+FORMAT: "Likely wins", "Safe fallbacks", "How to order".`),
+  },
+  {
+    id: 'allergy-card',
+    category: 'packing',
+    title: 'Allergy card in the local language',
+    badge: 'any',
+    useCase: 'A polite, firm allergy card vendors will take seriously.',
+    questions: [
+      { id: 'allergies', label: 'List the allergies', type: 'text', placeholder: 'e.g. peanuts, shellfish' },
+      { id: 'language', label: 'Local language?', type: 'text', placeholder: 'e.g. Thai' },
+    ],
+    build: (a) => wrap(
+`ROLE: Translator and travel safety expert.
+CONTEXT: Family with these allergies: ${a.allergies}. Language: ${a.language}.
+TASK: Write a clear, polite, firm allergy card in ${a.language} with English underneath, strong enough that a restaurant or street vendor takes it seriously. Then list local foods that commonly hide these allergens.
+FORMAT: The card in local language and English, then "watch out for".`),
+  },
+
+  // 🤔 SHOULD WE GO?
+  {
+    id: 'destination-compare',
+    category: 'decide',
+    title: 'Destination compare',
+    badge: 'any',
+    useCase: 'A clear head-to-head when you are torn between two places.',
+    questions: [
+      { id: 'optionA', label: 'Destination A?', type: 'text', placeholder: 'e.g. Costa Rica' },
+      { id: 'optionB', label: 'Destination B?', type: 'text', placeholder: 'e.g. Sri Lanka' },
+      { id: 'duration', label: 'How long?', type: 'text', placeholder: 'e.g. 3 weeks' },
+    ],
+    build: (a, p) => wrap(
+`ROLE: Honest family-travel expert.
+CONTEXT: ${a.optionA} vs ${a.optionB} | ${a.duration} | ${travellersStr(p)}.${moneyRule(p)}
+TASK: Compare the two for a family on ease, safety, cost, weather, kid-friendliness and overall experience, then give a clear recommendation for us.
+FORMAT: A side-by-side table, then a one-paragraph verdict.`),
+  },
+  {
+    id: 'right-month',
+    category: 'decide',
+    title: 'Is this the right month?',
+    badge: 'web',
+    useCase: 'Whether your chosen month is a good time to go, or a better one exists.',
+    questions: [
+      { id: 'destination', label: 'Where are you going?', type: 'text', placeholder: 'e.g. Bali' },
+      { id: 'month', label: 'Which month?', type: 'text', placeholder: 'e.g. January' },
+    ],
+    build: (a, p) => wrap(
+`ROLE: Honest family-travel expert with live web access.
+CONTEXT: ${a.destination} | ${a.month} | kids aged ${agesStr(p.kidsAges)}.${moneyRule(p)}
+TASK: Be honest about whether this is a good month to visit here with kids: weather, crowds, prices, school-holiday clashes, and anything seasonal to avoid. If it is not ideal, suggest a better window.
+FORMAT: A verdict, the reasons, and a better month if relevant.`),
+  },
+  {
+    id: 'should-we-go',
+    category: 'decide',
+    title: 'Should we actually go?',
+    badge: 'any',
+    useCase: 'An honest gut-check on whether a place fits your family right now.',
+    questions: [
+      { id: 'destination', label: 'Where are you thinking?', type: 'text', placeholder: 'e.g. India' },
+      { id: 'month', label: 'Roughly when?', type: 'text', optional: true, placeholder: 'e.g. November' },
+    ],
+    build: (a, p) => wrap(
+`ROLE: Honest family-travel expert. No sugar-coating and no fear-mongering.
+CONTEXT: ${a.destination}${a.month ? ` in ${a.month}` : ''} | kids aged ${agesStr(p.kidsAges)}.${moneyRule(p)}
+TASK: Honestly assess whether this is a good fit for our family right now, weighing weather, crowds, travel fatigue, cost and overall experience for these ages. End with a clear "go", "wait" or "rethink".
+FORMAT: A short honest take, then a clear recommendation.`),
   },
 ]
 

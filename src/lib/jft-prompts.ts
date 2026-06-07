@@ -114,11 +114,11 @@ export type CategoryId =
 export type Category = { id: CategoryId; label: string; emoji: string }
 
 export const CATEGORIES: Category[] = [
+  { id: 'route',     label: 'Route & timing',       emoji: '🗺️' },
+  { id: 'flights',   label: 'Flights',              emoji: '✈️' },
+  { id: 'budget',    label: 'Budget & money',       emoji: '💰' },
   { id: 'itinerary', label: 'Planning & itinerary', emoji: '🗓️' },
   { id: 'family',    label: 'Family & kids',        emoji: '👨‍👩‍👧‍👦' },
-  { id: 'flights',   label: 'Flights',              emoji: '✈️' },
-  { id: 'route',     label: 'Route & timing',       emoji: '🗺️' },
-  { id: 'budget',    label: 'Budget & money',       emoji: '💰' },
 ]
 
 export const BADGE_LABEL: Record<Badge, string> = {

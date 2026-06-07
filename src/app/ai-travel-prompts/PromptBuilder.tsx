@@ -49,7 +49,7 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
   const [profileSaved, setProfileSaved] = useState(false)
   const [savingProfile, setSavingProfile] = useState(false)
 
-  const [activeCat, setActiveCat] = useState<CategoryId>('itinerary')
+  const [activeCat, setActiveCat] = useState<CategoryId>('route')
   const [openId, setOpenId] = useState<string | null>(null)
   const [answers, setAnswers] = useState<Record<string, Record<string, string>>>({})
   const [copiedId, setCopiedId] = useState<string | null>(null)

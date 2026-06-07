@@ -49,7 +49,7 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
   const [profileSaved, setProfileSaved] = useState(false)
   const [savingProfile, setSavingProfile] = useState(false)
 
-  const [activeCat, setActiveCat] = useState<CategoryId>('signature')
+  const [activeCat, setActiveCat] = useState<CategoryId>('itinerary')
   const [openId, setOpenId] = useState<string | null>(null)
   const [answers, setAnswers] = useState<Record<string, Record<string, string>>>({})
   const [copiedId, setCopiedId] = useState<string | null>(null)
@@ -401,22 +401,32 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
           </div>
         </div>
 
-        {/* CATEGORY TABS */}
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-6 -mx-1 px-1">
-          {CATEGORIES.map(c => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => { setActiveCat(c.id); setOpenId(null) }}
-              className={`shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-semibold border transition-colors ${
-                activeCat === c.id
-                  ? 'bg-brand-600 text-white border-brand-600'
-                  : 'bg-white text-gray-600 border-gray-200 hover:border-brand-300'
-              }`}
-            >
-              <span aria-hidden>{c.emoji}</span> {c.label}
-            </button>
-          ))}
+        {/* CATEGORY GRID — every category visible at once, no sideways
+            scrolling. 2 columns on phones, 3 on larger screens. */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-6">
+          {CATEGORIES.map(c => {
+            const count = PROMPTS.filter(p => p.category === c.id).length
+            const active = activeCat === c.id
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => { setActiveCat(c.id); setOpenId(null) }}
+                aria-pressed={active}
+                className={`flex flex-col items-start gap-1 p-3 rounded-xl border text-left transition-colors ${
+                  active
+                    ? 'bg-brand-600 border-brand-600 text-white'
+                    : 'bg-white border-gray-200 text-gray-800 hover:border-brand-300'
+                }`}
+              >
+                <span className="text-2xl leading-none" aria-hidden>{c.emoji}</span>
+                <span className="text-sm font-semibold leading-tight">{c.label}</span>
+                <span className={`text-[11px] ${active ? 'text-white/80' : 'text-gray-400'}`}>
+                  {count} prompt{count !== 1 ? 's' : ''}
+                </span>
+              </button>
+            )
+          })}
         </div>
 
         {/* PROMPT CARDS */}

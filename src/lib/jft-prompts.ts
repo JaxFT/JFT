@@ -109,17 +109,16 @@ const ADVENTURE_CROSSLINK = {
 }
 
 export type CategoryId =
-  | 'signature' | 'family' | 'flights' | 'route' | 'budget' | 'itinerary'
+  | 'family' | 'flights' | 'route' | 'budget' | 'itinerary'
 
 export type Category = { id: CategoryId; label: string; emoji: string }
 
 export const CATEGORIES: Category[] = [
-  { id: 'signature', label: 'Start here',        emoji: '✨' },
-  { id: 'family',    label: 'Family & kids',     emoji: '👨‍👩‍👧‍👦' },
-  { id: 'flights',   label: 'Flights',           emoji: '✈️' },
-  { id: 'route',     label: 'Route & timing',    emoji: '🗺️' },
-  { id: 'budget',    label: 'Budget & money',    emoji: '💰' },
-  { id: 'itinerary', label: 'Itinerary & pacing', emoji: '🗓️' },
+  { id: 'itinerary', label: 'Planning & itinerary', emoji: '🗓️' },
+  { id: 'family',    label: 'Family & kids',        emoji: '👨‍👩‍👧‍👦' },
+  { id: 'flights',   label: 'Flights',              emoji: '✈️' },
+  { id: 'route',     label: 'Route & timing',       emoji: '🗺️' },
+  { id: 'budget',    label: 'Budget & money',       emoji: '💰' },
 ]
 
 export const BADGE_LABEL: Record<Badge, string> = {
@@ -157,10 +156,11 @@ export function agesStr(ages: number[]): string {
 
 // ── PROMPTS ────────────────────────────────────────────────────────
 export const PROMPTS: PromptDef[] = [
-  // 1. ✨ SIGNATURE / START HERE
+  // PLANNING & ITINERARY — cross-cutting "starter" prompts (these used
+  // to be a "Start here" category; they now live under Planning).
   {
     id: 'interview-first',
-    category: 'signature',
+    category: 'itinerary',
     title: 'Make the AI interview you first',
     badge: 'any',
     useCase: 'Best when you don\'t even know what to ask — the AI draws it out of you.',
@@ -177,7 +177,7 @@ RULES: One question per message; wait for my reply; no advice until done.`),
   },
   {
     id: 'blind-spots',
-    category: 'signature',
+    category: 'itinerary',
     title: 'Find my blind spots',
     badge: 'any',
     useCase: 'Surfaces the questions a seasoned family-travel expert would ask that you haven\'t.',
@@ -193,7 +193,7 @@ FORMAT: Numbered list, one line each. No preamble.`),
   },
   {
     id: 'roast-itinerary',
-    category: 'signature',
+    category: 'itinerary',
     title: 'Roast my itinerary, then fix it',
     badge: 'any',
     useCase: 'A brutally honest expert tears your plan apart, then rebuilds it calmer.',
@@ -479,7 +479,7 @@ TASK: Brief me — cash vs card norms, tipping, common tourist scams, and a real
 FORMAT: 4 short sections.`),
   },
 
-  // 6. 🗓️ ITINERARY & PACING
+  // 🗓️ PLANNING & ITINERARY (continued) — review/pacing prompts
   {
     id: 'itinerary-critique',
     category: 'itinerary',

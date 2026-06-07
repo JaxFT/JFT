@@ -1,9 +1,10 @@
 'use client'
 
 import { Suspense, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { ArrowLeft, Check, Loader2 } from 'lucide-react'
+import { ArrowLeft, Loader2 } from 'lucide-react'
 import Logo from '@/components/branding/Logo'
 
 export default function ResetPasswordPage() {
@@ -16,28 +17,60 @@ export default function ResetPasswordPage() {
 
 function ResetPasswordForm() {
   const supabase = createClient()
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [sent, setSent] = useState(false)
+  // 'form' = enter email, 'otp' = enter the 6-digit reset code.
+  const [phase, setPhase] = useState<'form' | 'otp'>('form')
+  const [code, setCode] = useState('')
+  const [verifying, setVerifying] = useState(false)
+  const [resent, setResent] = useState(false)
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
     try {
-      // Send users straight to /update-password, that page handles the
-      // PASSWORD_RECOVERY auth event itself, which is the canonical
-      // Supabase pattern and sidesteps query-param mangling on redirectTo.
+      // We send a 6-digit code (the email template includes {{ .Token }}).
+      // redirectTo is kept as a fallback for anyone who clicks the link.
       const redirectTo = `${window.location.origin}/update-password`
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo })
       if (error) throw new Error(error.message)
-      setSent(true)
+      setPhase('otp')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not send reset email')
     } finally {
       setLoading(false)
     }
+  }
+
+  const verify = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setVerifying(true)
+    setError(null)
+    const { error } = await supabase.auth.verifyOtp({
+      email: email.trim(),
+      token: code.trim(),
+      type: 'recovery',
+    })
+    if (error) {
+      setError(error.message || 'That code was not valid. Check it and try again.')
+      setVerifying(false)
+      return
+    }
+    // Recovery session is now active; the update-password page lets them
+    // set a new one.
+    router.replace('/update-password')
+  }
+
+  const resend = async () => {
+    setError(null)
+    setResent(false)
+    const redirectTo = `${window.location.origin}/update-password`
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo })
+    if (error) { setError(error.message); return }
+    setResent(true)
   }
 
   return (
@@ -50,23 +83,43 @@ function ResetPasswordForm() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          {sent ? (
-            <div className="text-center">
-              <div className="w-12 h-12 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Check className="w-6 h-6 text-brand-700" />
-              </div>
-              <h1 className="text-xl font-bold text-gray-900 mb-2">Check your email</h1>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                If an account exists for <strong>{email}</strong>, we've sent a password reset link. Open it on this device and you'll be taken to set a new password.
+          {phase === 'otp' ? (
+            <>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">Enter your code</h1>
+              <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+                If an account exists for <strong>{email}</strong>, we&apos;ve emailed a 6-digit code.
+                Enter it below to set a new password.
               </p>
-              <Link href="/login" className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700 mt-6">
-                <ArrowLeft className="w-4 h-4" /> Back to login
-              </Link>
-            </div>
+
+              <form onSubmit={verify} className="space-y-4">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  autoFocus
+                  required
+                  value={code}
+                  onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
+                  placeholder="123456"
+                  className="w-full px-3.5 py-3 border border-gray-200 rounded-lg text-center text-lg tracking-[0.4em] font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                />
+                {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+                {resent && <p className="text-sm text-brand-700 bg-brand-50 px-3 py-2 rounded-lg">New code sent.</p>}
+                <button type="submit" disabled={verifying || code.length < 6} className="btn-primary w-full justify-center py-2.5 disabled:opacity-60">
+                  {verifying ? (<><Loader2 className="w-4 h-4 animate-spin" /> Verifying…</>) : 'Continue'}
+                </button>
+              </form>
+
+              <p className="text-center text-sm text-gray-500 mt-6">
+                Didn&apos;t get it?{' '}
+                <button type="button" onClick={resend} className="text-brand-600 font-semibold hover:underline">Resend code</button>
+              </p>
+            </>
           ) : (
             <>
               <h1 className="text-2xl font-bold text-gray-900 mb-1">Forgot password</h1>
-              <p className="text-sm text-gray-500 mb-6">Enter your email and we'll send you a link to set a new one.</p>
+              <p className="text-sm text-gray-500 mb-6">Enter your email and we&apos;ll send you a 6-digit code to set a new one.</p>
 
               <form onSubmit={submit} className="space-y-4">
                 <div>
@@ -90,7 +143,7 @@ function ResetPasswordForm() {
                   disabled={loading}
                   className="btn-primary w-full justify-center py-2.5 disabled:opacity-60"
                 >
-                  {loading ? (<><Loader2 className="w-4 h-4 animate-spin" /> Sending…</>) : 'Send reset link'}
+                  {loading ? (<><Loader2 className="w-4 h-4 animate-spin" /> Sending…</>) : 'Send reset code'}
                 </button>
               </form>
 

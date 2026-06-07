@@ -19,10 +19,14 @@ type Tier = 'free' | 'premium'
 export default function SignupForm({
   discountEmail = null,
   defaultTier = 'free',
+  next = null,
 }: {
   discountEmail?: string | null
   defaultTier?: Tier
+  next?: string | null
 }) {
+  // Only allow internal paths as a return target (no open redirects).
+  const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : '/account'
   const discountActive = !!discountEmail
   const [email, setEmail] = useState(discountEmail ?? '')
   const [password, setPassword] = useState('')
@@ -93,12 +97,12 @@ export default function SignupForm({
           const json = await res.json() as { url?: string }
           if (json.url) { window.location.replace(json.url); return }
         }
-        // Fall through to /account if checkout couldn't start.
+        // Fall through to safeNext if checkout couldn't start.
       }
     } catch {
       // Fall through.
     }
-    router.replace('/account')
+    router.replace(safeNext)
     router.refresh()
   }
 

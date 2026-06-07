@@ -34,7 +34,11 @@ function LoginForm() {
     setLoading(true)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) { setError(error.message); setLoading(false); return }
-    router.push('/')
+    // Honour a safe internal ?next= return path (e.g. back to the prompt
+    // builder after signing in to copy), otherwise home.
+    const next = searchParams.get('next')
+    const dest = next && next.startsWith('/') && !next.startsWith('//') ? next : '/'
+    router.push(dest)
     router.refresh()
   }
 

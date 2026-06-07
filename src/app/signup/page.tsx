@@ -11,13 +11,14 @@ export const dynamic = 'force-dynamic'
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ plan?: string }>
+  searchParams: Promise<{ plan?: string; next?: string }>
 }) {
-  const [discount, { plan }] = await Promise.all([readWaystaqDiscount(), searchParams])
+  const [discount, { plan, next }] = await Promise.all([readWaystaqDiscount(), searchParams])
   return (
     <SignupForm
       discountEmail={discount?.email ?? null}
       defaultTier={plan === 'premium' ? 'premium' : 'free'}
+      next={next ?? null}
     />
   )
 }

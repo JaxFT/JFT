@@ -23,6 +23,9 @@ import {
 } from '@/lib/jft-prompts'
 
 const LS_KEY = 'jft-family-profile'
+// In-progress prompt (answers + open card + category) so it survives a
+// trip to sign up and back. Keyed separately from the family profile.
+const DRAFT_KEY = 'jft-prompt-draft'
 
 // Full country list (minus Antarctica) for the home-country picker.
 const COUNTRY_NAMES = COUNTRIES
@@ -55,6 +58,9 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
   // (on small screens the grid fills the viewport and the change is
   // otherwise below the fold).
   const listRef = useRef<HTMLUListElement>(null)
+  // Guards the draft save so we don't overwrite the stored draft with
+  // empty state before the restore effect has run.
+  const draftHydrated = useRef(false)
   const [answers, setAnswers] = useState<Record<string, Record<string, string>>>({})
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
@@ -76,6 +82,33 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Restore any in-progress prompt on mount (e.g. after signing up).
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY)
+      if (raw) {
+        const d = JSON.parse(raw) as {
+          answers?: Record<string, Record<string, string>>
+          openId?: string | null
+          activeCat?: CategoryId
+        }
+        if (d.answers) setAnswers(d.answers)
+        if (d.openId) setOpenId(d.openId)
+        if (d.activeCat) setActiveCat(d.activeCat)
+      }
+    } catch {}
+    draftHydrated.current = true
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Persist the in-progress prompt whenever it changes.
+  useEffect(() => {
+    if (!draftHydrated.current) return
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ answers, openId, activeCat }))
+    } catch {}
+  }, [answers, openId, activeCat])
 
   const parseKids = (list: string[]): number[] =>
     list
@@ -503,7 +536,7 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
                                 : <><Copy className="w-4 h-4" /> Copy prompt</>}
                             </button>
                           ) : (
-                            <Link href="/signup" className="btn-primary !text-sm !py-2 !px-4">
+                            <Link href="/signup?next=/ai-travel-prompts" className="btn-primary !text-sm !py-2 !px-4">
                               <Lock className="w-4 h-4" /> Free account to copy
                             </Link>
                           )}
@@ -512,7 +545,7 @@ export default function PromptBuilder({ isLoggedIn, initialProfile, related }: P
                         {!isLoggedIn && (
                           <p className="text-[11px] text-gray-600 mt-2 bg-brand-50 border border-brand-100 rounded-md px-2.5 py-1.5 leading-relaxed">
                             Copying needs a free account, which also saves your family profile and prompts so you never re-type them.{' '}
-                            <Link href="/signup" className="text-brand-600 font-semibold hover:underline">Create one free</Link>{' '}
+                            <Link href="/signup?next=/ai-travel-prompts" className="text-brand-600 font-semibold hover:underline">Create one free</Link>{' '}
                             or <Link href="/login?next=/ai-travel-prompts" className="text-brand-600 font-semibold hover:underline">log in</Link>.
                           </p>
                         )}

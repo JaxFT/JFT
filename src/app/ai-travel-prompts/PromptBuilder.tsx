@@ -13,13 +13,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
-  Sparkles, Copy, Check, Globe, Bot, ChevronDown, Users, Wand2, Lock, Plus, X,
+  Sparkles, Copy, Check, Globe, Bot, ChevronDown, Users, Wand2, Lock, Plus, X, BookOpen,
 } from 'lucide-react'
 import { COUNTRIES } from '@/lib/countries'
 import {
   CATEGORIES, PROMPTS, BADGE_LABEL, BADGE_NOTE, EMPTY_PROFILE, TRAVEL_STYLES,
-  CURRENCIES, MAJOR_AIRPORTS,
-  type CategoryId, type FamilyProfile, type PromptDef, type Question,
+  CURRENCIES, MAJOR_AIRPORTS, relatedFor,
+  type CategoryId, type FamilyProfile, type PromptDef, type Question, type RelatedContentItem,
 } from '@/lib/jft-prompts'
 
 const LS_KEY = 'jft-family-profile'
@@ -33,6 +33,7 @@ const COUNTRY_NAMES = COUNTRIES
 type Props = {
   isLoggedIn: boolean
   initialProfile: FamilyProfile
+  related: RelatedContentItem[]
 }
 
 function isEmptyProfile(p: FamilyProfile): boolean {
@@ -40,7 +41,7 @@ function isEmptyProfile(p: FamilyProfile): boolean {
     && !p.homeAirport && !p.homeCurrency && p.travelStyle.length === 0
 }
 
-export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
+export default function PromptBuilder({ isLoggedIn, initialProfile, related }: Props) {
   const [profile, setProfile] = useState<FamilyProfile>(initialProfile)
   const [kids, setKids] = useState<string[]>(
     initialProfile.kidsAges.length ? initialProfile.kidsAges.map(String) : [''],
@@ -423,6 +424,7 @@ export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
           {visiblePrompts.map(p => {
             const open = openId === p.id
             const canCopy = requiredFilled(p)
+            const rel = open ? relatedFor(related, effAnswers(p)) : []
             return (
               <li key={p.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 {/* Card header — toggles open */}
@@ -485,6 +487,25 @@ export default function PromptBuilder({ isLoggedIn, initialProfile }: Props) {
                       </div>
                     ) : (
                       <p className="text-xs text-gray-400">Fill in the questions above to build your prompt.</p>
+                    )}
+
+                    {/* Related guides + blog posts, matched to the
+                        destination the user typed. */}
+                    {rel.length > 0 && (
+                      <div className="text-xs bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
+                        <span className="font-semibold text-gray-700 inline-flex items-center gap-1.5">
+                          <BookOpen className="w-3.5 h-3.5 text-brand-600" /> From Jax Family Travels
+                        </span>
+                        <ul className="mt-1.5 space-y-1">
+                          {rel.map(r => (
+                            <li key={r.href}>
+                              <Link href={r.href} className="text-brand-600 hover:underline">
+                                {r.type === 'guide' ? 'Guide: ' : ''}{r.title}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
 
                     {/* Soft cross-link to our own products (human-facing). */}

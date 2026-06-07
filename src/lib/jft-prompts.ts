@@ -539,3 +539,34 @@ FORMAT: Verdict + specific tweaks.`),
 export function promptsByCategory(id: CategoryId): PromptDef[] {
   return PROMPTS.filter(p => p.category === id)
 }
+
+// ── RELATED CONTENT (guides + blogs) ───────────────────────────────
+// The page builds this catalogue server-side from published guides and
+// blog posts; the client matches it live against the destination the
+// user types so e.g. "Sri Lanka" surfaces our Sri Lanka guide + posts.
+export type RelatedContentItem = {
+  type: 'guide' | 'blog'
+  title: string
+  href: string
+  terms: string[]   // lowercased match terms (country, title)
+}
+
+// Which question answers count as a "location" for matching.
+const LOCATION_QUESTION_IDS = new Set(['destination', 'region', 'to'])
+
+export function relatedFor(
+  items: RelatedContentItem[],
+  answers: Record<string, string>,
+  max = 4,
+): RelatedContentItem[] {
+  const hay = Object.entries(answers)
+    .filter(([k, v]) => LOCATION_QUESTION_IDS.has(k) && v && v.trim().length >= 3)
+    .map(([, v]) => v.toLowerCase())
+  if (!hay.length) return []
+  const matched = items.filter(it =>
+    it.terms.some(t => t.length >= 4 && hay.some(h => h.includes(t) || t.includes(h))),
+  )
+  // Guides before blogs, then cap.
+  matched.sort((a, b) => (a.type === b.type ? 0 : a.type === 'guide' ? -1 : 1))
+  return matched.slice(0, max)
+}

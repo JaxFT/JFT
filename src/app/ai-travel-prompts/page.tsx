@@ -2,7 +2,10 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/admin'
-import { EMPTY_PROFILE, type FamilyProfile } from '@/lib/jft-prompts'
+import { EMPTY_PROFILE, type FamilyProfile, type RelatedContentItem } from '@/lib/jft-prompts'
+import { listPublishedWebGuides } from '@/lib/guides-content-db'
+import { listPublishedPosts } from '@/lib/blog-db'
+import { getPackByIso2, getPackMeta } from '@/lib/adventurePackMeta'
 import PromptBuilder from './PromptBuilder'
 
 export const metadata: Metadata = {
@@ -47,10 +50,36 @@ export default async function AiTravelPromptsPage() {
     }
   }
 
+  // Build the related-content catalogue from published guides + posts.
+  // The client matches it against the destination the user types.
+  const [guides, posts] = await Promise.all([
+    listPublishedWebGuides(),
+    listPublishedPosts(),
+  ])
+  const related: RelatedContentItem[] = []
+  for (const g of guides) {
+    const terms = [g.title.toLowerCase()]
+    if (g.country) terms.push(g.country.toLowerCase())
+    related.push({ type: 'guide', title: g.title, href: `/guides/${g.slug}`, terms })
+  }
+  for (const b of posts) {
+    const terms = [b.title.toLowerCase()]
+    const dc = b.destination_country
+    if (dc) {
+      terms.push(dc.toLowerCase())
+      // destination_country can be a pack slug or ISO2 — resolve to a
+      // proper country name so "Sri Lanka" matches "lk"/"sri-lanka".
+      const meta = getPackMeta(dc) ?? getPackByIso2(dc)
+      if (meta?.country) terms.push(meta.country.toLowerCase())
+    }
+    related.push({ type: 'blog', title: b.title, href: `/blog/${b.slug}`, terms })
+  }
+
   return (
     <PromptBuilder
       isLoggedIn={!!user}
       initialProfile={initialProfile}
+      related={related}
     />
   )
 }

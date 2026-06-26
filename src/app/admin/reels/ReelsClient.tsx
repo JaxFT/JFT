@@ -3,17 +3,24 @@
 import { useState, useMemo } from 'react'
 import { Plus, Download, Pencil, Trash2, X, ChevronUp, ChevronDown, ExternalLink, Video } from 'lucide-react'
 import { createReel, updateReel, deleteReel } from './actions'
+import { COUNTRIES } from '@/lib/countries'
+import { COUNTRY_TZ, localToGmt } from './timezones'
 
 export type Reel = {
   id: string
   name: string
   post_type: 'trial' | 'main'
   posted_date: string | null
+  posted_country: string | null
+  posted_time_local: string | null
+  posted_time_gmt: string | null
   instagram_url: string | null
   duration_seconds: number | null
   clip_count: number | null
   audio_type: string | null
   topic: string | null
+  content_scope: string | null
+  content_country: string | null
   visual_hook: string | null
   verbal_hook: string | null
   text_hook: string | null
@@ -36,8 +43,10 @@ export type Reel = {
 }
 
 const EMPTY_FORM: Record<string, string> = {
-  name: '', post_type: 'main', posted_date: '', instagram_url: '',
+  name: '', post_type: 'main', posted_date: '', posted_country: '',
+  posted_time_local: '', instagram_url: '',
   duration_seconds: '', clip_count: '', audio_type: '', topic: '',
+  content_scope: 'general', content_country: '',
   visual_hook: '', verbal_hook: '', text_hook: '', hook_duration_seconds: '',
   views: '', reach: '', plays: '', likes: '', comments: '', shares: '',
   saves: '', follows_gained: '', avg_watch_time_seconds: '',
@@ -50,11 +59,15 @@ function reelToForm(r: Reel): Record<string, string> {
     name:                     r.name,
     post_type:                r.post_type,
     posted_date:              r.posted_date ?? '',
+    posted_country:           r.posted_country ?? '',
+    posted_time_local:        r.posted_time_local ?? '',
     instagram_url:            r.instagram_url ?? '',
     duration_seconds:         r.duration_seconds?.toString() ?? '',
     clip_count:               r.clip_count?.toString() ?? '',
     audio_type:               r.audio_type ?? '',
     topic:                    r.topic ?? '',
+    content_scope:            r.content_scope ?? 'general',
+    content_country:          r.content_country ?? '',
     visual_hook:              r.visual_hook ?? '',
     verbal_hook:              r.verbal_hook ?? '',
     text_hook:                r.text_hook ?? '',
@@ -102,18 +115,16 @@ type Modal =
   | { type: 'delete'; reel: Reel }
 
 const AUDIO_OPTIONS = [
-  { value: '', label: 'Not set' },
-  { value: 'original', label: 'Original audio' },
-  { value: 'trending_sound', label: 'Trending sound' },
-  { value: 'music', label: 'Music' },
-  { value: 'voiceover', label: 'Voiceover' },
-  { value: 'silent', label: 'Silent' },
+  { value: '',            label: 'Not set' },
+  { value: 'voiceover',  label: 'Voiceover' },
+  { value: 'audio_only', label: 'Audio only (no voiceover)' },
 ]
 
 const TABLE_COLS: { key: SortKey; label: string; numeric?: boolean }[] = [
   { key: 'name',                   label: 'Name' },
   { key: 'post_type',              label: 'Type' },
-  { key: 'posted_date',            label: 'Date' },
+  { key: 'posted_date',            label: 'Date / GMT' },
+  { key: 'content_country',        label: 'About' },
   { key: 'duration_seconds',       label: 'Duration',  numeric: true },
   { key: 'clip_count',             label: 'Clips',     numeric: true },
   { key: 'views',                  label: 'Views',     numeric: true },
@@ -125,11 +136,15 @@ const TABLE_COLS: { key: SortKey; label: string; numeric?: boolean }[] = [
   { key: 'shares',                 label: 'Shares',    numeric: true },
 ]
 
-// Token-efficient CSV column mapping
 const CSV_COLS: [keyof Reel, string][] = [
   ['name',                   'name'],
   ['post_type',              'type'],
   ['posted_date',            'date'],
+  ['posted_country',         'posted_in'],
+  ['posted_time_local',      'time_local'],
+  ['posted_time_gmt',        'time_gmt'],
+  ['content_scope',          'scope'],
+  ['content_country',        'about_country'],
   ['duration_seconds',       'dur_s'],
   ['clip_count',             'clips'],
   ['audio_type',             'audio'],
@@ -182,10 +197,10 @@ function exportToCsv(reels: Reel[]) {
 const INPUT = 'w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent'
 const LABEL = 'block text-xs font-semibold text-gray-600 mb-1'
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className={LABEL}>{label}</label>
+      <label className={LABEL}>{label}{hint && <span className="font-normal text-gray-400 ml-1">({hint})</span>}</label>
       {children}
     </div>
   )
@@ -220,13 +235,23 @@ export default function ReelsClient({ initialReels }: { initialReels: Reel[] }) 
     })
   }, [reels, sortKey, sortDir])
 
-  function openAdd()       { setForm(EMPTY_FORM); setError(null); setModal('add') }
+  // Compute GMT time reactively from date + local time + country
+  const computedGmt = useMemo(() => {
+    const tz = COUNTRY_TZ[form.posted_country?.toLowerCase()]
+    if (!tz) return null
+    return localToGmt(form.posted_date, form.posted_time_local, tz)
+  }, [form.posted_date, form.posted_time_local, form.posted_country])
+
+  function openAdd()         { setForm(EMPTY_FORM); setError(null); setModal('add') }
   function openEdit(r: Reel) { setForm(reelToForm(r)); setError(null); setModal({ type: 'edit', reel: r }) }
   function openDelete(r: Reel, e: React.MouseEvent) { e.stopPropagation(); setError(null); setModal({ type: 'delete', reel: r }) }
-  function closeModal()    { setModal(null); setSaving(false); setError(null) }
+  function closeModal()      { setModal(null); setSaving(false); setError(null) }
 
-  function f(key: string) { return form[key] ?? '' }
-  function set(key: string) { return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setForm(prev => ({ ...prev, [key]: e.target.value })) }
+  function f(key: string)  { return form[key] ?? '' }
+  function set(key: string) {
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+      setForm(prev => ({ ...prev, [key]: e.target.value }))
+  }
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
@@ -236,12 +261,13 @@ export default function ReelsClient({ initialReels }: { initialReels: Reel[] }) 
   async function handleSave() {
     if (!form.name.trim()) { setError('Name is required'); return }
     setSaving(true); setError(null)
+    const formWithGmt = { ...form, posted_time_gmt: computedGmt ?? '' }
     try {
       if (modal === 'add') {
-        const created = await createReel(form)
+        const created = await createReel(formWithGmt)
         setReels(prev => [created as Reel, ...prev])
       } else if (modal !== null && typeof modal === 'object' && modal.type === 'edit') {
-        const updated = await updateReel(modal.reel.id, form)
+        const updated = await updateReel(modal.reel.id, formWithGmt)
         setReels(prev => prev.map(r => r.id === (modal as { type: 'edit'; reel: Reel }).reel.id ? updated as Reel : r))
       }
       closeModal()
@@ -266,11 +292,12 @@ export default function ReelsClient({ initialReels }: { initialReels: Reel[] }) 
     }
   }
 
-  const isTrial = f('post_type') === 'trial'
-  const isAdd = modal === 'add'
-  const isEdit = typeof modal === 'object' && modal?.type === 'edit'
-  const isDelete = typeof modal === 'object' && modal?.type === 'delete'
-  const showForm = isAdd || isEdit
+  const isTrial            = f('post_type') === 'trial'
+  const isCountrySpecific  = f('content_scope') === 'country_specific'
+  const isAdd              = modal === 'add'
+  const isEdit             = typeof modal === 'object' && modal?.type === 'edit'
+  const isDelete           = typeof modal === 'object' && modal?.type === 'delete'
+  const showForm           = isAdd || isEdit
 
   return (
     <>
@@ -356,7 +383,19 @@ export default function ReelsClient({ initialReels }: { initialReels: Reel[] }) 
                       {r.post_type}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDate(r.posted_date)}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className="text-gray-700">{fmtDate(r.posted_date)}</span>
+                    {r.posted_time_gmt && (
+                      <span className="block text-xs text-gray-400">{r.posted_time_gmt} UTC</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-gray-500 max-w-[8rem] truncate text-xs">
+                    {r.content_scope === 'country_specific' && r.content_country
+                      ? r.content_country
+                      : r.content_scope === 'general'
+                        ? <span className="text-gray-300">General</span>
+                        : '—'}
+                  </td>
                   <td className="px-4 py-3 text-right text-gray-700">{fmtDur(r.duration_seconds)}</td>
                   <td className="px-4 py-3 text-right text-gray-700">{fmtN(r.clip_count)}</td>
                   <td className="px-4 py-3 text-right font-medium text-gray-900">{fmtN(r.views)}</td>
@@ -426,6 +465,34 @@ export default function ReelsClient({ initialReels }: { initialReels: Reel[] }) 
                       <input type="date" value={f('posted_date')} onChange={set('posted_date')} className={INPUT} />
                     </Field>
                   </div>
+
+                  {/* Country + time */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="Country you were in">
+                      <select value={f('posted_country')} onChange={set('posted_country')} className={INPUT}>
+                        <option value="">Select country…</option>
+                        {COUNTRIES.map(c => (
+                          <option key={c.iso2} value={c.iso2}>{c.name}</option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Local time posted" hint="HH:MM">
+                      <div className="space-y-1">
+                        <input
+                          type="time"
+                          value={f('posted_time_local')}
+                          onChange={set('posted_time_local')}
+                          className={INPUT}
+                        />
+                        {computedGmt ? (
+                          <p className="text-xs text-brand-700 font-medium pl-1">= {computedGmt} UTC</p>
+                        ) : f('posted_time_local') && !COUNTRY_TZ[f('posted_country')?.toLowerCase()] && f('posted_country') ? (
+                          <p className="text-xs text-amber-600 pl-1">No timezone for selected country</p>
+                        ) : null}
+                      </div>
+                    </Field>
+                  </div>
+
                   <Field label="Instagram URL">
                     <input type="url" value={f('instagram_url')} onChange={set('instagram_url')} placeholder="https://www.instagram.com/reel/…" className={INPUT} />
                   </Field>
@@ -451,19 +518,44 @@ export default function ReelsClient({ initialReels }: { initialReels: Reel[] }) 
                     <input type="text" value={f('topic')} onChange={set('topic')} placeholder="e.g. budget travel, Asia, street food" className={INPUT} />
                   </Field>
                 </div>
+
+                {/* Content scope */}
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <Field label="Content scope">
+                    <select value={f('content_scope')} onChange={set('content_scope')} className={INPUT}>
+                      <option value="general">General travel</option>
+                      <option value="country_specific">Country-specific</option>
+                    </select>
+                  </Field>
+                  {isCountrySpecific && (
+                    <Field label="Which country is it about?">
+                      <input
+                        type="text"
+                        value={f('content_country')}
+                        onChange={set('content_country')}
+                        placeholder="e.g. Singapore"
+                        className={INPUT}
+                        list="content-country-list"
+                      />
+                      <datalist id="content-country-list">
+                        {COUNTRIES.map(c => <option key={c.iso2} value={c.name} />)}
+                      </datalist>
+                    </Field>
+                  )}
+                </div>
               </div>
 
               {/* Hooks */}
               <div>
                 <SectionHead title="Hooks" />
                 <div className="space-y-4">
-                  <Field label="Visual hook — what do viewers SEE in the first 1-3 seconds?">
+                  <Field label="Visual hook" hint="what viewers SEE in the first 1-3 seconds">
                     <textarea rows={2} value={f('visual_hook')} onChange={set('visual_hook')} placeholder="e.g. Close-up of kids faces reacting to street food, then pull back to reveal the market" className={INPUT} />
                   </Field>
-                  <Field label="Verbal hook — what is SAID (voiceover or on-camera)?">
+                  <Field label="Verbal hook" hint="what is SAID, voiceover or on-camera">
                     <textarea rows={2} value={f('verbal_hook')} onChange={set('verbal_hook')} placeholder='e.g. "We spent a day exploring Singapore on £30 as a family of four..."' className={INPUT} />
                   </Field>
-                  <Field label="Text hook — on-screen text overlay">
+                  <Field label="Text hook" hint="on-screen text overlay">
                     <textarea rows={2} value={f('text_hook')} onChange={set('text_hook')} placeholder='e.g. "Singapore on a budget with kids" or a question on screen' className={INPUT} />
                   </Field>
                   <Field label="Hook duration (seconds)">
@@ -477,13 +569,13 @@ export default function ReelsClient({ initialReels }: { initialReels: Reel[] }) 
                 <SectionHead title="Performance metrics" />
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { key: 'views',       label: 'Views' },
-                    { key: 'reach',       label: 'Reach' },
-                    { key: 'plays',       label: 'Plays (incl. replays)' },
-                    { key: 'likes',       label: 'Likes' },
-                    { key: 'comments',    label: 'Comments' },
-                    { key: 'shares',      label: 'Shares' },
-                    { key: 'saves',       label: 'Saves' },
+                    { key: 'views',          label: 'Views' },
+                    { key: 'reach',          label: 'Reach' },
+                    { key: 'plays',          label: 'Plays (incl. replays)' },
+                    { key: 'likes',          label: 'Likes' },
+                    { key: 'comments',       label: 'Comments' },
+                    { key: 'shares',         label: 'Shares' },
+                    { key: 'saves',          label: 'Saves' },
                     { key: 'follows_gained', label: 'Follows gained' },
                     { key: 'profile_visits', label: 'Profile visits' },
                   ].map(({ key, label }) => (
@@ -502,7 +594,7 @@ export default function ReelsClient({ initialReels }: { initialReels: Reel[] }) 
                 </div>
               </div>
 
-              {/* Trial-only metrics */}
+              {/* Trial-only */}
               {isTrial && (
                 <div>
                   <SectionHead title="Trial reel metrics" />
@@ -547,7 +639,7 @@ export default function ReelsClient({ initialReels }: { initialReels: Reel[] }) 
         </div>
       )}
 
-      {/* Delete confirmation modal */}
+      {/* Delete confirmation */}
       {isDelete && typeof modal === 'object' && modal.type === 'delete' && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={closeModal}>
           <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl" onClick={e => e.stopPropagation()}>

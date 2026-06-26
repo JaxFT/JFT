@@ -137,7 +137,7 @@ function isValidSavedState(s: unknown, expectedLength: number): s is number[] {
 // PNG download is small (~5KB at w160), and we only do it once per mount.
 async function computeFlagEquivalence(iso2: string, gridSize: number): Promise<EquivalenceResult> {
   const url = `https://flagcdn.com/w160/${iso2.toLowerCase()}.png`
-  const PURE_THRESHOLD = 0.92
+  const PURE_THRESHOLD = 0.97
   const BUCKET_SHIFT = 4
 
   return new Promise<EquivalenceResult>((resolve, reject) => {
@@ -157,7 +157,7 @@ async function computeFlagEquivalence(iso2: string, gridSize: number): Promise<E
         const all = ctx.getImageData(0, 0, W, H).data
         const tileW = W / gridSize
         const tileH = H / gridSize
-        const SAMPLES = 6
+        const SAMPLES = 10
         const sigToGroup = new Map<string, number>()
         const groups: number[] = []
         const pureColours: (string | null)[] = []

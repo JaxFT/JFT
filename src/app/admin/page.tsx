@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { PenLine, ArrowRight, ShieldCheck, FileText, Upload, MessageCircle, BookOpen, Users, Sparkles } from 'lucide-react'
+import { PenLine, ArrowRight, ShieldCheck, FileText, Upload, MessageCircle, BookOpen, Users, Sparkles, Video } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -49,6 +49,12 @@ const TOOLS = [
     title: 'AI Prompt Builder',
     desc: 'The live AI travel prompt builder: pick a prompt, answer a few questions, copy an engineered prompt for your own AI. Also linked in the main nav for everyone.',
     icon: Sparkles,
+  },
+  {
+    href: '/admin/reels',
+    title: 'Reel Analytics',
+    desc: 'Log every Instagram reel with hooks, content details, and performance metrics. Export to CSV and ask your AI what to make next.',
+    icon: Video,
   },
 ]
 

@@ -94,3 +94,43 @@ insert into public.products (name, slug, description, price_pence, type) values
   ('Slow Travel Portugal with Kids',   'slow-travel-portugal',      'A month-by-month Portugal family guide.',           499, 'guide'),
   ('I Want To Travel, Decision Tool', 'i-want-to-travel',          'Find out if long-term family travel is right for you.', 299, 'tool')
 on conflict (slug) do nothing;
+
+-- ── REELS ──────────────────────────────
+-- Instagram Reel analytics tracker (admin-only, accessed via service role)
+create table if not exists public.reels (
+  id                        uuid primary key default gen_random_uuid(),
+  created_at                timestamptz not null default now(),
+  updated_at                timestamptz not null default now(),
+  name                      text not null,
+  post_type                 text not null check (post_type in ('main','trial')),
+  posted_date               date,
+  instagram_url             text,
+  duration_seconds          integer,
+  clip_count                integer,
+  audio_type                text check (audio_type in ('original','trending_sound','music','voiceover','silent')),
+  topic                     text,
+  visual_hook               text,
+  verbal_hook               text,
+  text_hook                 text,
+  hook_duration_seconds     integer,
+  views                     integer,
+  reach                     integer,
+  plays                     integer,
+  likes                     integer,
+  comments                  integer,
+  shares                    integer,
+  saves                     integer,
+  follows_gained            integer,
+  avg_watch_time_seconds    numeric(6,1),
+  watch_through_rate_pct    numeric(5,1),
+  profile_visits            integer,
+  non_follower_views        integer,
+  non_follower_watch_pct    numeric(5,1),
+  notes                     text
+);
+
+alter table public.reels enable row level security;
+
+drop trigger if exists reels_updated_at on public.reels;
+create trigger reels_updated_at before update on public.reels
+  for each row execute procedure public.set_updated_at();

@@ -385,15 +385,12 @@ function PuzzleInner({ data, pack }: Props) {
           const row = Math.floor(tile / GRID)
           const col = tile % GRID
           const movable = movableSet.has(pos)
-          const pureColour = equivalence?.pureColours[tile] ?? null
-          const tileStyle = pureColour
-            ? { backgroundColor: pureColour }
-            : {
-                backgroundImage: `url(${url})`,
-                backgroundSize: `${GRID * 100}% ${GRID * 100}%`,
-                backgroundPosition: `${(col / Math.max(1, GRID - 1)) * 100}% ${(row / Math.max(1, GRID - 1)) * 100}%`,
-                backgroundRepeat: 'no-repeat' as const,
-              }
+          const tileStyle = {
+            backgroundImage: `url(${url})`,
+            backgroundSize: `${GRID * 100}% ${GRID * 100}%`,
+            backgroundPosition: `${(col / Math.max(1, GRID - 1)) * 100}% ${(row / Math.max(1, GRID - 1)) * 100}%`,
+            backgroundRepeat: 'no-repeat' as const,
+          }
           return (
             <button
               key={pos}

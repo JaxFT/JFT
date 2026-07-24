@@ -2,11 +2,11 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Shared by every Stripe Checkout Session-creating route that can
 // take a discount code (subscribe, checkout, checkout-pack,
-// checkout-web-guide). Reservation is atomic and race-safe (see
-// reserve_discount_code in supabase/discount-codes.sql) — it either
-// fully succeeds (slot reserved + redemption row recorded) or does
-// nothing, so a failed/cancelled checkout never leaves a half-applied
-// reservation behind.
+// checkout-web-guide). Reserving records a redemption row but does
+// NOT consume the usage cap, that's only ever incremented on actual
+// payment (see complete_discount_reservation in
+// supabase/discount-codes.sql), so an abandoned checkout never makes
+// a code look "already used" to anyone else.
 
 export type DiscountProductType = 'premium_annual' | 'guide' | 'pack'
 

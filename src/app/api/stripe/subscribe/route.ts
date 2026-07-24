@@ -112,9 +112,11 @@ export async function POST(request: Request) {
         cancel_url:  `${origin}/account?subscribe=cancelled`,
         metadata,
         subscription_data: { metadata },
-        // A discount code reserves a scarce, capped slot — expire the
-        // session quickly (Stripe's minimum) so an abandoned checkout
-        // frees it back up fast rather than tying it up for 24h.
+        // Doesn't affect the usage cap (that's only ever consumed on
+        // actual payment, see reserve_discount_code), just keeps the
+        // redemption's audit trail accurate — an abandoned session
+        // gets marked 'released' quickly instead of sitting as
+        // 'reserved' for 24h.
         ...(discountReservation ? { expires_at: Math.floor(Date.now() / 1000) + 30 * 60 } : {}),
         ...(discountReservation ? { discounts: [{ coupon: discountReservation.stripeCouponId }] } : {}),
       })

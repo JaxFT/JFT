@@ -30,6 +30,10 @@ public/images/    , static assets
 | `profiles`  | Extends auth.users, subscription_tier ('free'\|'premium'), stripe IDs |
 | `products`  | Purchasable items, guides, tools, packs (price_pence, stripe_price_id) |
 | `purchases` | Records per-user product purchases |
+| `discount_codes` / `discount_code_redemptions` | Admin-managed percent-off codes, usage cap + tracking |
+| `premium_gifts` | Audit log of admin-gifted 1-year Premium grants |
+
+This table isn't exhaustive, e.g. `guides`, `web_guide_purchases`, and `jax_pack_purchases` also exist, see `supabase/*.sql` for the full picture.
 
 Supabase Auth handles users. Profile is auto-created via trigger on signup.
 
@@ -67,10 +71,5 @@ node -e "const fs=require('fs');const h=fs.readFileSync('src/app/i-want-to-trave
 ```
 In-iframe links to parent-window routes need `target="_top"` (e.g. the call CTA on the results screen links to `/work-with-us`).
 
-## Not Yet Built
-- Stripe checkout + webhook (`/api/stripe/`)
-- Account page (`/account`)
-- Auth callback route (`/api/auth/callback`)
-- Family Way questionnaire embedded in `/i-want-to-travel`
-- Blog post template builder for Bec
-- Cloudflare Pages deployment config
+## Discount codes & gift Premium
+Admins manage percent-off discount codes and free 1-year Premium gifts from `/admin/discount-codes` and `/admin/gift-premium`. Codes are redeemed on our own pages (signup, account, buy/download buttons), never Stripe's hosted promo-code field, backed by `discount_codes`/`discount_code_redemptions` and the `reserve_discount_code`/`release_discount_reservation`/`complete_discount_reservation` RPCs (see `supabase/discount-codes.sql`). Gifted Premium bypasses Stripe entirely (`stripe_subscription_id` stays null) and auto-expires via a daily `pg_cron` job (see `supabase/premium-gifts.sql`), so it can never be confused with, or clobbered by, a real paying subscription.

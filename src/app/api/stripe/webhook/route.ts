@@ -76,6 +76,23 @@ export async function POST(request: Request) {
             if (skip) return skip
           }
         }
+        // Any checkout that reserved a discount code slot (any kind,
+        // any of the handlers above) turns that reservation into a
+        // completed redemption once we know it's paid.
+        const redemptionId = session.metadata?.discount_redemption_id
+        if (redemptionId && session.payment_status === 'paid') {
+          await admin.rpc('complete_discount_reservation', { p_redemption_id: redemptionId })
+        }
+        break
+      }
+      case 'checkout.session.expired': {
+        // A checkout that reserved a discount code but was never
+        // paid, give the slot back so someone else can use it.
+        const session = event.data.object as Stripe.Checkout.Session
+        const redemptionId = session.metadata?.discount_redemption_id
+        if (redemptionId) {
+          await admin.rpc('release_discount_reservation', { p_redemption_id: redemptionId })
+        }
         break
       }
       case 'customer.subscription.created':

@@ -10,14 +10,16 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getPublishedWebGuideBySlug } from '@/lib/guides-content-db'
 import { stripeClient } from '@/lib/stripe'
+import { reserveDiscountCode, releaseDiscountReservation, attachSessionToReservation } from '@/lib/discount-code-checkout'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
-  let body: { slug?: string } = {}
+  let body: { slug?: string; code?: string } = {}
   try { body = await request.json() } catch {}
   const slug = typeof body.slug === 'string' ? body.slug : null
+  const requestedCode = typeof body.code === 'string' ? body.code.trim() : ''
   if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 })
 
   // Guest checkout: no sign-in required. Stripe collects the email
@@ -39,6 +41,17 @@ export async function POST(request: Request) {
     )
   }
 
+  let discountReservation: Awaited<ReturnType<typeof reserveDiscountCode>> = null
+  if (requestedCode) {
+    discountReservation = await reserveDiscountCode(supabase, requestedCode, 'guide', guide.id, user?.id ?? null)
+    if (!discountReservation) {
+      return NextResponse.json(
+        { error: "That code isn't valid, has expired, or has already been fully redeemed." },
+        { status: 400 },
+      )
+    }
+  }
+
   const origin = new URL(request.url).origin
   const stripe = stripeClient()
 
@@ -46,6 +59,7 @@ export async function POST(request: Request) {
     kind: 'web_guide',
     guide_id: guide.id,
     guide_slug: guide.slug,
+    ...(discountReservation ? { discount_redemption_id: discountReservation.redemptionId } : {}),
   }
   if (user) metadata.user_id = user.id
 
@@ -60,13 +74,18 @@ export async function POST(request: Request) {
       ...(user?.email ? { customer_email: user.email } : {}),
       metadata,
       payment_intent_data: { metadata },
+      ...(discountReservation ? { expires_at: Math.floor(Date.now() / 1000) + 30 * 60 } : {}),
+      ...(discountReservation ? { discounts: [{ coupon: discountReservation.stripeCouponId }] } : {}),
     })
 
     if (!session.url) {
+      if (discountReservation) await releaseDiscountReservation(supabase, discountReservation.redemptionId)
       return NextResponse.json({ error: 'Stripe did not return a checkout URL' }, { status: 500 })
     }
+    if (discountReservation) await attachSessionToReservation(supabase, discountReservation.redemptionId, session.id)
     return NextResponse.json({ url: session.url })
   } catch (e) {
+    if (discountReservation) await releaseDiscountReservation(supabase, discountReservation.redemptionId)
     return NextResponse.json(
       { error: e instanceof Error ? e.message : 'Stripe error' },
       { status: 500 },

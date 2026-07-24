@@ -391,6 +391,36 @@ Bec & Oli`
   return { subject, html: emailShell(subject, bodyHtml), text }
 }
 
+// Sent from POST /api/admin/gift-premium once an admin gifts a year of
+// Premium to an existing account.
+export function buildPremiumGiftEmail(p: { name: string | null; expiresAt: string; siteUrl: string }): { subject: string; html: string; text: string } {
+  const subject = "You've been gifted a year of Premium"
+  const greeting = p.name?.trim()
+    ? `Hi ${escapeHtml(p.name.split(' ')[0])},`
+    : 'Hi there,'
+  const expiresLabel = new Date(p.expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+
+  const bodyHtml = `
+    <p>${greeting}</p>
+    <p>You've been gifted a year of Premium on Jax | Family Travels, on us. It's active on your account right now.</p>
+    <div class="kv">
+      <div class="kv-row"><span class="kv-label">Active until</span><span class="kv-value">${escapeHtml(expiresLabel)}</span></div>
+    </div>
+    <p>That unlocks the I Want To Travel tool, Learning Packs, and every guide, no separate purchases needed.</p>
+    <p><a class="btn" href="${p.siteUrl}/account">View your account</a></p>
+  `
+
+  const text = `${greeting.replace(/&[a-z#0-9]+;/g, '')}
+
+You've been gifted a year of Premium on Jax | Family Travels, on us. It's active on your account right now, until ${expiresLabel}.
+
+That unlocks the I Want To Travel tool, Learning Packs, and every guide, no separate purchases needed.
+
+View your account: ${p.siteUrl}/account`
+
+  return { subject, html: emailShell(subject, bodyHtml), text }
+}
+
 // New blog-comment notification, fired from POST /api/blog/[slug]/comments
 // after a successful insert. Sent to ADMIN_NOTIFY so Bec / Oli see new
 // activity in their shared inbox. The commenter's address goes in

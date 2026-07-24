@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { stripeClient } from '@/lib/stripe'
 import { readWaystaqDiscount } from '@/lib/waystaq-discount'
+import { reserveDiscountCode, releaseDiscountReservation, attachSessionToReservation } from '@/lib/discount-code-checkout'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -16,6 +17,10 @@ export async function POST(request: Request) {
   // shows up as "Status: —" in the browser with no diagnostic.
   try {
     console.log('[subscribe] start')
+
+    let body: { code?: string } = {}
+    try { body = await request.json() } catch {}
+    const requestedCode = typeof body.code === 'string' ? body.code.trim() : ''
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -36,6 +41,20 @@ export async function POST(request: Request) {
       )
     }
 
+    // A discount code the customer typed in takes priority over the
+    // WayStaq cookie discount below, they explicitly asked for it.
+    let discountReservation: Awaited<ReturnType<typeof reserveDiscountCode>> = null
+    if (requestedCode) {
+      discountReservation = await reserveDiscountCode(supabase, requestedCode, 'premium_annual', null, user.id)
+      if (!discountReservation) {
+        return NextResponse.json(
+          { error: "That code isn't valid, has expired, or has already been fully redeemed." },
+          { status: 400 },
+        )
+      }
+      console.log('[subscribe] discount code reserved', discountReservation.redemptionId)
+    }
+
     // WayStaq member discount: a valid £25 discount cookie swaps in the
     // discounted annual price, but ONLY when this account's email matches
     // the email the discount was verified for on WayStaq. That stops the
@@ -43,14 +62,16 @@ export async function POST(request: Request) {
     // Everything else (user_id metadata, the webhook that flips the profile
     // to premium) is unchanged, so access is granted exactly as it is for a
     // full-price subscription.
-    const discount = await readWaystaqDiscount()
-    if (discount && discount.email.toLowerCase() === (user.email ?? '').toLowerCase()) {
-      const discountPrice = process.env.WAYSTAQ_DISCOUNT_PRICE_ID
-      if (discountPrice) {
-        priceId = discountPrice
-        console.log('[subscribe] WayStaq £25 discount applied')
-      } else {
-        console.error('[subscribe] discount cookie present but WAYSTAQ_DISCOUNT_PRICE_ID not set')
+    if (!discountReservation) {
+      const discount = await readWaystaqDiscount()
+      if (discount && discount.email.toLowerCase() === (user.email ?? '').toLowerCase()) {
+        const discountPrice = process.env.WAYSTAQ_DISCOUNT_PRICE_ID
+        if (discountPrice) {
+          priceId = discountPrice
+          console.log('[subscribe] WayStaq £25 discount applied')
+        } else {
+          console.error('[subscribe] discount cookie present but WAYSTAQ_DISCOUNT_PRICE_ID not set')
+        }
       }
     }
 
@@ -73,34 +94,42 @@ export async function POST(request: Request) {
 
     console.log('[subscribe] creating stripe client')
     const stripe = stripeClient()
-    console.log('[subscribe] calling stripe.checkout.sessions.create')
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      payment_method_types: ['card'],
-      line_items: [{ price: priceId, quantity: 1 }],
-      ...(profile?.stripe_customer_id
-        ? { customer: profile.stripe_customer_id }
-        : { customer_email: user.email ?? undefined }),
-      success_url: `${origin}/account?subscribe=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:  `${origin}/account?subscribe=cancelled`,
-      metadata: {
-        user_id: user.id,
-        kind: 'premium_annual',
-      },
-      subscription_data: {
-        metadata: {
-          user_id: user.id,
-          kind: 'premium_annual',
-        },
-      },
-      allow_promotion_codes: true,
-    })
-    console.log('[subscribe] session created', session.id, 'url:', !!session.url)
-
-    if (!session.url) {
-      return NextResponse.json({ error: 'Stripe did not return a checkout URL' }, { status: 500 })
+    const metadata: Record<string, string> = {
+      user_id: user.id,
+      kind: 'premium_annual',
+      ...(discountReservation ? { discount_redemption_id: discountReservation.redemptionId } : {}),
     }
-    return NextResponse.json({ url: session.url })
+    try {
+      console.log('[subscribe] calling stripe.checkout.sessions.create')
+      const session = await stripe.checkout.sessions.create({
+        mode: 'subscription',
+        payment_method_types: ['card'],
+        line_items: [{ price: priceId, quantity: 1 }],
+        ...(profile?.stripe_customer_id
+          ? { customer: profile.stripe_customer_id }
+          : { customer_email: user.email ?? undefined }),
+        success_url: `${origin}/account?subscribe=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url:  `${origin}/account?subscribe=cancelled`,
+        metadata,
+        subscription_data: { metadata },
+        // A discount code reserves a scarce, capped slot — expire the
+        // session quickly (Stripe's minimum) so an abandoned checkout
+        // frees it back up fast rather than tying it up for 24h.
+        ...(discountReservation ? { expires_at: Math.floor(Date.now() / 1000) + 30 * 60 } : {}),
+        ...(discountReservation ? { discounts: [{ coupon: discountReservation.stripeCouponId }] } : {}),
+      })
+      console.log('[subscribe] session created', session.id, 'url:', !!session.url)
+
+      if (!session.url) {
+        if (discountReservation) await releaseDiscountReservation(supabase, discountReservation.redemptionId)
+        return NextResponse.json({ error: 'Stripe did not return a checkout URL' }, { status: 500 })
+      }
+      if (discountReservation) await attachSessionToReservation(supabase, discountReservation.redemptionId, session.id)
+      return NextResponse.json({ url: session.url })
+    } catch (e) {
+      if (discountReservation) await releaseDiscountReservation(supabase, discountReservation.redemptionId)
+      throw e
+    }
   } catch (e) {
     console.error('[subscribe] error', e)
     const msg = e instanceof Error ? e.message : 'Unknown error'

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { PenLine, ArrowRight, ShieldCheck, FileText, Upload, MessageCircle, BookOpen, Users, Sparkles, Video } from 'lucide-react'
+import { PenLine, ArrowRight, ShieldCheck, FileText, Upload, MessageCircle, BookOpen, Users, Sparkles, Video, Ticket, Gift } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -55,6 +55,18 @@ const TOOLS = [
     title: 'Reel Analytics',
     desc: 'Log every Instagram reel with hooks, content details, and performance metrics. Export to CSV and ask your AI what to make next.',
     icon: Video,
+  },
+  {
+    href: '/admin/discount-codes',
+    title: 'Discount Codes',
+    desc: 'Create percent-off codes with a usage cap, scoped to Premium, guides, and/or Adventure Packs. Tracks redemptions automatically.',
+    icon: Ticket,
+  },
+  {
+    href: '/admin/gift-premium',
+    title: 'Gift Premium',
+    desc: "Give an existing member a year of Premium access for free, no Stripe charge. Auto-expires after a year unless they subscribe for real.",
+    icon: Gift,
   },
 ]
 

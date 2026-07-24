@@ -38,6 +38,10 @@ export default function SignupForm({
   // premium_intent flag in user_metadata that we read after the code
   // is verified and turn into a Stripe checkout redirect.
   const [tier, setTier] = useState<Tier>(defaultTier)
+  const [discountCode, setDiscountCode] = useState('')
+  const [discountChecking, setDiscountChecking] = useState(false)
+  const [discountPercentOff, setDiscountPercentOff] = useState<number | null>(null)
+  const [discountError, setDiscountError] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   // 'form' = filling details, 'otp' = entering the 6-digit email code.
@@ -47,6 +51,31 @@ export default function SignupForm({
   const [resent, setResent] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+
+  const applyDiscountCode = async () => {
+    const trimmed = discountCode.trim()
+    setDiscountError('')
+    setDiscountPercentOff(null)
+    if (!trimmed) return
+    setDiscountChecking(true)
+    try {
+      const res = await fetch('/api/discount-codes/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: trimmed, productType: 'premium_annual' }),
+      })
+      const body = await res.json().catch(() => ({}))
+      if (body.valid) {
+        setDiscountPercentOff(body.percentOff)
+      } else {
+        setDiscountError(body.reason || "That code isn't valid.")
+      }
+    } catch {
+      setDiscountError('Could not check that code right now.')
+    } finally {
+      setDiscountChecking(false)
+    }
+  }
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -92,7 +121,12 @@ export default function SignupForm({
       const meta = user?.user_metadata as { premium_intent?: boolean } | null
       if (meta?.premium_intent) {
         await supabase.auth.updateUser({ data: { premium_intent: false } }).catch(() => null)
-        const res = await fetch('/api/stripe/subscribe', { method: 'POST' })
+        const trimmedCode = discountCode.trim()
+        const res = await fetch('/api/stripe/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(trimmedCode ? { code: trimmedCode } : {}),
+        })
         if (res.ok) {
           const json = await res.json() as { url?: string }
           if (json.url) { window.location.replace(json.url); return }
@@ -250,6 +284,33 @@ export default function SignupForm({
                 </p>
               )}
             </div>
+
+            {tier === 'premium' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Discount code (optional)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={discountCode}
+                    onChange={e => { setDiscountCode(e.target.value.toUpperCase()); setDiscountPercentOff(null); setDiscountError('') }}
+                    className="flex-1 px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                    placeholder="e.g. JAXBIRTHDAY50"
+                  />
+                  <button
+                    type="button"
+                    onClick={applyDiscountCode}
+                    disabled={discountChecking || !discountCode.trim()}
+                    className="px-4 py-2.5 text-sm font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-lg disabled:opacity-50 shrink-0"
+                  >
+                    {discountChecking ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
+                  </button>
+                </div>
+                {discountPercentOff != null && (
+                  <p className="text-xs text-brand-700 mt-1.5 font-semibold">{discountPercentOff}% off applied to your first year.</p>
+                )}
+                {discountError && <p className="text-xs text-red-600 mt-1.5">{discountError}</p>}
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Full name</label>

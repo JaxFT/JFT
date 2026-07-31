@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient as createSbClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/admin'
+import { notifyWaystaqPremiumAccess } from '@/lib/waystaq-premium-access'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -53,6 +54,13 @@ export async function PATCH(
       .update({ subscription_tier: 'free', subscription_expires_at: null })
       .eq('id', gift.user_id)
     if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 })
+
+    // No real Stripe subscription behind this account, so WayStaq's
+    // webhook-driven revoke never fires for it either. Tell it directly.
+    const { data: authUser } = await admin.auth.admin.getUserById(gift.user_id)
+    if (authUser.user?.email) {
+      await notifyWaystaqPremiumAccess(authUser.user.email, 'revoke')
+    }
   }
 
   const { error: revokeError } = await admin

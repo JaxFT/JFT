@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/admin'
 import { findUserIdByEmail } from '@/lib/find-user-by-email'
 import { sendEmail, buildPremiumGiftEmail } from '@/lib/email'
+import { notifyWaystaqPremiumAccess } from '@/lib/waystaq-premium-access'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -87,6 +88,11 @@ export async function POST(request: Request) {
     .from('premium_gifts')
     .insert({ user_id: userId, granted_by: auth.email, expires_at: expiresAt, note })
   if (giftError) return NextResponse.json({ error: giftError.message }, { status: 500 })
+
+  // Gifted Premium never generates a Stripe event, so WayStaq's own
+  // webhook-driven grant (for real subscribers) never fires for this
+  // account. Tell it directly instead, best-effort.
+  await notifyWaystaqPremiumAccess(email, 'grant', expiresAt)
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
   const emailContent = buildPremiumGiftEmail({ name: profile?.full_name ?? null, expiresAt, siteUrl })

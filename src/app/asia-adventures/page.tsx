@@ -23,20 +23,19 @@ export default async function AsiaAdventuresLanding() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // WayStaq only grants free access off a real Stripe subscription event
-  // (see JFT_SUBSCRIPTION_PRICE_IDS in WayStaq's stripe-webhook.js), so
-  // gifted Premium (stripe_subscription_id null, see supabase/premium-gifts.sql)
-  // must NOT show the free-access CTA here, it would send them to WayStaq
-  // expecting access that was never actually granted. Only a real paying
-  // subscriber counts.
+  // Any current Premium member gets free access, gifted or paid. Real
+  // subscribers get it via WayStaq's Stripe webhook; gifted members get it
+  // via notifyWaystaqPremiumAccess() called from the admin gift-premium
+  // routes (see src/lib/waystaq-premium-access.ts), since gifted Premium
+  // never generates a Stripe event for the webhook to react to.
   let isPremium = false
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('subscription_tier, stripe_subscription_id')
+      .select('subscription_tier')
       .eq('id', user.id)
       .maybeSingle()
-    isPremium = isPremiumTier(profile?.subscription_tier) && !!profile?.stripe_subscription_id
+    isPremium = isPremiumTier(profile?.subscription_tier)
   }
 
   // Access on WayStaq is keyed off email, granted by the Stripe webhook

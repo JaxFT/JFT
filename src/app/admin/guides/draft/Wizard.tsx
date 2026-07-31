@@ -451,7 +451,7 @@ export default function Wizard({ guide }: { guide: GuideRow }) {
 
             <Field
               label="One-off price (pence)"
-              sub="0 = Premium-only (no one-off purchase). £49.99/year premium always includes this guide."
+              sub="0 = Premium-only (no one-off purchase). Premium (£49.99/year or £5/month) always includes this guide."
             >
               <div className="flex items-center gap-3 flex-wrap">
                 <input

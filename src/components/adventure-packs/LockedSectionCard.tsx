@@ -48,7 +48,7 @@ export default function LockedSectionCard({
       </div>
 
       <p className="text-xs text-gray-500 mt-4 leading-relaxed">
-        Premium (£49.99/yr) unlocks every one of our 80+ Adventure Packs, the Adventure
+        Premium (£49.99/yr or £5/mo) unlocks every one of our 80+ Adventure Packs, the Adventure
         Passport for kids, and every guide + premium blog post.{' '}
         <Link href={`/login?next=/adventure-packs/${packSlug}`} className="font-semibold text-brand-700 hover:text-brand-800 underline underline-offset-2">
           Already have an account? Log in.

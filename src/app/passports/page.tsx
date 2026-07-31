@@ -294,7 +294,7 @@ export default async function PassportsLanding() {
               Included with Premium membership.{' '}
               {wsDiscount ? (
                 <>£25 a year <span className="text-white/40 line-through">£49.99</span></>
-              ) : '£49.99 a year'}
+              ) : '£49.99 a year, or £5 a month,'}
               {' '}covers the whole family, every child, every Adventure Pack, every guide, every premium blog post.
             </p>
             <ul className="text-sm text-white/80 inline-flex flex-col gap-2 mb-7 text-left">

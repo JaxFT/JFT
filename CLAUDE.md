@@ -4,7 +4,7 @@
 - **Framework**: Next.js 14 (App Router, TypeScript)
 - **Styling**: Tailwind CSS, brand colour `brand-600` = `#2d6b4f`
 - **Auth + DB**: Supabase, `https://wjpmdwugnwuydomdmetf.supabase.co`
-- **Payments**: Stripe (one-off purchases + £49.99/year premium subscription)
+- **Payments**: Stripe (one-off purchases + £49.99/year or £5/month premium subscription)
 - **Hosting**: Cloudflare Pages, domain `jaxfamilytravels.com`
 - **Repo**: `https://github.com/JaxFT/JFT.git`
 
@@ -57,7 +57,7 @@ Supabase Auth handles users. Profile is auto-created via trigger on signup.
 ## Pricing Model
 - Individual guides: ~£4.99 each (one-off Stripe payment)
 - I Want To Travel tool: ~£2.99 one-off or included in premium
-- Premium annual: £49.99/year (Stripe subscription), includes everything
+- Premium: £49.99/year or £5/month (Stripe subscription, `STRIPE_PRICE_PREMIUM_ANNUAL` / `STRIPE_PRICE_PREMIUM_MONTHLY`), includes everything. `/api/stripe/subscribe` takes a `plan: 'annual'|'monthly'` body param. Discount codes and the WayStaq £25/year member price only ever apply to the annual plan, never monthly.
 
 ## Key Components
 - `Navbar`, transparent on homepage hero, white when scrolled or on other pages. Shows login/account state.
@@ -72,4 +72,4 @@ node -e "const fs=require('fs');const h=fs.readFileSync('src/app/i-want-to-trave
 In-iframe links to parent-window routes need `target="_top"` (e.g. the call CTA on the results screen links to `/work-with-us`).
 
 ## Discount codes & gift Premium
-Admins manage percent-off discount codes and free 1-year Premium gifts from `/admin/discount-codes` and `/admin/gift-premium`. Codes are redeemed on our own pages (signup, account, buy/download buttons), never Stripe's hosted promo-code field, backed by `discount_codes`/`discount_code_redemptions` and the `reserve_discount_code`/`release_discount_reservation`/`complete_discount_reservation` RPCs (see `supabase/discount-codes.sql`). Gifted Premium bypasses Stripe entirely (`stripe_subscription_id` stays null) and auto-expires via a daily `pg_cron` job (see `supabase/premium-gifts.sql`), so it can never be confused with, or clobbered by, a real paying subscription.
+Admins manage percent-off discount codes and free 1-year Premium gifts from `/admin/discount-codes` and `/admin/gift-premium`. Codes are redeemed on our own pages (signup, account, buy/download buttons), never Stripe's hosted promo-code field, backed by `discount_codes`/`discount_code_redemptions` and the `reserve_discount_code`/`release_discount_reservation`/`complete_discount_reservation` RPCs (see `supabase/discount-codes.sql`). Gifted Premium bypasses Stripe entirely (`stripe_subscription_id` stays null) and auto-expires via a daily `pg_cron` job (see `supabase/premium-gifts.sql`), so it can never be confused with, or clobbered by, a real paying subscription. Discount codes (and the WayStaq £25/year member price) only ever apply to the annual Premium plan, there's no discounted rate on the £5/month plan, so the `premium_annual` product type string is intentionally not renamed to something plan-agnostic.

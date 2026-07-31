@@ -53,14 +53,24 @@ export default function PackJsonLd({ slug, country, flag, isFree }: Props) {
           availability: 'https://schema.org/InStock',
           url,
         }
-      : {
-          '@type': 'Offer',
-          price: '49.99',
-          priceCurrency: 'GBP',
-          availability: 'https://schema.org/InStock',
-          url: `${SITE}/account`,
-          description: 'Included with the Jax Family Travels annual membership.',
-        },
+      : [
+          {
+            '@type': 'Offer',
+            price: '49.99',
+            priceCurrency: 'GBP',
+            availability: 'https://schema.org/InStock',
+            url: `${SITE}/account`,
+            description: 'Included with the Jax Family Travels annual membership.',
+          },
+          {
+            '@type': 'Offer',
+            price: '5.00',
+            priceCurrency: 'GBP',
+            availability: 'https://schema.org/InStock',
+            url: `${SITE}/account`,
+            description: 'Included with the Jax Family Travels monthly membership.',
+          },
+        ],
     keywords: [country, 'family travel', 'adventure pack', 'worldschooling', 'kids learning', flag].join(', '),
   }
 

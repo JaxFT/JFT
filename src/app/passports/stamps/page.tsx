@@ -242,7 +242,7 @@ export default async function StampsExplainerPage() {
               Adventure Passports come with Premium,{' '}
               {wsDiscount ? (
                 <>£25 a year <span className="text-white/40 line-through">£49.99</span></>
-              ) : '£49.99 a year'}
+              ) : '£49.99 a year, or £5 a month,'}
               {' '}for every child in your family, every Adventure Pack, every guide, every premium blog post.
             </p>
             <div className="flex flex-col items-center gap-2">

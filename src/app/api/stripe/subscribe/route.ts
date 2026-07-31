@@ -8,7 +8,8 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 // POST /api/stripe/subscribe
-// Starts a Checkout session for the £49.99/year Premium subscription.
+// Starts a Checkout session for the Premium subscription, either the
+// £49.99/year plan or the £5/month plan.
 // The webhook (checkout.session.completed + customer.subscription.*) is
 // the source of truth for flipping profiles.subscription_tier to 'premium'.
 export async function POST(request: Request) {
@@ -18,13 +19,14 @@ export async function POST(request: Request) {
   try {
     console.log('[subscribe] start')
 
-    let body: { code?: string } = {}
+    let body: { code?: string; plan?: string } = {}
     try { body = await request.json() } catch {}
     const requestedCode = typeof body.code === 'string' ? body.code.trim() : ''
+    const plan = body.plan === 'monthly' ? 'monthly' : 'annual'
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    console.log('[subscribe] user', user ? user.id : 'none')
+    console.log('[subscribe] user', user ? user.id : 'none', 'plan', plan)
     if (!user) {
       return NextResponse.json(
         { error: 'Please sign in to subscribe.', signInUrl: '/login?next=/account' },
@@ -32,11 +34,23 @@ export async function POST(request: Request) {
       )
     }
 
-    let priceId = process.env.STRIPE_PRICE_PREMIUM_ANNUAL
+    // Discount codes and the WayStaq member discount only ever apply to
+    // the annual plan, there's no discounted rate on the £5/month plan.
+    if (plan === 'monthly' && requestedCode) {
+      return NextResponse.json(
+        { error: 'Discount codes only apply to the yearly plan.' },
+        { status: 400 },
+      )
+    }
+
+    let priceId = plan === 'monthly'
+      ? process.env.STRIPE_PRICE_PREMIUM_MONTHLY
+      : process.env.STRIPE_PRICE_PREMIUM_ANNUAL
     console.log('[subscribe] priceId', priceId ? 'set' : 'MISSING')
     if (!priceId) {
+      const missingVar = plan === 'monthly' ? 'STRIPE_PRICE_PREMIUM_MONTHLY' : 'STRIPE_PRICE_PREMIUM_ANNUAL'
       return NextResponse.json(
-        { error: 'Premium price is not configured (STRIPE_PRICE_PREMIUM_ANNUAL).' },
+        { error: `Premium price is not configured (${missingVar}).` },
         { status: 500 },
       )
     }
@@ -44,7 +58,7 @@ export async function POST(request: Request) {
     // A discount code the customer typed in takes priority over the
     // WayStaq cookie discount below, they explicitly asked for it.
     let discountReservation: Awaited<ReturnType<typeof reserveDiscountCode>> = null
-    if (requestedCode) {
+    if (plan === 'annual' && requestedCode) {
       discountReservation = await reserveDiscountCode(supabase, requestedCode, 'premium_annual', null, user.id)
       if (!discountReservation) {
         return NextResponse.json(
@@ -58,11 +72,12 @@ export async function POST(request: Request) {
     // WayStaq member discount: a valid £25 discount cookie swaps in the
     // discounted annual price, but ONLY when this account's email matches
     // the email the discount was verified for on WayStaq. That stops the
-    // browser-scoped cookie from discounting an unrelated account.
+    // browser-scoped cookie from discounting an unrelated account. Doesn't
+    // apply to the monthly plan, there's no discounted monthly price.
     // Everything else (user_id metadata, the webhook that flips the profile
     // to premium) is unchanged, so access is granted exactly as it is for a
     // full-price subscription.
-    if (!discountReservation) {
+    if (plan === 'annual' && !discountReservation) {
       const discount = await readWaystaqDiscount()
       if (discount && discount.email.toLowerCase() === (user.email ?? '').toLowerCase()) {
         const discountPrice = process.env.WAYSTAQ_DISCOUNT_PRICE_ID
@@ -96,7 +111,7 @@ export async function POST(request: Request) {
     const stripe = stripeClient()
     const metadata: Record<string, string> = {
       user_id: user.id,
-      kind: 'premium_annual',
+      kind: plan === 'monthly' ? 'premium_monthly' : 'premium_annual',
       ...(discountReservation ? { discount_redemption_id: discountReservation.redemptionId } : {}),
     }
     try {

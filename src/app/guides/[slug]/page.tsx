@@ -268,9 +268,9 @@ export default async function GuidePage({
               <h3 className="text-2xl font-bold mb-1">
                 {wsDiscount ? (
                   <>£25 / year <span className="text-white/40 line-through font-normal text-lg">£49.99</span></>
-                ) : '£49.99 / year'}
+                ) : '£49.99 / year, or £5 / month'}
               </h3>
-              <p className="text-sm text-white/70 mb-5 flex-1">A year of access to every premium blog post, every guide, and every adventure pack.</p>
+              <p className="text-sm text-white/70 mb-5 flex-1">Every premium blog post, every guide, and every adventure pack.</p>
               {user ? (
                 <UpgradeButton className="btn-primary w-full justify-center !text-sm" />
               ) : (

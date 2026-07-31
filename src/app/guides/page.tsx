@@ -99,9 +99,10 @@ export default async function GuidesPage() {
                 {wsDiscount ? (
                   <>£25/year <span className="font-normal text-white/40 line-through">£49.99</span></>
                 ) : '£49.99/year'}
+                {' '}or £5/month
               </p>
               <p className="text-white/60 text-sm">
-                A year of access to every premium blog post, every guide, and every adventure pack. View on the site, no downloads.
+                Every premium blog post, every guide, and every adventure pack. View on the site, no downloads.
               </p>
             </div>
             {user ? (

@@ -310,15 +310,19 @@ async function notifyAdminOfPremiumSubscription(session: Stripe.Checkout.Session
   const buyerEmail = session.customer_details?.email ?? session.customer_email ?? 'unknown'
   const amountPence = session.amount_total ?? 0
   const amountStr = `£${(amountPence / 100).toFixed(2)}`
-  // Heuristic: anything under £40 on a Premium signup is almost
-  // certainly the £25 WayStaq member price, flag it inline so the inbox
-  // makes the source obvious at a glance.
-  const discountHint = amountPence > 0 && amountPence < 4000 ? ' (looks like the WayStaq £25 member price)' : ''
+  const isMonthly = session.metadata?.kind === 'premium_monthly'
+  // Heuristic, only meaningful for the annual plan: anything under £40 on
+  // an annual Premium signup is almost certainly the £25 WayStaq member
+  // price, flag it inline so the inbox makes the source obvious at a
+  // glance. The £5/month plan is legitimately under that threshold too,
+  // so it's excluded rather than mislabeled.
+  const discountHint = !isMonthly && amountPence > 0 && amountPence < 4000 ? ' (looks like the WayStaq £25 member price)' : ''
+  const planLabel = isMonthly ? ' (monthly plan)' : ''
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
 
   const subject = `Premium signup: ${buyerEmail} (${amountStr})`
   const html = emailShell(subject, `
-    <p><strong>${escapeForEmail(buyerEmail)}</strong> just started a JFT Premium subscription.</p>
+    <p><strong>${escapeForEmail(buyerEmail)}</strong> just started a JFT Premium subscription${planLabel}.</p>
     <p><strong>Amount:</strong> ${amountStr}${discountHint}<br>
        <strong>Stripe session:</strong> ${escapeForEmail(session.id)}</p>
     <p style="margin-top:14px"><a href="${siteUrl}/admin" style="color:#2d6b4f;">Open admin</a></p>
@@ -329,7 +333,7 @@ async function notifyAdminOfPremiumSubscription(session: Stripe.Checkout.Session
       to: ADMIN_NOTIFY,
       subject,
       html,
-      text: `Premium signup\nBuyer: ${buyerEmail}\nAmount: ${amountStr}${discountHint}\nStripe session: ${session.id}`,
+      text: `Premium signup${planLabel}\nBuyer: ${buyerEmail}\nAmount: ${amountStr}${discountHint}\nStripe session: ${session.id}`,
       replyTo: buyerEmail !== 'unknown' ? buyerEmail : undefined,
     })
   })

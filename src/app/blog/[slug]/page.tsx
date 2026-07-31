@@ -205,10 +205,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             </span>
             <h2 className="text-2xl sm:text-3xl font-bold mb-3">Keep reading with Premium</h2>
             <p className="text-white/70 leading-relaxed max-w-md mx-auto mb-6">
-              A year of access to every premium blog post, every guide, and every adventure pack,{' '}
+              Every premium blog post, every guide, and every adventure pack,{' '}
               {wsDiscount ? (
-                <>£25 <span className="text-white/40 line-through">£49.99</span></>
-              ) : '£49.99'}, cancel any time.
+                <>£25 a year <span className="text-white/40 line-through">£49.99</span></>
+              ) : '£49.99 a year, or £5 a month'}, cancel any time.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
               {user ? (

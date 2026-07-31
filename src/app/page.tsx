@@ -209,8 +209,9 @@ export default async function HomePage() {
                   <>£25 a year <span className="text-white/40 line-through font-normal text-2xl sm:text-3xl">£49.99</span></>
                 ) : '£49.99 a year'}
               </h2>
+              <p className="text-white/50 text-sm -mt-2 mb-4">Or £5 a month</p>
               <p className="text-white/70 text-lg mb-8 leading-relaxed">
-                A year of access to every premium blog post, every guide, and every adventure pack. Cancel any time.
+                Every premium blog post, every guide, and every adventure pack. Cancel any time.
               </p>
               {user ? (
                 <UpgradeButton className="btn-primary text-base px-8 py-3.5" />

@@ -132,7 +132,7 @@ export default async function AdventurePackPage({
               <h3 className="text-lg font-bold mb-3 leading-tight">
                 {wsDiscount ? (
                   <>£25 a year <span className="text-white/40 line-through font-normal">£49.99</span> for the whole site.</>
-                ) : '£49.99 a year for the whole site.'}
+                ) : '£49.99 a year, or £5 a month, for the whole site.'}
               </h3>
               <ul className="space-y-1.5 text-sm text-white/85 mb-5">
                 {[

@@ -38,6 +38,9 @@ export default function SignupForm({
   // premium_intent flag in user_metadata that we read after the code
   // is verified and turn into a Stripe checkout redirect.
   const [tier, setTier] = useState<Tier>(defaultTier)
+  // Only meaningful when tier === 'premium'. Discount codes and the
+  // WayStaq £25 member price only ever apply to the annual plan.
+  const [premiumPlan, setPremiumPlan] = useState<'annual' | 'monthly'>('annual')
   const [discountCode, setDiscountCode] = useState('')
   const [discountChecking, setDiscountChecking] = useState(false)
   const [discountPercentOff, setDiscountPercentOff] = useState<number | null>(null)
@@ -100,6 +103,7 @@ export default function SignupForm({
           full_name: normalisedName,
           marketing_opt_in: marketingOptIn,
           premium_intent: tier === 'premium',
+          premium_plan: tier === 'premium' ? premiumPlan : null,
         },
         // Fallback link target if they click the email link instead of
         // entering the code. The code (verifyOtp) is the primary path.
@@ -118,14 +122,15 @@ export default function SignupForm({
     fetch('/api/auth/welcome', { method: 'POST' }).catch(() => null)
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      const meta = user?.user_metadata as { premium_intent?: boolean } | null
+      const meta = user?.user_metadata as { premium_intent?: boolean; premium_plan?: 'annual' | 'monthly' } | null
       if (meta?.premium_intent) {
         await supabase.auth.updateUser({ data: { premium_intent: false } }).catch(() => null)
-        const trimmedCode = discountCode.trim()
+        const plan = meta.premium_plan === 'monthly' ? 'monthly' : 'annual'
+        const trimmedCode = plan === 'annual' ? discountCode.trim() : ''
         const res = await fetch('/api/stripe/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(trimmedCode ? { code: trimmedCode } : {}),
+          body: JSON.stringify({ plan, ...(trimmedCode ? { code: trimmedCode } : {}) }),
         })
         if (res.ok) {
           const json = await res.json() as { url?: string }
@@ -225,8 +230,8 @@ export default function SignupForm({
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Create your account</h1>
           <p className="text-sm text-gray-500 mb-6">
             {discountActive
-              ? 'Free to join, or go Premium for £25/year, your WayStaq member price.'
-              : 'Free to join, premium access from £49.99/year'}
+              ? 'Free to join, or go Premium for £25/year (your WayStaq member price) or £5/month.'
+              : 'Free to join, premium access from £5/month or £49.99/year'}
           </p>
 
           <form onSubmit={handleSignup} className="space-y-4">
@@ -268,24 +273,53 @@ export default function SignupForm({
                         <span className="text-brand-700 font-semibold">£25/yr</span>
                       </span>
                     ) : (
-                      <span className="font-normal text-gray-500">£49.99/yr</span>
+                      <span className="font-normal text-gray-500">£49.99/yr or £5/mo</span>
                     )}
                   </p>
                   {discountActive && (
-                    <p className="text-[11px] font-semibold text-brand-700 mt-0.5">WayStaq member price</p>
+                    <p className="text-[11px] font-semibold text-brand-700 mt-0.5">WayStaq member price, or £5/mo</p>
                   )}
                   <p className="text-xs text-gray-500 leading-snug mt-0.5">All 80+ Adventure Packs, the Adventure Passport, every premium blog and guide.</p>
                 </button>
               </div>
               {tier === 'premium' && (
-                <p className="text-xs text-gray-500 mt-2 leading-relaxed">
-                  You&apos;ll confirm your email with a code, then land on Stripe checkout to start your Premium membership
-                  {discountActive ? ' at the £25 member price.' : '.'}
-                </p>
+                <div className="mt-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Billing</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPremiumPlan('annual')}
+                      aria-pressed={premiumPlan === 'annual'}
+                      className={`flex-1 text-sm font-semibold rounded-lg border px-3 py-2 transition-colors ${
+                        premiumPlan === 'annual'
+                          ? 'border-brand-500 bg-brand-50/60 ring-2 ring-brand-200 text-brand-900'
+                          : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      {discountActive ? 'Yearly · £25' : 'Yearly · £49.99'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPremiumPlan('monthly')}
+                      aria-pressed={premiumPlan === 'monthly'}
+                      className={`flex-1 text-sm font-semibold rounded-lg border px-3 py-2 transition-colors ${
+                        premiumPlan === 'monthly'
+                          ? 'border-brand-500 bg-brand-50/60 ring-2 ring-brand-200 text-brand-900'
+                          : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      Monthly · £5
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                    You&apos;ll confirm your email with a code, then land on Stripe checkout to start your Premium membership
+                    {premiumPlan === 'annual' && discountActive ? ' at the £25 member price.' : '.'}
+                  </p>
+                </div>
               )}
             </div>
 
-            {tier === 'premium' && (
+            {tier === 'premium' && premiumPlan === 'annual' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Discount code (optional)</label>
                 <div className="flex gap-2">
@@ -329,7 +363,7 @@ export default function SignupForm({
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 placeholder="you@example.com"
               />
-              {discountActive && (
+              {discountActive && tier === 'premium' && premiumPlan === 'annual' && (
                 <p className="text-xs text-brand-700 mt-1.5 leading-relaxed">
                   Keep this email to get your £25 WayStaq member price. A different email signs up at the standard £49.99.
                 </p>

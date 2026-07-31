@@ -514,7 +514,7 @@ export function buildFamilyWayResultEmail(p: {
     <p>${escapeHtml(p.nextStep.body)}</p>
 
     <p style="margin-top:24px"><strong>Where to go next on the site</strong></p>
-    <p>Premium membership unlocks the guides, Adventure Packs, and posts that go deeper on the parts of your result that matter most. £49.99 a year for the whole family. If you're already a WayStaq Premium member you can pick up JFT Premium at £25 a year through the member link inside WayStaq.</p>
+    <p>Premium membership unlocks the guides, Adventure Packs, and posts that go deeper on the parts of your result that matter most. £49.99 a year for the whole family, or £5 a month. If you're already a WayStaq Premium member you can pick up JFT Premium at £25 a year through the member link inside WayStaq.</p>
     <p><a class="btn" href="${p.siteUrl}/account">See what Premium unlocks</a></p>
 
     <p style="margin-top:20px">If you'd rather talk it through, we run a 60-minute 1:1 video call, £49.99 flat. <a href="${p.siteUrl}/work-with-us">Book one here</a>.</p>
@@ -546,7 +546,7 @@ ${p.nextStep.title}
 ${p.nextStep.body}
 
 Where to go next on the site:
-Premium membership unlocks the guides, Adventure Packs, and posts that go deeper on the parts of your result that matter most. £49.99 a year for the whole family. If you're already a WayStaq Premium member you can pick up JFT Premium at £25 a year through the member link inside WayStaq.
+Premium membership unlocks the guides, Adventure Packs, and posts that go deeper on the parts of your result that matter most. £49.99 a year for the whole family, or £5 a month. If you're already a WayStaq Premium member you can pick up JFT Premium at £25 a year through the member link inside WayStaq.
 ${p.siteUrl}/account
 
 If you'd rather talk it through, we run a 60-minute 1:1 video call, £49.99 flat. Book one here: ${p.siteUrl}/work-with-us

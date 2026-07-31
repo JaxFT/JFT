@@ -174,10 +174,10 @@ export default async function AccountPage() {
                   'Every premium blog post, every guide, every Adventure Pack, and the full Adventure Passport are included.'
                 ) : (
                   <>
-                    A year of access to every premium blog post, every guide, every Adventure Pack, and the Adventure Passport,{' '}
+                    Every premium blog post, every guide, every Adventure Pack, and the Adventure Passport,{' '}
                     {wsDiscount ? (
                       <>£25/year <span className="text-gray-400 line-through">£49.99</span></>
-                    ) : '£49.99/year'}.
+                    ) : '£49.99/year'}, or £5/month.
                   </>
                 )}
               </p>

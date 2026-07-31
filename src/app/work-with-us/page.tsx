@@ -85,13 +85,13 @@ export default async function WorkWithUsPage() {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:gap-6 gap-4">
             <div className="flex-1">
               <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2 inline-flex items-center gap-1.5">
-                <Eye className="w-3.5 h-3.5" /> A smaller way in, £4.99
+                <Eye className="w-3.5 h-3.5" /> A smaller way in, {isPremium ? 'included with Premium' : '£4.99'}
               </p>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 leading-tight">
                 Walk through our live two-year Asia trip
               </h2>
               <p className="text-sm text-gray-600 leading-relaxed">
-                Want a less-talk option? Get view-only access to our family&apos;s live two-year Asia trip on WayStaq, every accommodation, every cost, every day on the road. New stops appear as we keep going. For the price of a coffee.
+                Want a less-talk option? Get view-only access to our family&apos;s live two-year Asia trip on WayStaq, every accommodation, every cost, every day on the road. New stops appear as we keep going.{isPremium ? ' Included with your Premium subscription.' : ' For the price of a coffee.'}
               </p>
             </div>
             <Link

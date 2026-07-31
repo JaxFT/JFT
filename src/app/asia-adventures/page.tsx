@@ -1,20 +1,53 @@
 import type { Metadata } from 'next'
-import { Check, MapPin, Receipt, Calendar, Compass, Mountain } from 'lucide-react'
+import { Check, MapPin, Receipt, Calendar, Compass, Mountain, ArrowRight } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+import { isPremiumTier } from '@/lib/profile'
 import BuyTripViewButton from './BuyTripViewButton'
 
 // Landing page for the "Our Total Spending and Trip plan" product: £4.99
-// view-only access to JFT's ongoing two-year Asia trip on WayStaq.
-// WayStaq's webhook listener grants access; this page is the sales
-// surface on the JFT side.
+// view-only access to JFT's ongoing two-year Asia trip on WayStaq, free
+// for as long as a Premium subscription (annual or monthly) stays active.
+// WayStaq's stripe-webhook.js grants/revokes the free version off Stripe
+// subscription events for JFT's price IDs; this page is the sales surface
+// (and, for existing Premium members, the "you already have this" surface)
+// on the JFT side.
 
 export const metadata: Metadata = {
   title: 'Our Total Spending and Trip plan, a live two-year Asia trip on WayStaq',
-  description: 'A live view of our family\'s actual two-year Asia trip on WayStaq. Every accommodation, every transport leg, every cost, every day on the road, updated as we keep going. £4.99 for view-only access.',
+  description: 'A live view of our family\'s actual two-year Asia trip on WayStaq. Every accommodation, every transport leg, every cost, every day on the road, updated as we keep going. £4.99 for view-only access, free with Premium.',
 }
 
 export const dynamic = 'force-dynamic'
 
-export default function AsiaAdventuresLanding() {
+export default async function AsiaAdventuresLanding() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // WayStaq only grants free access off a real Stripe subscription event
+  // (see JFT_SUBSCRIPTION_PRICE_IDS in WayStaq's stripe-webhook.js), so
+  // gifted Premium (stripe_subscription_id null, see supabase/premium-gifts.sql)
+  // must NOT show the free-access CTA here, it would send them to WayStaq
+  // expecting access that was never actually granted. Only a real paying
+  // subscriber counts.
+  let isPremium = false
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('subscription_tier, stripe_subscription_id')
+      .eq('id', user.id)
+      .maybeSingle()
+    isPremium = isPremiumTier(profile?.subscription_tier) && !!profile?.stripe_subscription_id
+  }
+
+  // Access on WayStaq is keyed off email, granted by the Stripe webhook
+  // against whatever email is on the subscriber's Stripe customer record.
+  // Prefilling the JFT account email covers the common case where they
+  // match; if a subscriber used a different email at Stripe checkout,
+  // they'll need to sign in/up with that one instead.
+  const waystaqUrl = user?.email
+    ? `https://waystaq.com/app/?email=${encodeURIComponent(user.email)}`
+    : 'https://waystaq.com/app/'
+
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -32,23 +65,48 @@ export default function AsiaAdventuresLanding() {
           </p>
         </div>
 
-        {/* HERO CARD with the buy CTA */}
+        {/* HERO CARD with the buy CTA, or the free-with-Premium CTA */}
         <div className="bg-brand-950 text-white rounded-2xl p-6 sm:p-8 mb-10">
           <div className="flex flex-col sm:flex-row sm:items-start sm:gap-6 gap-4">
             <div className="flex-1">
-              <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-3">
-                View-only access · one-off purchase
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-bold mb-3 leading-tight">
-                A live view of the whole trip and the real numbers.
-              </h2>
-              <p className="text-white/80 leading-relaxed text-sm sm:text-base mb-5">
-                We use WayStaq to plan and track our family&apos;s travel. £4.99 gives you view-only access to the whole Asia trip: the route, the bookings we made, the transport, and what each leg cost us. This is the live trip plan, not a finished retrospective, so you&apos;ll see new stops, new bookings and new costs appear as we keep going. After you pay, you can sign up for a free WayStaq account (or sign in to an existing one) with the same email and you&apos;re in.
-              </p>
-              <BuyTripViewButton className="btn-primary bg-white !text-brand-700 hover:bg-white/90" />
-              <p className="text-white/60 text-xs mt-3">
-                One-time payment. View access doesn&apos;t expire and updates as the trip continues.
-              </p>
+              {isPremium ? (
+                <>
+                  <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-3">
+                    Included free with Premium
+                  </p>
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-3 leading-tight">
+                    You already have this, no charge.
+                  </h2>
+                  <p className="text-white/80 leading-relaxed text-sm sm:text-base mb-5">
+                    Premium members get free view-only access to the whole Asia trip for as long as the subscription stays active, no separate purchase needed. Sign in to WayStaq with the same email as your JFT account and it&apos;s there.
+                  </p>
+                  <a
+                    href={waystaqUrl}
+                    className="btn-primary bg-white !text-brand-700 hover:bg-white/90 inline-flex items-center gap-2"
+                  >
+                    Open WayStaq <ArrowRight className="w-4 h-4" />
+                  </a>
+                  <p className="text-white/60 text-xs mt-3">
+                    New to WayStaq? Signing up is free, just use the same email as your JFT account. Just subscribed? Give it a minute to sync before it shows up.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-3">
+                    View-only access · one-off purchase, or free with Premium
+                  </p>
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-3 leading-tight">
+                    A live view of the whole trip and the real numbers.
+                  </h2>
+                  <p className="text-white/80 leading-relaxed text-sm sm:text-base mb-5">
+                    We use WayStaq to plan and track our family&apos;s travel. £4.99 gives you view-only access to the whole Asia trip: the route, the bookings we made, the transport, and what each leg cost us. This is the live trip plan, not a finished retrospective, so you&apos;ll see new stops, new bookings and new costs appear as we keep going. After you pay, you can sign up for a free WayStaq account (or sign in to an existing one) with the same email and you&apos;re in.
+                  </p>
+                  <BuyTripViewButton className="btn-primary bg-white !text-brand-700 hover:bg-white/90" />
+                  <p className="text-white/60 text-xs mt-3">
+                    One-time payment. View access doesn&apos;t expire and updates as the trip continues. Already a Premium member? <a href="/account" className="underline">Sign in</a> to get it free instead.
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -190,7 +248,20 @@ export default function AsiaAdventuresLanding() {
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 mb-10">
           <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-4">How it works</p>
           <ol className="space-y-5">
-            {[
+            {(isPremium ? [
+              {
+                title: 'Sign up on WayStaq with the same email as your JFT account',
+                body: 'No payment needed, your Premium subscription covers it. If you already have a WayStaq account under that email, just sign in.',
+              },
+              {
+                title: 'The trip is in your account',
+                body: 'View-only, but otherwise the full thing. You can read every detail, copy ideas into your own plans, and come back to it whenever. As we keep going, new entries appear in your view.',
+              },
+              {
+                title: 'It stays free for as long as you stay subscribed',
+                body: 'Cancel Premium and view access ends with it. Resubscribe any time and it comes back.',
+              },
+            ] : [
               {
                 title: 'Pay £4.99',
                 body: 'One-off Stripe checkout. Card details handled by Stripe, never touched by us.',
@@ -203,7 +274,7 @@ export default function AsiaAdventuresLanding() {
                 title: 'The trip is in your account',
                 body: 'View-only, but otherwise the full thing. You can read every detail, copy ideas into your own plans, and come back to it whenever. As we keep going, new entries appear in your view.',
               },
-            ].map((s, i) => (
+            ]).map((s, i) => (
               <li key={s.title} className="flex gap-4">
                 <div className="w-9 h-9 bg-brand-600 text-white rounded-lg flex items-center justify-center shrink-0 font-bold text-sm">
                   {i + 1}
@@ -230,7 +301,13 @@ export default function AsiaAdventuresLanding() {
 
         {/* FINAL CTA */}
         <div className="text-center">
-          <BuyTripViewButton className="btn-primary text-base px-7 py-3" />
+          {isPremium ? (
+            <a href={waystaqUrl} className="btn-primary text-base px-7 py-3 inline-flex items-center gap-2">
+              Open WayStaq <ArrowRight className="w-4 h-4" />
+            </a>
+          ) : (
+            <BuyTripViewButton className="btn-primary text-base px-7 py-3" />
+          )}
           <p className="text-xs text-gray-500 mt-3">
             Got a question first?{' '}
             <a href="mailto:hello@jaxfamilytravels.com" className="text-brand-700 font-semibold hover:underline">

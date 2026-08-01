@@ -23,24 +23,55 @@ export type ResizeResult = {
   newBytes: number
 }
 
+// iPhone camera-roll photos are HEIC/HEIF by default. Browsers can't
+// decode that format in <canvas>/<img> (outside Safari), and file.type
+// is often just '' for it depending on OS/picker, which would otherwise
+// skip the "non-image" check below and get rejected server-side with
+// "Only image files are allowed". Detect by extension too, not just
+// MIME, since MIME can't be trusted here.
+function isHeic(file: File): boolean {
+  const type = file.type.toLowerCase()
+  if (type === 'image/heic' || type === 'image/heif') return true
+  return /\.hei[cf]$/i.test(file.name)
+}
+
 // Try to resize. On any failure (unsupported format, browser quirk,
 // etc.) returns the original file untouched. Safe to call on every
 // upload.
 export async function resizeImageIfLarge(file: File): Promise<ResizeResult> {
   const originalBytes = file.size
+  let heicConverted = false
+
+  if (isHeic(file)) {
+    try {
+      const heic2any = (await import('heic2any')).default
+      const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: QUALITY })
+      // heic2any returns an array for multi-image HEIC (e.g. Live Photos),
+      // a single Blob otherwise — only the first frame is a still photo.
+      const blob = Array.isArray(converted) ? converted[0] : converted
+      const baseName = file.name.replace(/\.[^.]+$/, '') || 'photo'
+      file = new File([blob], `${baseName}.jpg`, { type: 'image/jpeg', lastModified: Date.now() })
+      heicConverted = true
+    } catch {
+      // Conversion failed — fall through with the original HEIC file.
+      // The upload route will reject it with a clear "only image files"
+      // error rather than this failing silently.
+    }
+  }
 
   // Non-images (e.g. PDFs), skip entirely.
   if (!file.type.startsWith('image/')) {
-    return { file, resized: false, originalBytes, newBytes: originalBytes }
+    return { file, resized: false, originalBytes, newBytes: file.size }
   }
   // SVGs aren't pixel data, don't touch.
   if (file.type === 'image/svg+xml') {
-    return { file, resized: false, originalBytes, newBytes: originalBytes }
+    return { file, resized: false, originalBytes, newBytes: file.size }
   }
   // Already small, pass through. Avoids re-encoding small icons /
-  // already-optimised images.
+  // already-optimised images. (HEIC conversion above still counts as a
+  // resize for reporting purposes, even if it's under the bypass size.)
   if (originalBytes <= MAX_BYTES_BYPASS) {
-    return { file, resized: false, originalBytes, newBytes: originalBytes }
+    return { file, resized: heicConverted, originalBytes, newBytes: file.size }
   }
 
   try {
@@ -56,7 +87,7 @@ export async function resizeImageIfLarge(file: File): Promise<ResizeResult> {
     if (scale >= 1 && originalBytes <= MAX_BYTES_BYPASS * 4) {
       // Image is already within the dimensional cap and isn't enormous.
       // Pass through.
-      return { file, resized: false, originalBytes, newBytes: originalBytes }
+      return { file, resized: heicConverted, originalBytes, newBytes: file.size }
     }
     const targetW = Math.round(img.naturalWidth * scale)
     const targetH = Math.round(img.naturalHeight * scale)

@@ -24,6 +24,7 @@ type Photo = {
   caption: string
   isCover: boolean
   error?: string
+  file?: File // kept so a failed upload can be retried without re-picking it
 }
 
 type WizardLink = { id: string; url: string; label: string }
@@ -126,6 +127,32 @@ export default function Wizard() {
     setLinks(prev => prev.map(l => (l.id === id ? { ...l, ...patch } : l)))
   const removeLink = (id: string) => setLinks(prev => prev.filter(l => l.id !== id))
 
+  // Shared by addPhotos and retryPhoto so a flaky connection (common
+  // uploading over patchy hotel/hostel wifi) only needs one photo
+  // re-tried, not the whole page reloaded and the draft lost.
+  const uploadOnePhoto = async (photoId: string, file: File) => {
+    setPhotos(prev => prev.map(p =>
+      p.id === photoId ? { ...p, status: 'uploading', error: undefined } : p,
+    ))
+    try {
+      const { file: prepared } = await resizeImageIfLarge(file)
+      const form = new FormData()
+      form.append('file', prepared)
+      const res = await fetch('/api/admin/blog-photos/upload', { method: 'POST', body: form })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`)
+      setPhotos(prev => prev.map(p =>
+        p.id === photoId ? { ...p, status: 'done', url: body.url } : p,
+      ))
+    } catch (e) {
+      setPhotos(prev => prev.map(p =>
+        p.id === photoId
+          ? { ...p, status: 'error', error: e instanceof Error ? e.message : 'Upload failed' }
+          : p,
+      ))
+    }
+  }
+
   const addPhotos = async (files: FileList | null) => {
     if (!files || files.length === 0) return
     const newPhotos: Photo[] = Array.from(files).map((f, i) => ({
@@ -133,30 +160,18 @@ export default function Wizard() {
       status: 'uploading',
       caption: '',
       isCover: false,
+      file: f,
     }))
     setPhotos(prev => [...prev, ...newPhotos])
 
     for (let i = 0; i < files.length; i++) {
-      const file = files[i]
-      const photoId = newPhotos[i].id
-      try {
-        const { file: prepared } = await resizeImageIfLarge(file)
-        const form = new FormData()
-        form.append('file', prepared)
-        const res = await fetch('/api/admin/blog-photos/upload', { method: 'POST', body: form })
-        const body = await res.json().catch(() => ({}))
-        if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`)
-        setPhotos(prev => prev.map(p =>
-          p.id === photoId ? { ...p, status: 'done', url: body.url } : p,
-        ))
-      } catch (e) {
-        setPhotos(prev => prev.map(p =>
-          p.id === photoId
-            ? { ...p, status: 'error', error: e instanceof Error ? e.message : 'Upload failed' }
-            : p,
-        ))
-      }
+      await uploadOnePhoto(newPhotos[i].id, files[i])
     }
+  }
+
+  const retryPhoto = (id: string) => {
+    const photo = photos.find(p => p.id === id)
+    if (photo?.file) uploadOnePhoto(id, photo.file)
   }
 
   const removePhoto = (id: string) => setPhotos(prev => prev.filter(p => p.id !== id))
@@ -665,8 +680,17 @@ Do NOT add any text before or after the code block. The code block IS the entire
                           <img loading="lazy" src={p.url} alt={p.caption} className="absolute inset-0 w-full h-full object-cover" />
                         )}
                         {p.status === 'error' && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center text-red-700 text-sm px-4 text-center">
-                            <X className="w-6 h-6 mb-1" /> {p.error}
+                          <div className="absolute inset-0 flex flex-col items-center justify-center text-red-700 text-sm px-4 text-center gap-2">
+                            <X className="w-6 h-6" /> {p.error}
+                            {p.file && (
+                              <button
+                                type="button"
+                                onClick={() => retryPhoto(p.id)}
+                                className="text-xs font-semibold underline underline-offset-2"
+                              >
+                                Retry
+                              </button>
+                            )}
                           </div>
                         )}
                         {p.isCover ? (

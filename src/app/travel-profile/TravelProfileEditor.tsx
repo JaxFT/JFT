@@ -380,6 +380,8 @@ export default function TravelProfileEditor({
             onChange={e => setBio(e.target.value.slice(0, 200))}
             rows={2}
             placeholder="Travelling the world slowly."
+            spellCheck
+            lang="en"
             className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
         </div>

@@ -134,20 +134,14 @@ export async function GET(request: Request) {
           />
         )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-          <div
-            style={{
-              width: 130,
-              height: 130,
-              borderRadius: 34,
-              background: 'rgba(255,255,255,0.16)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: 40,
-            }}
-          >
-            <svg width={68} height={68} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+        {/* The per-type icon is now a big, faint watermark sitting behind
+            the text and bleeding down into the blank space below it,
+            rather than a small standalone badge, so it's unmistakably
+            "this whole section is about the Mountain type" instead of a
+            random little icon floating above the copy. */}
+        <div style={{ display: 'flex', flexDirection: 'column', position: 'relative', flex: 1 }}>
+          <div style={{ display: 'flex', position: 'absolute', top: -10, left: 40, opacity: 0.16 }}>
+            <svg width={860} height={860} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={0.55} strokeLinecap="round" strokeLinejoin="round">
               {nodes.map((n, i) =>
                 n.tag === 'rect'
                   ? <rect key={i} x={n.x} y={n.y} width={n.width} height={n.height} rx={n.rx} />
@@ -155,36 +149,37 @@ export async function GET(request: Request) {
               )}
             </svg>
           </div>
-          <div style={{ display: 'flex', fontSize: 30, fontWeight: 600, lineHeight: 1.4, opacity: 0.85, marginBottom: 20, maxWidth: 860 }}>
-            I just took the What Kind of Traveller Are You? quiz on Jax | Family Travels, and my type is...
-          </div>
-          <div style={{ display: 'flex', fontSize: 68, fontWeight: 800, lineHeight: 1.05, marginBottom: 26, maxWidth: 860 }}>
-            {result.name}
-          </div>
-          <div style={{ display: 'flex', fontSize: 32, lineHeight: 1.4, opacity: 0.92, maxWidth: 840, marginBottom: 36 }}>
-            {result.tagline}
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, maxWidth: 860 }}>
-            {result.traits.map(t => (
-              <div
-                key={t}
-                style={{
-                  display: 'flex',
-                  fontSize: 24,
-                  fontWeight: 600,
-                  padding: '12px 24px',
-                  borderRadius: 999,
-                  background: 'rgba(255,255,255,0.14)',
-                  border: '1px solid rgba(255,255,255,0.28)',
-                }}
-              >
-                {t}
-              </div>
-            ))}
+
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', fontSize: 30, fontWeight: 600, lineHeight: 1.4, opacity: 0.85, marginBottom: 20, maxWidth: 860 }}>
+              I just took the What Kind of Traveller Are You? quiz on Jax | Family Travels, and my type is...
+            </div>
+            <div style={{ display: 'flex', fontSize: 68, fontWeight: 800, lineHeight: 1.05, marginBottom: 26, maxWidth: 860 }}>
+              {result.name}
+            </div>
+            <div style={{ display: 'flex', fontSize: 32, lineHeight: 1.4, opacity: 0.92, maxWidth: 840, marginBottom: 36 }}>
+              {result.tagline}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, maxWidth: 860 }}>
+              {result.traits.map(t => (
+                <div
+                  key={t}
+                  style={{
+                    display: 'flex',
+                    fontSize: 24,
+                    fontWeight: 600,
+                    padding: '12px 24px',
+                    borderRadius: 999,
+                    background: 'rgba(255,255,255,0.14)',
+                    border: '1px solid rgba(255,255,255,0.28)',
+                  }}
+                >
+                  {t}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-
-        <div style={{ display: 'flex', flex: 1 }} />
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', fontSize: 30, fontWeight: 700 }}>jaxfamilytravels.com</div>

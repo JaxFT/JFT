@@ -7,7 +7,7 @@ import { proxyImageUrl } from '@/lib/image-proxy'
 import { TRAVELLER_TYPES, type TravellerTypeId } from '@/app/what-kind-of-traveller-are-you/quiz-data'
 import { BACKGROUND_THEMES, isValidBackgroundTheme } from '@/app/travel-profile/background-themes'
 
-export const metadata: Metadata = { title: 'Discover Travellers' }
+export const metadata: Metadata = { title: 'Real Travellers' }
 export const dynamic = 'force-dynamic'
 
 function isValidTravellerType(v: string | null): v is TravellerTypeId {
@@ -63,9 +63,9 @@ export default async function DiscoverPage({
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2 mb-2">
           <Compass className="w-5 h-5 text-brand-600" />
-          <p className="text-xs font-bold tracking-widest uppercase text-brand-600">Discover</p>
+          <p className="text-xs font-bold tracking-widest uppercase text-brand-600">Community</p>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Travellers</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Real Travellers</h1>
         <p className="text-gray-500 mb-6">Public Travel Profiles from the JFT community.</p>
 
         <form method="GET" className="relative mb-8 max-w-md">

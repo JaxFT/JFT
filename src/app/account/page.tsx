@@ -238,7 +238,7 @@ export default async function AccountPage() {
               <Search className="w-6 h-6" />
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-bold text-gray-900 group-hover:text-brand-800">Discover</h2>
+              <h2 className="text-lg font-bold text-gray-900 group-hover:text-brand-800">Real Travellers</h2>
               <p className="text-sm text-gray-500">
                 Browse public Travel Profiles from other JFT members.
               </p>

@@ -24,6 +24,37 @@ function cleanFocal(v: unknown): number {
   return Math.max(0, Math.min(100, Math.round(n)))
 }
 
+// Accepts a bare domain ("waystaq.com") by prepending https://, and
+// only allows http(s) — rejects javascript:/data: etc. Returns null
+// for anything that doesn't parse as a URL at all rather than
+// silently mangling it.
+function cleanUrl(v: unknown): string | null {
+  if (typeof v !== 'string') return null
+  let s = v.trim().slice(0, 300)
+  if (!s) return null
+  if (!/^https?:\/\//i.test(s)) s = `https://${s}`
+  try {
+    const url = new URL(s)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null
+    return url.toString()
+  } catch {
+    return null
+  }
+}
+
+// Bare handle only, no @, no full URL, so it can render with its own
+// icon on the public page instead of looking like a generic link.
+// Also accepts a pasted profile URL and pulls the handle out of it.
+function cleanInstagramHandle(v: unknown): string | null {
+  if (typeof v !== 'string') return null
+  let s = v.trim()
+  if (!s) return null
+  const urlMatch = s.match(/instagram\.com\/([a-zA-Z0-9._]+)/i)
+  if (urlMatch) s = urlMatch[1]
+  s = s.replace(/^@/, '')
+  return /^[a-zA-Z0-9._]{1,30}$/.test(s) ? s : null
+}
+
 export async function GET() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -48,6 +79,7 @@ export async function PUT(request: Request) {
 
   const iso2 = typeof body.fav_country_iso2 === 'string' ? body.fav_country_iso2.toLowerCase() : ''
   const favCountryIso2 = getCountryByIso2(iso2) ? iso2 : null
+  const linkUrl = cleanUrl(body.link_url)
 
   const row = {
     user_id: user.id,
@@ -57,6 +89,9 @@ export async function PUT(request: Request) {
     background_theme: isValidBackgroundTheme(body.background_theme) ? body.background_theme : 'brand',
     hero_photo_focal_x: cleanFocal(body.hero_photo_focal_x),
     hero_photo_focal_y: cleanFocal(body.hero_photo_focal_y),
+    link_label: linkUrl ? cleanStr(body.link_label, 40) : null,
+    link_url: linkUrl,
+    instagram_handle: cleanInstagramHandle(body.instagram_handle),
     fav_place: cleanStr(body.fav_place, 80),
     fav_food: cleanStr(body.fav_food, 80),
     fav_beach: cleanStr(body.fav_beach, 80),

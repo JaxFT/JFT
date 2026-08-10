@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Compass, EyeOff, MapPin, Pencil, Sparkles, Users } from 'lucide-react'
+import { Compass, EyeOff, Instagram, Link2, MapPin, Pencil, Sparkles, Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getCountryByIso2 } from '@/lib/countries'
 import { proxyImageUrl } from '@/lib/image-proxy'
@@ -14,6 +14,16 @@ export const dynamic = 'force-dynamic'
 
 function isValidTravellerType(v: string | null): v is TravellerTypeId {
   return !!v && v in TRAVELLER_TYPES
+}
+
+// Fallback label when no custom link_label is set: the bare hostname,
+// "www." stripped, e.g. "waystaq.com".
+function hostnameLabel(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '')
+  } catch {
+    return url
+  }
 }
 
 export async function generateMetadata(
@@ -120,11 +130,33 @@ export default async function TravelProfilePublicPage(
             )}
             <span>{been.length} {been.length === 1 ? 'country' : 'countries'} visited</span>
           </div>
-          {isValidTravellerType(travelProfile?.traveller_type ?? null) && (
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-700 bg-brand-50 border border-brand-100 rounded-full px-3 py-1.5 mt-3">
-              <Sparkles className="w-3 h-3" /> {TRAVELLER_TYPES[travelProfile!.traveller_type as TravellerTypeId].name}
-            </span>
-          )}
+          <div className="flex items-center justify-center gap-2 flex-wrap mt-3">
+            {isValidTravellerType(travelProfile?.traveller_type ?? null) && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-700 bg-brand-50 border border-brand-100 rounded-full px-3 py-1.5">
+                <Sparkles className="w-3 h-3" /> {TRAVELLER_TYPES[travelProfile!.traveller_type as TravellerTypeId].name}
+              </span>
+            )}
+            {travelProfile?.instagram_handle && (
+              <a
+                href={`https://instagram.com/${travelProfile.instagram_handle}`}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-gradient-to-br from-purple-600 to-pink-500 rounded-full px-3 py-1.5 hover:opacity-90"
+              >
+                <Instagram className="w-3 h-3" /> @{travelProfile.instagram_handle}
+              </a>
+            )}
+            {travelProfile?.link_url && (
+              <a
+                href={travelProfile.link_url}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded-full px-3 py-1.5 hover:bg-gray-100"
+              >
+                <Link2 className="w-3 h-3" /> {travelProfile.link_label || hostnameLabel(travelProfile.link_url)}
+              </a>
+            )}
+          </div>
         </div>
 
         {/* Favourite country */}
@@ -242,7 +274,7 @@ export default async function TravelProfilePublicPage(
             href="/discover"
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/80 hover:text-white"
           >
-            <Compass className="w-3.5 h-3.5" /> Discover more travellers
+            <Compass className="w-3.5 h-3.5" /> Real Travellers
           </Link>
         </div>
       </div>

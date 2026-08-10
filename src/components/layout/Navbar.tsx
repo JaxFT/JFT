@@ -24,7 +24,7 @@ const navLinks = [
   { label: 'How We Can Help',    href: '/work-with-us' },
   { label: 'Adventure Packs',    href: '/adventure-packs' },
   { label: 'Adventure Passport', href: '/passports' },
-  { label: 'Discover',           href: '/discover' },
+  { label: 'Real Travellers',    href: '/discover' },
   { label: 'Worldschooling',     href: '/learning' },
 ]
 

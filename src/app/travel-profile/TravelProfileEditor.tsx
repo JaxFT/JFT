@@ -36,6 +36,9 @@ type TravelProfileRow = {
   fav_sunset: string | null
   fav_country_iso2: string | null
   fav_country_why: string | null
+  link_label: string | null
+  link_url: string | null
+  instagram_handle: string | null
 }
 
 type BuddyRow = { id: string; buddy_user_id: string; username: string | null; full_name: string | null }
@@ -82,6 +85,9 @@ export default function TravelProfileEditor({
   })
   const [favCountryIso2, setFavCountryIso2] = useState(initialProfile?.fav_country_iso2 ?? null)
   const [favCountryWhy, setFavCountryWhy] = useState(initialProfile?.fav_country_why ?? '')
+  const [linkLabel, setLinkLabel] = useState(initialProfile?.link_label ?? '')
+  const [linkUrl, setLinkUrl] = useState(initialProfile?.link_url ?? '')
+  const [instagramHandle, setInstagramHandle] = useState(initialProfile?.instagram_handle ?? '')
   const [backgroundTheme, setBackgroundTheme] = useState<BackgroundThemeId>(
     (initialProfile?.background_theme as BackgroundThemeId) ?? 'brand',
   )
@@ -138,6 +144,9 @@ export default function TravelProfileEditor({
           hero_photo_focal_y: focalY,
           fav_country_iso2: favCountryIso2,
           fav_country_why: favCountryWhy,
+          link_label: linkLabel,
+          link_url: linkUrl,
+          instagram_handle: instagramHandle,
           ...favs,
         }),
       })
@@ -224,7 +233,7 @@ export default function TravelProfileEditor({
               <p className="font-bold text-gray-900">{isPublic ? 'Your page is public' : 'Your page is private'}</p>
               <p className="text-sm text-gray-500 mt-0.5">
                 {isPublic
-                  ? "Anyone with the link can see it, and it's listed on Discover."
+                  ? "Anyone with the link can see it, and it's listed on Real Travellers."
                   : "Only you can see it until you turn this on. Nothing is shared by default."}
               </p>
               {!username && (
@@ -261,7 +270,7 @@ export default function TravelProfileEditor({
             href="/discover"
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-brand-700"
           >
-            <Compass className="w-3.5 h-3.5" /> Discover other travellers
+            <Compass className="w-3.5 h-3.5" /> Real Travellers
           </Link>
         </div>
       </section>
@@ -384,6 +393,39 @@ export default function TravelProfileEditor({
             className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
           <p className="text-xs text-gray-400 mt-1">Just a status you set yourself, update it whenever you like.</p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Link</label>
+          <p className="text-xs text-gray-400 mb-1.5">One link, your own site, blog, a business like WayStaq, whatever you want to point to.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr] gap-2">
+            <input
+              type="text"
+              value={linkLabel}
+              onChange={e => setLinkLabel(e.target.value.slice(0, 40))}
+              placeholder="Label, e.g. WayStaq"
+              className="px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+            />
+            <input
+              type="text"
+              value={linkUrl}
+              onChange={e => setLinkUrl(e.target.value.slice(0, 300))}
+              placeholder="waystaq.com"
+              className="px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Instagram</label>
+          <div className="flex items-center">
+            <span className="px-3 py-2.5 text-sm text-gray-400 border border-r-0 border-gray-200 rounded-l-lg bg-gray-50">@</span>
+            <input
+              type="text"
+              value={instagramHandle}
+              onChange={e => setInstagramHandle(e.target.value.slice(0, 30))}
+              placeholder="yourhandle"
+              className="flex-1 px-3.5 py-2.5 border border-gray-200 rounded-r-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+            />
+          </div>
         </div>
       </section>
 

@@ -16,15 +16,17 @@
 // tried that first and the icon silently came out blank.
 //
 // The header photo is fetched and inlined as a base64 data URI rather
-// than referenced by its public path directly. This runs on Cloudflare
-// via OpenNext, which has no real filesystem to fs.readFileSync a
-// public/ asset from at request time, a same-origin fetch is the
-// reliable way to pull in a static image here (same idea as the cover
-// image proxy in blog/[slug]/opengraph-image.tsx, just re-encoded
-// instead of streamed straight through since this image sits inside a
-// composed layout, not standing alone as the whole response).
+// than referenced by its public path directly, no real filesystem to
+// fs.readFileSync a public/ asset from at request time on Cloudflare.
+// A plain fetch() back to the site's own hostname doesn't work here
+// either, a worker fetching its own zone hits itself again and times
+// out (522) rather than resolving, same issue already solved in
+// adventurePackData.ts: use the ASSETS service binding directly in
+// production, and fall back to a plain HTTP fetch against the local
+// dev server where there's no Cloudflare context to bind to.
 
 import { ImageResponse } from 'next/og'
+import { getCloudflareContext } from '@opennextjs/cloudflare'
 import { TRAVELLER_TYPES, TRAVELLER_TYPE_ORDER, type TravellerTypeId } from '../quiz-data'
 
 export const runtime = 'nodejs'
@@ -68,18 +70,35 @@ function isValidType(v: string | null): v is TravellerTypeId {
   return !!v && (TRAVELLER_TYPE_ORDER as string[]).includes(v)
 }
 
-async function fetchPhotoDataUri(origin: string): Promise<{ uri: string | null; debug: string }> {
+const PHOTO_PATH = '/images/homepage/homepage_header_jft.jpg'
+
+type AssetsBinding = { fetch: (req: Request) => Promise<Response> }
+
+async function fetchPhotoBuffer(origin: string): Promise<{ buf: ArrayBuffer | null; debug: string }> {
   try {
-    const res = await fetch(`${origin}/images/homepage/homepage_header_jft.jpg`)
-    if (!res.ok) {
-      return { uri: null, debug: `not ok: ${res.status} ${res.statusText}` }
+    const { env } = await getCloudflareContext({ async: true })
+    const ASSETS = (env as { ASSETS?: AssetsBinding }).ASSETS
+    if (ASSETS) {
+      const res = await ASSETS.fetch(new Request(`https://placeholder${PHOTO_PATH}`))
+      if (res.ok) return { buf: await res.arrayBuffer(), debug: 'ok via ASSETS binding' }
+      return { buf: null, debug: `ASSETS binding not ok: ${res.status}` }
     }
-    const buf = await res.arrayBuffer()
-    const uri = `data:image/jpeg;base64,${Buffer.from(buf).toString('base64')}`
-    return { uri, debug: `ok: ${buf.byteLength} bytes` }
-  } catch (e) {
-    return { uri: null, debug: `threw: ${e instanceof Error ? `${e.name}: ${e.message}` : String(e)}` }
+  } catch {
+    // Not in Cloudflare runtime (local dev), fall through to plain fetch.
   }
+  try {
+    const res = await fetch(`${origin}${PHOTO_PATH}`)
+    if (!res.ok) return { buf: null, debug: `http fallback not ok: ${res.status}` }
+    return { buf: await res.arrayBuffer(), debug: 'ok via http fallback' }
+  } catch (e) {
+    return { buf: null, debug: `http fallback threw: ${e instanceof Error ? e.message : String(e)}` }
+  }
+}
+
+async function fetchPhotoDataUri(origin: string): Promise<{ uri: string | null; debug: string }> {
+  const { buf, debug } = await fetchPhotoBuffer(origin)
+  if (!buf) return { uri: null, debug }
+  return { uri: `data:image/jpeg;base64,${Buffer.from(buf).toString('base64')}`, debug: `${debug}, ${buf.byteLength} bytes` }
 }
 
 export async function GET(request: Request) {

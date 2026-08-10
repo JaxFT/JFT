@@ -14,6 +14,15 @@
 // Satori (which ImageResponse runs on) only supports a plain SVG/HTML
 // element subset, it can't render a third-party component's internals,
 // tried that first and the icon silently came out blank.
+//
+// The header photo is fetched and inlined as a base64 data URI rather
+// than referenced by its public path directly. This runs on Cloudflare
+// via OpenNext, which has no real filesystem to fs.readFileSync a
+// public/ asset from at request time, a same-origin fetch is the
+// reliable way to pull in a static image here (same idea as the cover
+// image proxy in blog/[slug]/opengraph-image.tsx, just re-encoded
+// instead of streamed straight through since this image sits inside a
+// composed layout, not standing alone as the whole response).
 
 import { ImageResponse } from 'next/og'
 import { TRAVELLER_TYPES, TRAVELLER_TYPE_ORDER, type TravellerTypeId } from '../quiz-data'
@@ -59,12 +68,24 @@ function isValidType(v: string | null): v is TravellerTypeId {
   return !!v && (TRAVELLER_TYPE_ORDER as string[]).includes(v)
 }
 
+async function fetchPhotoDataUri(origin: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${origin}/images/homepage/homepage_header_jft.jpg`)
+    if (!res.ok) return null
+    const buf = await res.arrayBuffer()
+    return `data:image/jpeg;base64,${Buffer.from(buf).toString('base64')}`
+  } catch {
+    return null
+  }
+}
+
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
+  const { searchParams, origin } = new URL(request.url)
   const typeParam = searchParams.get('type')
   const typeId: TravellerTypeId = isValidType(typeParam) ? typeParam : TRAVELLER_TYPE_ORDER[0]
   const result = TRAVELLER_TYPES[typeId]
   const nodes = ICON_NODES[typeId]
+  const photoDataUri = await fetchPhotoDataUri(origin)
 
   return new ImageResponse(
     (
@@ -74,31 +95,41 @@ export async function GET(request: Request) {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between',
           background: 'linear-gradient(160deg, #1e40af 0%, #2d8163 100%)',
           color: 'white',
           fontFamily: 'system-ui, sans-serif',
-          padding: '90px 80px',
+          padding: '70px 80px',
         }}
       >
-        <div style={{ display: 'flex', fontSize: 30, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', opacity: 0.85 }}>
+        <div style={{ display: 'flex', fontSize: 28, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', opacity: 0.85, marginBottom: 32 }}>
           Jax&nbsp;&nbsp;|&nbsp;&nbsp;Family Travels
         </div>
+
+        {photoDataUri && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={photoDataUri}
+            alt=""
+            width={920}
+            height={600}
+            style={{ width: '100%', height: 600, objectFit: 'cover', objectPosition: 'center 35%', borderRadius: 36, marginBottom: 48 }}
+          />
+        )}
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
           <div
             style={{
-              width: 168,
-              height: 168,
-              borderRadius: 42,
+              width: 130,
+              height: 130,
+              borderRadius: 34,
               background: 'rgba(255,255,255,0.16)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              marginBottom: 56,
+              marginBottom: 40,
             }}
           >
-            <svg width={88} height={88} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+            <svg width={68} height={68} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
               {nodes.map((n, i) =>
                 n.tag === 'rect'
                   ? <rect key={i} x={n.x} y={n.y} width={n.width} height={n.height} rx={n.rx} />
@@ -106,24 +137,24 @@ export async function GET(request: Request) {
               )}
             </svg>
           </div>
-          <div style={{ display: 'flex', fontSize: 28, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', opacity: 0.75, marginBottom: 20 }}>
+          <div style={{ display: 'flex', fontSize: 26, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', opacity: 0.75, marginBottom: 16 }}>
             My travel type is
           </div>
-          <div style={{ display: 'flex', fontSize: 78, fontWeight: 800, lineHeight: 1.05, marginBottom: 34, maxWidth: 860 }}>
+          <div style={{ display: 'flex', fontSize: 68, fontWeight: 800, lineHeight: 1.05, marginBottom: 26, maxWidth: 860 }}>
             {result.name}
           </div>
-          <div style={{ display: 'flex', fontSize: 36, lineHeight: 1.4, opacity: 0.92, maxWidth: 840, marginBottom: 60 }}>
+          <div style={{ display: 'flex', fontSize: 32, lineHeight: 1.4, opacity: 0.92, maxWidth: 840, marginBottom: 36 }}>
             {result.tagline}
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, maxWidth: 860 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, maxWidth: 860 }}>
             {result.traits.map(t => (
               <div
                 key={t}
                 style={{
                   display: 'flex',
-                  fontSize: 26,
+                  fontSize: 24,
                   fontWeight: 600,
-                  padding: '14px 26px',
+                  padding: '12px 24px',
                   borderRadius: 999,
                   background: 'rgba(255,255,255,0.14)',
                   border: '1px solid rgba(255,255,255,0.28)',
@@ -135,9 +166,11 @@ export async function GET(request: Request) {
           </div>
         </div>
 
+        <div style={{ display: 'flex', flex: 1 }} />
+
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', fontSize: 32, fontWeight: 700 }}>jaxfamilytravels.com</div>
-          <div style={{ display: 'flex', fontSize: 28, opacity: 0.75 }}>Take the quiz →</div>
+          <div style={{ display: 'flex', fontSize: 30, fontWeight: 700 }}>jaxfamilytravels.com</div>
+          <div style={{ display: 'flex', fontSize: 26, opacity: 0.75 }}>Take the quiz →</div>
         </div>
       </div>
     ),

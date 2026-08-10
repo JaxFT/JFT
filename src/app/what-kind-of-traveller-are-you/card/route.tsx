@@ -155,8 +155,8 @@ export async function GET(request: Request) {
               )}
             </svg>
           </div>
-          <div style={{ display: 'flex', fontSize: 26, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', opacity: 0.75, marginBottom: 16 }}>
-            My travel type is
+          <div style={{ display: 'flex', fontSize: 30, fontWeight: 600, lineHeight: 1.4, opacity: 0.85, marginBottom: 20, maxWidth: 860 }}>
+            I just took the What Kind of Traveller Are You? quiz on Jax | Family Travels, and my type is...
           </div>
           <div style={{ display: 'flex', fontSize: 68, fontWeight: 800, lineHeight: 1.05, marginBottom: 26, maxWidth: 860 }}>
             {result.name}

@@ -17,6 +17,10 @@ export type TravellerType = {
   name: string
   tagline: string
   description: string
+  // Three short traits, used as pill badges on both the result screen
+  // and the shareable card image. Exists to give both of those more
+  // visual substance without adding more quiz questions.
+  traits: [string, string, string]
   relatedLinks: RelatedLink[]
 }
 
@@ -27,6 +31,7 @@ export const TRAVELLER_TYPES: Record<TravellerTypeId, TravellerType> = {
     tagline: "You don't travel to relax, you travel with a plan, and honestly, it works.",
     description:
       "You research before you book, book before you land, and the itinerary is basically a member of the family. It's not control for its own sake, it's not wanting to waste a single day figuring things out on the ground. The trade-off is you'll never really wing it, and you don't want to.",
+    traits: ['Itinerary-driven', 'Books weeks ahead', 'Loves a spreadsheet'],
     relatedLinks: [
       { href: '/blog/the-travel-spreadsheet-finally-broke-us', title: 'The Travel Spreadsheet Finally Broke Us' },
       { href: '/guides/sri-lanka-family-guide', title: 'The Real Sri Lanka Family Guide' },
@@ -38,6 +43,7 @@ export const TRAVELLER_TYPES: Record<TravellerTypeId, TravellerType> = {
     tagline: "The plan is that there isn't one.",
     description:
       "You'd rather stand in a station and pick a direction than follow someone else's itinerary. Some of your best days happened because you changed your mind at the last minute, and you wouldn't have it any other way. The risk is the odd wasted afternoon, the upside is the stories nobody else has.",
+    traits: ['Decides day by day', 'Thrives on detours', 'Plans loosely, if at all'],
     relatedLinks: [
       { href: '/blog/why-we-started-morocco-by-train-then-hired-a-car-halfway-through', title: 'Why We Started Morocco By Train, Then Hired a Car Halfway Through' },
       { href: '/blog/the-creepiest-film-set-you-ll-drive-past-in-morocco-and-probably-stop-at', title: "The Creepiest Film Set You'll Drive Past in Morocco (and Probably Stop At)" },
@@ -49,6 +55,7 @@ export const TRAVELLER_TYPES: Record<TravellerTypeId, TravellerType> = {
     tagline: "You don't visit places, you live in them for a while.",
     description:
       'Long stays over quick hits, unpacking properly over living out of a bag, a coffee spot you go back to over a checklist of sights. You measure a trip by how well you got to know somewhere, not by how many places you saw.',
+    traits: ['Long stays, not quick hits', 'Has a ‘usual place’', 'Measures depth, not distance'],
     relatedLinks: [
       { href: '/blog/the-george-town-breakfast-spot-we-kept-going-back-to', title: 'The George Town breakfast spot we kept going back to' },
       { href: '/blog/fast-travel-vs-slow-travel-why-we-ve-ended-up-doing-both', title: "Fast Travel vs Slow Travel, Why We've Ended Up Doing Both" },
@@ -60,6 +67,7 @@ export const TRAVELLER_TYPES: Record<TravellerTypeId, TravellerType> = {
     tagline: 'A slow day is a wasted day.',
     description:
       "You didn't come this far to sit by a pool. If there's a hike, a dive, a safari, or something with a mild element of risk, you're first in the queue, kids in tow. The itinerary bends around whatever the biggest experience on offer is, and everyone comes home a little more tired and a little more sure it was worth it.",
+    traits: ['First in the queue', 'Activity-packed days', 'A little risk is the point'],
     relatedLinks: [
       { href: '/blog/the-time-jax-dislocated-his-elbow-halfway-up-a-mountain-in-nepal', title: 'The Time Jax Dislocated His Elbow Halfway Up a Mountain in Nepal' },
       { href: '/blog/our-favourite-safari-so-far-a-full-day-in-chitwan-national-park-nepal', title: 'Our Favourite Safari So Far: A Full Day in Chitwan National Park, Nepal' },
@@ -71,6 +79,7 @@ export const TRAVELLER_TYPES: Record<TravellerTypeId, TravellerType> = {
     tagline: "The trip's not over until you know exactly what it cost.",
     description:
       "You treat every pound like it has to earn its place in the budget, not because you have to, but because it's the game. Points, deals, free days, and a running total you actually enjoy checking. You'll happily skip the taxi if it means bragging rights on how little the day cost.",
+    traits: ['Tracks every pound', 'Points and deals', 'Treats saving as a game'],
     relatedLinks: [
       { href: '/guides/how-to-save-blueprint', title: 'How We Saved for Full-Time Travel, The Blueprint' },
       { href: '/blog/the-difference-between-holiday-spending-and-travel-spending', title: 'The Difference Between Holiday Spending And Travel Spending' },
@@ -82,6 +91,7 @@ export const TRAVELLER_TYPES: Record<TravellerTypeId, TravellerType> = {
     tagline: "Everyone's happier when nobody's uncomfortable.",
     description:
       "You've done the hostel-with-kids thing, or you've heard about it, and made your peace with paying more for the version where everyone sleeps and nobody melts down at 3pm. A pool, a proper bed, and air conditioning aren't luxuries, they're what makes the rest of the day possible.",
+    traits: ["Kids' comfort first", 'Pays for ease', 'Pool and space, non-negotiable'],
     relatedLinks: [
       { href: '/blog/a-very-different-kind-of-family-hotel-stay-at-hard-rock-hotel-penang', title: 'A Very Different Kind of Family Hotel Stay at Hard Rock Hotel Penang' },
       { href: '/blog/two-nights-in-the-sahara-at-a-luxury-desert-camp', title: 'Two Nights in the Sahara At A Luxury Desert Camp' },

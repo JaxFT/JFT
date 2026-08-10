@@ -22,7 +22,7 @@ export default async function TravellerQuizPage() {
   if (!isAdminEmail(user?.email)) notFound()
 
   return (
-    <div className="min-h-screen bg-white pt-28 pb-20 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-sand-50 to-white pt-28 pb-24 px-4">
       <QuizClient />
     </div>
   )

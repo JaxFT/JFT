@@ -40,10 +40,11 @@ export async function POST() {
     return NextResponse.json({ ok: true, imported: 0 })
   }
 
-  const { error: insertErr } = await supabase
+  const { data: inserted, error: insertErr } = await supabase
     .from('travel_profile_places')
     .insert(toInsert)
+    .select('id, iso2, list_type, top8_rank')
   if (insertErr) return NextResponse.json({ error: insertErr.message }, { status: 500 })
 
-  return NextResponse.json({ ok: true, imported: toInsert.length })
+  return NextResponse.json({ ok: true, imported: toInsert.length, places: inserted ?? [] })
 }

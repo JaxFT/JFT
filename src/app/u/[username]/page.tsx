@@ -7,6 +7,7 @@ import { getCountryByIso2 } from '@/lib/countries'
 import { proxyImageUrl } from '@/lib/image-proxy'
 import CountryFlag from '@/components/CountryFlag'
 import { TRAVELLER_TYPES, type TravellerTypeId } from '@/app/what-kind-of-traveller-are-you/quiz-data'
+import { BACKGROUND_THEMES, isValidBackgroundTheme } from '@/app/travel-profile/background-themes'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,6 +59,11 @@ export default async function TravelProfilePublicPage(
     { emoji: '🌅', label: 'Favourite sunset', value: travelProfile?.fav_sunset ?? null },
   ].filter(f => f.value)
 
+  const favCountry = travelProfile?.fav_country_iso2 ? getCountryByIso2(travelProfile.fav_country_iso2) : null
+  const rawTheme: unknown = travelProfile?.background_theme
+  const heroTheme = BACKGROUND_THEMES[isValidBackgroundTheme(rawTheme) ? rawTheme : 'brand']
+  const focalPosition = `${travelProfile?.hero_photo_focal_x ?? 50}% ${travelProfile?.hero_photo_focal_y ?? 50}%`
+
   return (
     <div className="min-h-screen bg-sand-50 pt-20 pb-20">
       {isOwner && !travelProfile?.is_public && (
@@ -79,10 +85,18 @@ export default async function TravelProfilePublicPage(
         )}
 
         {/* Hero photo */}
-        <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-blue-800 to-brand-600 aspect-[4/3] mb-6 flex items-center justify-center">
+        <div
+          className="rounded-3xl overflow-hidden aspect-[4/3] mb-6 flex items-center justify-center"
+          style={{ background: heroTheme.gradient }}
+        >
           {travelProfile?.hero_photo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={proxyImageUrl(travelProfile.hero_photo_url)} alt="" className="w-full h-full object-cover" />
+            <img
+              src={proxyImageUrl(travelProfile.hero_photo_url)}
+              alt=""
+              className="w-full h-full object-cover"
+              style={{ objectPosition: focalPosition }}
+            />
           ) : (
             <span className="text-white/60 text-sm font-semibold">No photo yet</span>
           )}
@@ -104,6 +118,19 @@ export default async function TravelProfilePublicPage(
             </span>
           )}
         </div>
+
+        {/* Favourite country */}
+        {favCountry && (
+          <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4 mb-8 text-center">
+            <p className="text-xs font-bold tracking-widest uppercase text-gray-400 mb-2">🏆 Favourite country</p>
+            <p className="inline-flex items-center gap-2 text-lg font-bold text-gray-900">
+              <CountryFlag iso2={favCountry.iso2} country={favCountry.name} ariaHidden size="md" /> {favCountry.name}
+            </p>
+            {travelProfile?.fav_country_why && (
+              <p className="text-sm text-gray-600 mt-1.5 italic">&quot;{travelProfile.fav_country_why}&quot;</p>
+            )}
+          </div>
+        )}
 
         {/* My Travel 8 */}
         {top8.length > 0 && (
@@ -184,7 +211,7 @@ export default async function TravelProfilePublicPage(
           </Section>
         )}
 
-        {been.length === 0 && want.length === 0 && favourites.length === 0 && !(buddies ?? []).length && (
+        {been.length === 0 && want.length === 0 && favourites.length === 0 && !favCountry && !(buddies ?? []).length && (
           <p className="text-center text-sm text-gray-400 italic mt-10">
             {isOwner ? "You haven't added anything yet." : `${profile.full_name || profile.username} hasn't added anything yet.`}
           </p>

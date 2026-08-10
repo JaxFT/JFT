@@ -5,19 +5,26 @@
 // fields rather than per-field autosave — predictable, and matches
 // AccountEditor's pattern elsewhere on the site.
 
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
-  Camera, Check, ExternalLink, Eye, EyeOff, Loader2, Sparkles, Trash2, Users, X,
+  Camera, Check, ExternalLink, Eye, EyeOff, Loader2, Search, Sparkles, Users, X,
 } from 'lucide-react'
 import { resizeImageIfLarge } from '@/lib/image-resize'
 import { proxyImageUrl } from '@/lib/image-proxy'
+import { COUNTRIES, getCountryByIso2 } from '@/lib/countries'
+import CountryFlag from '@/components/CountryFlag'
+import CoverFocalPicker from '@/components/CoverFocalPicker'
 import { TRAVELLER_TYPES, type TravellerTypeId } from '@/app/what-kind-of-traveller-are-you/quiz-data'
+import { BACKGROUND_THEMES, BACKGROUND_THEME_ORDER, type BackgroundThemeId } from './background-themes'
 import PlacesEditor, { type PlaceRow } from './PlacesEditor'
 
 type TravelProfileRow = {
   is_public: boolean
   hero_photo_url: string | null
+  hero_photo_focal_x: number
+  hero_photo_focal_y: number
+  background_theme: string
   bio: string | null
   current_location: string | null
   traveller_type: string | null
@@ -27,6 +34,8 @@ type TravelProfileRow = {
   fav_swim: string | null
   fav_adventure: string | null
   fav_sunset: string | null
+  fav_country_iso2: string | null
+  fav_country_why: string | null
 }
 
 type BuddyRow = { id: string; name: string }
@@ -70,10 +79,17 @@ export default function TravelProfileEditor({
     fav_adventure: initialProfile?.fav_adventure ?? '',
     fav_sunset: initialProfile?.fav_sunset ?? '',
   })
+  const [favCountryIso2, setFavCountryIso2] = useState(initialProfile?.fav_country_iso2 ?? null)
+  const [favCountryWhy, setFavCountryWhy] = useState(initialProfile?.fav_country_why ?? '')
+  const [backgroundTheme, setBackgroundTheme] = useState<BackgroundThemeId>(
+    (initialProfile?.background_theme as BackgroundThemeId) ?? 'brand',
+  )
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const travellerType = initialProfile?.traveller_type ?? null
 
   const [heroUrl, setHeroUrl] = useState(initialProfile?.hero_photo_url ?? null)
+  const [focalX, setFocalX] = useState(initialProfile?.hero_photo_focal_x ?? 50)
+  const [focalY, setFocalY] = useState(initialProfile?.hero_photo_focal_y ?? 50)
   const [photoBusy, setPhotoBusy] = useState(false)
   const [photoError, setPhotoError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -88,7 +104,17 @@ export default function TravelProfileEditor({
       const res = await fetch('/api/travel-profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_public: isPublic, bio, current_location: location, ...favs }),
+        body: JSON.stringify({
+          is_public: isPublic,
+          bio,
+          current_location: location,
+          background_theme: backgroundTheme,
+          hero_photo_focal_x: focalX,
+          hero_photo_focal_y: focalY,
+          fav_country_iso2: favCountryIso2,
+          fav_country_why: favCountryWhy,
+          ...favs,
+        }),
       })
       if (!res.ok) throw new Error()
       setSaveState('saved')
@@ -215,7 +241,12 @@ export default function TravelProfileEditor({
           <div className="w-24 h-24 rounded-2xl bg-gray-100 overflow-hidden shrink-0 flex items-center justify-center">
             {heroUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={proxyImageUrl(heroUrl)} alt="" className="w-full h-full object-cover" />
+              <img
+                src={proxyImageUrl(heroUrl)}
+                alt=""
+                className="w-full h-full object-cover"
+                style={{ objectPosition: `${focalX}% ${focalY}%` }}
+              />
             ) : (
               <Camera className="w-7 h-7 text-gray-300" />
             )}
@@ -250,6 +281,44 @@ export default function TravelProfileEditor({
           </div>
         </div>
         {photoError && <p className="text-sm text-red-700 mt-3">{photoError}</p>}
+
+        {heroUrl && (
+          <div className="mt-5 pt-5 border-t border-gray-100">
+            <CoverFocalPicker
+              src={proxyImageUrl(heroUrl)}
+              x={focalX}
+              y={focalY}
+              onChange={({ x, y }) => { setFocalX(x); setFocalY(y) }}
+              previews={[{ label: 'Your page', aspect: '4 / 3' }]}
+            />
+          </div>
+        )}
+      </section>
+
+      {/* Background colour */}
+      <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <h2 className="text-lg font-bold text-gray-900 mb-1">Background colour</h2>
+        <p className="text-sm text-gray-500 mb-4">Sets the tone behind your photo on your page.</p>
+        <div className="flex flex-wrap gap-3">
+          {BACKGROUND_THEME_ORDER.map(id => {
+            const theme = BACKGROUND_THEMES[id]
+            const selected = backgroundTheme === id
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setBackgroundTheme(id)}
+                className={`flex flex-col items-center gap-1.5 ${selected ? '' : 'opacity-70 hover:opacity-100'} transition-opacity`}
+              >
+                <span
+                  className={`w-12 h-12 rounded-full block ${selected ? 'ring-2 ring-offset-2 ring-brand-600' : ''}`}
+                  style={{ background: theme.swatch }}
+                />
+                <span className="text-xs font-medium text-gray-600">{theme.label}</span>
+              </button>
+            )
+          })}
+        </div>
       </section>
 
       {/* Identity */}
@@ -315,6 +384,21 @@ export default function TravelProfileEditor({
       <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-1">Your favourites</h2>
         <p className="text-sm text-gray-500 mb-4">All optional. Say who you are as a traveller, not just where you've been.</p>
+
+        <div className="mb-5 pb-5 border-b border-gray-100">
+          <label className="block text-xs font-semibold text-gray-500 mb-1.5">🏆 Favourite country</label>
+          <FavouriteCountryPicker value={favCountryIso2} onSelect={setFavCountryIso2} />
+          {favCountryIso2 && (
+            <textarea
+              value={favCountryWhy}
+              onChange={e => setFavCountryWhy(e.target.value.slice(0, 300))}
+              rows={2}
+              placeholder="Why? (optional)"
+              className="w-full mt-2 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+            />
+          )}
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {FAVOURITES.map(f => (
             <div key={f.key as string}>
@@ -376,6 +460,75 @@ export default function TravelProfileEditor({
           {saveState === 'idle' && 'Save changes'}
         </button>
       </div>
+    </div>
+  )
+}
+
+function FavouriteCountryPicker({ value, onSelect }: { value: string | null; onSelect: (iso2: string | null) => void }) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const selected = value ? getCountryByIso2(value) : null
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return COUNTRIES
+      .filter(c => c.continent !== 'Antarctica')
+      .filter(c => !q || c.name.toLowerCase().includes(q))
+  }, [query])
+
+  return (
+    <div className="relative">
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          className="flex-1 text-left px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-300"
+        >
+          {selected
+            ? <span className="inline-flex items-center gap-2"><CountryFlag iso2={selected.iso2} country={selected.name} ariaHidden size="sm" />{selected.name}</span>
+            : <span className="text-gray-500">Choose a country…</span>}
+        </button>
+        {selected && (
+          <button type="button" onClick={() => onSelect(null)} className="text-gray-400 hover:text-red-600 p-2" aria-label="Clear favourite country">
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+      {open && (
+        <div className="absolute z-20 left-0 right-0 mt-1 max-h-64 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
+          <div className="sticky top-0 p-2 bg-white border-b border-gray-100">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="search"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Type to search…"
+                autoFocus
+                className="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
+              />
+            </div>
+          </div>
+          {filtered.length === 0 ? (
+            <p className="px-4 py-6 text-sm text-gray-500 italic">No countries match &quot;{query}&quot;.</p>
+          ) : (
+            <ul>
+              {filtered.map(c => (
+                <li key={c.iso2}>
+                  <button
+                    type="button"
+                    onClick={() => { onSelect(c.iso2); setQuery(''); setOpen(false) }}
+                    className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-brand-50 text-sm"
+                  >
+                    <CountryFlag iso2={c.iso2} country={c.name} ariaHidden size="sm" />
+                    <span>{c.name}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   )
 }

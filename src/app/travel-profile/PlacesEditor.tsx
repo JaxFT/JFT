@@ -80,12 +80,19 @@ export default function PlacesEditor({
       const res = await fetch('/api/travel-profile/places/import', { method: 'POST' })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body.error || 'Import failed')
-      window.location.reload()
+      // Merge the newly-imported rows into local state rather than
+      // reloading the page — a reload would wipe any unsaved changes
+      // sitting in sibling sections above this one (bio, favourites,
+      // etc.) that the user hasn't hit "Save changes" on yet.
+      if (Array.isArray(body.places) && body.places.length > 0) {
+        setPlaces(prev => [...prev, ...body.places])
+      }
+      setImportDone(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Import failed')
+    } finally {
       setImporting(false)
     }
-    setImportDone(true)
   }
 
   return (

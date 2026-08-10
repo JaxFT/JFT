@@ -3,11 +3,23 @@
 import { useEffect, useRef, useState } from 'react'
 import { Crosshair, Check, Loader2, Save } from 'lucide-react'
 
+export type FocalPreviewConfig = { label: string; aspect: string }
+
+const DEFAULT_PREVIEWS: FocalPreviewConfig[] = [
+  { label: 'Post hero (square)', aspect: '1 / 1' },
+  { label: 'Listing card', aspect: '16 / 9' },
+]
+
 // A click-to-set focal point picker. Shows the image at its natural
 // aspect ratio with an overlay dot at the chosen focal point. Clicking
 // anywhere on the image moves the dot to that point. The chosen point
 // is then used as `object-position` on the cropped hero / card images
 // so the subject of the photo stays visible.
+//
+// Originally blog-only (cover_focal_x/y on blog_posts), generalised
+// so other features with a similar "one photo, cropped at a few fixed
+// aspect ratios" need (Travel Profile hero photo) can reuse it — pass
+// `previews` to relabel/resize the crop preview boxes for your case.
 //
 // If `onSave` is provided, an inline "Save focal point" button appears
 // below the previews so the user doesn't need to scroll to the form's
@@ -18,12 +30,14 @@ export default function CoverFocalPicker({
   y,
   onChange,
   onSave,
+  previews = DEFAULT_PREVIEWS,
 }: {
   src: string
   x: number       // 0–100
   y: number       // 0–100
   onChange: (next: { x: number; y: number }) => void
   onSave?: (next: { x: number; y: number }) => Promise<void> | void
+  previews?: FocalPreviewConfig[]
 }) {
   const imgWrapRef = useRef<HTMLDivElement>(null)
 
@@ -92,7 +106,7 @@ export default function CoverFocalPicker({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img loading="lazy"
           src={src}
-          alt="Cover focal point preview"
+          alt="Focal point preview"
           className="block w-full max-h-96 object-contain mx-auto pointer-events-none"
           draggable={false}
         />
@@ -107,10 +121,11 @@ export default function CoverFocalPicker({
         </div>
       </div>
 
-      {/* Cropped previews showing what the post hero + listing card will look like */}
-      <div className="grid grid-cols-2 gap-3">
-        <FocalPreviewBox label="Post hero (square)" src={src} x={x} y={y} aspect="1 / 1" />
-        <FocalPreviewBox label="Listing card" src={src} x={x} y={y} aspect="16 / 9" />
+      {/* Cropped previews showing what the photo will look like at each aspect ratio it's actually shown at */}
+      <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${previews.length}, minmax(0, 1fr))` }}>
+        {previews.map(p => (
+          <FocalPreviewBox key={p.label} label={p.label} src={src} x={x} y={y} aspect={p.aspect} />
+        ))}
       </div>
 
       {onSave && (

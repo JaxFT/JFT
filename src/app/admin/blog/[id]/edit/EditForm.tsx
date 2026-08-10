@@ -16,7 +16,7 @@ import { BLOG_CATEGORIES, type BlogCategory } from '@/lib/blog-categories'
 import type { TravelStage, BlogTopic } from '@/lib/blog-meta'
 import TaggingFields from '@/components/admin/blog/TaggingFields'
 import InsertLinkButton from '@/components/admin/blog/InsertLinkButton'
-import CoverFocalPicker from '@/components/blog/CoverFocalPicker'
+import CoverFocalPicker from '@/components/CoverFocalPicker'
 import { buildRewritePrompt } from '@/lib/blog-rewrite-prompt'
 import { resizeImageIfLarge } from '@/lib/image-resize'
 

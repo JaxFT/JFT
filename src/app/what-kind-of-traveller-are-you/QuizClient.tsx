@@ -84,6 +84,14 @@ function QuizInner() {
       setArrivedViaShare(false)
       setPhase('result')
       router.replace(`/what-kind-of-traveller-are-you?type=${winner}`, { scroll: false })
+      // Best-effort save to the Travel Profile if the visitor happens
+      // to be signed in. The quiz itself stays fully anonymous either
+      // way, the API route just 401s silently for signed-out visitors.
+      fetch('/api/travel-profile/quiz-result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: winner }),
+      }).catch(() => null)
     }
   }
 

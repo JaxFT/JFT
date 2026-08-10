@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Crown, ShoppingBag, ArrowRight, Calendar, ShieldCheck, FileText, Mail, Users } from 'lucide-react'
+import { Crown, ShoppingBag, ArrowRight, Calendar, ShieldCheck, FileText, Mail, Users, Compass } from 'lucide-react'
 import WaystaqCard from '@/components/WaystaqCard'
 import { getWaystaqDiscountState } from '@/lib/waystaq-discount'
 import type { Metadata } from 'next'
@@ -204,7 +204,28 @@ export default async function AccountPage() {
           </div>
         </div>
 
-        {/* 2 ── OPEN MY FAMILY (premium-only) ─────────────────────
+        {/* 2a ── OPEN MY TRAVEL PROFILE (free for everyone) ────────
+            Personal identity page (photo, bio, been/want, favourites,
+            travel buddies), opt-in public. Lives on /travel-profile. */}
+        <Link
+          href="/travel-profile"
+          className="block bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6 hover:border-brand-200 hover:bg-sand-50 transition-all group"
+        >
+          <div className="flex items-center gap-4">
+            <div className="bg-brand-50 text-brand-700 rounded-xl p-3 shrink-0">
+              <Compass className="w-6 h-6" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg font-bold text-gray-900 group-hover:text-brand-800">My Travel Profile</h2>
+              <p className="text-sm text-gray-500">
+                Your own page: where you&apos;ve been, where you&apos;re going, your travel style.
+              </p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-brand-600 shrink-0" />
+          </div>
+        </Link>
+
+        {/* 2b ── OPEN MY FAMILY (premium-only) ─────────────────────
             The full family dashboard (kid cards, home country,
             country visits, pack allocation, stamp award, delete
             passport) lives on /family. This is just the doorway. */}

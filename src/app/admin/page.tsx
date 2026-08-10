@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { PenLine, ArrowRight, ShieldCheck, FileText, Upload, MessageCircle, BookOpen, Users, Sparkles, Video, Ticket, Gift } from 'lucide-react'
+import { PenLine, ArrowRight, ShieldCheck, FileText, Upload, MessageCircle, BookOpen, Users, Sparkles, Video, Ticket, Gift, Compass } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -55,6 +55,12 @@ const TOOLS = [
     title: 'Reel Analytics',
     desc: 'Log every Instagram reel with hooks, content details, and performance metrics. Export to CSV and ask your AI what to make next.',
     icon: Video,
+  },
+  {
+    href: '/what-kind-of-traveller-are-you',
+    title: 'Traveller Type Quiz',
+    desc: "In progress, admin-only for now. Six-question shareable quiz for new visitors, links each result back to real posts and guides. Remove the admin gate in this page's page.tsx to launch it publicly.",
+    icon: Compass,
   },
   {
     href: '/admin/discount-codes',

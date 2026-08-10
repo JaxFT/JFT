@@ -396,20 +396,20 @@ export default function TravelProfileEditor({
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Link</label>
-          <p className="text-xs text-gray-400 mb-1.5">One link, your own site, blog, a business like WayStaq, whatever you want to point to.</p>
+          <p className="text-xs text-gray-400 mb-1.5">One link, your own site, blog, a business, whatever you want to point to.</p>
           <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr] gap-2">
             <input
               type="text"
               value={linkLabel}
               onChange={e => setLinkLabel(e.target.value.slice(0, 40))}
-              placeholder="Label, e.g. WayStaq"
+              placeholder="Your website or blog"
               className="px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
             <input
               type="text"
               value={linkUrl}
               onChange={e => setLinkUrl(e.target.value.slice(0, 300))}
-              placeholder="waystaq.com"
+              placeholder="yourwebsite.com"
               className="px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>

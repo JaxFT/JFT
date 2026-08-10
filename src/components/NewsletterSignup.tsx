@@ -8,7 +8,7 @@ import { useState } from 'react'
 import { Check, Loader2, Mail } from 'lucide-react'
 
 type Props = {
-  source: 'blog_end' | 'footer'
+  source: 'blog_end' | 'footer' | 'quiz_result'
   variant?: 'card' | 'dark'
 }
 

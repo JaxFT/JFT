@@ -46,7 +46,7 @@ async function hashIp(ip: string): Promise<string> {
     .slice(0, 32)
 }
 
-const VALID_SOURCES = new Set(['blog_end', 'footer'])
+const VALID_SOURCES = new Set(['blog_end', 'footer', 'quiz_result'])
 
 export async function POST(request: Request) {
   let body: unknown

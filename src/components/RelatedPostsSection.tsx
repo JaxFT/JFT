@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Crown } from 'lucide-react'
 import { proxyImageUrl } from '@/lib/image-proxy'
 import type { RelatedPostSummary } from '@/lib/blog-db'
 
@@ -42,6 +42,11 @@ export default function RelatedPostsSection({
               ) : null}
             </div>
             <div className="flex-1 min-w-0 flex flex-col justify-center">
+              {post.is_premium && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold tracking-wide uppercase text-brand-700 bg-brand-50 px-1.5 py-0.5 rounded-full w-fit mb-1">
+                  <Crown className="w-2.5 h-2.5" /> Premium
+                </span>
+              )}
               <p className="font-semibold text-sm text-gray-900 group-hover:text-brand-700 line-clamp-2">{post.title}</p>
               <span className="inline-flex items-center gap-1 text-xs font-medium text-brand-600 mt-1">
                 Read <ArrowRight className="w-3 h-3" />

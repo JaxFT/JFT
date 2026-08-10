@@ -157,11 +157,16 @@ export type RelatedPostSummary = {
   cover_image: string | null
   cover_focal_x: number
   cover_focal_y: number
+  is_premium: boolean
 }
 
 // Lightweight (no body_markdown) — used for "related posts" sections
 // on guide pages, keyed off the Adventure Pack country slug shared
-// with resolveCountrySlug() in related-content.ts.
+// with resolveCountrySlug() in related-content.ts. Includes is_premium
+// so the card can show the same Premium badge BlogCard.tsx already
+// uses on the main blog listing — this doesn't gate anything itself
+// (the linked post page has its own untouched paywall), it's just
+// so a free reader isn't surprised by a locked post with no warning.
 export async function listPublishedPostsByCountrySlug(
   countrySlug: string,
   opts?: { excludeSlug?: string; limit?: number },
@@ -169,7 +174,7 @@ export async function listPublishedPostsByCountrySlug(
   const supabase = await createClient()
   let query = supabase
     .from('blog_posts')
-    .select('slug, title, excerpt, cover_image, cover_focal_x, cover_focal_y')
+    .select('slug, title, excerpt, cover_image, cover_focal_x, cover_focal_y, is_premium')
     .eq('status', 'published')
     .eq('destination_country', countrySlug)
     .order('published_at', { ascending: false })

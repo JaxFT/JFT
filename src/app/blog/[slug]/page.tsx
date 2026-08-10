@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { format } from 'date-fns'
-import { Clock, ArrowLeft, Crown, ArrowRight } from 'lucide-react'
+import { Clock, ArrowLeft, Crown, ArrowRight, BookOpen } from 'lucide-react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getPublishedPostBySlug, rowToView } from '@/lib/blog-db'
@@ -20,6 +20,7 @@ import BlogSocial from '@/components/blog/BlogSocial'
 import ShareButton from '@/components/blog/ShareButton'
 import BlogPostViewTracker from '@/components/blog/BlogPostViewTracker'
 import NewsletterSignup from '@/components/NewsletterSignup'
+import { findGuideForCountrySlug } from '@/lib/related-content'
 
 export const dynamic = 'force-dynamic'
 
@@ -97,9 +98,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   // renders with everything visible on first paint (SEO, no flicker)
   // then hydrates as a client island for interactions.
   const isAdmin = isAdminEmail(user?.email)
-  const [social, viewerProfile] = await Promise.all([
+  const [social, viewerProfile, relatedGuide] = await Promise.all([
     loadBlogPostSocial(slug, user?.id ?? null, isAdmin),
     getViewerProfile(),
+    post.destinationCountry ? findGuideForCountrySlug(post.destinationCountry) : Promise.resolve(null),
   ])
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
@@ -226,6 +228,22 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               )}
             </div>
           </div>
+        )}
+
+        {relatedGuide && (
+          <Link
+            href={`/guides/${relatedGuide.slug}`}
+            className="group mt-8 flex items-center justify-between gap-4 bg-brand-50 border border-brand-100 rounded-2xl px-5 py-4 hover:border-brand-300 hover:bg-brand-100/60 transition-all"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <BookOpen className="w-5 h-5 text-brand-700 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs font-bold tracking-widest uppercase text-brand-600">Go deeper</p>
+                <p className="font-semibold text-gray-900 truncate">{relatedGuide.title}</p>
+              </div>
+            </div>
+            <ArrowRight className="w-5 h-5 text-brand-600 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
         )}
 
         <div className="mt-8">

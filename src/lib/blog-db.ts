@@ -150,6 +150,35 @@ export async function getPublishedPostBySlug(slug: string): Promise<BlogPostRow 
   return data ? normaliseRow(data) : null
 }
 
+export type RelatedPostSummary = {
+  slug: string
+  title: string
+  excerpt: string | null
+  cover_image: string | null
+  cover_focal_x: number
+  cover_focal_y: number
+}
+
+// Lightweight (no body_markdown) — used for "related posts" sections
+// on guide pages, keyed off the Adventure Pack country slug shared
+// with resolveCountrySlug() in related-content.ts.
+export async function listPublishedPostsByCountrySlug(
+  countrySlug: string,
+  opts?: { excludeSlug?: string; limit?: number },
+): Promise<RelatedPostSummary[]> {
+  const supabase = await createClient()
+  let query = supabase
+    .from('blog_posts')
+    .select('slug, title, excerpt, cover_image, cover_focal_x, cover_focal_y')
+    .eq('status', 'published')
+    .eq('destination_country', countrySlug)
+    .order('published_at', { ascending: false })
+    .limit(opts?.limit ?? 6)
+  if (opts?.excludeSlug) query = query.neq('slug', opts.excludeSlug)
+  const { data } = await query
+  return (data ?? []) as RelatedPostSummary[]
+}
+
 export async function listAllPostsForAdmin(): Promise<BlogPostRow[]> {
   const supabase = await createClient()
   const { data } = await supabase

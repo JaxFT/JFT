@@ -13,6 +13,9 @@ import { claimWebGuidePurchase } from '@/lib/claim-web-guide-purchase'
 import { isAdminEmail } from '@/lib/admin'
 import { getAboutUs } from '@/lib/app-settings'
 import { getAutoLinkPhrases } from '@/lib/blog-links-server'
+import { listPublishedPostsByCountrySlug } from '@/lib/blog-db'
+import { resolveCountrySlug, resolveCountrySlugFromTags } from '@/lib/related-content'
+import RelatedPostsSection from '@/components/RelatedPostsSection'
 import WebGuideView from '@/components/guide/WebGuideView'
 import GuideViewTracker from '@/components/guide/GuideViewTracker'
 import GuideViewer from './GuideViewer'
@@ -141,6 +144,10 @@ export default async function GuidePage({
     const adminWeb = isAdminEmail(user?.email)
     const canViewFull = isPremium || !webGuide.is_premium || adminWeb
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
+    const webGuideCountrySlug = resolveCountrySlug(webGuide.country)
+    const relatedPosts = webGuideCountrySlug
+      ? await listPublishedPostsByCountrySlug(webGuideCountrySlug, { limit: 4 })
+      : []
     return (
       <>
         <ArticleJsonLd
@@ -157,6 +164,7 @@ export default async function GuidePage({
           guide={webGuide}
           aboutUsMarkdown={aboutUs}
           autoLinkPhrases={autoLinkPhrases}
+          relatedPosts={relatedPosts}
           canViewFull={canViewFull}
           isLoggedIn={!!user}
           isPremium={isPremium}
@@ -198,6 +206,11 @@ export default async function GuidePage({
   const canViewFull = isPremium || hasPurchased || admin
   const canDownload = hasPurchased || admin
   const fullAvailable = !!guide.full_path
+
+  const pdfGuideCountrySlug = resolveCountrySlugFromTags(guide.tags)
+  const relatedPosts = pdfGuideCountrySlug
+    ? await listPublishedPostsByCountrySlug(pdfGuideCountrySlug, { limit: 4 })
+    : []
 
   return (
     <div className="min-h-screen bg-sand-50 pt-20 pb-20">
@@ -298,6 +311,8 @@ export default async function GuidePage({
             </a>
           </div>
         )}
+
+        <RelatedPostsSection posts={relatedPosts} heading="More from the blog" bare />
 
         {/* PREMIUM NOTE */}
         {isPremium && !hasPurchased && fullAvailable && (

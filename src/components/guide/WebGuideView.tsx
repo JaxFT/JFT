@@ -8,11 +8,14 @@ import type { GuideRow, GuideContentBlock } from '@/lib/guide-types'
 import { truncateMarkdownToPercent, extractMarkdownToc } from '@/lib/guide-types'
 import type { AutoLinkPhrase } from '@/lib/blog-links'
 import { proxyImageUrl } from '@/lib/image-proxy'
+import RelatedPostsSection from '@/components/RelatedPostsSection'
+import type { RelatedPostSummary } from '@/lib/blog-db'
 
 type Props = {
   guide: GuideRow
   aboutUsMarkdown: string
   autoLinkPhrases: AutoLinkPhrase[]
+  relatedPosts: RelatedPostSummary[]
   canViewFull: boolean
   isLoggedIn: boolean
   isPremium: boolean
@@ -46,7 +49,7 @@ function blockAnchor(b: GuideContentBlock): string {
 }
 
 export default function WebGuideView({
-  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, isPremium, hasPurchasedDownload, isAdmin, freshPurchase, wsDiscount = false,
+  guide, aboutUsMarkdown, autoLinkPhrases, relatedPosts, canViewFull, isLoggedIn, isPremium, hasPurchasedDownload, isAdmin, freshPurchase, wsDiscount = false,
 }: Props) {
   const hideAbout = !!guide.sections.hideAbout
   // Admin gets the same UI treatment as a buyer — "Download my copy"
@@ -183,6 +186,8 @@ export default function WebGuideView({
           </div>
         </div>
       )}
+
+      <RelatedPostsSection posts={relatedPosts} heading={`More from ${guide.country || 'the blog'}`} />
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Crown, ShoppingBag, ArrowRight, Calendar, ShieldCheck, FileText, Mail, Users, Compass } from 'lucide-react'
+import { Crown, ShoppingBag, ArrowRight, Calendar, ShieldCheck, FileText, Mail, Users, Compass, Search } from 'lucide-react'
 import WaystaqCard from '@/components/WaystaqCard'
 import { getWaystaqDiscountState } from '@/lib/waystaq-discount'
 import type { Metadata } from 'next'
@@ -219,6 +219,28 @@ export default async function AccountPage() {
               <h2 className="text-lg font-bold text-gray-900 group-hover:text-brand-800">My Travel Profile</h2>
               <p className="text-sm text-gray-500">
                 Your own page: where you&apos;ve been, where you&apos;re going, your travel style.
+              </p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-brand-600 shrink-0" />
+          </div>
+        </Link>
+
+        {/* 2a-ii ── DISCOVER (free for everyone) ────────────────────
+            Directory/search of public Travel Profiles. Also linked in
+            the main nav, this card gives it a second, more contextual
+            entry point right next to My Travel Profile. */}
+        <Link
+          href="/discover"
+          className="block bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6 hover:border-brand-200 hover:bg-sand-50 transition-all group"
+        >
+          <div className="flex items-center gap-4">
+            <div className="bg-brand-50 text-brand-700 rounded-xl p-3 shrink-0">
+              <Search className="w-6 h-6" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg font-bold text-gray-900 group-hover:text-brand-800">Discover</h2>
+              <p className="text-sm text-gray-500">
+                Browse public Travel Profiles from other JFT members.
               </p>
             </div>
             <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-brand-600 shrink-0" />

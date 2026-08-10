@@ -68,14 +68,17 @@ function isValidType(v: string | null): v is TravellerTypeId {
   return !!v && (TRAVELLER_TYPE_ORDER as string[]).includes(v)
 }
 
-async function fetchPhotoDataUri(origin: string): Promise<string | null> {
+async function fetchPhotoDataUri(origin: string): Promise<{ uri: string | null; debug: string }> {
   try {
     const res = await fetch(`${origin}/images/homepage/homepage_header_jft.jpg`)
-    if (!res.ok) return null
+    if (!res.ok) {
+      return { uri: null, debug: `not ok: ${res.status} ${res.statusText}` }
+    }
     const buf = await res.arrayBuffer()
-    return `data:image/jpeg;base64,${Buffer.from(buf).toString('base64')}`
-  } catch {
-    return null
+    const uri = `data:image/jpeg;base64,${Buffer.from(buf).toString('base64')}`
+    return { uri, debug: `ok: ${buf.byteLength} bytes` }
+  } catch (e) {
+    return { uri: null, debug: `threw: ${e instanceof Error ? `${e.name}: ${e.message}` : String(e)}` }
   }
 }
 
@@ -85,7 +88,13 @@ export async function GET(request: Request) {
   const typeId: TravellerTypeId = isValidType(typeParam) ? typeParam : TRAVELLER_TYPE_ORDER[0]
   const result = TRAVELLER_TYPES[typeId]
   const nodes = ICON_NODES[typeId]
-  const photoDataUri = await fetchPhotoDataUri(origin)
+  const { uri: photoDataUri, debug: photoDebug } = await fetchPhotoDataUri(origin)
+
+  if (searchParams.get('debug') === '1') {
+    return new Response(JSON.stringify({ origin, photoDebug }), {
+      headers: { 'content-type': 'application/json' },
+    })
+  }
 
   return new ImageResponse(
     (

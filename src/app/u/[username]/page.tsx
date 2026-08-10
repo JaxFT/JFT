@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { EyeOff, MapPin, Pencil, Sparkles, Users } from 'lucide-react'
+import { Compass, EyeOff, MapPin, Pencil, Sparkles, Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getCountryByIso2 } from '@/lib/countries'
 import { proxyImageUrl } from '@/lib/image-proxy'
@@ -236,6 +236,15 @@ export default async function TravelProfilePublicPage(
             {isOwner ? "You haven't added anything yet." : `${profile.full_name || profile.username} hasn't added anything yet.`}
           </p>
         )}
+
+        <div className="text-center mt-10">
+          <Link
+            href="/discover"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/80 hover:text-white"
+          >
+            <Compass className="w-3.5 h-3.5" /> Discover more travellers
+          </Link>
+        </div>
       </div>
     </div>
   )

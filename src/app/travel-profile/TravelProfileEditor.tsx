@@ -8,7 +8,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
-  Camera, Check, ExternalLink, Eye, EyeOff, Loader2, Search, Sparkles, Users, X,
+  Camera, Check, Compass, ExternalLink, Eye, EyeOff, Loader2, Search, Sparkles, Users, X,
 } from 'lucide-react'
 import { resizeImageIfLarge } from '@/lib/image-resize'
 import { proxyImageUrl } from '@/lib/image-proxy'
@@ -224,7 +224,7 @@ export default function TravelProfileEditor({
               <p className="font-bold text-gray-900">{isPublic ? 'Your page is public' : 'Your page is private'}</p>
               <p className="text-sm text-gray-500 mt-0.5">
                 {isPublic
-                  ? 'Anyone with the link can see it.'
+                  ? "Anyone with the link can see it, and it's listed on Discover."
                   : "Only you can see it until you turn this on. Nothing is shared by default."}
               </p>
               {!username && (
@@ -247,15 +247,23 @@ export default function TravelProfileEditor({
             <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-brand-600 peer-disabled:opacity-50 transition-colors relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5" />
           </label>
         </div>
-        {username && (
+        <div className="flex items-center gap-4 mt-4">
+          {username && (
+            <Link
+              href={`/u/${username}`}
+              target="_blank"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:underline"
+            >
+              View your page <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
+          )}
           <Link
-            href={`/u/${username}`}
-            target="_blank"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:underline mt-4"
+            href="/discover"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-brand-700"
           >
-            View your page <ExternalLink className="w-3.5 h-3.5" />
+            <Compass className="w-3.5 h-3.5" /> Discover other travellers
           </Link>
-        )}
+        </div>
       </section>
 
       {/* Hero photo */}

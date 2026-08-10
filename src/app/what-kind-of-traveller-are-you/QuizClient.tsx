@@ -10,10 +10,11 @@ import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
-  ArrowRight, Check, Loader2, RotateCcw, Share2, Sparkles,
+  ArrowRight, RotateCcw, Share2, Sparkles,
   ClipboardList, Shuffle, Home, Mountain, PiggyBank, Heart, type LucideIcon,
 } from 'lucide-react'
 import NewsletterSignup from '@/components/NewsletterSignup'
+import ShareModal from './ShareModal'
 import {
   QUIZ_QUESTIONS,
   TRAVELLER_TYPES,
@@ -67,8 +68,7 @@ function QuizInner() {
     isValidType(sharedType) ? sharedType : null,
   )
   const [arrivedViaShare, setArrivedViaShare] = useState(isValidType(sharedType))
-  const [shareState, setShareState] = useState<'idle' | 'working' | 'done'>('idle')
-  const [doneLabel, setDoneLabel] = useState('')
+  const [shareModalOpen, setShareModalOpen] = useState(false)
 
   const start = () => {
     setAnswers([])
@@ -92,57 +92,6 @@ function QuizInner() {
     setResultId(null)
     router.replace('/what-kind-of-traveller-are-you', { scroll: false })
     setPhase('question')
-  }
-
-  const finishDone = (label: string) => {
-    setDoneLabel(label)
-    setShareState('done')
-    setTimeout(() => setShareState('idle'), 2200)
-  }
-
-  // Fetches the 9:16 branded result card and hands it to the native
-  // share sheet as an actual image file where that's supported (mobile
-  // Safari/Chrome, e.g. sharing straight to Instagram Stories or
-  // WhatsApp), otherwise downloads the PNG so it can be shared by hand.
-  const share = async () => {
-    if (!resultId || shareState === 'working') return
-    setShareState('working')
-    const cardUrl = `${window.location.origin}/what-kind-of-traveller-are-you/card?type=${resultId}`
-    const pageUrl = `${window.location.origin}/what-kind-of-traveller-are-you?type=${resultId}`
-    const title = `I got ${TRAVELLER_TYPES[resultId].name} on the Jax Family Travels quiz`
-
-    try {
-      const res = await fetch(cardUrl)
-      if (!res.ok) throw new Error('Card image request failed')
-      const blob = await res.blob()
-      const file = new File([blob], 'my-traveller-type.png', { type: 'image/png' })
-
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title, text: title, url: pageUrl })
-        setShareState('idle')
-        return
-      }
-
-      const objectUrl = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = objectUrl
-      a.download = 'my-traveller-type.png'
-      a.click()
-      URL.revokeObjectURL(objectUrl)
-      finishDone('Image downloaded')
-    } catch (e) {
-      if (e instanceof Error && e.name === 'AbortError') {
-        // User dismissed the native share sheet, not a failure.
-        setShareState('idle')
-        return
-      }
-      try {
-        await navigator.clipboard.writeText(pageUrl)
-        finishDone('Link copied')
-      } catch {
-        setShareState('idle')
-      }
-    }
   }
 
   if (phase === 'intro') {
@@ -227,10 +176,8 @@ function QuizInner() {
       <p className="text-gray-700 leading-relaxed mb-7 px-1">{result.description}</p>
 
       <div className="flex flex-col sm:flex-row gap-2.5 mb-8">
-        <button onClick={share} disabled={shareState === 'working'} className="btn-outline justify-center flex-1 !py-2.5 disabled:opacity-60">
-          {shareState === 'working' && (<><Loader2 className="w-4 h-4 animate-spin" /> Preparing…</>)}
-          {shareState === 'done' && (<><Check className="w-4 h-4" /> {doneLabel}</>)}
-          {shareState === 'idle' && (<><Share2 className="w-4 h-4" /> Share your result</>)}
+        <button onClick={() => setShareModalOpen(true)} className="btn-outline justify-center flex-1 !py-2.5">
+          <Share2 className="w-4 h-4" /> Share your result
         </button>
         <button onClick={retake} className="inline-flex items-center justify-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-900 px-4 py-2.5">
           <RotateCcw className="w-4 h-4" /> {arrivedViaShare ? 'Take the quiz' : 'Retake'}
@@ -263,6 +210,10 @@ function QuizInner() {
           Take the Family Way assessment
         </Link>
       </p>
+
+      {shareModalOpen && resultId && (
+        <ShareModal typeId={resultId} onClose={() => setShareModalOpen(false)} />
+      )}
     </div>
   )
 }

@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { Instagram } from 'lucide-react'
 import Logo from '@/components/branding/Logo'
+import NewsletterSignup from '@/components/NewsletterSignup'
 
 // Plain <a> throughout (not next/link). Same reasoning as the Navbar:
 // CSR navigation occasionally rendered the destination page unstyled,
@@ -17,6 +18,10 @@ export default function Footer() {
   return (
     <footer className="bg-brand-950 text-white/70 print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="mb-10">
+          <NewsletterSignup source="footer" variant="dark" />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div className="md:col-span-2">
             <a href="/" className="inline-flex items-center mb-4">

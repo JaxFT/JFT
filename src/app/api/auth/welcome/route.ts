@@ -85,7 +85,7 @@ export async function POST() {
   // marketing-style send, not transactional). sendEmail folds this
   // into the List-Unsubscribe + List-Unsubscribe-Post headers so
   // Gmail/Outlook render their native unsubscribe button.
-  const unsubscribeUrl = (await buildUnsubscribeUrl(user.id)) ?? undefined
+  const unsubscribeUrl = (await buildUnsubscribeUrl('profile', user.id)) ?? undefined
   const result = await sendEmail({
     from: HELLO_FROM,
     to: user.email!,

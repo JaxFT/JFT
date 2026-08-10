@@ -7,10 +7,12 @@ export const runtime = 'nodejs'
 
 // One-click unsubscribe. Called via GET from the link embedded in
 // every marketing email's footer. No login required (UK PECR + good
-// UX). The token in `?t=` is HMAC-signed against the user's id, so we
-// can trust which account to update without asking.
+// UX). The token in `?t=` is HMAC-signed against a profile id or a
+// standalone newsletter_subscribers id (see unsubscribe-token.ts),
+// so we can trust which row to update without asking.
 //
-// On success: marketing_opt_in is set to false. Account, premium
+// On success: either profiles.marketing_opt_in is set to false, or the
+// newsletter_subscribers row is marked unsubscribed. Account, premium
 // subscription, and any other state are NOT touched, this strictly
 // affects marketing emails.
 //
@@ -39,10 +41,15 @@ export async function GET(request: Request) {
     { auth: { persistSession: false, autoRefreshToken: false } },
   )
 
-  const { error } = await admin
-    .from('profiles')
-    .update({ marketing_opt_in: false })
-    .eq('id', verified.uid)
+  const { error } = verified.kind === 'subscriber'
+    ? await admin
+        .from('newsletter_subscribers')
+        .update({ unsubscribed_at: new Date().toISOString() })
+        .eq('id', verified.id)
+    : await admin
+        .from('profiles')
+        .update({ marketing_opt_in: false })
+        .eq('id', verified.id)
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
   }

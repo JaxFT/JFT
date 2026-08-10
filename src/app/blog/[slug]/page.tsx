@@ -19,6 +19,7 @@ import { isAdminEmail } from '@/lib/admin'
 import BlogSocial from '@/components/blog/BlogSocial'
 import ShareButton from '@/components/blog/ShareButton'
 import BlogPostViewTracker from '@/components/blog/BlogPostViewTracker'
+import NewsletterSignup from '@/components/NewsletterSignup'
 
 export const dynamic = 'force-dynamic'
 
@@ -226,6 +227,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             </div>
           </div>
         )}
+
+        <div className="mt-8">
+          <NewsletterSignup source="blog_end" />
+        </div>
 
         {/* Comments + likes. Renders for everyone (signed in or not);
             the client component handles the auth gate for interactions. */}

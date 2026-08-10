@@ -3,11 +3,18 @@
 // logging in (UK PECR requires the link to actually work, no friction).
 //
 // Format: `<base64url(payload)>.<base64url(hmac)>`
-// Payload: JSON { uid: <user_id>, exp: <ms epoch> }, 1 year expiry.
+// Payload: JSON { kind: 'profile' | 'subscriber', id: <row id>, exp: <ms epoch> },
+// 1 year expiry. `kind` picks which table the unsubscribe route updates,
+// `profile` for a full account's marketing_opt_in, `subscriber` for a
+// standalone newsletter_subscribers row. Older tokens (signed before the
+// `kind` field existed) carry `uid` instead of `id` and no `kind`, they're
+// read back as `profile` for backward compatibility, see verify below.
 //
 // The signing secret is UNSUBSCRIBE_SIGNING_SECRET, set as a Worker
 // secret. If absent, signing/verifying returns null and the caller
 // falls back to a manual "email us" path.
+
+export type UnsubscribeKind = 'profile' | 'subscriber'
 
 const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000
 
@@ -58,16 +65,16 @@ function timingSafeEqual(a: string, b: string): boolean {
   return diff === 0
 }
 
-export async function signUnsubscribeToken(userId: string): Promise<string | null> {
+export async function signUnsubscribeToken(kind: UnsubscribeKind, id: string): Promise<string | null> {
   const secret = getSecret()
   if (!secret) return null
-  const payload = JSON.stringify({ uid: userId, exp: Date.now() + ONE_YEAR_MS })
+  const payload = JSON.stringify({ kind, id, exp: Date.now() + ONE_YEAR_MS })
   const data = base64urlEncode(payload)
   const sig = await hmac(secret, data)
   return `${data}.${sig}`
 }
 
-export async function verifyUnsubscribeToken(token: string): Promise<{ ok: true; uid: string } | { ok: false; error: string }> {
+export async function verifyUnsubscribeToken(token: string): Promise<{ ok: true; kind: UnsubscribeKind; id: string } | { ok: false; error: string }> {
   const secret = getSecret()
   if (!secret) return { ok: false, error: 'Unsubscribe is not configured on the server' }
   if (!token || !token.includes('.')) return { ok: false, error: 'Bad link' }
@@ -76,21 +83,26 @@ export async function verifyUnsubscribeToken(token: string): Promise<{ ok: true;
   const expected = await hmac(secret, data)
   if (!timingSafeEqual(sig, expected)) return { ok: false, error: 'Bad signature, link may have been altered' }
 
-  let payload: { uid?: string; exp?: number }
+  let payload: { uid?: string; id?: string; kind?: string; exp?: number }
   try {
     payload = JSON.parse(base64urlDecodeToString(data))
   } catch {
     return { ok: false, error: 'Bad link payload' }
   }
-  if (!payload.uid || typeof payload.uid !== 'string') return { ok: false, error: 'No user in token' }
+  // uid is the pre-`kind` field name, still valid for up to a year after
+  // the switchover.
+  const id = payload.id ?? payload.uid
+  if (!id || typeof id !== 'string') return { ok: false, error: 'No id in token' }
   if (typeof payload.exp === 'number' && Date.now() > payload.exp) return { ok: false, error: 'This link has expired, please update your preferences from your account page instead' }
-  return { ok: true, uid: payload.uid }
+  const kind: UnsubscribeKind = payload.kind === 'subscriber' ? 'subscriber' : 'profile'
+  return { ok: true, kind, id }
 }
 
-// Convenience: build the full unsubscribe URL for a given user.
-// Returns null if the signing secret isn't configured.
-export async function buildUnsubscribeUrl(userId: string): Promise<string | null> {
-  const token = await signUnsubscribeToken(userId)
+// Convenience: build the full unsubscribe URL for a given profile or
+// standalone subscriber row. Returns null if the signing secret isn't
+// configured.
+export async function buildUnsubscribeUrl(kind: UnsubscribeKind, id: string): Promise<string | null> {
+  const token = await signUnsubscribeToken(kind, id)
   if (!token) return null
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
   return `${base}/unsubscribe?t=${encodeURIComponent(token)}`

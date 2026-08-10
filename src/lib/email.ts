@@ -344,7 +344,7 @@ Open the thread: ${adminUrl}`
 // email can still go out, but you should NOT send marketing emails
 // without an unsubscribe link, so check the result before sending.
 export async function buildUnsubscribeFooter(userId: string): Promise<{ html: string; text: string }> {
-  const url = await buildUnsubscribeUrl(userId)
+  const url = await buildUnsubscribeUrl('profile', userId)
   if (!url) return { html: '', text: '' }
   return {
     html: `<p style="margin-top:24px; font-size:12px; color:#888;">Don't want these emails? <a href="${url}" style="color:#888;">Unsubscribe in one click</a>.</p>`,
@@ -457,6 +457,31 @@ export function buildNewCommentNotificationEmail(p: {
 Open: ${url}
 Commenter: ${p.commenterEmail}
 `
+  return { subject, html: emailShell(subject, bodyHtml), text }
+}
+
+// Sent when someone subscribes via the standalone newsletter box (blog
+// post end / footer), not a full account. Short and low-key, this is a
+// confirmation, not a chance to pitch Premium.
+export function buildNewsletterConfirmEmail(p: { siteUrl: string; unsubscribeUrl: string }): { subject: string; html: string; text: string } {
+  const subject = "You're on the list"
+  const bodyHtml = `
+    <p>Hi there,</p>
+    <p>You're subscribed to Jax | Family Travels. We'll send new guides and posts as they go up, nothing else.</p>
+    <p><a href="${p.siteUrl}/blog">Read the blog</a> in the meantime.</p>
+    <p style="margin-top:22px">Bec &amp; Oli</p>
+    <p style="margin-top:24px; font-size:12px; color:#888;">Not you, or changed your mind? <a href="${p.unsubscribeUrl}" style="color:#888;">Unsubscribe in one click</a>.</p>
+  `
+  const text = `Hi there,
+
+You're subscribed to Jax | Family Travels. We'll send new guides and posts as they go up, nothing else.
+
+Read the blog: ${p.siteUrl}/blog
+
+Bec & Oli
+
+Not you, or changed your mind? Unsubscribe: ${p.unsubscribeUrl}`
+
   return { subject, html: emailShell(subject, bodyHtml), text }
 }
 

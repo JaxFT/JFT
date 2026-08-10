@@ -12,7 +12,7 @@ import QuizClient from './QuizClient'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'What Kind of Traveller Are You? | Jax Family Travels',
+  title: 'What Kind of Traveller Are You?',
   robots: { index: false, follow: false },
 }
 

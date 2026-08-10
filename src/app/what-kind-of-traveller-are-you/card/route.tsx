@@ -74,31 +74,27 @@ const PHOTO_PATH = '/images/homepage/homepage_header_jft.jpg'
 
 type AssetsBinding = { fetch: (req: Request) => Promise<Response> }
 
-async function fetchPhotoBuffer(origin: string): Promise<{ buf: ArrayBuffer | null; debug: string }> {
+async function fetchPhotoDataUri(origin: string): Promise<string | null> {
   try {
     const { env } = await getCloudflareContext({ async: true })
     const ASSETS = (env as { ASSETS?: AssetsBinding }).ASSETS
     if (ASSETS) {
       const res = await ASSETS.fetch(new Request(`https://placeholder${PHOTO_PATH}`))
-      if (res.ok) return { buf: await res.arrayBuffer(), debug: 'ok via ASSETS binding' }
-      return { buf: null, debug: `ASSETS binding not ok: ${res.status}` }
+      if (!res.ok) return null
+      const buf = await res.arrayBuffer()
+      return `data:image/jpeg;base64,${Buffer.from(buf).toString('base64')}`
     }
   } catch {
     // Not in Cloudflare runtime (local dev), fall through to plain fetch.
   }
   try {
     const res = await fetch(`${origin}${PHOTO_PATH}`)
-    if (!res.ok) return { buf: null, debug: `http fallback not ok: ${res.status}` }
-    return { buf: await res.arrayBuffer(), debug: 'ok via http fallback' }
-  } catch (e) {
-    return { buf: null, debug: `http fallback threw: ${e instanceof Error ? e.message : String(e)}` }
+    if (!res.ok) return null
+    const buf = await res.arrayBuffer()
+    return `data:image/jpeg;base64,${Buffer.from(buf).toString('base64')}`
+  } catch {
+    return null
   }
-}
-
-async function fetchPhotoDataUri(origin: string): Promise<{ uri: string | null; debug: string }> {
-  const { buf, debug } = await fetchPhotoBuffer(origin)
-  if (!buf) return { uri: null, debug }
-  return { uri: `data:image/jpeg;base64,${Buffer.from(buf).toString('base64')}`, debug: `${debug}, ${buf.byteLength} bytes` }
 }
 
 export async function GET(request: Request) {
@@ -107,13 +103,7 @@ export async function GET(request: Request) {
   const typeId: TravellerTypeId = isValidType(typeParam) ? typeParam : TRAVELLER_TYPE_ORDER[0]
   const result = TRAVELLER_TYPES[typeId]
   const nodes = ICON_NODES[typeId]
-  const { uri: photoDataUri, debug: photoDebug } = await fetchPhotoDataUri(origin)
-
-  if (searchParams.get('debug') === '1') {
-    return new Response(JSON.stringify({ origin, photoDebug }), {
-      headers: { 'content-type': 'application/json' },
-    })
-  }
+  const photoDataUri = await fetchPhotoDataUri(origin)
 
   return new ImageResponse(
     (

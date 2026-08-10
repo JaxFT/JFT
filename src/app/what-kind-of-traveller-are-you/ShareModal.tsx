@@ -17,7 +17,12 @@ type Props = {
 
 export default function ShareModal({ typeId, onClose }: Props) {
   const result = TRAVELLER_TYPES[typeId]
-  const cardUrl = `/what-kind-of-traveller-are-you/card?type=${typeId}`
+  // `v` busts Cloudflare's edge cache (the card route sets a 1-year
+  // immutable cache-control) whenever the card's design changes, bump
+  // it any time card/route.tsx's visual output changes. Currently at 2
+  // because v1 (no photo) got cached at the edge for a couple of type
+  // values before the photo embed landed.
+  const cardUrl = `/what-kind-of-traveller-are-you/card?type=${typeId}&v=2`
   const pageUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/what-kind-of-traveller-are-you?type=${typeId}`
     : ''

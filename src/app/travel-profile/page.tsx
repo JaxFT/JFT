@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { ensureProfile } from '@/lib/ensure-profile'
+import { getPublicProfilesByIds } from '@/lib/travel-profile-db'
 import TravelProfileEditor from './TravelProfileEditor'
 
 export const metadata: Metadata = { title: 'My Travel Profile' }
@@ -19,13 +20,23 @@ export default async function TravelProfilePage() {
 
   await ensureProfile(user)
 
-  const [{ data: profile }, { data: travelProfile }, { data: places }, { data: buddies }, { count: passportVisitCount }] = await Promise.all([
+  const [{ data: profile }, { data: travelProfile }, { data: places }, { data: buddyRows }, { count: passportVisitCount }] = await Promise.all([
     supabase.from('profiles').select('username, full_name').eq('id', user.id).maybeSingle(),
     supabase.from('travel_profiles').select('*').eq('user_id', user.id).maybeSingle(),
     supabase.from('travel_profile_places').select('id, iso2, list_type, top8_rank').eq('user_id', user.id),
-    supabase.from('travel_profile_buddies').select('id, name').eq('user_id', user.id).order('created_at'),
+    supabase.from('travel_profile_buddies').select('id, buddy_user_id').eq('user_id', user.id).order('created_at'),
     supabase.from('family_country_visits').select('iso2', { count: 'exact', head: true }).eq('parent_id', user.id),
   ])
+
+  // Buddy display names come from another user's profile row, blocked
+  // by RLS under the normal client, service-role batch lookup instead.
+  const buddyIds = (buddyRows ?? []).map(b => b.buddy_user_id).filter((id): id is string => !!id)
+  const buddyProfiles = await getPublicProfilesByIds(buddyIds)
+  const buddies = (buddyRows ?? []).flatMap(b => {
+    if (!b.buddy_user_id) return []
+    const p = buddyProfiles.get(b.buddy_user_id)
+    return [{ id: b.id, buddy_user_id: b.buddy_user_id, username: p?.username ?? null, full_name: p?.full_name ?? null }]
+  })
 
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
@@ -42,7 +53,7 @@ export default async function TravelProfilePage() {
           fullName={profile?.full_name ?? null}
           initialProfile={travelProfile ?? null}
           initialPlaces={places ?? []}
-          initialBuddies={buddies ?? []}
+          initialBuddies={buddies}
           hasPassportVisits={(passportVisitCount ?? 0) > 0}
         />
       </div>

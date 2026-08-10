@@ -1,9 +1,12 @@
-// POST add a named travel buddy. DELETE remove one by id.
-// Phase 1: freeform names only, no account linkage, no trip
-// association — see travel-profiles.sql for the reasoning.
+// POST link a real JFT account as a travel buddy (by user id, found
+// via the search endpoint). DELETE remove one by id.
+//
+// Buddies are only selectable from within the site, no freeform
+// names — see travel-profiles-v3.sql.
 
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getPublicProfilesByIds } from '@/lib/travel-profile-db'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -18,8 +21,11 @@ export async function POST(request: Request) {
   let body: Record<string, unknown> = {}
   try { body = await request.json() } catch {}
 
-  const name = typeof body.name === 'string' ? body.name.trim().slice(0, 40) : ''
-  if (!name) return NextResponse.json({ error: 'Name required' }, { status: 400 })
+  const buddyUserId = typeof body.buddy_user_id === 'string' ? body.buddy_user_id : ''
+  if (!buddyUserId) return NextResponse.json({ error: 'buddy_user_id required' }, { status: 400 })
+  if (buddyUserId === user.id) {
+    return NextResponse.json({ error: "You can't add yourself as a travel buddy" }, { status: 400 })
+  }
 
   const { count } = await supabase
     .from('travel_profile_buddies')
@@ -31,12 +37,24 @@ export async function POST(request: Request) {
 
   const { data, error } = await supabase
     .from('travel_profile_buddies')
-    .insert({ user_id: user.id, name })
-    .select('id, name')
+    .insert({ user_id: user.id, buddy_user_id: buddyUserId })
+    .select('id')
     .single()
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    // Unique violation on (user_id, buddy_user_id) — already added.
+    if (error.code === '23505') {
+      return NextResponse.json({ error: 'Already added as a travel buddy' }, { status: 400 })
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 
-  return NextResponse.json({ ok: true, buddy: data })
+  const profiles = await getPublicProfilesByIds([buddyUserId])
+  const p = profiles.get(buddyUserId)
+
+  return NextResponse.json({
+    ok: true,
+    buddy: { id: data.id, buddy_user_id: buddyUserId, username: p?.username ?? null, full_name: p?.full_name ?? null },
+  })
 }
 
 export async function DELETE(request: Request) {

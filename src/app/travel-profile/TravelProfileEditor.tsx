@@ -5,7 +5,7 @@
 // fields rather than per-field autosave — predictable, and matches
 // AccountEditor's pattern elsewhere on the site.
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
   Camera, Check, ExternalLink, Eye, EyeOff, Loader2, Search, Sparkles, Users, X,
@@ -38,7 +38,8 @@ type TravelProfileRow = {
   fav_country_why: string | null
 }
 
-type BuddyRow = { id: string; name: string }
+type BuddyRow = { id: string; buddy_user_id: string; username: string | null; full_name: string | null }
+type BuddySearchResult = { id: string; username: string | null; full_name: string | null }
 
 const FAVOURITES: Array<{ key: keyof TravelProfileRow; emoji: string; label: string }> = [
   { key: 'fav_place', emoji: '❤️', label: 'Favourite place' },
@@ -95,8 +96,32 @@ export default function TravelProfileEditor({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [buddies, setBuddies] = useState<BuddyRow[]>(initialBuddies)
-  const [buddyName, setBuddyName] = useState('')
+  const [buddyQuery, setBuddyQuery] = useState('')
+  const [buddyResults, setBuddyResults] = useState<BuddySearchResult[]>([])
+  const [buddySearching, setBuddySearching] = useState(false)
+  const [buddyOpen, setBuddyOpen] = useState(false)
   const [buddyBusy, setBuddyBusy] = useState(false)
+  const [buddyError, setBuddyError] = useState('')
+
+  // Debounced search against real accounts, buddies are only ever
+  // linked to an actual JFT account, no freeform names.
+  useEffect(() => {
+    const q = buddyQuery.trim()
+    if (q.length < 2) { setBuddyResults([]); setBuddySearching(false); return }
+    setBuddySearching(true)
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/travel-profile/buddies/search?q=${encodeURIComponent(q)}`)
+        const body = await res.json().catch(() => ({}))
+        setBuddyResults(body.results ?? [])
+      } catch {
+        setBuddyResults([])
+      } finally {
+        setBuddySearching(false)
+      }
+    }, 300)
+    return () => clearTimeout(t)
+  }, [buddyQuery])
 
   const save = async () => {
     setSaveState('saving')
@@ -156,23 +181,23 @@ export default function TravelProfileEditor({
     }
   }
 
-  const addBuddy = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const name = buddyName.trim()
-    if (!name) return
+  const addBuddy = async (result: BuddySearchResult) => {
     setBuddyBusy(true)
+    setBuddyError('')
     try {
       const res = await fetch('/api/travel-profile/buddies', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ buddy_user_id: result.id }),
       })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body.error || 'Could not add buddy')
       setBuddies(prev => [...prev, body.buddy])
-      setBuddyName('')
-    } catch {
-      // Inline error kept minimal here, this is a low-stakes list.
+      setBuddyQuery('')
+      setBuddyResults([])
+      setBuddyOpen(false)
+    } catch (e) {
+      setBuddyError(e instanceof Error ? e.message : 'Could not add buddy')
     } finally {
       setBuddyBusy(false)
     }
@@ -420,31 +445,63 @@ export default function TravelProfileEditor({
           <Users className="w-5 h-5 text-brand-600" />
           <h2 className="text-lg font-bold text-gray-900">Travel buddies</h2>
         </div>
-        <p className="text-sm text-gray-500 mb-4">People you've actually travelled with, not just anyone following along.</p>
+        <p className="text-sm text-gray-500 mb-4">
+          People you&apos;ve actually travelled with. Only real JFT accounts, search by username, not just typed names.
+        </p>
         {buddies.length > 0 && (
           <ul className="flex flex-wrap gap-2 mb-4">
             {buddies.map(b => (
               <li key={b.id} className="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-full pl-3 pr-1.5 py-1 text-sm font-medium text-gray-800">
-                {b.name}
-                <button type="button" onClick={() => removeBuddy(b.id)} className="text-gray-400 hover:text-red-600 p-0.5" aria-label={`Remove ${b.name}`}>
+                {b.full_name || b.username}
+                <button type="button" onClick={() => removeBuddy(b.id)} className="text-gray-400 hover:text-red-600 p-0.5" aria-label={`Remove ${b.full_name || b.username}`}>
                   <X className="w-3.5 h-3.5" />
                 </button>
               </li>
             ))}
           </ul>
         )}
-        <form onSubmit={addBuddy} className="flex gap-2">
-          <input
-            type="text"
-            value={buddyName}
-            onChange={e => setBuddyName(e.target.value)}
-            placeholder="Their name"
-            className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-          />
-          <button type="submit" disabled={buddyBusy || !buddyName.trim()} className="btn-primary !py-2 !px-4 !text-sm disabled:opacity-60">
-            Add
-          </button>
-        </form>
+        <div className="relative">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="search"
+              value={buddyQuery}
+              onChange={e => { setBuddyQuery(e.target.value); setBuddyOpen(true) }}
+              onFocus={() => setBuddyOpen(true)}
+              placeholder="Search by username…"
+              disabled={buddyBusy}
+              className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-60"
+            />
+          </div>
+          {buddyOpen && buddyQuery.trim().length >= 2 && (
+            <div className="absolute z-20 left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
+              {buddySearching ? (
+                <p className="px-4 py-3 text-sm text-gray-400 flex items-center gap-2"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Searching…</p>
+              ) : buddyResults.length === 0 ? (
+                <p className="px-4 py-3 text-sm text-gray-500 italic">No accounts match &quot;{buddyQuery}&quot;.</p>
+              ) : (
+                <ul>
+                  {buddyResults
+                    .filter(r => !buddies.some(b => b.buddy_user_id === r.id))
+                    .map(r => (
+                      <li key={r.id}>
+                        <button
+                          type="button"
+                          onClick={() => addBuddy(r)}
+                          disabled={buddyBusy}
+                          className="w-full px-3 py-2 text-left text-sm hover:bg-brand-50 disabled:opacity-60"
+                        >
+                          <span className="font-semibold text-gray-900">{r.full_name || r.username}</span>
+                          {r.full_name && r.username && <span className="text-gray-400"> @{r.username}</span>}
+                        </button>
+                      </li>
+                    ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+        {buddyError && <p className="text-sm text-red-700 mt-2">{buddyError}</p>}
       </section>
 
       <div className="sticky bottom-4">

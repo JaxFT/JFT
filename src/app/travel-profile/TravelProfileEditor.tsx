@@ -471,6 +471,8 @@ export default function TravelProfileEditor({
               onChange={e => setFavCountryWhy(e.target.value.slice(0, 300))}
               rows={2}
               placeholder="Why? (optional)"
+              spellCheck
+              lang="en"
               className="w-full mt-2 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           )}

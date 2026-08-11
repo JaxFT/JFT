@@ -261,28 +261,10 @@ export default async function GuidePage({
           )}
         </div>
 
-        {/* DESCRIPTION */}
-        {guide.description && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
-            <p className="text-gray-600 leading-relaxed">{guide.description}</p>
-          </div>
-        )}
-
-        {/* PDF VIEWER */}
-        <GuideViewer
-          slug={guide.slug}
-          mode={canViewFull && fullAvailable ? 'full' : 'preview'}
-          previewPageCount={guide.preview_page_count}
-          sessionId={pdfFreshPurchase?.sessionId}
-        />
-
-        {pdfFreshPurchase && (
-          <PdfPostPurchase slug={guide.slug} sessionId={pdfFreshPurchase.sessionId} email={pdfFreshPurchase.email} />
-        )}
-
-        {/* PURCHASE CTAs */}
+        {/* PURCHASE CTAs, shown immediately on landing so buying doesn't
+            require scrolling past the preview first. */}
         {!canViewFull && (
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* One-off purchase */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col">
               <div className="flex items-center gap-2 mb-3">
@@ -315,6 +297,25 @@ export default async function GuidePage({
               )}
             </div>
           </div>
+        )}
+
+        {/* DESCRIPTION */}
+        {guide.description && (
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
+            <p className="text-gray-600 leading-relaxed">{guide.description}</p>
+          </div>
+        )}
+
+        {/* PDF VIEWER */}
+        <GuideViewer
+          slug={guide.slug}
+          mode={canViewFull && fullAvailable ? 'full' : 'preview'}
+          previewPageCount={guide.preview_page_count}
+          sessionId={pdfFreshPurchase?.sessionId}
+        />
+
+        {pdfFreshPurchase && (
+          <PdfPostPurchase slug={guide.slug} sessionId={pdfFreshPurchase.sessionId} email={pdfFreshPurchase.email} />
         )}
 
         {/* DOWNLOAD CTA for returning purchasers. Skipped right after a

@@ -15,8 +15,9 @@ import { isAdminEmail } from '@/lib/admin'
 import { getAboutUs } from '@/lib/app-settings'
 import { getAutoLinkPhrases } from '@/lib/blog-links-server'
 import { listPublishedPostsByCountrySlug } from '@/lib/blog-db'
-import { resolveCountrySlug, resolveCountrySlugFromTags } from '@/lib/related-content'
+import { resolveCountrySlug, resolveCountrySlugFromTags, findOtherGuidesForCountrySlug } from '@/lib/related-content'
 import RelatedPostsSection from '@/components/RelatedPostsSection'
+import RelatedGuidesSection from '@/components/RelatedGuidesSection'
 import WebGuideView from '@/components/guide/WebGuideView'
 import GuideViewTracker from '@/components/guide/GuideViewTracker'
 import DownloadPdfButton from '@/components/guide/DownloadPdfButton'
@@ -148,9 +149,14 @@ export default async function GuidePage({
     const canViewFull = isPremium || !webGuide.is_premium || adminWeb
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
     const webGuideCountrySlug = resolveCountrySlug(webGuide.country)
-    const relatedPosts = webGuideCountrySlug
-      ? await listPublishedPostsByCountrySlug(webGuideCountrySlug, { limit: 4 })
-      : []
+    const [relatedPosts, relatedGuides] = await Promise.all([
+      webGuideCountrySlug
+        ? listPublishedPostsByCountrySlug(webGuideCountrySlug, { limit: 4 })
+        : Promise.resolve([]),
+      webGuideCountrySlug
+        ? findOtherGuidesForCountrySlug(webGuideCountrySlug, webGuide.slug)
+        : Promise.resolve([]),
+    ])
     return (
       <>
         <ArticleJsonLd
@@ -168,6 +174,7 @@ export default async function GuidePage({
           aboutUsMarkdown={aboutUs}
           autoLinkPhrases={autoLinkPhrases}
           relatedPosts={relatedPosts}
+          relatedGuides={relatedGuides}
           canViewFull={canViewFull}
           isLoggedIn={!!user}
           isPremium={isPremium}
@@ -225,9 +232,14 @@ export default async function GuidePage({
   const fullAvailable = !!guide.full_path
 
   const pdfGuideCountrySlug = resolveCountrySlugFromTags(guide.tags)
-  const relatedPosts = pdfGuideCountrySlug
-    ? await listPublishedPostsByCountrySlug(pdfGuideCountrySlug, { limit: 4 })
-    : []
+  const [relatedPosts, relatedGuides] = await Promise.all([
+    pdfGuideCountrySlug
+      ? listPublishedPostsByCountrySlug(pdfGuideCountrySlug, { limit: 4 })
+      : Promise.resolve([]),
+    pdfGuideCountrySlug
+      ? findOtherGuidesForCountrySlug(pdfGuideCountrySlug, guide.slug)
+      : Promise.resolve([]),
+  ])
 
   return (
     <div className="min-h-screen bg-sand-50 pt-20 pb-20">
@@ -339,6 +351,8 @@ export default async function GuidePage({
             <DownloadPdfButton slug={guide.slug} />
           </div>
         )}
+
+        <RelatedGuidesSection guides={relatedGuides} heading="More guides for this country" bare />
 
         <RelatedPostsSection posts={relatedPosts} heading="More from the blog" bare />
 

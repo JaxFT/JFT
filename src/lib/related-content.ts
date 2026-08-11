@@ -16,14 +16,31 @@ import { PACK_META } from './adventurePackMeta'
 import { listPublishedWebGuides } from './guides-content-db'
 import { listActiveGuides } from './guides-db'
 
-export function resolveCountrySlug(value: string | null | undefined): string | null {
-  if (!value) return null
-  const trimmed = value.trim().toLowerCase()
+function matchSegment(segment: string): string | null {
+  const trimmed = segment.trim().toLowerCase()
   if (!trimmed) return null
   const bySlug = PACK_META.find(p => p.slug === trimmed)
   if (bySlug) return bySlug.slug
   const byName = PACK_META.find(p => p.country.toLowerCase() === trimmed)
   return byName?.slug ?? null
+}
+
+// Web guides' `country` field is free text and sometimes carries extra
+// context beyond the country itself, e.g. "Sri-Lanka, Transport" or
+// "Thailand / Bangkok / Things to do". Try the whole string first, then
+// fall back to splitting on comma/slash and matching each segment, so a
+// clean country name buried in the string still resolves. Segments are
+// still checked against the exact known-country list, never fuzzy
+// matched, so an unrelated tag can't accidentally produce a match.
+export function resolveCountrySlug(value: string | null | undefined): string | null {
+  if (!value) return null
+  const whole = matchSegment(value)
+  if (whole) return whole
+  for (const segment of value.split(/[,/]/)) {
+    const match = matchSegment(segment)
+    if (match) return match
+  }
+  return null
 }
 
 // First country match across a guide's tags (used for the legacy PDF
@@ -54,4 +71,34 @@ export async function findGuideForCountrySlug(countrySlug: string): Promise<Rela
   if (pdfMatch) return { slug: pdfMatch.slug, title: pdfMatch.name }
 
   return null
+}
+
+export type RelatedGuideCard = {
+  slug: string
+  title: string
+  cover_image: string | null
+  price_pence: number
+  is_premium: boolean
+}
+
+// For a guide page's own "other guides covering this country" section,
+// e.g. the Sri Lanka PDF guide linking to the separate Sri Lanka tuk-tuk
+// web guide, and vice versa. Excludes the guide the visitor is already
+// on. Unlike findGuideForCountrySlug (single best match for a blog post),
+// this returns every other guide for the country across both tables.
+export async function findOtherGuidesForCountrySlug(
+  countrySlug: string,
+  excludeSlug: string,
+): Promise<RelatedGuideCard[]> {
+  const [webGuides, pdfGuides] = await Promise.all([listPublishedWebGuides(), listActiveGuides()])
+
+  const web = webGuides
+    .filter(g => g.slug !== excludeSlug && resolveCountrySlug(g.country) === countrySlug)
+    .map(g => ({ slug: g.slug, title: g.title, cover_image: g.cover_image, price_pence: g.price_pence, is_premium: g.is_premium }))
+
+  const pdf = pdfGuides
+    .filter(g => g.slug !== excludeSlug && resolveCountrySlugFromTags(g.tags) === countrySlug)
+    .map(g => ({ slug: g.slug, title: g.name, cover_image: g.cover_image, price_pence: g.price_pence, is_premium: false }))
+
+  return [...web, ...pdf]
 }

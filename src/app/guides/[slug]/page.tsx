@@ -18,6 +18,8 @@ import { listPublishedPostsByCountrySlug } from '@/lib/blog-db'
 import { resolveCountrySlug, resolveCountrySlugFromTags, findOtherGuidesForCountrySlug } from '@/lib/related-content'
 import RelatedPostsSection from '@/components/RelatedPostsSection'
 import RelatedGuidesSection from '@/components/RelatedGuidesSection'
+import { GUIDE_SALES_COPY } from '@/lib/guide-sales-copy'
+import GuideMarkdown from '@/components/guide/GuideMarkdown'
 import WebGuideView from '@/components/guide/WebGuideView'
 import GuideViewTracker from '@/components/guide/GuideViewTracker'
 import DownloadPdfButton from '@/components/guide/DownloadPdfButton'
@@ -230,6 +232,7 @@ export default async function GuidePage({
   const canViewFull = isPremium || hasPurchased || admin || !!pdfFreshPurchase
   const canDownload = hasPurchased || admin || !!pdfFreshPurchase
   const fullAvailable = !!guide.full_path
+  const salesCopy = GUIDE_SALES_COPY[guide.slug]
 
   const pdfGuideCountrySlug = resolveCountrySlugFromTags(guide.tags)
   const [relatedPosts, relatedGuides] = await Promise.all([
@@ -309,6 +312,14 @@ export default async function GuidePage({
 
         {pdfFreshPurchase && (
           <PdfPostPurchase slug={guide.slug} sessionId={pdfFreshPurchase.sessionId} email={pdfFreshPurchase.email} />
+        )}
+
+        {/* SALES COPY, longer editorial pitch for guides that have one,
+            sits between the preview and the premium upsell. */}
+        {salesCopy && (
+          <div className="mt-8 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+            <GuideMarkdown markdown={salesCopy} autoLinkPhrases={autoLinkPhrases} />
+          </div>
         )}
 
         {/* PREMIUM UPGRADE, shown under the preview as the "or" option

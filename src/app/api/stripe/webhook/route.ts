@@ -169,6 +169,13 @@ async function handleGuideOneOffPurchase(
   if (!r.ok) {
     return NextResponse.json({ error: r.error, session: session.id }, { status: r.status })
   }
+  // Admin notify from the webhook only, not from claimGuidePurchase
+  // itself — that helper is also called from the guide page render
+  // and the viewer's own fetch on every visit, wiring the email in
+  // there would send it repeatedly per page load. The webhook fires
+  // once (or a rare Stripe retry), same tradeoff already accepted for
+  // web guide sales below.
+  void notifyAdminOfGuideOneOffSale(session)
   return null
 }
 
@@ -353,6 +360,34 @@ async function notifyAdminOfWebGuideSale(session: Stripe.Checkout.Session): Prom
       subject,
       html,
       text: `Web guide sold: ${guideSlug}\nBuyer: ${buyerEmail}\nAmount: ${amountStr}\nStripe session: ${session.id}`,
+      replyTo: buyerEmail !== 'unknown' ? buyerEmail : undefined,
+    })
+  })
+}
+
+async function notifyAdminOfGuideOneOffSale(session: Stripe.Checkout.Session): Promise<void> {
+  const buyerEmail = session.customer_details?.email ?? session.customer_email ?? 'unknown'
+  const amountPence = session.amount_total ?? 0
+  const amountStr = `£${(amountPence / 100).toFixed(2)}`
+  const guideSlug = typeof session.metadata?.product_slug === 'string'
+    ? session.metadata.product_slug
+    : '(unknown)'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
+
+  const subject = `Guide sold: ${guideSlug} (${buyerEmail})`
+  const html = emailShell(subject, `
+    <p><strong>${escapeForEmail(buyerEmail)}</strong> just bought the guide <strong>${escapeForEmail(guideSlug)}</strong>.</p>
+    <p><strong>Amount:</strong> ${amountStr}<br>
+       <strong>Stripe session:</strong> ${escapeForEmail(session.id)}</p>
+    <p style="margin-top:14px"><a href="${siteUrl}/guides/${encodeURIComponent(guideSlug)}" style="color:#2d6b4f;">Open the guide</a></p>
+  `)
+  after(async () => {
+    await sendEmail({
+      from: HELLO_FROM,
+      to: ADMIN_NOTIFY,
+      subject,
+      html,
+      text: `Guide sold: ${guideSlug}\nBuyer: ${buyerEmail}\nAmount: ${amountStr}\nStripe session: ${session.id}`,
       replyTo: buyerEmail !== 'unknown' ? buyerEmail : undefined,
     })
   })

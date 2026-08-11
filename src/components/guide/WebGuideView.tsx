@@ -281,7 +281,7 @@ function SingleDocBody({
             isLoggedIn={isLoggedIn}
             slug={guide.slug}
             hiddenLabel={`${100 - guide.preview_percent}% more`}
-            hasOneOff={guide.price_pence > 0}
+            hasOneOff={!!guide.stripe_price_id}
             priceLabel={formatPrice(guide.price_pence)}
             wsDiscount={wsDiscount}
           />
@@ -377,7 +377,7 @@ function BlocksBody({
             isLoggedIn={isLoggedIn}
             slug={guide.slug}
             hiddenLabel={`${hiddenCount} more section${hiddenCount === 1 ? '' : 's'}`}
-            hasOneOff={guide.price_pence > 0}
+            hasOneOff={!!guide.stripe_price_id}
             priceLabel={formatPrice(guide.price_pence)}
             wsDiscount={wsDiscount}
           />
@@ -445,7 +445,7 @@ function Paywall({
         </div>
         {hasOneOff && (
           <p className="text-xs text-white/50 mt-5">
-            Or buy just this guide as a one-off, {priceLabel} (coming soon).
+            Or buy just this guide as a one-off, {priceLabel}.
           </p>
         )}
       </div>

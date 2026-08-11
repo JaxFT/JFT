@@ -290,8 +290,10 @@ export default async function GuidePage({
           </div>
         )}
 
-        {/* DESCRIPTION */}
-        {guide.description && (
+        {/* DESCRIPTION, skipped when it's just a repeat of the subtitle
+            already shown in the header above (some older guides have
+            the same sentence saved in both fields). */}
+        {guide.description && guide.description.trim() !== guide.subtitle?.trim() && (
           <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
             <p className="text-gray-600 leading-relaxed">{guide.description}</p>
           </div>
@@ -358,7 +360,7 @@ export default async function GuidePage({
         {/* PREMIUM NOTE */}
         {isPremium && !hasPurchased && fullAvailable && (
           <p className="text-xs text-gray-400 mt-6 text-center">
-            On-site reading is included in Premium. To keep a personal copy offline, you can also buy this guide as a one-off (Stripe coming soon).
+            On-site reading is included in Premium. To keep a personal copy offline, you can also buy this guide as a one-off.
           </p>
         )}
       </div>

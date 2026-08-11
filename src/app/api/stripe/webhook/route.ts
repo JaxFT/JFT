@@ -2,6 +2,7 @@ import { NextResponse, after } from 'next/server'
 import { createClient as createSbClient, type SupabaseClient } from '@supabase/supabase-js'
 import { stripeClient } from '@/lib/stripe'
 import { claimWebGuidePurchase } from '@/lib/claim-web-guide-purchase'
+import { claimGuidePurchase } from '@/lib/claim-guide-purchase'
 import { sendEmail, HELLO_FROM, ADMIN_NOTIFY, emailShell } from '@/lib/email'
 import type Stripe from 'stripe'
 
@@ -154,33 +155,19 @@ async function handleOneOffCheckout(
     return null
   }
 
-  const userId = session.metadata?.user_id
-  const productId = session.metadata?.product_id
-  const amount = session.amount_total
-  const paymentIntent = typeof session.payment_intent === 'string'
-    ? session.payment_intent
-    : session.payment_intent?.id
+  return handleGuideOneOffPurchase(session)
+}
 
-  if (!userId || !productId || amount == null) {
-    return NextResponse.json(
-      { error: 'Missing metadata on checkout session', session: session.id },
-      { status: 400 },
-    )
-  }
-
-  // unique(user_id, product_id) prevents duplicate rows if Stripe retries.
-  const { error } = await admin
-    .from('purchases')
-    .insert({
-      user_id: userId,
-      product_id: productId,
-      stripe_payment_intent_id: paymentIntent ?? null,
-      amount_pence: amount,
-    })
-
-  // 23505 = unique_violation: Stripe is retrying a previously-recorded purchase.
-  if (error && error.code !== '23505') {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+async function handleGuideOneOffPurchase(
+  session: Stripe.Checkout.Session,
+): Promise<NextResponse | null> {
+  // Shared with the success-page handler — finds or creates the user
+  // from Stripe's collected email (guest checkout) or uses the
+  // signed-in buyer's id from metadata, then records the purchase.
+  // Idempotent, same pattern as claimWebGuidePurchase above.
+  const r = await claimGuidePurchase({ session })
+  if (!r.ok) {
+    return NextResponse.json({ error: r.error, session: session.id }, { status: r.status })
   }
   return null
 }

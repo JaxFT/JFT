@@ -1,11 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Download, Loader2 } from 'lucide-react'
 
 export default function BuyButton({ slug, priceLabel }: { slug: string; priceLabel: string }) {
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showCode, setShowCode] = useState(false)
@@ -22,10 +20,6 @@ export default function BuyButton({ slug, priceLabel }: { slug: string; priceLab
         body: JSON.stringify({ slug, ...(trimmedCode ? { code: trimmedCode } : {}) }),
       })
       const body = await res.json().catch(() => ({}))
-      if (res.status === 401 && body.signInUrl) {
-        router.push(body.signInUrl)
-        return
-      }
       if (!res.ok || !body.url) {
         throw new Error(body.error || `HTTP ${res.status}`)
       }

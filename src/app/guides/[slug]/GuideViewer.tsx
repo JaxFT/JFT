@@ -7,6 +7,11 @@ type Props = {
   slug: string
   mode: 'preview' | 'full'
   previewPageCount: number
+  // Set when a signed-out guest just completed checkout — threaded
+  // through to /api/guides/[slug]/url so it can authorise kind=full
+  // via the Stripe session instead of requiring a login the guest
+  // doesn't have yet.
+  sessionId?: string
 }
 
 // iOS Safari refuses to render PDFs inside iframes inline, you get a
@@ -24,7 +29,7 @@ function isLikelyIosSafari(): boolean {
 
 const FETCH_TIMEOUT_MS = 15_000
 
-export default function GuideViewer({ slug, mode, previewPageCount }: Props) {
+export default function GuideViewer({ slug, mode, previewPageCount, sessionId }: Props) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -33,6 +38,8 @@ export default function GuideViewer({ slug, mode, previewPageCount }: Props) {
   useEffect(() => {
     setIosSafari(isLikelyIosSafari())
   }, [])
+
+  const fetchQs = `kind=${mode === 'full' ? 'full' : 'preview'}${sessionId ? `&session_id=${encodeURIComponent(sessionId)}` : ''}`
 
   useEffect(() => {
     let cancelled = false
@@ -45,7 +52,7 @@ export default function GuideViewer({ slug, mode, previewPageCount }: Props) {
     const ac = new AbortController()
     const timer = setTimeout(() => ac.abort(), FETCH_TIMEOUT_MS)
 
-    fetch(`/api/guides/${slug}/url?kind=${mode === 'full' ? 'full' : 'preview'}`, {
+    fetch(`/api/guides/${slug}/url?${fetchQs}`, {
       signal: ac.signal,
     })
       .then(async r => {
@@ -74,7 +81,7 @@ export default function GuideViewer({ slug, mode, previewPageCount }: Props) {
       })
 
     return () => { cancelled = true; clearTimeout(timer); ac.abort() }
-  }, [slug, mode])
+  }, [slug, fetchQs])
 
   const heading = mode === 'full' ? 'Full guide' : `Preview, first ${previewPageCount} pages`
 
@@ -86,7 +93,7 @@ export default function GuideViewer({ slug, mode, previewPageCount }: Props) {
     setPdfUrl(null)
     // Defer to next tick to let React unmount the iframe.
     setTimeout(() => {
-      fetch(`/api/guides/${slug}/url?kind=${mode === 'full' ? 'full' : 'preview'}`)
+      fetch(`/api/guides/${slug}/url?${fetchQs}`)
         .then(async r => {
           const body = await r.json().catch(() => null)
           if (!r.ok) setError(body?.error ?? `HTTP ${r.status}`)

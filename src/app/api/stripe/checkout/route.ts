@@ -14,14 +14,15 @@ export async function POST(request: Request) {
   const requestedCode = typeof body.code === 'string' ? body.code.trim() : ''
   if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 })
 
+  // Guest checkout: no sign-in required. Stripe collects the email
+  // anyway (for the receipt) and the webhook + success-page handler
+  // turn that email into a Supabase user automatically, same pattern
+  // already used by /api/stripe/checkout-web-guide. If the buyer IS
+  // signed in we preload Stripe with their email and metadata so they
+  // don't have to type it again and the purchase attaches to their
+  // existing account directly.
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json(
-      { error: 'Please sign in to buy this guide.', signInUrl: `/login?next=/guides/${slug}` },
-      { status: 401 },
-    )
-  }
 
   const guide = await getGuideBySlug(slug)
   if (!guide || !guide.active) {
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
 
   let discountReservation: Awaited<ReturnType<typeof reserveDiscountCode>> = null
   if (requestedCode) {
-    discountReservation = await reserveDiscountCode(supabase, requestedCode, 'guide', guide.id, user.id)
+    discountReservation = await reserveDiscountCode(supabase, requestedCode, 'guide', guide.id, user?.id ?? null)
     if (!discountReservation) {
       return NextResponse.json(
         { error: "That code isn't valid, has expired, or has already been fully redeemed." },
@@ -59,9 +60,10 @@ export async function POST(request: Request) {
   // Metadata flows through to the webhook, never trust client-supplied user IDs.
   // Duplicated onto payment_intent_data below so a refund or dispute can be traced back.
   const metadata: Record<string, string> = {
-    user_id: user.id,
+    kind: 'guide_one_off',
     product_id: guide.id,
     product_slug: guide.slug,
+    ...(user ? { user_id: user.id } : {}),
     ...(discountReservation ? { discount_redemption_id: discountReservation.redemptionId } : {}),
   }
 
@@ -72,7 +74,8 @@ export async function POST(request: Request) {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${origin}/guides/${slug}?purchase=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${origin}/guides/${slug}?purchase=cancelled`,
-      customer_email: user.email ?? undefined,
+      // Preload email when signed in; Stripe asks the buyer otherwise.
+      ...(user?.email ? { customer_email: user.email } : {}),
       metadata,
       payment_intent_data: { metadata },
       ...(discountReservation ? { expires_at: Math.floor(Date.now() / 1000) + 30 * 60 } : {}),

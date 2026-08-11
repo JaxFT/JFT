@@ -4,12 +4,21 @@ import { getGuideBySlug, userHasPurchased, PREVIEWS_BUCKET, FULL_BUCKET } from '
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
 import { isAdminEmail } from '@/lib/admin'
+import { stripeClient } from '@/lib/stripe'
+import { claimGuidePurchase } from '@/lib/claim-guide-purchase'
 
 export const dynamic = 'force-dynamic'
 
 // Returns a short-lived signed URL the iframe / download anchor can load.
 // kind=preview → public preview PDF, available to anyone.
 // kind=full    → full PDF, gated to premium subscribers and one-off purchasers.
+//
+// Two ways to authorise full/download, same as the web-guide download
+// route:
+//   • ?session_id=cs_… — fresh from Stripe Checkout, guest-purchase
+//     path, no sign-in required. Verified against Stripe.
+//   • Signed-in user with a row in purchases (repeat visits) or an
+//     active Premium subscription.
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ slug: string }> },
@@ -17,6 +26,7 @@ export async function GET(
   const { slug } = await params
   const { searchParams } = new URL(request.url)
   const kind = searchParams.get('kind') ?? 'preview'
+  const sessionId = searchParams.get('session_id')
 
   const guide = await getGuideBySlug(slug)
   if (!guide) return NextResponse.json({ error: 'Guide not found' }, { status: 404 })
@@ -34,33 +44,60 @@ export async function GET(
     return NextResponse.json({ error: 'Unknown kind' }, { status: 400 })
   }
 
-  // Full-PDF access, premium subscribers can view, one-off purchasers can view + download
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Sign in required' }, { status: 401 })
+  let authorised = false
+
+  if (sessionId) {
+    let session
+    try {
+      session = await stripeClient().checkout.sessions.retrieve(sessionId)
+    } catch {
+      return NextResponse.json({ error: 'Invalid checkout session' }, { status: 400 })
+    }
+    if (session.payment_status !== 'paid') {
+      return NextResponse.json({ error: 'Payment not completed' }, { status: 402 })
+    }
+    if (session.metadata?.product_id !== guide.id) {
+      return NextResponse.json({ error: 'Session is for a different guide' }, { status: 403 })
+    }
+    // Idempotent — also the webhook's backstop, whichever fires first wins.
+    const claim = await claimGuidePurchase({ session })
+    if (!claim.ok) {
+      return NextResponse.json({ error: claim.error }, { status: claim.status })
+    }
+    authorised = true
+  } else {
+    // Full-PDF access, premium subscribers can view, one-off purchasers can view + download
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Sign in required' }, { status: 401 })
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('subscription_tier')
+      .eq('id', user.id)
+      .single()
+    const isPremium = isPremiumTier(profile?.subscription_tier)
+    const hasPurchased = await userHasPurchased(user.id, guide.id)
+    // Admins bypass purchase + premium checks so they can pull any
+    // guide for QA without paying.
+    const admin = isAdminEmail(user.email)
+
+    if (kind === 'download' && !hasPurchased && !admin) {
+      return NextResponse.json(
+        { error: 'Download is only available with a one-off purchase. Premium members can read on-site but cannot download.' },
+        { status: 403 },
+      )
+    }
+    if (kind === 'full' && !isPremium && !hasPurchased && !admin) {
+      return NextResponse.json({ error: 'Upgrade or buy this guide to view it' }, { status: 403 })
+    }
+    authorised = true
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('subscription_tier')
-    .eq('id', user.id)
-    .single()
-  const isPremium = isPremiumTier(profile?.subscription_tier)
-  const hasPurchased = await userHasPurchased(user.id, guide.id)
-  // Admins bypass purchase + premium checks so they can pull any
-  // guide for QA without paying.
-  const admin = isAdminEmail(user.email)
-
-  if (kind === 'download' && !hasPurchased && !admin) {
-    return NextResponse.json(
-      { error: 'Download is only available with a one-off purchase. Premium members can read on-site but cannot download.' },
-      { status: 403 },
-    )
-  }
-
-  if (kind === 'full' && !isPremium && !hasPurchased && !admin) {
-    return NextResponse.json({ error: 'Upgrade or buy this guide to view it' }, { status: 403 })
+  if (!authorised) {
+    return NextResponse.json({ error: 'Not authorised' }, { status: 403 })
   }
 
   if (!guide.full_path) {

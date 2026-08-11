@@ -10,6 +10,7 @@ import { ArticleJsonLd } from '@/components/seo/JsonLd'
 import { getPublishedWebGuideBySlug } from '@/lib/guides-content-db'
 import { userHasPurchasedWebGuide } from '@/lib/web-guide-purchases-db'
 import { claimWebGuidePurchase } from '@/lib/claim-web-guide-purchase'
+import { claimGuidePurchase } from '@/lib/claim-guide-purchase'
 import { isAdminEmail } from '@/lib/admin'
 import { getAboutUs } from '@/lib/app-settings'
 import { getAutoLinkPhrases } from '@/lib/blog-links-server'
@@ -18,6 +19,8 @@ import { resolveCountrySlug, resolveCountrySlugFromTags } from '@/lib/related-co
 import RelatedPostsSection from '@/components/RelatedPostsSection'
 import WebGuideView from '@/components/guide/WebGuideView'
 import GuideViewTracker from '@/components/guide/GuideViewTracker'
+import DownloadPdfButton from '@/components/guide/DownloadPdfButton'
+import PdfPostPurchase from '@/components/guide/PdfPostPurchase'
 import GuideViewer from './GuideViewer'
 import BuyButton from './BuyButton'
 import UpgradeButton from '@/components/billing/UpgradeButton'
@@ -200,11 +203,25 @@ export default async function GuidePage({
     hasPurchased = hp
   }
 
+  // Guest (or already-logged-in) return from Stripe checkout for THIS
+  // purchase flow. Claiming here (not just relying on the webhook) is
+  // what unlocks the page immediately instead of the buyer landing on
+  // a still-locked guide until the webhook catches up. Idempotent, see
+  // claim-guide-purchase.ts.
+  const pdfSessionId = typeof sp.session_id === 'string' ? sp.session_id : null
+  let pdfFreshPurchase: { sessionId: string; email: string | null } | null = null
+  if (pdfSessionId) {
+    const claim = await claimGuidePurchase({ sessionId: pdfSessionId })
+    if (claim.ok) {
+      pdfFreshPurchase = { sessionId: pdfSessionId, email: claim.email || null }
+    }
+  }
+
   // Admins can view + download any legacy PDF guide for free — same
   // logic as the new web guides. Lets us QA without paying.
   const admin = isAdminEmail(user?.email)
-  const canViewFull = isPremium || hasPurchased || admin
-  const canDownload = hasPurchased || admin
+  const canViewFull = isPremium || hasPurchased || admin || !!pdfFreshPurchase
+  const canDownload = hasPurchased || admin || !!pdfFreshPurchase
   const fullAvailable = !!guide.full_path
 
   const pdfGuideCountrySlug = resolveCountrySlugFromTags(guide.tags)
@@ -235,7 +252,7 @@ export default async function GuidePage({
           {canViewFull ? (
             <div className="inline-flex items-center gap-2 bg-brand-50 border border-brand-200 text-brand-800 text-sm font-medium px-3 py-1.5 rounded-full">
               {isPremium && !hasPurchased && <><Crown className="w-3.5 h-3.5" /> Premium access, full guide</>}
-              {hasPurchased && <><Check className="w-3.5 h-3.5" /> Purchased, full access</>}
+              {(hasPurchased || (!!pdfFreshPurchase && !isPremium)) && <><Check className="w-3.5 h-3.5" /> Purchased, full access</>}
             </div>
           ) : (
             <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-3 py-1.5 rounded-full">
@@ -256,7 +273,12 @@ export default async function GuidePage({
           slug={guide.slug}
           mode={canViewFull && fullAvailable ? 'full' : 'preview'}
           previewPageCount={guide.preview_page_count}
+          sessionId={pdfFreshPurchase?.sessionId}
         />
+
+        {pdfFreshPurchase && (
+          <PdfPostPurchase slug={guide.slug} sessionId={pdfFreshPurchase.sessionId} email={pdfFreshPurchase.email} />
+        )}
 
         {/* PURCHASE CTAs */}
         {!canViewFull && (
@@ -295,20 +317,17 @@ export default async function GuidePage({
           </div>
         )}
 
-        {/* DOWNLOAD CTA, only for one-off purchasers */}
-        {canDownload && (
+        {/* DOWNLOAD CTA for returning purchasers. Skipped right after a
+            fresh purchase — PdfPostPurchase above already covers that
+            moment, no need for two download buttons stacked. */}
+        {canDownload && !pdfFreshPurchase && (
           <div className="mt-8 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between gap-4 flex-wrap">
             <div>
               <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-1">Your purchase</p>
               <h3 className="font-bold text-gray-900">Download the full PDF</h3>
               <p className="text-sm text-gray-500 mt-1">You bought this guide, yours to keep.</p>
             </div>
-            <a
-              href={`/api/guides/${guide.slug}/url?kind=download`}
-              className="btn-primary !py-2.5 !px-5 !text-sm shrink-0"
-            >
-              <Download className="w-4 h-4" /> Download
-            </a>
+            <DownloadPdfButton slug={guide.slug} />
           </div>
         )}
 

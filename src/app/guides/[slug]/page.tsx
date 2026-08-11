@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, ArrowRight, Lock, Crown, Download, Check } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Crown, Download, Check } from 'lucide-react'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
@@ -259,19 +259,18 @@ export default async function GuidePage({
           {guide.subtitle && <p className="text-lg text-gray-600 leading-relaxed">{guide.subtitle}</p>}
         </div>
 
-        {/* ACCESS STATE BADGE */}
-        <div className="mb-6">
-          {canViewFull ? (
+        {/* ACCESS STATE BADGE, only shown once there's actually an
+            access state to report (purchased/premium) — the old
+            "Preview, first N pages" badge here looked clickable but
+            did nothing, the real preview is the viewer further down. */}
+        {canViewFull && (
+          <div className="mb-6">
             <div className="inline-flex items-center gap-2 bg-brand-50 border border-brand-200 text-brand-800 text-sm font-medium px-3 py-1.5 rounded-full">
               {isPremium && !hasPurchased && <><Crown className="w-3.5 h-3.5" /> Premium access, full guide</>}
               {(hasPurchased || (!!pdfFreshPurchase && !isPremium)) && <><Check className="w-3.5 h-3.5" /> Purchased, full access</>}
             </div>
-          ) : (
-            <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-3 py-1.5 rounded-full">
-              <Lock className="w-3.5 h-3.5" /> Preview, first {guide.preview_page_count} pages
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* ONE-OFF PURCHASE, shown immediately on landing so buying
             doesn't require scrolling past the preview first. */}

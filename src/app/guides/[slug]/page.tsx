@@ -261,40 +261,20 @@ export default async function GuidePage({
           )}
         </div>
 
-        {/* PURCHASE CTAs, shown immediately on landing so buying doesn't
-            require scrolling past the preview first. */}
+        {/* ONE-OFF PURCHASE, shown immediately on landing so buying
+            doesn't require scrolling past the preview first. */}
         {!canViewFull && (
-          <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* One-off purchase */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col">
+          <div className="mb-8 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col sm:flex-row sm:items-center gap-5">
+            <div className="flex-1">
               <div className="flex items-center gap-2 mb-3">
                 <Download className="w-5 h-5 text-brand-600" />
                 <p className="text-xs font-bold tracking-widest uppercase text-brand-600">Buy as a one-off</p>
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-1">{formatPrice(guide.price_pence)}</h3>
-              <p className="text-sm text-gray-500 mb-5 flex-1">Pay once. Download the full PDF and keep it on your device forever.</p>
-              <BuyButton slug={guide.slug} priceLabel={formatPrice(guide.price_pence)} />
+              <p className="text-sm text-gray-500">Pay once. Download the full PDF and keep it on your device forever.</p>
             </div>
-
-            {/* Premium upgrade */}
-            <div className="bg-brand-950 text-white rounded-2xl shadow-sm p-6 flex flex-col">
-              <div className="flex items-center gap-2 mb-3">
-                <Crown className="w-5 h-5 text-brand-300" />
-                <p className="text-xs font-bold tracking-widest uppercase text-brand-300">Or unlock everything</p>
-              </div>
-              <h3 className="text-2xl font-bold mb-1">
-                {wsDiscount ? (
-                  <>£25 / year <span className="text-white/40 line-through font-normal text-lg">£49.99</span></>
-                ) : '£49.99 / year, or £5 / month'}
-              </h3>
-              <p className="text-sm text-white/70 mb-5 flex-1">Every premium blog post, every guide, and every adventure pack.</p>
-              {user ? (
-                <UpgradeButton className="btn-primary w-full justify-center !text-sm" />
-              ) : (
-                <Link href={`/signup?next=/guides/${guide.slug}`} className="btn-primary w-full justify-center !text-sm">
-                  Sign up, get Premium <ArrowRight className="w-4 h-4" />
-                </Link>
-              )}
+            <div className="sm:w-56 shrink-0">
+              <BuyButton slug={guide.slug} priceLabel={formatPrice(guide.price_pence)} />
             </div>
           </div>
         )}
@@ -316,6 +296,34 @@ export default async function GuidePage({
 
         {pdfFreshPurchase && (
           <PdfPostPurchase slug={guide.slug} sessionId={pdfFreshPurchase.sessionId} email={pdfFreshPurchase.email} />
+        )}
+
+        {/* PREMIUM UPGRADE, shown under the preview as the "or" option
+            once someone has seen enough of the guide to want more. */}
+        {!canViewFull && (
+          <div className="mt-8 bg-brand-950 text-white rounded-2xl shadow-sm p-6 flex flex-col sm:flex-row sm:items-center gap-5">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-3">
+                <Crown className="w-5 h-5 text-brand-300" />
+                <p className="text-xs font-bold tracking-widest uppercase text-brand-300">Or unlock everything</p>
+              </div>
+              <h3 className="text-2xl font-bold mb-1">
+                {wsDiscount ? (
+                  <>£25 / year <span className="text-white/40 line-through font-normal text-lg">£49.99</span></>
+                ) : '£49.99 / year, or £5 / month'}
+              </h3>
+              <p className="text-sm text-white/70">Every premium blog post, every guide, and every adventure pack.</p>
+            </div>
+            <div className="sm:w-56 shrink-0">
+              {user ? (
+                <UpgradeButton className="btn-primary w-full justify-center !text-sm" />
+              ) : (
+                <Link href={`/signup?next=/guides/${guide.slug}`} className="btn-primary w-full justify-center !text-sm">
+                  Sign up, get Premium <ArrowRight className="w-4 h-4" />
+                </Link>
+              )}
+            </div>
+          </div>
         )}
 
         {/* DOWNLOAD CTA for returning purchasers. Skipped right after a

@@ -155,12 +155,19 @@ export default function GuideViewer({ slug, mode, previewPageCount, sessionId }:
       )}
 
       {!loading && !error && pdfUrl && (
-        <iframe
-          src={pdfUrl + '#toolbar=' + (mode === 'full' ? '0' : '1')}
-          title={mode === 'full' ? 'Full guide' : 'Guide preview'}
-          className="w-full block border-0"
-          style={{ height: '80vh' }}
-        />
+        // Capped width + centred: a full-bleed iframe lets the browser's
+        // native PDF viewer reserve scrollbar space on the right, which
+        // shifts a portrait page visibly left of the true centre. Capping
+        // the width to roughly a page's own shape keeps that shift small
+        // and looks better than a huge blank void either side anyway.
+        <div className="max-w-xl mx-auto">
+          <iframe
+            src={pdfUrl + '#toolbar=' + (mode === 'full' ? '0' : '1')}
+            title={mode === 'full' ? 'Full guide' : 'Guide preview'}
+            className="w-full block border-0"
+            style={{ height: '80vh' }}
+          />
+        </div>
       )}
     </div>
   )

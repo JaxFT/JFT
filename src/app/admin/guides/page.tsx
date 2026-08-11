@@ -177,6 +177,7 @@ export default async function AdminGuidesListPage() {
                     subtitle={lg.subtitle}
                     active={lg.active}
                     supersededByWeb={publishedWebSlugs.has(lg.slug)}
+                    viewCount={lg.view_count}
                   />
                 ))}
               </ul>

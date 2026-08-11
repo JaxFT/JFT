@@ -244,8 +244,18 @@ export default async function GuidePage({
       : Promise.resolve([]),
   ])
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
+
   return (
-    <div className="min-h-screen bg-sand-50 pt-20 pb-20">
+    <>
+      <ArticleJsonLd
+        url={`${siteUrl}/guides/${guide.slug}`}
+        headline={guide.name}
+        description={guide.subtitle ?? guide.description ?? undefined}
+        image={guide.cover_image ?? undefined}
+      />
+      <GuideViewTracker slug={guide.slug} kind="legacy" />
+      <div className="min-h-screen bg-sand-50 pt-20 pb-20">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <Link href="/guides" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-600 mb-6 mt-4">
           <ArrowLeft className="w-4 h-4" /> All guides
@@ -375,6 +385,7 @@ export default async function GuidePage({
           </p>
         )}
       </div>
-    </div>
+      </div>
+    </>
   )
 }

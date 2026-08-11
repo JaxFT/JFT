@@ -11,10 +11,11 @@ type Props = {
   subtitle: string | null
   active: boolean
   supersededByWeb: boolean
+  viewCount: number
 }
 
 export default function LegacyGuideRow({
-  id, slug, name, subtitle, active, supersededByWeb,
+  id, slug, name, subtitle, active, supersededByWeb, viewCount,
 }: Props) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
@@ -62,7 +63,13 @@ export default function LegacyGuideRow({
           )}
         </div>
         <p className="font-semibold text-gray-900 truncate">{name}</p>
-        <p className="text-xs text-gray-500 mt-0.5 truncate">/{slug}</p>
+        <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-2.5 flex-wrap">
+          <span>/{slug}</span>
+          <span className="text-gray-300">·</span>
+          <span className="inline-flex items-center gap-1" title="Views">
+            <Eye className="w-3.5 h-3.5" /> {viewCount}
+          </span>
+        </p>
         {subtitle && <p className="text-xs text-gray-400 mt-0.5 italic truncate">{subtitle}</p>}
         {error && <p className="text-xs text-red-700 mt-1">{error}</p>}
       </div>

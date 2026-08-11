@@ -13,13 +13,14 @@ export type GuideRow = {
   preview_page_count: number
   tags: string[]
   active: boolean
+  view_count: number
 }
 
 export async function listActiveGuides(): Promise<GuideRow[]> {
   const supabase = await createClient()
   const { data } = await supabase
     .from('products')
-    .select('id, slug, name, subtitle, description, price_pence, cover_image, preview_path, full_path, preview_page_count, tags, active')
+    .select('id, slug, name, subtitle, description, price_pence, cover_image, preview_path, full_path, preview_page_count, tags, active, view_count')
     .eq('type', 'guide')
     .eq('active', true)
     .order('name', { ascending: true })
@@ -32,7 +33,7 @@ export async function listAllLegacyGuidesForAdmin(): Promise<GuideRow[]> {
   const supabase = await createClient()
   const { data } = await supabase
     .from('products')
-    .select('id, slug, name, subtitle, description, price_pence, cover_image, preview_path, full_path, preview_page_count, tags, active')
+    .select('id, slug, name, subtitle, description, price_pence, cover_image, preview_path, full_path, preview_page_count, tags, active, view_count')
     .eq('type', 'guide')
     .order('name', { ascending: true })
   return (data ?? []) as GuideRow[]
@@ -42,7 +43,7 @@ export async function getGuideBySlug(slug: string): Promise<GuideRow | null> {
   const supabase = await createClient()
   const { data } = await supabase
     .from('products')
-    .select('id, slug, name, subtitle, description, price_pence, cover_image, preview_path, full_path, preview_page_count, tags, active')
+    .select('id, slug, name, subtitle, description, price_pence, cover_image, preview_path, full_path, preview_page_count, tags, active, view_count')
     .eq('type', 'guide')
     .eq('slug', slug)
     .maybeSingle()

@@ -11,7 +11,7 @@ import { useEffect } from 'react'
 
 const STORAGE_PREFIX = 'jft.guide.viewed.'
 
-export default function GuideViewTracker({ slug }: { slug: string }) {
+export default function GuideViewTracker({ slug, kind = 'web' }: { slug: string; kind?: 'web' | 'legacy' }) {
   useEffect(() => {
     if (!slug) return
     const key = STORAGE_PREFIX + slug
@@ -23,13 +23,14 @@ export default function GuideViewTracker({ slug }: { slug: string }) {
       // the view. Same tab will then count multiple refreshes, which
       // is fine, those visitors are rare.
     }
-    void fetch(`/api/web-guides/${encodeURIComponent(slug)}/view`, {
+    const base = kind === 'legacy' ? '/api/guides' : '/api/web-guides'
+    void fetch(`${base}/${encodeURIComponent(slug)}/view`, {
       method: 'POST',
       keepalive: true,
     }).catch(() => {
       // Network blip, ignore.
     })
-  }, [slug])
+  }, [slug, kind])
 
   return null
 }

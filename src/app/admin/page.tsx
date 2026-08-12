@@ -59,7 +59,7 @@ const TOOLS = [
   {
     href: '/what-kind-of-traveller-are-you',
     title: 'Traveller Type Quiz',
-    desc: "In progress, admin-only for now. Six-question shareable quiz for new visitors, links each result back to real posts and guides. Remove the admin gate in this page's page.tsx to launch it publicly.",
+    desc: "Six-question shareable quiz, live at its own URL (noindex, not linked from nav yet) and reachable from the Travel Profile editor's \"Take the quiz\" CTA. Links each result back to real posts and guides.",
     icon: Compass,
   },
   {

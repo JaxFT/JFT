@@ -3,6 +3,7 @@ import { createClient as createSbClient, type SupabaseClient } from '@supabase/s
 import { stripeClient } from '@/lib/stripe'
 import { claimWebGuidePurchase } from '@/lib/claim-web-guide-purchase'
 import { claimGuidePurchase } from '@/lib/claim-guide-purchase'
+import { logFunnelEvent } from '@/lib/campaign-links-db'
 import { sendEmail, HELLO_FROM, ADMIN_NOTIFY, emailShell } from '@/lib/email'
 import type Stripe from 'stripe'
 
@@ -176,6 +177,11 @@ async function handleGuideOneOffPurchase(
   // once (or a rare Stripe retry), same tradeoff already accepted for
   // web guide sales below.
   void notifyAdminOfGuideOneOffSale(session)
+  const campaignRef = session.metadata?.campaign_ref
+  const productSlug = session.metadata?.product_slug
+  if (campaignRef && productSlug) {
+    void logFunnelEvent(campaignRef, productSlug, 'purchase')
+  }
   return null
 }
 
@@ -446,6 +452,11 @@ async function handleWebGuidePurchase(
   // (re-runs are silent), but doesn't expose a first-vs-retry flag, so
   // a rare Stripe redelivery could send a duplicate email. Acceptable.
   void notifyAdminOfWebGuideSale(session)
+  const campaignRef = session.metadata?.campaign_ref
+  const guideSlug = session.metadata?.guide_slug
+  if (campaignRef && guideSlug) {
+    void logFunnelEvent(campaignRef, guideSlug, 'purchase')
+  }
   return null
 }
 

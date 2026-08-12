@@ -12,6 +12,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Download, Loader2 } from 'lucide-react'
+import { getCampaignRef } from '@/lib/campaign-ref-client'
 
 type Props = {
   slug: string
@@ -35,10 +36,19 @@ export default function DownloadButton({ slug, hasPurchased, priceLabel, variant
     setLoading(true)
     try {
       const trimmedCode = code.trim()
+      const ref = getCampaignRef()
+      if (ref) {
+        void fetch('/api/campaign/event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ eventType: 'buy_click', guideSlug: slug, ref }),
+          keepalive: true,
+        }).catch(() => {})
+      }
       const res = await fetch('/api/stripe/checkout-web-guide', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug, ...(trimmedCode ? { code: trimmedCode } : {}) }),
+        body: JSON.stringify({ slug, ...(trimmedCode ? { code: trimmedCode } : {}), ...(ref ? { ref } : {}) }),
       })
       const body = await res.json().catch(() => ({}))
       if (res.status === 401 && body.signInUrl) {

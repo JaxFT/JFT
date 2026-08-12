@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { PenLine, ArrowRight, ShieldCheck, FileText, Upload, MessageCircle, BookOpen, Users, Sparkles, Video, Ticket, Gift, Compass } from 'lucide-react'
+import { PenLine, ArrowRight, ShieldCheck, FileText, Upload, MessageCircle, BookOpen, Users, Sparkles, Video, Ticket, Gift, Compass, Link2 } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -73,6 +73,12 @@ const TOOLS = [
     title: 'Gift Premium',
     desc: "Give an existing member a year of Premium access for free, no Stripe charge. Auto-expires after a year unless they subscribe for real.",
     icon: Gift,
+  },
+  {
+    href: '/admin/campaigns',
+    title: 'Campaign Links',
+    desc: 'Create trackable short links for guide promos (Instagram DMs, etc.) and see the full funnel: clicked, viewed, clicked buy, purchased.',
+    icon: Link2,
   },
 ]
 

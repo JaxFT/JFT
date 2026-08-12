@@ -16,10 +16,11 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
-  let body: { slug?: string; code?: string } = {}
+  let body: { slug?: string; code?: string; ref?: string } = {}
   try { body = await request.json() } catch {}
   const slug = typeof body.slug === 'string' ? body.slug : null
   const requestedCode = typeof body.code === 'string' ? body.code.trim() : ''
+  const campaignRef = typeof body.ref === 'string' ? body.ref.trim() : ''
   if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 })
 
   // Guest checkout: no sign-in required. Stripe collects the email
@@ -60,6 +61,7 @@ export async function POST(request: Request) {
     guide_id: guide.id,
     guide_slug: guide.slug,
     ...(discountReservation ? { discount_redemption_id: discountReservation.redemptionId } : {}),
+    ...(campaignRef ? { campaign_ref: campaignRef } : {}),
   }
   if (user) metadata.user_id = user.id
 

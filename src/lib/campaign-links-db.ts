@@ -17,6 +17,9 @@ export type CampaignLink = {
   label: string | null
   active: boolean
   createdAt: string
+  // How many times this link was actually sent out (DMs, etc.) — not
+  // measurable by us, entered and edited by hand. Null = not entered yet.
+  sentCount: number | null
 }
 
 export type CampaignStats = CampaignLink & {
@@ -69,11 +72,12 @@ export async function createCampaignLink(input: {
   code: string
   guideSlug: string
   label: string | null
+  sentCount: number | null
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const admin = adminClient()
   const { error } = await admin
     .from('campaign_links')
-    .insert({ code: input.code, guide_slug: input.guideSlug, label: input.label })
+    .insert({ code: input.code, guide_slug: input.guideSlug, label: input.label, sent_count: input.sentCount })
   if (error) {
     if (error.code === '23505') return { ok: false, error: 'That code is already in use.' }
     return { ok: false, error: error.message }
@@ -87,6 +91,12 @@ export async function setCampaignLinkActive(id: string, active: boolean): Promis
   if (error) console.error('[campaign_links] toggle failed', error.message)
 }
 
+export async function setCampaignLinkSentCount(id: string, sentCount: number | null): Promise<void> {
+  const admin = adminClient()
+  const { error } = await admin.from('campaign_links').update({ sent_count: sentCount }).eq('id', id)
+  if (error) console.error('[campaign_links] sent_count update failed', error.message)
+}
+
 // Every campaign link plus its funnel counts, newest first. Small
 // dataset (a handful of campaigns at a time) — fetch links and events
 // separately and tally in memory rather than a SQL aggregate, keeps
@@ -94,7 +104,7 @@ export async function setCampaignLinkActive(id: string, active: boolean): Promis
 export async function listCampaignStats(): Promise<CampaignStats[]> {
   const admin = adminClient()
   const [{ data: links }, { data: events }] = await Promise.all([
-    admin.from('campaign_links').select('id, code, guide_slug, label, active, created_at').order('created_at', { ascending: false }),
+    admin.from('campaign_links').select('id, code, guide_slug, label, active, created_at, sent_count').order('created_at', { ascending: false }),
     admin.from('funnel_events').select('campaign_code, event_type'),
   ])
 
@@ -105,7 +115,7 @@ export async function listCampaignStats(): Promise<CampaignStats[]> {
     counts.set(e.campaign_code, row)
   }
 
-  return ((links ?? []) as { id: string; code: string; guide_slug: string; label: string | null; active: boolean; created_at: string }[])
+  return ((links ?? []) as { id: string; code: string; guide_slug: string; label: string | null; active: boolean; created_at: string; sent_count: number | null }[])
     .map(l => {
       const c = counts.get(l.code) ?? { click: 0, view: 0, buy_click: 0, purchase: 0 }
       return {
@@ -115,6 +125,7 @@ export async function listCampaignStats(): Promise<CampaignStats[]> {
         label: l.label,
         active: l.active,
         createdAt: l.created_at,
+        sentCount: l.sent_count,
         clicks: c.click,
         views: c.view,
         buyClicks: c.buy_click,

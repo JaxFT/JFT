@@ -3,11 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Copy, Check, MousePointerClick, Eye, ShoppingCart, CreditCard, ExternalLink } from 'lucide-react'
+import { Copy, Check, MousePointerClick, Eye, ShoppingCart, CreditCard, ExternalLink, Send } from 'lucide-react'
 import type { CampaignStats } from '@/lib/campaign-links-db'
 
-function pct(n: number, of: number): string {
-  if (of === 0) return '—'
+function pct(n: number, of: number | null): string {
+  if (!of) return '—'
   return `${Math.round((n / of) * 100)}%`
 }
 
@@ -15,6 +15,7 @@ export default function CampaignLinkRow({ stats, siteUrl }: { stats: CampaignSta
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [sentDraft, setSentDraft] = useState(stats.sentCount?.toString() ?? '')
   const url = `${siteUrl}/l/${stats.code}`
 
   const toggle = async () => {
@@ -29,6 +30,17 @@ export default function CampaignLinkRow({ stats, siteUrl }: { stats: CampaignSta
     } finally {
       setBusy(false)
     }
+  }
+
+  const saveSentCount = async () => {
+    const parsed = sentDraft.trim() ? Number(sentDraft) : null
+    if (parsed === stats.sentCount) return
+    await fetch(`/api/admin/campaign-links/${stats.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sentCount: parsed }),
+    })
+    router.refresh()
   }
 
   const copy = () => {
@@ -67,10 +79,23 @@ export default function CampaignLinkRow({ stats, siteUrl }: { stats: CampaignSta
         </button>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <div className="bg-gray-50 rounded-lg px-3 py-2">
+          <p className="text-[10px] font-bold tracking-widest uppercase text-gray-400 flex items-center gap-1"><Send className="w-3 h-3" /> Sent</p>
+          <input
+            type="number"
+            min={0}
+            value={sentDraft}
+            onChange={e => setSentDraft(e.target.value)}
+            onBlur={saveSentCount}
+            placeholder="—"
+            title="Entered by hand, we can't measure how many were actually sent"
+            className="w-full text-lg font-bold text-gray-900 bg-transparent focus:outline-none focus:ring-1 focus:ring-brand-400 rounded -ml-0.5 pl-0.5"
+          />
+        </div>
         <div className="bg-gray-50 rounded-lg px-3 py-2">
           <p className="text-[10px] font-bold tracking-widest uppercase text-gray-400 flex items-center gap-1"><MousePointerClick className="w-3 h-3" /> Clicked</p>
-          <p className="text-lg font-bold text-gray-900">{stats.clicks}</p>
+          <p className="text-lg font-bold text-gray-900">{stats.clicks} <span className="text-xs font-normal text-gray-400">{pct(stats.clicks, stats.sentCount)}</span></p>
         </div>
         <div className="bg-gray-50 rounded-lg px-3 py-2">
           <p className="text-[10px] font-bold tracking-widest uppercase text-gray-400 flex items-center gap-1"><Eye className="w-3 h-3" /> Viewed</p>

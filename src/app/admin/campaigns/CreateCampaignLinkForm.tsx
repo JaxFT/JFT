@@ -11,6 +11,7 @@ export default function CreateCampaignLinkForm({ guides, siteUrl }: { guides: Gu
   const [code, setCode] = useState('')
   const [guideSlug, setGuideSlug] = useState(guides[0]?.slug ?? '')
   const [label, setLabel] = useState('')
+  const [sentCount, setSentCount] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [createdUrl, setCreatedUrl] = useState<string | null>(null)
@@ -24,13 +25,19 @@ export default function CreateCampaignLinkForm({ guides, siteUrl }: { guides: Gu
       const res = await fetch('/api/admin/campaign-links', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, guideSlug, label: label.trim() || null }),
+        body: JSON.stringify({
+          code,
+          guideSlug,
+          label: label.trim() || null,
+          sentCount: sentCount.trim() ? Number(sentCount) : null,
+        }),
       })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`)
       setCreatedUrl(`${siteUrl}/l/${body.code}`)
       setCode('')
       setLabel('')
+      setSentCount('')
       router.refresh()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not create link')
@@ -49,7 +56,7 @@ export default function CreateCampaignLinkForm({ guides, siteUrl }: { guides: Gu
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-8">
       <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-4">New campaign link</p>
-      <form onSubmit={create} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-3 items-start">
+      <form onSubmit={create} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_90px_1fr_auto] gap-3 items-start">
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1">Code</label>
           <input
@@ -74,6 +81,17 @@ export default function CreateCampaignLinkForm({ guides, siteUrl }: { guides: Gu
           </select>
         </div>
         <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1">Sent</label>
+          <input
+            type="number"
+            min={0}
+            value={sentCount}
+            onChange={e => setSentCount(e.target.value)}
+            placeholder="60"
+            className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+          />
+        </div>
+        <div>
           <label className="block text-xs font-medium text-gray-500 mb-1">Label (optional, for you)</label>
           <input
             type="text"
@@ -93,6 +111,7 @@ export default function CreateCampaignLinkForm({ guides, siteUrl }: { guides: Gu
           </button>
         </div>
       </form>
+      <p className="text-xs text-gray-400 mt-2">Sent count is entered by hand, we can't measure how many DMs actually went out. You can also add or update it later.</p>
       {error && <p className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-md px-3 py-2 mt-3">{error}</p>}
       {createdUrl && (
         <div className="mt-4 flex items-center gap-2 bg-brand-50 border border-brand-200 rounded-md px-3 py-2">

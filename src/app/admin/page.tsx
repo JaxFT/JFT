@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { PenLine, ArrowRight, ShieldCheck, ShieldAlert, FileText, Upload, MessageCircle, BookOpen, Users, Sparkles, Video, Ticket, Gift, Compass, Link2, MapPin, Star } from 'lucide-react'
+import { PenLine, ArrowRight, ShieldCheck, ShieldAlert, FileText, Upload, MessageCircle, BookOpen, Users, Sparkles, Video, Ticket, Gift, Compass, Link2, MapPin, Star, BarChart3 } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -67,6 +67,12 @@ const TOOLS = [
     title: 'Discount Codes',
     desc: 'Create percent-off codes with a usage cap, scoped to Premium, guides, and/or Adventure Packs. Tracks redemptions automatically.',
     icon: Ticket,
+  },
+  {
+    href: '/admin/recommendations-stats',
+    title: 'Recommendations stats',
+    desc: 'Votes, comments, country coverage and Maps-link gaps across the Recommendations directory, plus a link out to Cloudflare Web Analytics for page views.',
+    icon: BarChart3,
   },
   {
     href: '/admin/gift-premium',

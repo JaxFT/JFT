@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
@@ -55,6 +55,19 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     images: ['/images/homepage/homepage_header_jft.jpg'],
   },
+  // The manifest above covers Android "Add to Home Screen". iOS Safari
+  // ignores manifest.json's display mode entirely and only launches
+  // full-screen (no URL bar) when this exact meta tag is present —
+  // without it, a home-screen icon just opens a normal Safari tab.
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Jax Family',
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#2d8163',
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
+import { createClient as createSbClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { getPublicProfilesByIds } from '@/lib/travel-profile-db'
 import { getSocialCounts } from '@/lib/recommendation-social'
 import { getBlogLinksForRecommendations } from '@/lib/recommendation-blog-links'
-import { isAdminEmail } from '@/lib/admin'
+import { isAdminEmail, filterAdminUserIds } from '@/lib/admin'
 import { shortName } from '@/lib/display-name'
 import RecommendationsBrowser from './RecommendationsBrowser'
 import type { Recommendation } from '@/components/recommendations/types'
@@ -31,10 +32,19 @@ export default async function RecommendationsPage({
 
   const allRows = rows ?? []
   const authorIds = [...new Set(allRows.map(r => r.user_id))]
-  const [authors, socialCounts, blogLinks] = await Promise.all([
+  const isViewerAdmin = isAdminEmail(user?.email)
+  const admin = createSbClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false, autoRefreshToken: false } },
+  )
+  const [authors, socialCounts, blogLinks, adminAuthorIds] = await Promise.all([
     getPublicProfilesByIds(authorIds),
     getSocialCounts(supabase, allRows.map(r => r.id), user?.id ?? null),
     getBlogLinksForRecommendations(allRows),
+    // Only worth resolving if the viewer is themselves an admin —
+    // nobody else can use this to edit another admin's entry anyway.
+    isViewerAdmin ? filterAdminUserIds(admin, authorIds) : Promise.resolve(new Set<string>()),
   ])
   const recommendations: Recommendation[] = allRows.map(r => ({
     ...r,
@@ -61,7 +71,8 @@ export default async function RecommendationsPage({
         <RecommendationsBrowser
           initialRecommendations={recommendations}
           currentUserId={user?.id ?? null}
-          isAdmin={isAdminEmail(user?.email)}
+          isAdmin={isViewerAdmin}
+          adminAuthorIds={[...adminAuthorIds]}
           authorFilter={authorFilterId ? { id: authorFilterId, name: authorFilterName } : null}
         />
       </div>

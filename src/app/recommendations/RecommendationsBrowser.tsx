@@ -17,13 +17,16 @@ export default function RecommendationsBrowser({
   initialRecommendations,
   currentUserId,
   isAdmin,
+  adminAuthorIds,
   authorFilter,
 }: {
   initialRecommendations: Recommendation[]
   currentUserId: string | null
   isAdmin: boolean
+  adminAuthorIds: string[]
   authorFilter: { id: string; name: string | null } | null
 }) {
+  const adminAuthorIdSet = useMemo(() => new Set(adminAuthorIds), [adminAuthorIds])
   const [recommendations, setRecommendations] = useState(initialRecommendations)
   const [category, setCategory] = useState<RecommendationCategory | 'all'>('all')
   const [iso2, setIso2] = useState('')
@@ -159,7 +162,7 @@ export default function RecommendationsBrowser({
               rec={r}
               showAuthor
               canInteract={!!currentUserId}
-              canEdit={r.user_id === currentUserId}
+              canEdit={r.user_id === currentUserId || (isAdmin && adminAuthorIdSet.has(r.user_id))}
               onRemove={(r.user_id === currentUserId || isAdmin) ? removeRecommendation : undefined}
             />
           ))}

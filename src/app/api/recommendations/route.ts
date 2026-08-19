@@ -150,9 +150,13 @@ export async function POST(request: Request) {
   })
 }
 
-// Owner-only edit. Admins get delete rights (below), not edit — this
-// mirrors "the author fixes their own review, admins moderate" rather
-// than admins rewriting someone else's words.
+// Owner edit, or an admin editing another admin's row — the "author
+// fixes their own review" rule still holds for regular members, but
+// the small admin team (currently just Bec + you) share the same
+// bulk-imported/resolved data and need to fix each other's entries,
+// not just their own. Admins still can't edit a regular member's row,
+// only delete it (below) — editing someone else's words is different
+// from removing them.
 export async function PATCH(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -166,7 +170,20 @@ export async function PATCH(request: Request) {
   const parsed = parseInput(body)
   if ('error' in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 })
 
-  const { data, error } = await supabase
+  const { data: existing } = await supabase.from('recommendations').select('user_id').eq('id', id).maybeSingle()
+  if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  const isOwner = existing.user_id === user.id
+  let editingAsAdmin = false
+  if (!isOwner) {
+    if (!isAdminEmail(user.email)) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    const { data: ownerAuth } = await adminClient().auth.admin.getUserById(existing.user_id)
+    if (!isAdminEmail(ownerAuth.user?.email)) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    editingAsAdmin = true
+  }
+
+  const client = editingAsAdmin ? adminClient() : supabase
+  let query = client
     .from('recommendations')
     .update({
       category: parsed.category,
@@ -179,7 +196,8 @@ export async function PATCH(request: Request) {
       note: parsed.note || null,
     })
     .eq('id', id)
-    .eq('user_id', user.id)
+  if (!editingAsAdmin) query = query.eq('user_id', user.id)
+  const { data, error } = await query
     .select('id, user_id, category, place_name, iso2, town, google_maps_url, date_visited, rating, note, created_at')
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

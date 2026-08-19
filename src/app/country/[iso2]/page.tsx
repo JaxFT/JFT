@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { BookOpen, Compass, Crown, MapPin, Rocket } from 'lucide-react'
+import { createClient as createSbClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { getCountryByIso2 } from '@/lib/countries'
 import { getPackByIso2 } from '@/lib/adventurePackMeta'
@@ -11,7 +12,7 @@ import { formatPrice } from '@/lib/guides-db'
 import { getPublicProfilesByIds } from '@/lib/travel-profile-db'
 import { getSocialCounts } from '@/lib/recommendation-social'
 import { getBlogLinksForRecommendations } from '@/lib/recommendation-blog-links'
-import { isAdminEmail } from '@/lib/admin'
+import { isAdminEmail, filterAdminUserIds } from '@/lib/admin'
 import { shortName } from '@/lib/display-name'
 import { proxyImageUrl } from '@/lib/image-proxy'
 import CountryFlag from '@/components/CountryFlag'
@@ -75,10 +76,17 @@ export default async function CountryPage(
   // Recommendations for this country.
   const allRecRows = recRows ?? []
   const authorIds = [...new Set(allRecRows.map(r => r.user_id))]
-  const [authors, socialCounts, blogLinks] = await Promise.all([
+  const isAdmin = isAdminEmail(user?.email)
+  const admin = createSbClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false, autoRefreshToken: false } },
+  )
+  const [authors, socialCounts, blogLinks, adminAuthorIds] = await Promise.all([
     getPublicProfilesByIds(authorIds),
     getSocialCounts(supabase, allRecRows.map(r => r.id), user?.id ?? null),
     getBlogLinksForRecommendations(allRecRows),
+    isAdmin ? filterAdminUserIds(admin, authorIds) : Promise.resolve(new Set<string>()),
   ])
   const recommendations: Recommendation[] = allRecRows.map(r => ({
     ...r,
@@ -86,7 +94,6 @@ export default async function CountryPage(
     ...(socialCounts.get(r.id) ?? { up_votes: 0, down_votes: 0, my_vote: null, comment_count: 0 }),
     blog_link: blogLinks.get(r.id) ?? null,
   }))
-  const isAdmin = isAdminEmail(user?.email)
 
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
@@ -155,6 +162,7 @@ export default async function CountryPage(
               initialRecommendations={recommendations}
               currentUserId={user?.id ?? null}
               isAdmin={isAdmin}
+              adminAuthorIds={[...adminAuthorIds]}
             />
           )}
           <Link href="/recommendations" className="text-sm font-semibold text-brand-600 hover:underline">

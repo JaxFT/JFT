@@ -6,7 +6,7 @@
 // route) or the add-a-place form (that stays on /recommendations,
 // linked below the list).
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import RecommendationCard from '@/components/recommendations/RecommendationCard'
 import type { Recommendation } from '@/components/recommendations/types'
 
@@ -14,11 +14,14 @@ export default function CountryRecommendationsList({
   initialRecommendations,
   currentUserId,
   isAdmin,
+  adminAuthorIds,
 }: {
   initialRecommendations: Recommendation[]
   currentUserId: string | null
   isAdmin: boolean
+  adminAuthorIds: string[]
 }) {
+  const adminAuthorIdSet = useMemo(() => new Set(adminAuthorIds), [adminAuthorIds])
   const [recommendations, setRecommendations] = useState(initialRecommendations)
   const [error, setError] = useState('')
 
@@ -44,7 +47,7 @@ export default function CountryRecommendationsList({
           rec={r}
           showAuthor
           canInteract={!!currentUserId}
-          canEdit={r.user_id === currentUserId}
+          canEdit={r.user_id === currentUserId || (isAdmin && adminAuthorIdSet.has(r.user_id))}
           onRemove={(r.user_id === currentUserId || isAdmin) ? removeRecommendation : undefined}
         />
       ))}

@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
+
 // Hardcoded admin allowlist. Lowercase-compared to user.email.
 // To add an admin: add their email here and redeploy.
 export const ADMIN_EMAILS = [
@@ -8,6 +10,21 @@ export const ADMIN_EMAILS = [
 export function isAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false
   return ADMIN_EMAILS.includes(email.toLowerCase() as typeof ADMIN_EMAILS[number])
+}
+
+// Which of these user ids belong to admins — used where the UI/API
+// needs to tell "an admin's own content" apart from a regular
+// member's (e.g. admins editing each other's Recommendations entries,
+// not just deleting/moderating them). One auth lookup per id, same
+// pattern as resolveCommentAuthorExtras.
+export async function filterAdminUserIds(service: SupabaseClient, userIds: string[]): Promise<Set<string>> {
+  const admins = new Set<string>()
+  if (userIds.length === 0) return admins
+  const results = await Promise.all(userIds.map(id => service.auth.admin.getUserById(id)))
+  userIds.forEach((id, i) => {
+    if (isAdminEmail(results[i]?.data?.user?.email)) admins.add(id)
+  })
+  return admins
 }
 
 // Profile ids that should NOT count toward the premium / free totals

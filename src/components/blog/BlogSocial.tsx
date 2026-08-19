@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation'
 import { Heart, Send, Loader2, Trash2, Instagram, MessageCircle, Reply } from 'lucide-react'
 import type { BlogCommentRow } from '@/lib/blog-social-db'
 import UsernameModal from './UsernameModal'
+import { proxyImageUrl } from '@/lib/image-proxy'
 
 type Props = {
   postSlug: string
@@ -26,6 +27,8 @@ type Props = {
   initialViewerUsername: string | null
   initialViewerUsernameIsInstagram: boolean
   initialViewerInstagram: string | null
+  initialViewerPhotoUrl: string | null
+  initialViewerAdminName: string | null
   isAdmin: boolean
 }
 
@@ -68,11 +71,15 @@ function fmtDate(iso: string): string {
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-function Avatar({ username, small }: { username: string | null; small?: boolean }) {
+function Avatar({ username, photoUrl, small }: { username: string | null; photoUrl?: string | null; small?: boolean }) {
+  const size = small ? 'w-7 h-7' : 'w-9 h-9'
+  if (photoUrl) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={proxyImageUrl(photoUrl)} alt="" className={`${size} rounded-full object-cover shrink-0`} />
+  }
   const initials = (username ?? '?').slice(0, 2).toUpperCase()
-  const size = small ? 'w-7 h-7 text-[10px]' : 'w-9 h-9 text-xs'
   return (
-    <div className={`${size} rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold shrink-0`}>
+    <div className={`${size} ${small ? 'text-[10px]' : 'text-xs'} rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold shrink-0`}>
       {initials}
     </div>
   )
@@ -87,6 +94,8 @@ export default function BlogSocial({
   initialViewerUsername,
   initialViewerUsernameIsInstagram,
   initialViewerInstagram,
+  initialViewerPhotoUrl,
+  initialViewerAdminName,
   isAdmin,
 }: Props) {
   const router = useRouter()
@@ -196,6 +205,8 @@ export default function BlogSocial({
       username: resp.comment.username,
       username_is_instagram: viewerUsernameIsInstagram,
       instagram_handle: initialViewerInstagram,
+      photo_url: initialViewerPhotoUrl,
+      admin_display_name: initialViewerAdminName,
       like_count: 0,
       liked_by_me: false,
     }
@@ -270,10 +281,13 @@ export default function BlogSocial({
     const canDelete = isAdmin || c.user_id === viewerUserId
     return (
       <div className="flex items-start gap-3">
-        <Avatar username={c.username} small={isReply} />
+        <Avatar username={c.username} photoUrl={c.photo_url} small={isReply} />
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2 flex-wrap">
             <UsernameLabel username={c.username} isInstagram={c.username_is_instagram} className="font-mono font-semibold text-sm text-gray-900" />
+            {c.admin_display_name && (
+              <span className="text-xs font-semibold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded">{c.admin_display_name}</span>
+            )}
             <span className="text-xs text-gray-400 ml-auto">{fmtDate(c.created_at)}</span>
           </div>
           {/* Instagram handle: admin-only, on its own line in a
@@ -331,7 +345,7 @@ export default function BlogSocial({
   // belongs to.
   const renderReplyForm = () => (
     <form onSubmit={submitReply} className="flex items-start gap-3">
-      <Avatar username={viewerUsername} small />
+      <Avatar username={viewerUsername} photoUrl={initialViewerPhotoUrl} small />
       <div className="flex-1">
         {replyTo?.username && (
           <p className="text-xs text-gray-400 mb-1">
@@ -408,7 +422,7 @@ export default function BlogSocial({
       {/* COMMENT FORM */}
       <form onSubmit={submitComment} className="mb-8">
         <div className="flex items-start gap-3">
-          <Avatar username={viewerUsername} />
+          <Avatar username={viewerUsername} photoUrl={initialViewerPhotoUrl} />
           <div className="flex-1">
             <textarea
               value={draft}

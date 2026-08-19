@@ -8,9 +8,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
-  Camera, Check, Compass, ExternalLink, Eye, EyeOff, Loader2, Search, Sparkles, Users, X,
+  Camera, Check, ExternalLink, Eye, EyeOff, Loader2, Search, Sparkles, Users, X,
 } from 'lucide-react'
 import { resizeImageIfLarge } from '@/lib/image-resize'
+import { safeSlice } from '@/lib/safe-slice'
+import { shortName } from '@/lib/display-name'
 import { proxyImageUrl } from '@/lib/image-proxy'
 import { COUNTRIES, getCountryByIso2 } from '@/lib/countries'
 import CountryFlag from '@/components/CountryFlag'
@@ -18,6 +20,9 @@ import CoverFocalPicker from '@/components/CoverFocalPicker'
 import { TRAVELLER_TYPES, type TravellerTypeId } from '@/app/what-kind-of-traveller-are-you/quiz-data'
 import { BACKGROUND_THEMES, BACKGROUND_THEME_ORDER, type BackgroundThemeId } from './background-themes'
 import PlacesEditor, { type PlaceRow } from './PlacesEditor'
+import ProfileCompletionReward from './ProfileCompletionReward'
+import FavouritePlacesSection from './FavouritePlacesSection'
+import type { Recommendation } from '@/components/recommendations/types'
 
 type TravelProfileRow = {
   is_public: boolean
@@ -27,6 +32,9 @@ type TravelProfileRow = {
   background_theme: string
   bio: string | null
   current_location: string | null
+  currently_planning: string | null
+  currently_vibing_to: string | null
+  mood: string | null
   traveller_type: string | null
   fav_place: string | null
   fav_food: string | null
@@ -64,6 +72,9 @@ export default function TravelProfileEditor({
   initialPlaces,
   initialBuddies,
   hasPassportVisits,
+  initialRecommendations,
+  alreadyClaimedPackSlug,
+  isPremium,
 }: {
   username: string | null
   fullName: string | null
@@ -71,10 +82,18 @@ export default function TravelProfileEditor({
   initialPlaces: PlaceRow[]
   initialBuddies: BuddyRow[]
   hasPassportVisits: boolean
+  initialRecommendations: Recommendation[]
+  alreadyClaimedPackSlug: string | null
+  isPremium: boolean
 }) {
   const [isPublic, setIsPublic] = useState(initialProfile?.is_public ?? false)
+  const [beenCount, setBeenCount] = useState(initialPlaces.filter(p => p.list_type === 'been').length)
+  const [wantCount, setWantCount] = useState(initialPlaces.filter(p => p.list_type === 'want').length)
   const [bio, setBio] = useState(initialProfile?.bio ?? '')
   const [location, setLocation] = useState(initialProfile?.current_location ?? '')
+  const [currentlyPlanning, setCurrentlyPlanning] = useState(initialProfile?.currently_planning ?? '')
+  const [currentlyVibingTo, setCurrentlyVibingTo] = useState(initialProfile?.currently_vibing_to ?? '')
+  const [mood, setMood] = useState(initialProfile?.mood ?? '')
   const [favs, setFavs] = useState({
     fav_place: initialProfile?.fav_place ?? '',
     fav_food: initialProfile?.fav_food ?? '',
@@ -92,6 +111,7 @@ export default function TravelProfileEditor({
     (initialProfile?.background_theme as BackgroundThemeId) ?? 'brand',
   )
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [saveError, setSaveError] = useState('')
   const travellerType = initialProfile?.traveller_type ?? null
 
   const [heroUrl, setHeroUrl] = useState(initialProfile?.hero_photo_url ?? null)
@@ -131,6 +151,7 @@ export default function TravelProfileEditor({
 
   const save = async () => {
     setSaveState('saving')
+    setSaveError('')
     try {
       const res = await fetch('/api/travel-profile', {
         method: 'PUT',
@@ -139,6 +160,9 @@ export default function TravelProfileEditor({
           is_public: isPublic,
           bio,
           current_location: location,
+          currently_planning: currentlyPlanning,
+          currently_vibing_to: currentlyVibingTo,
+          mood,
           background_theme: backgroundTheme,
           hero_photo_focal_x: focalX,
           hero_photo_focal_y: focalY,
@@ -150,10 +174,14 @@ export default function TravelProfileEditor({
           ...favs,
         }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error || `Save failed (HTTP ${res.status})`)
+      }
       setSaveState('saved')
       setTimeout(() => setSaveState('idle'), 2000)
-    } catch {
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : 'Save failed')
       setSaveState('error')
     }
   }
@@ -224,6 +252,20 @@ export default function TravelProfileEditor({
         <p className="text-gray-500">Your own page. Who you are as a traveller, not a feed.</p>
       </div>
 
+      {/* Premium members already have every Adventure Pack included,
+          so "claim a free one" is meaningless for them — hide the
+          whole nudge unless they'd already claimed one before
+          upgrading, in which case still show the confirmation. */}
+      {(!isPremium || alreadyClaimedPackSlug) && (
+        <ProfileCompletionReward
+          hasPhoto={!!heroUrl}
+          beenCount={beenCount}
+          wantCount={wantCount}
+          isPublic={isPublic}
+          alreadyClaimedSlug={alreadyClaimedPackSlug}
+        />
+      )}
+
       {/* Visibility + public link */}
       <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <div className="flex items-start justify-between gap-4">
@@ -266,12 +308,6 @@ export default function TravelProfileEditor({
               View your page <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           )}
-          <Link
-            href="/discover"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-brand-700"
-          >
-            <Compass className="w-3.5 h-3.5" /> Real Travellers
-          </Link>
         </div>
       </section>
 
@@ -377,7 +413,7 @@ export default function TravelProfileEditor({
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Short bio</label>
           <textarea
             value={bio}
-            onChange={e => setBio(e.target.value.slice(0, 200))}
+            onChange={e => setBio(safeSlice(e.target.value, 200))}
             rows={2}
             placeholder="Travelling the world slowly."
             spellCheck
@@ -390,11 +426,44 @@ export default function TravelProfileEditor({
           <input
             type="text"
             value={location}
-            onChange={e => setLocation(e.target.value.slice(0, 80))}
+            onChange={e => setLocation(safeSlice(e.target.value, 80))}
             placeholder="Chiang Mai, Thailand"
             className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
           <p className="text-xs text-gray-400 mt-1">Just a status you set yourself, update it whenever you like.</p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Currently planning</label>
+          <input
+            type="text"
+            value={currentlyPlanning}
+            onChange={e => setCurrentlyPlanning(safeSlice(e.target.value, 80))}
+            placeholder="Japan, spring 2027"
+            className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+          />
+          <p className="text-xs text-gray-400 mt-1">Shows on your public page as a nudge for people to leave tips in your guestbook.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Currently vibing to</label>
+            <input
+              type="text"
+              value={currentlyVibingTo}
+              onChange={e => setCurrentlyVibingTo(safeSlice(e.target.value, 80))}
+              placeholder="Song, artist, podcast…"
+              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Mood</label>
+            <input
+              type="text"
+              value={mood}
+              onChange={e => setMood(safeSlice(e.target.value, 60))}
+              placeholder="😎 feeling great"
+              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+            />
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Link</label>
@@ -403,7 +472,7 @@ export default function TravelProfileEditor({
             <input
               type="text"
               value={linkLabel}
-              onChange={e => setLinkLabel(e.target.value.slice(0, 40))}
+              onChange={e => setLinkLabel(safeSlice(e.target.value, 40))}
               placeholder="Your website or blog"
               className="px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
@@ -455,7 +524,14 @@ export default function TravelProfileEditor({
       </section>
 
       {/* Places */}
-      <PlacesEditor initialPlaces={initialPlaces} hasPassportVisits={hasPassportVisits} />
+      <PlacesEditor
+        initialPlaces={initialPlaces}
+        hasPassportVisits={hasPassportVisits}
+        onCountsChange={(been, want) => { setBeenCount(been); setWantCount(want) }}
+      />
+
+      {/* Favourite restaurants / attractions */}
+      <FavouritePlacesSection initialRecommendations={initialRecommendations} />
 
       {/* Favourites */}
       <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
@@ -468,7 +544,7 @@ export default function TravelProfileEditor({
           {favCountryIso2 && (
             <textarea
               value={favCountryWhy}
-              onChange={e => setFavCountryWhy(e.target.value.slice(0, 300))}
+              onChange={e => setFavCountryWhy(safeSlice(e.target.value, 300))}
               rows={2}
               placeholder="Why? (optional)"
               spellCheck
@@ -485,7 +561,7 @@ export default function TravelProfileEditor({
               <input
                 type="text"
                 value={favs[f.key as keyof typeof favs]}
-                onChange={e => setFavs(prev => ({ ...prev, [f.key]: e.target.value.slice(0, 80) }))}
+                onChange={e => setFavs(prev => ({ ...prev, [f.key]: safeSlice(e.target.value, 80) }))}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
@@ -506,8 +582,8 @@ export default function TravelProfileEditor({
           <ul className="flex flex-wrap gap-2 mb-4">
             {buddies.map(b => (
               <li key={b.id} className="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-full pl-3 pr-1.5 py-1 text-sm font-medium text-gray-800">
-                {b.full_name || b.username}
-                <button type="button" onClick={() => removeBuddy(b.id)} className="text-gray-400 hover:text-red-600 p-0.5" aria-label={`Remove ${b.full_name || b.username}`}>
+                {shortName(b.full_name) || b.username}
+                <button type="button" onClick={() => removeBuddy(b.id)} className="text-gray-400 hover:text-red-600 p-0.5" aria-label={`Remove ${shortName(b.full_name) || b.username}`}>
                   <X className="w-3.5 h-3.5" />
                 </button>
               </li>
@@ -522,7 +598,7 @@ export default function TravelProfileEditor({
               value={buddyQuery}
               onChange={e => { setBuddyQuery(e.target.value); setBuddyOpen(true) }}
               onFocus={() => setBuddyOpen(true)}
-              placeholder="Search by username…"
+              placeholder="Search by name or username…"
               disabled={buddyBusy}
               className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-60"
             />
@@ -545,7 +621,7 @@ export default function TravelProfileEditor({
                           disabled={buddyBusy}
                           className="w-full px-3 py-2 text-left text-sm hover:bg-brand-50 disabled:opacity-60"
                         >
-                          <span className="font-semibold text-gray-900">{r.full_name || r.username}</span>
+                          <span className="font-semibold text-gray-900">{shortName(r.full_name) || r.username}</span>
                           {r.full_name && r.username && <span className="text-gray-400"> @{r.username}</span>}
                         </button>
                       </li>
@@ -559,6 +635,9 @@ export default function TravelProfileEditor({
       </section>
 
       <div className="sticky bottom-4">
+        {saveState === 'error' && saveError && (
+          <p className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-md px-3 py-2 mb-2 shadow-lg">{saveError}</p>
+        )}
         <button
           type="button"
           onClick={save}

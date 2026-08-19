@@ -1,10 +1,13 @@
 'use client'
 
-// Been / Want-to-go lists, plus Top 8 ranking on "been" rows. Same
+// Been / Want-to-go lists, plus a top-3 favourite-countries ranking on
+// "been" rows (field name top8_rank is a historical leftover, kept
+// as-is in the DB/API to avoid a rename migration for what's just a
+// number 1-3 now). Same
 // country-picker UX as CountryVisitsSection on /family, minus the
 // visit date (a Travel Profile place isn't tied to a specific trip).
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Loader2, MapPin, Plus, Search, Sparkles, X } from 'lucide-react'
 import { COUNTRIES, getCountryByIso2 } from '@/lib/countries'
 import CountryFlag from '@/components/CountryFlag'
@@ -14,9 +17,13 @@ export type PlaceRow = { id: string; iso2: string; list_type: 'been' | 'want'; t
 export default function PlacesEditor({
   initialPlaces,
   hasPassportVisits,
+  onCountsChange,
 }: {
   initialPlaces: PlaceRow[]
   hasPassportVisits: boolean
+  // Lets a parent (the profile-completion reward checklist) react live
+  // to been/want counts without lifting the whole places list up.
+  onCountsChange?: (been: number, want: number) => void
 }) {
   const [places, setPlaces] = useState<PlaceRow[]>(initialPlaces)
   const [importing, setImporting] = useState(false)
@@ -25,6 +32,11 @@ export default function PlacesEditor({
 
   const been = places.filter(p => p.list_type === 'been')
   const want = places.filter(p => p.list_type === 'want')
+
+  useEffect(() => {
+    onCountsChange?.(been.length, want.length)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [been.length, want.length])
   const usedRanks = new Set(been.map(p => p.top8_rank).filter((r): r is number => r != null))
 
   const addPlace = async (iso2: string, listType: 'been' | 'want') => {
@@ -126,10 +138,10 @@ export default function PlacesEditor({
             value={place.top8_rank ?? ''}
             onChange={e => setTop8(place.id, e.target.value ? Number(e.target.value) : null)}
             className="text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md px-1.5 py-1 focus:outline-none focus:ring-2 focus:ring-brand-300"
-            title="Add to My Travel 8"
+            title="Add to your favourite countries visited"
           >
-            <option value="">Top 8: —</option>
-            {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
+            <option value="">Favourite: —</option>
+            {[1, 2, 3].map(n => (
               <option key={n} value={n} disabled={usedRanks.has(n) && place.top8_rank !== n}>
                 #{n}
               </option>

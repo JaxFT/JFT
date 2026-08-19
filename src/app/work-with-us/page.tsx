@@ -50,7 +50,7 @@ export default async function WorkWithUsPage() {
 
       {/* QUESTIONNAIRE CTA — the main "start here" option for most
           first-time visitors. Tinted card, prominent link. */}
-      <section className="pb-12 px-4 sm:px-6 lg:px-8">
+      <section id="questionnaire" className="pb-12 px-4 sm:px-6 lg:px-8 scroll-mt-24">
         <div className="max-w-3xl mx-auto">
           <div className="bg-brand-50 border-2 border-brand-200 rounded-2xl p-6 sm:p-8">
             <div className="flex items-center gap-2 mb-3">
@@ -107,7 +107,7 @@ export default async function WorkWithUsPage() {
       {/* CALL INTRO, dark card, mirrors the "Book a 1:1" CTA in the
           questionnaire results so anyone arriving from either funnel
           sees the same pitch. */}
-      <section className="pb-12 px-4 sm:px-6 lg:px-8">
+      <section id="call" className="pb-12 px-4 sm:px-6 lg:px-8 scroll-mt-24">
         <div className="max-w-3xl mx-auto">
           <div className="bg-brand-950 text-white rounded-2xl p-6 sm:p-8">
             <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-3 inline-flex items-center gap-1.5">
@@ -228,7 +228,7 @@ export default async function WorkWithUsPage() {
           so it sits below as its own block with a clear mailto CTA.
           Once the affiliate + UGC programmes are fleshed out properly
           we'll replace the mailto with a dedicated form. */}
-      <section className="pb-20 px-4 sm:px-6 lg:px-8">
+      <section id="collaboration" className="pb-20 px-4 sm:px-6 lg:px-8 scroll-mt-24">
         <div className="max-w-2xl mx-auto">
           <div className="bg-brand-950 text-white rounded-2xl p-6 sm:p-8">
             <p className="text-xs font-bold tracking-widest uppercase text-brand-300 mb-2 inline-flex items-center gap-1.5">

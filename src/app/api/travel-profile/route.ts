@@ -8,13 +8,14 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCountryByIso2 } from '@/lib/countries'
 import { isValidBackgroundTheme } from '@/app/travel-profile/background-themes'
+import { safeSlice } from '@/lib/safe-slice'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 function cleanStr(v: unknown, max: number): string | null {
   if (typeof v !== 'string') return null
-  const s = v.trim().slice(0, max)
+  const s = safeSlice(v.trim(), max)
   return s.length ? s : null
 }
 
@@ -86,6 +87,9 @@ export async function PUT(request: Request) {
     is_public: body.is_public === true,
     bio: cleanStr(body.bio, 200),
     current_location: cleanStr(body.current_location, 80),
+    currently_planning: cleanStr(body.currently_planning, 80),
+    currently_vibing_to: cleanStr(body.currently_vibing_to, 80),
+    mood: cleanStr(body.mood, 60),
     background_theme: isValidBackgroundTheme(body.background_theme) ? body.background_theme : 'brand',
     hero_photo_focal_x: cleanFocal(body.hero_photo_focal_x),
     hero_photo_focal_y: cleanFocal(body.hero_photo_focal_y),

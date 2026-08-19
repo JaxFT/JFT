@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { PenLine, ArrowRight, ShieldCheck, FileText, Upload, MessageCircle, BookOpen, Users, Sparkles, Video, Ticket, Gift, Compass, Link2 } from 'lucide-react'
+import { PenLine, ArrowRight, ShieldCheck, ShieldAlert, FileText, Upload, MessageCircle, BookOpen, Users, Sparkles, Video, Ticket, Gift, Compass, Link2, MapPin, Star } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -79,6 +79,24 @@ const TOOLS = [
     title: 'Campaign Links',
     desc: 'Create trackable short links for guide promos (Instagram DMs, etc.) and see the full funnel: clicked, viewed, clicked buy, purchased.',
     icon: Link2,
+  },
+  {
+    href: '/admin/moderation',
+    title: 'Moderation',
+    desc: 'Every new blog comment, recommendation comment, and guestbook message, plus anything a page owner has flagged. Mark reviewed to clear it.',
+    icon: ShieldAlert,
+  },
+  {
+    href: '/admin/resolve-maps-links',
+    title: 'Resolve Maps links',
+    desc: 'Bulk-attach Google Maps links to your own recommendations that don’t have one yet, auto-searched and throttled, one click per match.',
+    icon: MapPin,
+  },
+  {
+    href: '/admin/write-reviews',
+    title: 'Write Google reviews',
+    desc: 'Your own recommendations with a Maps link, one click through to that place’s Google review box, copy your note first, mark done as you go.',
+    icon: Star,
   },
 ]
 

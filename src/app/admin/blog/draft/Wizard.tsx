@@ -4,7 +4,7 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-  ArrowLeft, ArrowRight, Camera, Check, Copy, Loader2, ShieldCheck, Star,
+  ArrowLeft, ArrowRight, Camera, Check, Copy, Loader2, MapPin, ShieldCheck, Star,
   Trash2, X, ChevronUp, ChevronDown, Sparkles, Plus, Link as LinkIcon,
 } from 'lucide-react'
 import { BLOG_CATEGORIES, type BlogCategory } from '@/lib/blog-categories'
@@ -15,6 +15,7 @@ import {
 import { VOICE_PROFILE } from '@/lib/voice-profile'
 import { resizeImageIfLarge } from '@/lib/image-resize'
 import TaggingFields from '@/components/admin/blog/TaggingFields'
+import PlaceSearchPicker from '@/components/PlaceSearchPicker'
 import { getPackMeta } from '@/lib/adventurePackMeta'
 
 type Photo = {
@@ -126,6 +127,12 @@ export default function Wizard() {
   const patchLink = (id: string, patch: Partial<WizardLink>) =>
     setLinks(prev => prev.map(l => (l.id === id ? { ...l, ...patch } : l)))
   const removeLink = (id: string) => setLinks(prev => prev.filter(l => l.id !== id))
+  const [addingMapsLink, setAddingMapsLink] = useState(false)
+  const addGoogleMapsLink = (result: { name: string; mapsUrl: string }) => {
+    setLinks(prev => [...prev, { ...newLink('Google Maps'), url: result.mapsUrl }])
+    if (!placeName.trim()) setPlaceName(result.name)
+    setAddingMapsLink(false)
+  }
 
   // Shared by addPhotos and retryPhoto so a flaky connection (common
   // uploading over patchy hotel/hostel wifi) only needs one photo
@@ -433,14 +440,31 @@ Do NOT add any text before or after the code block. The code block IS the entire
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-gray-700">Links (optional)</label>
-                <button
-                  type="button"
-                  onClick={() => addLink()}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-2.5 py-1.5 rounded-md"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Add link
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setAddingMapsLink(o => !o)}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-2.5 py-1.5 rounded-md"
+                  >
+                    <MapPin className="w-3.5 h-3.5" /> Add Google Maps link
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => addLink()}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-2.5 py-1.5 rounded-md"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add link
+                  </button>
+                </div>
               </div>
+              {addingMapsLink && (
+                <div className="mb-3">
+                  <PlaceSearchPicker onSelect={addGoogleMapsLink} placeholder="Search for this place on Google Maps…" />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Uses the same identifier as members&apos; Recommendations entries, so a matching place links automatically.
+                  </p>
+                </div>
+              )}
               {links.length === 0 && (
                 <div className="bg-white border-2 border-dashed border-gray-200 rounded-xl p-4 text-center">
                   <p className="text-sm text-gray-500 mb-3">No links yet. Each link gets a short label so the AI knows how to phrase it in the post.</p>

@@ -5,6 +5,9 @@ import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { ensureProfile } from '@/lib/ensure-profile'
 import { getPublicProfilesByIds } from '@/lib/travel-profile-db'
+import { getSocialCounts } from '@/lib/recommendation-social'
+import { getBlogLinksForRecommendations } from '@/lib/recommendation-blog-links'
+import { isPremiumTier } from '@/lib/profile'
 import TravelProfileEditor from './TravelProfileEditor'
 
 export const metadata: Metadata = { title: 'My Travel Profile' }
@@ -20,13 +23,32 @@ export default async function TravelProfilePage() {
 
   await ensureProfile(user)
 
-  const [{ data: profile }, { data: travelProfile }, { data: places }, { data: buddyRows }, { count: passportVisitCount }] = await Promise.all([
-    supabase.from('profiles').select('username, full_name').eq('id', user.id).maybeSingle(),
+  const [{ data: profile }, { data: travelProfile }, { data: places }, { data: buddyRows }, { count: passportVisitCount }, { data: recommendationRows }] = await Promise.all([
+    supabase.from('profiles').select('username, full_name, subscription_tier').eq('id', user.id).maybeSingle(),
     supabase.from('travel_profiles').select('*').eq('user_id', user.id).maybeSingle(),
     supabase.from('travel_profile_places').select('id, iso2, list_type, top8_rank').eq('user_id', user.id),
     supabase.from('travel_profile_buddies').select('id, buddy_user_id').eq('user_id', user.id).order('created_at'),
     supabase.from('family_country_visits').select('iso2', { count: 'exact', head: true }).eq('parent_id', user.id),
+    supabase.from('recommendations')
+      .select('id, user_id, category, place_name, iso2, town, google_maps_url, date_visited, rating, note, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false }),
   ])
+  const { data: packClaim } = await supabase
+    .from('profile_completion_pack_claims')
+    .select('country_slug')
+    .eq('user_id', user.id)
+    .maybeSingle()
+  const [socialCounts, blogLinks] = await Promise.all([
+    getSocialCounts(supabase, (recommendationRows ?? []).map(r => r.id), user.id),
+    getBlogLinksForRecommendations(recommendationRows ?? []),
+  ])
+  const recommendations = (recommendationRows ?? []).map(r => ({
+    ...r,
+    author: null,
+    ...(socialCounts.get(r.id) ?? { up_votes: 0, down_votes: 0, my_vote: null, comment_count: 0 }),
+    blog_link: blogLinks.get(r.id) ?? null,
+  }))
 
   // Buddy display names come from another user's profile row, blocked
   // by RLS under the normal client, service-role batch lookup instead.
@@ -55,6 +77,9 @@ export default async function TravelProfilePage() {
           initialPlaces={places ?? []}
           initialBuddies={buddies}
           hasPassportVisits={(passportVisitCount ?? 0) > 0}
+          initialRecommendations={recommendations}
+          alreadyClaimedPackSlug={packClaim?.country_slug ?? null}
+          isPremium={isPremiumTier(profile?.subscription_tier)}
         />
       </div>
     </div>

@@ -7,6 +7,10 @@ import { NextResponse, after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail, HELLO_FROM, ADMIN_NOTIFY, buildNewCommentNotificationEmail } from '@/lib/email'
 import { isAdminEmail } from '@/lib/admin'
+import { createNotification } from '@/lib/notifications'
+import { shortName } from '@/lib/display-name'
+import { containsBlockedWord } from '@/lib/profanity-filter'
+import { logModerationItem } from '@/lib/moderation'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -29,7 +33,7 @@ export async function POST(
   // username modal, but defend at the API boundary too.
   const { data: profile } = await supabase
     .from('profiles')
-    .select('username')
+    .select('username, full_name')
     .eq('id', user.id)
     .maybeSingle()
   if (!profile?.username) {
@@ -45,22 +49,36 @@ export async function POST(
   if (text.length > MAX_LENGTH) {
     return NextResponse.json({ error: `Comments are capped at ${MAX_LENGTH} characters.` }, { status: 400 })
   }
+  if (containsBlockedWord(text)) {
+    return NextResponse.json({ error: "That comment can't be posted as written." }, { status: 400 })
+  }
 
   // Resolve the parent for replies. We keep threads one level deep, so
   // a reply to a reply attaches to that reply's own parent (the
   // top-level comment). Validate the parent exists on this same post.
+  // notifyUserId always ends up as the top-level comment's author,
+  // even when replying to someone else's reply within the thread —
+  // that's who "your comment" actually belongs to in this flat model.
   let parentId: string | null = null
+  let notifyUserId: string | null = null
   const rawParent = body.parent_id ?? null
   if (rawParent) {
     const { data: parent } = await supabase
       .from('blog_comments')
-      .select('id, post_slug, parent_id')
+      .select('id, post_slug, parent_id, user_id')
       .eq('id', rawParent)
       .maybeSingle()
     if (!parent || parent.post_slug !== slug) {
       return NextResponse.json({ error: 'That comment no longer exists.' }, { status: 400 })
     }
-    parentId = parent.parent_id ?? parent.id
+    if (parent.parent_id) {
+      parentId = parent.parent_id
+      const { data: topLevel } = await supabase.from('blog_comments').select('user_id').eq('id', parent.parent_id).maybeSingle()
+      notifyUserId = topLevel?.user_id ?? null
+    } else {
+      parentId = parent.id
+      notifyUserId = parent.user_id
+    }
   }
 
   const { data, error } = await supabase
@@ -69,6 +87,25 @@ export async function POST(
     .select('id, body, created_at, parent_id')
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  if (notifyUserId) {
+    const name = shortName(profile.full_name) || profile.username
+    await createNotification({
+      userId: notifyUserId,
+      actorUserId: user.id,
+      type: 'blog_comment_reply',
+      message: `${name} replied to your comment`,
+      link: `/blog/${slug}`,
+    })
+  }
+  await logModerationItem({
+    contentType: 'blog_comment',
+    contentId: data.id,
+    authorUserId: user.id,
+    bodySnapshot: text,
+    contextLabel: `Comment on blog post "${slug}"`,
+    contextLink: `/blog/${slug}`,
+  })
 
   // Fire admin notification via `after()` so the work outlives the
   // request response on Cloudflare Workers (a plain `void` Promise gets

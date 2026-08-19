@@ -5,7 +5,9 @@ import Footer from '@/components/layout/Footer'
 import WaystaqDiscountBanner from '@/components/WaystaqDiscountBanner'
 import LiveHeartbeat from '@/components/LiveHeartbeat'
 import SignupNudgeMounted from '@/components/SignupNudgeMounted'
+import TravelProfileNudge from '@/components/TravelProfileNudge'
 import { getCurrentUser } from '@/lib/auth'
+import { createClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/admin'
 
 export const metadata: Metadata = {
@@ -62,6 +64,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Cached via React.cache so pages that also call getCurrentUser share
   // the same single auth.getUser round-trip.
   const user = await getCurrentUser()
+  let hasTravelProfile = false
+  if (user) {
+    const supabase = await createClient()
+    const { data } = await supabase.from('travel_profiles').select('user_id').eq('user_id', user.id).maybeSingle()
+    hasTravelProfile = !!data
+  }
   return (
     <html lang="en">
       <body>
@@ -74,6 +82,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <WaystaqDiscountBanner />
         <LiveHeartbeat disabled={isAdminEmail(user?.email)} />
         <SignupNudgeMounted initialIsSignedIn={!!user} />
+        <TravelProfileNudge initialIsSignedIn={!!user} hasTravelProfile={hasTravelProfile} />
       </body>
     </html>
   )

@@ -3,9 +3,16 @@ import { createClient as createSbClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail, buildWelcomeEmail, HELLO_FROM } from '@/lib/email'
 import { buildUnsubscribeUrl } from '@/lib/unsubscribe-token'
+import { findUserIdByEmail } from '@/lib/find-user-by-email'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
+
+// Every new account is auto-added as a travel buddy of Bec's own
+// account — the MySpace "Tom is your first friend" mechanic. Only
+// runs once per account (guarded by the same welcome_sent_at check
+// everything else here uses), and never for Bec's own signup.
+const DEFAULT_BUDDY_EMAIL = 'jaxfamilytravels7@gmail.com'
 
 // Idempotent welcome trigger. The auth callback hits this once a
 // session is established. We:
@@ -63,6 +70,20 @@ export async function POST() {
 
   if (profile?.welcome_sent_at) {
     return NextResponse.json({ ok: true, alreadySent: true })
+  }
+
+  // Auto-buddy with Bec, best-effort — a failure here shouldn't block
+  // the welcome email. Duplicate-insert (already a buddy somehow) is
+  // silently ignored via the unique constraint.
+  if (user.email?.toLowerCase() !== DEFAULT_BUDDY_EMAIL) {
+    try {
+      const becId = await findUserIdByEmail(admin, DEFAULT_BUDDY_EMAIL)
+      if (becId) {
+        await admin.from('travel_profile_buddies').insert({ user_id: user.id, buddy_user_id: becId })
+      }
+    } catch (e) {
+      console.error('[welcome] auto-buddy failed', e)
+    }
   }
 
   // Mark first so concurrent calls don't both send.

@@ -27,6 +27,9 @@ import PdfPostPurchase from '@/components/guide/PdfPostPurchase'
 import GuideViewer from './GuideViewer'
 import BuyButton from './BuyButton'
 import UpgradeButton from '@/components/billing/UpgradeButton'
+import { loadGuideComments } from '@/lib/guide-social-db'
+import { getViewerProfile } from '@/lib/blog-social-db'
+import GuideComments from '@/components/guide/GuideComments'
 
 export const dynamic = 'force-dynamic'
 
@@ -151,13 +154,15 @@ export default async function GuidePage({
     const canViewFull = isPremium || !webGuide.is_premium || adminWeb
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
     const webGuideCountrySlug = resolveCountrySlug(webGuide.country)
-    const [relatedPosts, relatedGuides] = await Promise.all([
+    const [relatedPosts, relatedGuides, comments, viewerProfile] = await Promise.all([
       webGuideCountrySlug
         ? listPublishedPostsByCountrySlug(webGuideCountrySlug, { limit: 4 })
         : Promise.resolve([]),
       webGuideCountrySlug
         ? findOtherGuidesForCountrySlug(webGuideCountrySlug, webGuide.slug)
         : Promise.resolve([]),
+      loadGuideComments(webGuide.slug, user?.id ?? null, adminWeb),
+      getViewerProfile(),
     ])
     return (
       <>
@@ -185,6 +190,19 @@ export default async function GuidePage({
           freshPurchase={freshPurchase}
           wsDiscount={wsDiscount}
         />
+        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+          <GuideComments
+            guideSlug={webGuide.slug}
+            initialComments={comments}
+            viewerUserId={viewerProfile.userId}
+            initialViewerUsername={viewerProfile.username}
+            initialViewerUsernameIsInstagram={viewerProfile.username_is_instagram}
+            initialViewerInstagram={viewerProfile.instagram_handle}
+            initialViewerPhotoUrl={viewerProfile.photo_url}
+            initialViewerAdminName={viewerProfile.admin_display_name}
+            isAdmin={adminWeb}
+          />
+        </div>
       </>
     )
   }
@@ -235,13 +253,15 @@ export default async function GuidePage({
   const salesCopy = GUIDE_SALES_COPY[guide.slug]
 
   const pdfGuideCountrySlug = resolveCountrySlugFromTags(guide.tags)
-  const [relatedPosts, relatedGuides] = await Promise.all([
+  const [relatedPosts, relatedGuides, comments, viewerProfile] = await Promise.all([
     pdfGuideCountrySlug
       ? listPublishedPostsByCountrySlug(pdfGuideCountrySlug, { limit: 4 })
       : Promise.resolve([]),
     pdfGuideCountrySlug
       ? findOtherGuidesForCountrySlug(pdfGuideCountrySlug, guide.slug)
       : Promise.resolve([]),
+    loadGuideComments(guide.slug, user?.id ?? null, admin),
+    getViewerProfile(),
   ])
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
@@ -384,6 +404,20 @@ export default async function GuidePage({
             On-site reading is included in Premium. To keep a personal copy offline, you can also buy this guide as a one-off.
           </p>
         )}
+
+        <div className="max-w-3xl">
+          <GuideComments
+            guideSlug={guide.slug}
+            initialComments={comments}
+            viewerUserId={viewerProfile.userId}
+            initialViewerUsername={viewerProfile.username}
+            initialViewerUsernameIsInstagram={viewerProfile.username_is_instagram}
+            initialViewerInstagram={viewerProfile.instagram_handle}
+            initialViewerPhotoUrl={viewerProfile.photo_url}
+            initialViewerAdminName={viewerProfile.admin_display_name}
+            isAdmin={admin}
+          />
+        </div>
       </div>
       </div>
     </>

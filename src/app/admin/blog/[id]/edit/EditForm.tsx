@@ -8,7 +8,7 @@ import remarkGfm from 'remark-gfm'
 import {
   ArrowLeft, Save, Trash2, ExternalLink, Eye, FileEdit, Check, Upload,
   Loader2, Crown, Plus, Link as LinkIcon, Clock, CalendarDays,
-  Sparkles, Copy, ChevronDown, ChevronUp, RefreshCw, Image as ImageIcon,
+  Sparkles, Copy, ChevronDown, ChevronUp, RefreshCw, Image as ImageIcon, MapPin,
 } from 'lucide-react'
 import ImageSlotsPanel from '@/components/guide/ImageSlotsPanel'
 import type { BlogPostRow, BlogLink } from '@/lib/blog-db'
@@ -16,6 +16,7 @@ import { BLOG_CATEGORIES, type BlogCategory } from '@/lib/blog-categories'
 import type { TravelStage, BlogTopic } from '@/lib/blog-meta'
 import TaggingFields from '@/components/admin/blog/TaggingFields'
 import InsertLinkButton from '@/components/admin/blog/InsertLinkButton'
+import PlaceSearchPicker from '@/components/PlaceSearchPicker'
 import CoverFocalPicker from '@/components/CoverFocalPicker'
 import { buildRewritePrompt } from '@/lib/blog-rewrite-prompt'
 import { resizeImageIfLarge } from '@/lib/image-resize'
@@ -61,6 +62,7 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
   const [isPremium, setIsPremium] = useState<boolean>(post.is_premium)
   const [category, setCategory] = useState<BlogCategory | ''>(post.category ?? '')
   const [placeName, setPlaceName] = useState(post.place_name ?? '')
+  const [addingMapsLink, setAddingMapsLink] = useState(false)
   const [focalX, setFocalX] = useState<number>(post.cover_focal_x ?? 50)
   const [focalY, setFocalY] = useState<number>(post.cover_focal_y ?? 50)
 
@@ -219,6 +221,11 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
     setLinks(prev => prev.map(l => (l._key === key ? { ...l, ...patch } : l)))
   const removeLink = (key: string) =>
     setLinks(prev => prev.filter(l => l._key !== key))
+  const addGoogleMapsLink = (result: { name: string; mapsUrl: string }) => {
+    setLinks(prev => [...prev, { url: result.mapsUrl, label: 'Google Maps', _key: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}` }])
+    if (!placeName.trim()) setPlaceName(result.name)
+    setAddingMapsLink(false)
+  }
 
   const save = async (override?: { status?: 'draft' | 'published' }) => {
     setSaving(true)
@@ -748,14 +755,31 @@ export default function EditForm({ post, justCreated }: { post: BlogPostRow; jus
               <label className="block text-xs font-bold tracking-widest uppercase text-gray-500">
                 Links
               </label>
-              <button
-                type="button"
-                onClick={() => addLink()}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-2.5 py-1.5 rounded-md"
-              >
-                <Plus className="w-3.5 h-3.5" /> Add link
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setAddingMapsLink(o => !o)}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-2.5 py-1.5 rounded-md"
+                >
+                  <MapPin className="w-3.5 h-3.5" /> Add Google Maps link
+                </button>
+                <button
+                  type="button"
+                  onClick={() => addLink()}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-2.5 py-1.5 rounded-md"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add link
+                </button>
+              </div>
             </div>
+            {addingMapsLink && (
+              <div className="mb-2">
+                <PlaceSearchPicker onSelect={addGoogleMapsLink} placeholder="Search for this place on Google Maps…" />
+                <p className="text-[10px] text-gray-400 mt-1">
+                  Uses the same identifier as members&apos; Recommendations entries, so a matching place links automatically.
+                </p>
+              </div>
+            )}
             {links.length === 0 && (
               <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-4 text-center">
                 <p className="text-xs text-gray-500 mb-2">No links yet. Add any URLs the AI should weave into the body, each gets a label so it knows the CTA phrasing.</p>

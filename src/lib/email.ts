@@ -433,9 +433,12 @@ export function buildNewCommentNotificationEmail(p: {
   commenterEmail: string
   commentBody: string
   commentId: string
+  // Which URL section the comment lives under — blog posts vs guides.
+  // Defaults to 'blog' so existing call sites are unaffected.
+  basePath?: 'blog' | 'guides'
 }): { subject: string; html: string; text: string } {
   const subject = `New comment from ${p.username} on "${p.postTitle}"`
-  const url = `${p.siteUrl}/blog/${p.postSlug}#comment-${p.commentId}`
+  const url = `${p.siteUrl}/${p.basePath ?? 'blog'}/${p.postSlug}#comment-${p.commentId}`
   const excerpt = p.commentBody.length > 600
     ? p.commentBody.slice(0, 600).trimEnd() + '…'
     : p.commentBody

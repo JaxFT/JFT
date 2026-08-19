@@ -1,7 +1,9 @@
-// GET ?q=<query> — search real JFT accounts by username, for the
-// Travel Buddies picker. Travel buddies can only be linked to actual
-// site accounts (no freeform names), so this is how the editor finds
-// who to add.
+// GET ?q=<query> — search real JFT accounts by username OR full name,
+// for the Travel Buddies picker. Travel buddies can only be linked to
+// actual site accounts (no freeform names), so this is how the editor
+// finds who to add. Matching on full name too matters because
+// usernames are free-form pseudonyms, someone looking for "Auntie
+// Sarah" has no reason to know she picked "wanderfam23".
 //
 // profiles is locked down by RLS to the owner's own row, so this has
 // to run with the service role, same reasoning as blog comment
@@ -37,16 +39,25 @@ export async function GET(request: Request) {
     { auth: { persistSession: false, autoRefreshToken: false } },
   )
 
-  // Escape % and _ (ilike wildcards) so a username containing either
-  // character can't be used to build an unintended pattern.
+  // Escape % and _ (ilike wildcards) so a search term containing
+  // either character can't be used to build an unintended pattern.
   const safe = q.replace(/[%_]/g, c => `\\${c}`)
-  const { data } = await service
-    .from('profiles')
-    .select('id, username, full_name')
-    .not('username', 'is', null)
-    .ilike('username', `%${safe}%`)
-    .neq('id', user.id)
-    .limit(MAX_RESULTS)
 
-  return NextResponse.json({ results: data ?? [] })
+  // Two separate queries rather than a single .or(...) filter string —
+  // avoids building a raw PostgREST filter expression out of user
+  // input, simpler to reason about than escaping commas/parens for
+  // that DSL too.
+  const [byUsername, byName] = await Promise.all([
+    service.from('profiles').select('id, username, full_name')
+      .not('username', 'is', null).ilike('username', `%${safe}%`).neq('id', user.id).limit(MAX_RESULTS),
+    service.from('profiles').select('id, username, full_name')
+      .not('username', 'is', null).ilike('full_name', `%${safe}%`).neq('id', user.id).limit(MAX_RESULTS),
+  ])
+
+  const merged = new Map<string, { id: string; username: string; full_name: string | null }>()
+  for (const row of [...(byUsername.data ?? []), ...(byName.data ?? [])]) {
+    merged.set(row.id, row)
+  }
+
+  return NextResponse.json({ results: [...merged.values()].slice(0, MAX_RESULTS) })
 }

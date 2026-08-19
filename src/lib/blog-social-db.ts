@@ -4,6 +4,9 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { resolveCommentAuthorExtras } from '@/lib/comment-author-extras'
+import { isAdminEmail } from '@/lib/admin'
+import { shortName } from '@/lib/display-name'
 
 // Service-role client for reading commenters' public profile fields.
 // The profiles table is locked down by RLS (profiles_select_own), so a
@@ -34,6 +37,13 @@ export type BlogCommentRow = {
   username: string | null
   username_is_instagram: boolean
   instagram_handle: string | null
+  // Public travel-profile hero photo, when the author has set one and
+  // made their profile public. Null falls back to initials.
+  photo_url: string | null
+  // "First L." signature shown next to admin/team accounts' own
+  // comments, e.g. "Oli L." — null for everyone else, regular users'
+  // full names are never sent to the client.
+  admin_display_name: string | null
   // Hydrated separately (efficient count + current-user state).
   like_count: number
   liked_by_me: boolean
@@ -97,19 +107,26 @@ export async function loadBlogPostSocial(
     username: string | null
     username_is_instagram: boolean | null
     instagram_handle: string | null
+    full_name: string | null
   }
   const profileById = new Map<string, ProfileFields>()
   const authorIds = [...new Set(rawComments.map(c => c.user_id))]
+  let photoByUser = new Map<string, string>()
+  let adminNameByUser = new Map<string, string>()
   if (authorIds.length > 0) {
     const service = getServiceClient()
     if (service) {
       const { data: profs } = await service
         .from('profiles')
-        .select('id, username, username_is_instagram, instagram_handle')
+        .select('id, username, username_is_instagram, instagram_handle, full_name')
         .in('id', authorIds)
       for (const p of (profs ?? []) as Array<{ id: string } & ProfileFields>) {
         profileById.set(p.id, p)
       }
+      const fullNameById = new Map(authorIds.map(id => [id, profileById.get(id)?.full_name ?? null]))
+      const extras = await resolveCommentAuthorExtras(service, authorIds, fullNameById)
+      photoByUser = extras.photoByUser
+      adminNameByUser = extras.adminNameByUser
     }
   }
 
@@ -144,6 +161,8 @@ export async function loadBlogPostSocial(
       username: prof?.username ?? null,
       username_is_instagram: !!prof?.username_is_instagram,
       instagram_handle: viewerIsAdmin ? (prof?.instagram_handle ?? null) : null,
+      photo_url: photoByUser.get(c.user_id) ?? null,
+      admin_display_name: adminNameByUser.get(c.user_id) ?? null,
       like_count: likeCounts.get(c.id) ?? 0,
       liked_by_me: likedByMe.has(c.id),
     }
@@ -181,24 +200,42 @@ export async function loadCountsForSlugs(
 
 // Look up the viewer's username so the comment form can either show
 // it (ready to comment) or pop the "pick a username" modal first.
+// Also carries their own photo + admin signature, so a freshly-posted
+// comment can render with the right avatar/name without a refetch.
 export async function getViewerProfile(): Promise<{
   userId: string | null
   username: string | null
   username_is_instagram: boolean
   instagram_handle: string | null
+  photo_url: string | null
+  admin_display_name: string | null
 }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { userId: null, username: null, username_is_instagram: false, instagram_handle: null }
-  const { data } = await supabase
-    .from('profiles')
-    .select('username, username_is_instagram, instagram_handle')
-    .eq('id', user.id)
-    .maybeSingle()
+  if (!user) {
+    return {
+      userId: null, username: null, username_is_instagram: false, instagram_handle: null,
+      photo_url: null, admin_display_name: null,
+    }
+  }
+  const [{ data }, { data: tp }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('username, username_is_instagram, instagram_handle, full_name')
+      .eq('id', user.id)
+      .maybeSingle(),
+    supabase
+      .from('travel_profiles')
+      .select('hero_photo_url, is_public')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+  ])
   return {
     userId: user.id,
     username: data?.username ?? null,
     username_is_instagram: !!data?.username_is_instagram,
     instagram_handle: data?.instagram_handle ?? null,
+    photo_url: tp?.is_public ? (tp.hero_photo_url ?? null) : null,
+    admin_display_name: isAdminEmail(user.email) ? shortName(data?.full_name) : null,
   }
 }

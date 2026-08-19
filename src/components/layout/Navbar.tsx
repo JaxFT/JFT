@@ -10,22 +10,51 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { isAdminEmail } from '@/lib/admin'
-import { Menu, X, User, LogOut, ShieldCheck } from 'lucide-react'
+import { Menu, X, User, LogOut, ShieldCheck, ChevronDown } from 'lucide-react'
 import Logo from '@/components/branding/Logo'
+import NotificationBell from './NotificationBell'
+
+type NavLink = { label: string; href: string; children?: { label: string; href: string }[] }
 
 // Logo handles Home. How We Can Help is a right-side CTA button, not
 // part of this list. URLs stay the same so existing links + SEO
-// don't break, only the visible labels change.
-const navLinks = [
-  { label: 'About',              href: '/about' },
-  { label: 'Blog',               href: '/blog' },
-  { label: 'Guides',             href: '/guides' },
-  { label: 'AI Prompts',         href: '/ai-travel-prompts' },
-  { label: 'How We Can Help',    href: '/work-with-us' },
-  { label: 'Adventure Packs',    href: '/adventure-packs' },
-  { label: 'Adventure Passport', href: '/passports' },
-  { label: 'Real Travellers',    href: '/discover' },
-  { label: 'Worldschooling',     href: '/learning' },
+// don't break, only the visible labels change. Grouped entries (with
+// `children`) collapse several pages under one top-level slot — hover
+// reveals a small dropdown on desktop, the mobile menu just lists the
+// children indented underneath, no accordion needed for two items.
+const navLinks: NavLink[] = [
+  { label: 'About', href: '/about' },
+  {
+    label: 'Blog & Guides', href: '/blog',
+    children: [
+      { label: 'Blog', href: '/blog' },
+      { label: 'Guides', href: '/guides' },
+    ],
+  },
+  {
+    label: 'How We Can Help', href: '/work-with-us',
+    children: [
+      { label: 'Pre-trip questionnaire', href: '/work-with-us#questionnaire' },
+      { label: 'Our spending',           href: '/asia-adventures' },
+      { label: 'Book a 1:1 call',        href: '/work-with-us#call' },
+      { label: 'Collaboration',          href: '/work-with-us#collaboration' },
+      { label: 'AI Prompts',             href: '/ai-travel-prompts' },
+    ],
+  },
+  {
+    label: 'Adventure', href: '/adventure-packs',
+    children: [
+      { label: 'Adventure Packs', href: '/adventure-packs' },
+      { label: 'Adventure Passport', href: '/passports' },
+    ],
+  },
+  {
+    label: 'Community', href: '/recommendations',
+    children: [
+      { label: 'Worldschooling', href: '/learning' },
+      { label: 'Recommendations', href: '/recommendations' },
+    ],
+  },
 ]
 
 // Tiny shape, id + email is everything Navbar needs.
@@ -108,19 +137,41 @@ export default function Navbar({ initialUserId, initialUserEmail }: Props) {
 
           {/* Desktop links */}
           <div className="hidden md:flex items-center gap-1">
-            {navLinks.map(link => (
-              <a
-                key={link.href}
-                href={link.href}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  pathname === link.href
-                    ? transparent ? 'text-white font-semibold' : 'text-brand-600 font-semibold'
-                    : transparent ? 'text-white/80 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                {link.label}
-              </a>
-            ))}
+            {navLinks.map(link => {
+              const isActive = pathname === link.href || (link.children?.some(c => c.href === pathname) ?? false)
+              return (
+                <div key={link.href} className="relative group">
+                  <a
+                    href={link.href}
+                    className={`flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActive
+                        ? transparent ? 'text-white font-semibold' : 'text-brand-600 font-semibold'
+                        : transparent ? 'text-white/80 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {link.label}
+                    {link.children && <ChevronDown className="w-3 h-3 opacity-60" />}
+                  </a>
+                  {link.children && (
+                    <div className="absolute left-0 top-full pt-1 hidden group-hover:block z-50">
+                      <div className="bg-white rounded-lg shadow-lg border border-gray-100 py-1 min-w-[210px]">
+                        {link.children.map(child => (
+                          <a
+                            key={child.href}
+                            href={child.href}
+                            className={`block px-3.5 py-2 text-sm whitespace-nowrap transition-colors ${
+                              pathname === child.href ? 'text-brand-600 font-semibold' : 'text-gray-600 hover:bg-gray-50 hover:text-brand-600'
+                            }`}
+                          >
+                            {child.label}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
 
           {/* Right side: auth controls. "How We Can Help" now sits
@@ -164,6 +215,11 @@ export default function Navbar({ initialUserId, initialUserEmail }: Props) {
             )}
           </div>
 
+          {/* Notification bell — always visible (not tucked behind the
+              hamburger on mobile), checking notifications is a quick,
+              frequent action people expect one-tap access to. */}
+          {user && <NotificationBell transparent={transparent} />}
+
           {/* Mobile menu toggle */}
           <button
             className={`md:hidden p-2 rounded-md ${transparent ? 'text-white' : 'text-gray-700'}`}
@@ -179,13 +235,27 @@ export default function Navbar({ initialUserId, initialUserEmail }: Props) {
         <div className="md:hidden bg-white border-t border-gray-100 shadow-lg">
           <div className="px-4 py-3 space-y-1">
             {navLinks.map(link => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="block px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                {link.label}
-              </a>
+              <div key={link.href}>
+                <a
+                  href={link.href}
+                  className="block px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  {link.label}
+                </a>
+                {link.children && (
+                  <div className="pl-3 border-l border-gray-100 ml-3">
+                    {link.children.map(child => (
+                      <a
+                        key={child.href}
+                        href={child.href}
+                        className="block px-3 py-1.5 rounded-md text-xs text-gray-500 hover:bg-gray-50 hover:text-brand-600"
+                      >
+                        {child.label}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
             <div className="pt-3 border-t border-gray-100 mt-3">
               {user ? (

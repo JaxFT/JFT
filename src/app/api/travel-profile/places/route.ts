@@ -84,8 +84,8 @@ export async function PATCH(request: Request) {
 
   const id = typeof body.id === 'string' ? body.id : ''
   const rank = body.rank === null ? null : Number(body.rank)
-  if (!id || (rank !== null && (!Number.isInteger(rank) || rank < 1 || rank > 8))) {
-    return NextResponse.json({ error: 'id and rank (1-8 or null) required' }, { status: 400 })
+  if (!id || (rank !== null && (!Number.isInteger(rank) || rank < 1 || rank > 3))) {
+    return NextResponse.json({ error: 'id and rank (1-3 or null) required' }, { status: 400 })
   }
 
   if (rank !== null) {

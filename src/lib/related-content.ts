@@ -88,7 +88,7 @@ export type RelatedGuideCard = {
 // this returns every other guide for the country across both tables.
 export async function findOtherGuidesForCountrySlug(
   countrySlug: string,
-  excludeSlug: string,
+  excludeSlug?: string,
 ): Promise<RelatedGuideCard[]> {
   const [webGuides, pdfGuides] = await Promise.all([listPublishedWebGuides(), listActiveGuides()])
 
@@ -96,9 +96,15 @@ export async function findOtherGuidesForCountrySlug(
     .filter(g => g.slug !== excludeSlug && resolveCountrySlug(g.country) === countrySlug)
     .map(g => ({ slug: g.slug, title: g.title, cover_image: g.cover_image, price_pence: g.price_pence, is_premium: g.is_premium }))
 
+  // Legacy PDF guides predate the `is_premium` column (it only exists
+  // on the newer `guides` table), but every legacy guide IS included
+  // in Premium — same as web guides, see guides/[slug]/page.tsx's
+  // canViewFull check, which never gates a PDF guide behind its own
+  // is_premium flag the way it does for web guides. Hardcoded true,
+  // not false, to reflect that.
   const pdf = pdfGuides
     .filter(g => g.slug !== excludeSlug && resolveCountrySlugFromTags(g.tags) === countrySlug)
-    .map(g => ({ slug: g.slug, title: g.name, cover_image: g.cover_image, price_pence: g.price_pence, is_premium: false }))
+    .map(g => ({ slug: g.slug, title: g.name, cover_image: g.cover_image, price_pence: g.price_pence, is_premium: true }))
 
   return [...web, ...pdf]
 }

@@ -262,6 +262,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             initialViewerUsername={viewerProfile.username}
             initialViewerUsernameIsInstagram={viewerProfile.username_is_instagram}
             initialViewerInstagram={viewerProfile.instagram_handle}
+            initialViewerPhotoUrl={viewerProfile.photo_url}
+            initialViewerAdminName={viewerProfile.admin_display_name}
             isAdmin={isAdmin}
           />
         )}

@@ -38,9 +38,10 @@ export default function RecommendationCard({
   const [editing, setEditing] = useState(false)
   const [editError, setEditError] = useState('')
   const [blogLink, setBlogLink] = useState(rec.blog_link)
+  const [author, setAuthor] = useState(rec.author)
 
   const country = getCountryByIso2(fields.iso2)
-  const authorName = shortName(rec.author?.full_name) || rec.author?.username || 'A member'
+  const authorName = shortName(author?.full_name) || author?.username || 'A member'
 
   const [upVotes, setUpVotes] = useState(rec.up_votes)
   const [downVotes, setDownVotes] = useState(rec.down_votes)
@@ -72,6 +73,9 @@ export default function RecommendationCard({
         rating: body.recommendation.rating, note: body.recommendation.note ?? '',
       })
       setBlogLink(body.recommendation.blog_link ?? null)
+      // Only present on an admin-reassignment edit — a same-author edit
+      // doesn't touch attribution, so leave the existing author as-is.
+      if (body.recommendation.author) setAuthor(body.recommendation.author)
       setEditing(false)
     } catch {
       setEditError('Could not save changes')

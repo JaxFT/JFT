@@ -156,7 +156,8 @@ export async function POST(request: Request) {
 // bulk-imported/resolved data and need to fix each other's entries,
 // not just their own. Admins still can't edit a regular member's row,
 // only delete it (below) — editing someone else's words is different
-// from removing them.
+// from removing them. An admin edit also reassigns user_id to
+// themselves, so "posted by" reflects who the words belong to now.
 export async function PATCH(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -186,6 +187,10 @@ export async function PATCH(request: Request) {
   let query = client
     .from('recommendations')
     .update({
+      // Reassigns authorship to the admin doing the editing — "posted
+      // by" should reflect who the words on the page actually belong
+      // to now, not just who happened to add the row originally.
+      ...(editingAsAdmin ? { user_id: user.id } : {}),
       category: parsed.category,
       place_name: parsed.place_name,
       iso2: parsed.iso2,
@@ -203,8 +208,11 @@ export async function PATCH(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   const blogLink = (await getBlogLinksForRecommendations([data])).get(data.id) ?? null
+  // Only needs resolving on a reassignment — every other edit path
+  // keeps the same author the card already has.
+  const author = editingAsAdmin ? (await getPublicProfilesByIds([data.user_id])).get(data.user_id) ?? null : null
 
-  return NextResponse.json({ ok: true, recommendation: { ...data, blog_link: blogLink } })
+  return NextResponse.json({ ok: true, recommendation: { ...data, blog_link: blogLink, author } })
 }
 
 export async function DELETE(request: Request) {

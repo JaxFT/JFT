@@ -35,9 +35,27 @@ type ParsedInput = {
   iso2: string
   town: string
   google_maps_url: string
+  link_url: string
+  link_label: string
   date_visited: string | null
   rating: number
   note: string
+}
+
+// Accepts a bare domain by prepending https://, and only allows
+// http(s) — rejects javascript:/data: etc. Returns null for anything
+// that doesn't parse as a URL at all.
+function cleanUrl(v: string): string | null {
+  let s = v.trim().slice(0, 500)
+  if (!s) return null
+  if (!/^https?:\/\//i.test(s)) s = `https://${s}`
+  try {
+    const url = new URL(s)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null
+    return url.toString()
+  } catch {
+    return null
+  }
 }
 
 function parseInput(body: Record<string, unknown>): ParsedInput | { error: string } {
@@ -50,6 +68,19 @@ function parseInput(body: Record<string, unknown>): ParsedInput | { error: strin
   const rating = Number(body.rating)
   const note = typeof body.note === 'string' ? body.note.trim().slice(0, 500) : ''
 
+  const rawLinkUrl = typeof body.link_url === 'string' ? body.link_url : ''
+  const rawLinkLabel = typeof body.link_label === 'string' ? body.link_label.trim().slice(0, 40) : ''
+  let link_url = ''
+  let link_label = ''
+  if (rawLinkUrl.trim()) {
+    const cleaned = cleanUrl(rawLinkUrl)
+    if (!cleaned) return { error: 'That link doesn’t look like a valid URL' }
+    link_url = cleaned
+    // A link always needs something for the button to say — fall back
+    // to a generic label rather than reject the whole save over it.
+    link_label = rawLinkLabel || 'More info'
+  }
+
   if (!category || !place_name || !getCountryByIso2(iso2) || !town) {
     return { error: 'Category, place name, country and town are required' }
   }
@@ -59,7 +90,7 @@ function parseInput(body: Record<string, unknown>): ParsedInput | { error: strin
   if (google_maps_url && !/^https:\/\/(www\.)?(google\.[a-z.]+\/maps|maps\.app\.goo\.gl)\//.test(google_maps_url)) {
     return { error: 'Google Maps link looks wrong, paste the share link from Google Maps' }
   }
-  return { category, place_name, iso2, town, google_maps_url, date_visited, rating, note }
+  return { category, place_name, iso2, town, google_maps_url, link_url, link_label, date_visited, rating, note }
 }
 
 export async function GET(request: Request) {
@@ -73,7 +104,7 @@ export async function GET(request: Request) {
 
   let query = supabase
     .from('recommendations')
-    .select('id, user_id, category, place_name, iso2, town, google_maps_url, date_visited, rating, note, created_at')
+    .select('id, user_id, category, place_name, iso2, town, google_maps_url, link_url, link_label, date_visited, rating, note, created_at')
     .order('created_at', { ascending: false })
 
   if (iso2) query = query.eq('iso2', iso2.toLowerCase())
@@ -129,11 +160,13 @@ export async function POST(request: Request) {
       iso2: parsed.iso2,
       town: parsed.town,
       google_maps_url: parsed.google_maps_url || null,
+      link_url: parsed.link_url || null,
+      link_label: parsed.link_label || null,
       date_visited: parsed.date_visited,
       rating: parsed.rating,
       note: parsed.note || null,
     })
-    .select('id, user_id, category, place_name, iso2, town, google_maps_url, date_visited, rating, note, created_at')
+    .select('id, user_id, category, place_name, iso2, town, google_maps_url, link_url, link_label, date_visited, rating, note, created_at')
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
@@ -196,6 +229,8 @@ export async function PATCH(request: Request) {
       iso2: parsed.iso2,
       town: parsed.town,
       google_maps_url: parsed.google_maps_url || null,
+      link_url: parsed.link_url || null,
+      link_label: parsed.link_label || null,
       date_visited: parsed.date_visited,
       rating: parsed.rating,
       note: parsed.note || null,
@@ -203,7 +238,7 @@ export async function PATCH(request: Request) {
     .eq('id', id)
   if (!editingAsAdmin) query = query.eq('user_id', user.id)
   const { data, error } = await query
-    .select('id, user_id, category, place_name, iso2, town, google_maps_url, date_visited, rating, note, created_at')
+    .select('id, user_id, category, place_name, iso2, town, google_maps_url, link_url, link_label, date_visited, rating, note, created_at')
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 

@@ -13,6 +13,8 @@ export type Recommendation = {
   iso2: string
   town: string
   google_maps_url: string | null
+  link_url: string | null
+  link_label: string | null
   date_visited: string | null
   rating: number
   note: string | null

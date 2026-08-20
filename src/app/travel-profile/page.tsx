@@ -30,7 +30,7 @@ export default async function TravelProfilePage() {
     supabase.from('travel_profile_buddies').select('id, buddy_user_id').eq('user_id', user.id).order('created_at'),
     supabase.from('family_country_visits').select('iso2', { count: 'exact', head: true }).eq('parent_id', user.id),
     supabase.from('recommendations')
-      .select('id, user_id, category, place_name, iso2, town, google_maps_url, date_visited, rating, note, created_at')
+      .select('id, user_id, category, place_name, iso2, town, google_maps_url, link_url, link_label, date_visited, rating, note, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false }),
   ])

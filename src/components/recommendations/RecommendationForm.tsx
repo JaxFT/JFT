@@ -11,7 +11,7 @@
 // built from the returned place_id.
 
 import { useEffect, useRef, useState } from 'react'
-import { Loader2, MapPin, Search, Star, X } from 'lucide-react'
+import { Link2, Loader2, MapPin, Search, Star, X } from 'lucide-react'
 import { COUNTRIES } from '@/lib/countries'
 import { autocompletePlaces, getPlaceAddress, googleMapsUrlFromPlaceId, newSessionToken, type PlaceSuggestion } from '@/lib/google-places'
 import type { RecommendationCategory } from './types'
@@ -22,6 +22,8 @@ export type NewRecommendationInput = {
   iso2: string
   town: string
   google_maps_url: string
+  link_url: string
+  link_label: string
   date_visited: string
   rating: number
   note: string
@@ -45,6 +47,8 @@ export default function RecommendationForm({
   const [iso2, setIso2] = useState(initialValues?.iso2 ?? '')
   const [town, setTown] = useState(initialValues?.town ?? '')
   const [googleMapsUrl, setGoogleMapsUrl] = useState(initialValues?.google_maps_url ?? '')
+  const [linkUrl, setLinkUrl] = useState(initialValues?.link_url ?? '')
+  const [linkLabel, setLinkLabel] = useState(initialValues?.link_label ?? '')
   const [linkedPlaceName, setLinkedPlaceName] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([])
@@ -109,7 +113,8 @@ export default function RecommendationForm({
     setBusy(true)
     const err = await onSubmit({
       category, place_name: placeName.trim(), iso2, town: town.trim(),
-      google_maps_url: googleMapsUrl.trim(), date_visited: dateVisited, rating, note: note.trim(),
+      google_maps_url: googleMapsUrl.trim(), link_url: linkUrl.trim(), link_label: linkLabel.trim(),
+      date_visited: dateVisited, rating, note: note.trim(),
     })
     setBusy(false)
     if (err) setError(err)
@@ -254,6 +259,26 @@ export default function RecommendationForm({
           className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-y min-h-[7rem]"
         />
         <p className="text-xs text-gray-400 text-right mt-1">{note.length}/500</p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <input
+          type="text"
+          value={linkLabel}
+          onChange={e => setLinkLabel(e.target.value.slice(0, 40))}
+          placeholder="Link label, e.g. Book here, See menu"
+          className="px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+        />
+        <div className="relative">
+          <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            value={linkUrl}
+            onChange={e => setLinkUrl(e.target.value)}
+            placeholder="Link URL (optional)"
+            className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+          />
+        </div>
       </div>
 
       {error && <p className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-md px-3 py-2">{error}</p>}

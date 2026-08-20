@@ -11,7 +11,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { BookOpen, ExternalLink, Flag, MapPin, MessageCircle, Pencil, Star, ThumbsDown, ThumbsUp, X } from 'lucide-react'
+import { BookOpen, ExternalLink, Flag, Link2, MapPin, MessageCircle, Pencil, Star, ThumbsDown, ThumbsUp, X } from 'lucide-react'
 import { getCountryByIso2 } from '@/lib/countries'
 import { shortName } from '@/lib/display-name'
 import CountryFlag from '@/components/CountryFlag'
@@ -33,7 +33,8 @@ export default function RecommendationCard({
 }) {
   const [fields, setFields] = useState({
     category: rec.category, place_name: rec.place_name, iso2: rec.iso2, town: rec.town,
-    google_maps_url: rec.google_maps_url ?? '', date_visited: rec.date_visited ?? '', rating: rec.rating, note: rec.note ?? '',
+    google_maps_url: rec.google_maps_url ?? '', link_url: rec.link_url ?? '', link_label: rec.link_label ?? '',
+    date_visited: rec.date_visited ?? '', rating: rec.rating, note: rec.note ?? '',
   })
   const [editing, setEditing] = useState(false)
   const [editError, setEditError] = useState('')
@@ -69,7 +70,8 @@ export default function RecommendationCard({
       setFields({
         category: body.recommendation.category, place_name: body.recommendation.place_name,
         iso2: body.recommendation.iso2, town: body.recommendation.town,
-        google_maps_url: body.recommendation.google_maps_url ?? '', date_visited: body.recommendation.date_visited ?? '',
+        google_maps_url: body.recommendation.google_maps_url ?? '', link_url: body.recommendation.link_url ?? '',
+        link_label: body.recommendation.link_label ?? '', date_visited: body.recommendation.date_visited ?? '',
         rating: body.recommendation.rating, note: body.recommendation.note ?? '',
       })
       setBlogLink(body.recommendation.blog_link ?? null)
@@ -197,6 +199,16 @@ export default function RecommendationCard({
           {fields.note && <p className="text-sm text-gray-600 mt-1.5">{fields.note}</p>}
 
           <div className="flex items-center gap-4 mt-2 flex-wrap">
+            {fields.link_url && fields.link_label && (
+              <a
+                href={fields.link_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:underline"
+              >
+                <Link2 className="w-3 h-3" /> {fields.link_label} <ExternalLink className="w-3 h-3" />
+              </a>
+            )}
             {fields.google_maps_url && (
               <a
                 href={fields.google_maps_url}

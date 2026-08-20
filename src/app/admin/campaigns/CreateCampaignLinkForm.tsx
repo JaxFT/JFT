@@ -4,18 +4,27 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, Plus, Copy, Check } from 'lucide-react'
 
-type GuideOption = { slug: string; label: string }
+type GuideOption = { slug: string; label: string; pricePence: number }
+type DiscountCodeOption = { id: string; code: string; percentOff: number }
 
-export default function CreateCampaignLinkForm({ guides, siteUrl }: { guides: GuideOption[]; siteUrl: string }) {
+function formatPrice(pence: number): string {
+  return `£${(pence / 100).toFixed(2)}`
+}
+
+export default function CreateCampaignLinkForm({ guides, siteUrl, discountCodes }: { guides: GuideOption[]; siteUrl: string; discountCodes: DiscountCodeOption[] }) {
   const router = useRouter()
   const [code, setCode] = useState('')
   const [guideSlug, setGuideSlug] = useState(guides[0]?.slug ?? '')
   const [label, setLabel] = useState('')
   const [sentCount, setSentCount] = useState('')
+  const [discountCodeId, setDiscountCodeId] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [createdUrl, setCreatedUrl] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+
+  const selectedGuide = guides.find(g => g.slug === guideSlug)
+  const selectedDiscount = discountCodes.find(d => d.id === discountCodeId)
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,6 +39,7 @@ export default function CreateCampaignLinkForm({ guides, siteUrl }: { guides: Gu
           guideSlug,
           label: label.trim() || null,
           sentCount: sentCount.trim() ? Number(sentCount) : null,
+          discountCodeId: discountCodeId || null,
         }),
       })
       const body = await res.json().catch(() => ({}))
@@ -38,6 +48,7 @@ export default function CreateCampaignLinkForm({ guides, siteUrl }: { guides: Gu
       setCode('')
       setLabel('')
       setSentCount('')
+      setDiscountCodeId('')
       router.refresh()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not create link')
@@ -110,8 +121,31 @@ export default function CreateCampaignLinkForm({ guides, siteUrl }: { guides: Gu
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Create
           </button>
         </div>
+        <div className="sm:col-span-2">
+          <label className="block text-xs font-medium text-gray-500 mb-1">Discount on landing (optional)</label>
+          <select
+            value={discountCodeId}
+            onChange={e => setDiscountCodeId(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+          >
+            <option value="">No discount</option>
+            {discountCodes.map(d => (
+              <option key={d.id} value={d.id}>{d.code} — {d.percentOff}% off</option>
+            ))}
+          </select>
+          {discountCodes.length === 0 && (
+            <p className="text-xs text-gray-400 mt-1">
+              No active codes scoped to guides yet — create one on <a href="/admin/discount-codes" className="underline hover:text-brand-600">Discount Codes</a> first (must have "applies to guides" checked).
+            </p>
+          )}
+          {selectedDiscount && selectedGuide && (
+            <p className="text-xs text-brand-700 mt-1 font-medium">
+              Lands at {formatPrice(Math.round(selectedGuide.pricePence * (100 - selectedDiscount.percentOff) / 100))}, was {formatPrice(selectedGuide.pricePence)}.
+            </p>
+          )}
+        </div>
       </form>
-      <p className="text-xs text-gray-400 mt-2">Sent count is entered by hand, we can't measure how many DMs actually went out. You can also add or update it later.</p>
+      <p className="text-xs text-gray-400 mt-2">Sent count is entered by hand, we can't measure how many DMs actually went out. You can also add or update it later. A discount code auto-applies for anyone who lands via this link and buys, no code typing needed, and still respects that code's own usage cap.</p>
       {error && <p className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-md px-3 py-2 mt-3">{error}</p>}
       {createdUrl && (
         <div className="mt-4 flex items-center gap-2 bg-brand-50 border border-brand-200 rounded-md px-3 py-2">

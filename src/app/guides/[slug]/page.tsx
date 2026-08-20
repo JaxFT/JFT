@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Crown, Download, Check } from 'lucide-react'
 import type { Metadata } from 'next'
@@ -6,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isPremiumTier } from '@/lib/profile'
 import { getGuideBySlug, userHasPurchased, formatPrice } from '@/lib/guides-db'
 import { getWaystaqDiscountState } from '@/lib/waystaq-discount'
+import { getCampaignDiscountForGuide, applyPercentOff } from '@/lib/campaign-discount'
 import { ArticleJsonLd } from '@/components/seo/JsonLd'
 import { getPublishedWebGuideBySlug } from '@/lib/guides-content-db'
 import { userHasPurchasedWebGuide } from '@/lib/web-guide-purchases-db'
@@ -101,16 +103,23 @@ export default async function GuidePage({
   const { slug } = await params
   const sp = await searchParams
 
+  // Same ref-resolution order as the client-side buy buttons (query
+  // string first, then the 30-day jft_ref cookie set by /l/[code]) so
+  // the price shown on landing matches what checkout actually charges.
+  const refFromQuery = typeof sp.ref === 'string' ? sp.ref : null
+  const ref = refFromQuery ?? (await cookies()).get('jft_ref')?.value ?? null
+
   // Fire ALL the read-side fetches in parallel up front. About-us and
   // auto-link phrases are only used for the web-guide path, but firing
   // them eagerly is cheaper than serialising, the web path is the
   // hot path now that the PDF flow is being retired.
-  const [webGuide, supabase, aboutUs, autoLinkPhrases, wsDiscountState] = await Promise.all([
+  const [webGuide, supabase, aboutUs, autoLinkPhrases, wsDiscountState, campaignDiscount] = await Promise.all([
     getPublishedWebGuideBySlug(slug),
     createClient(),
     getAboutUs(),
     getAutoLinkPhrases(),
     getWaystaqDiscountState(),
+    getCampaignDiscountForGuide(slug, ref),
   ])
   const wsDiscount = wsDiscountState.active
 
@@ -189,6 +198,7 @@ export default async function GuidePage({
           isAdmin={adminWeb}
           freshPurchase={freshPurchase}
           wsDiscount={wsDiscount}
+          campaignDiscountPercent={campaignDiscount?.percentOff}
         />
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <GuideComments
@@ -314,11 +324,21 @@ export default async function GuidePage({
                 <Download className="w-5 h-5 text-brand-600" />
                 <p className="text-xs font-bold tracking-widest uppercase text-brand-600">Buy as a one-off</p>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-1">{formatPrice(guide.price_pence)}</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                {campaignDiscount ? (
+                  <>
+                    {formatPrice(applyPercentOff(guide.price_pence, campaignDiscount.percentOff))}{' '}
+                    <span className="text-base font-normal text-gray-400 line-through">{formatPrice(guide.price_pence)}</span>
+                  </>
+                ) : formatPrice(guide.price_pence)}
+              </h3>
               <p className="text-sm text-gray-500">Pay once. Download the full PDF and keep it on your device forever.</p>
             </div>
             <div className="sm:w-56 shrink-0">
-              <BuyButton slug={guide.slug} priceLabel={formatPrice(guide.price_pence)} />
+              <BuyButton
+                slug={guide.slug}
+                priceLabel={campaignDiscount ? formatPrice(applyPercentOff(guide.price_pence, campaignDiscount.percentOff)) : formatPrice(guide.price_pence)}
+              />
             </div>
           </div>
         )}

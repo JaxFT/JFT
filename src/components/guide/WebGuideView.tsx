@@ -36,6 +36,9 @@ type Props = {
   // True when the WayStaq £25 discount applies to this viewer; flips the
   // Premium price callout from £49.99 to £25.
   wsDiscount?: boolean
+  // Set when the visitor arrived via a campaign link with a discount
+  // attached — flips the offline-download price everywhere it's shown.
+  campaignDiscountPercent?: number
 }
 
 function anchor(s: string): string {
@@ -52,7 +55,7 @@ function blockAnchor(b: GuideContentBlock): string {
 }
 
 export default function WebGuideView({
-  guide, aboutUsMarkdown, autoLinkPhrases, relatedPosts, relatedGuides, canViewFull, isLoggedIn, isPremium, hasPurchasedDownload, isAdmin, freshPurchase, wsDiscount = false,
+  guide, aboutUsMarkdown, autoLinkPhrases, relatedPosts, relatedGuides, canViewFull, isLoggedIn, isPremium, hasPurchasedDownload, isAdmin, freshPurchase, wsDiscount = false, campaignDiscountPercent,
 }: Props) {
   const hideAbout = !!guide.sections.hideAbout
   // Admin gets the same UI treatment as a buyer — "Download my copy"
@@ -63,7 +66,11 @@ export default function WebGuideView({
   // Download CTA shows only when the guide has been wired up in Stripe.
   // Buyers see "Download my copy"; everyone else sees the buy button.
   const downloadAvailable = !!guide.stripe_price_id
-  const downloadPriceLabel = formatPrice(guide.price_pence)
+  // The button/Paywall wording only ever needs the plain discounted
+  // number; the bigger heading below adds the struck-through original.
+  const downloadPriceLabel = campaignDiscountPercent
+    ? formatPrice(Math.round(guide.price_pence * (100 - campaignDiscountPercent) / 100))
+    : formatPrice(guide.price_pence)
 
   return (
     <div className="min-h-screen bg-sand-50 pb-20">
@@ -148,6 +155,7 @@ export default function WebGuideView({
             isLoggedIn={isLoggedIn}
             hideAbout={hideAbout}
             wsDiscount={wsDiscount}
+            priceLabel={downloadPriceLabel}
           />
         )
         : (
@@ -159,6 +167,7 @@ export default function WebGuideView({
             isLoggedIn={isLoggedIn}
             hideAbout={hideAbout}
             wsDiscount={wsDiscount}
+            priceLabel={downloadPriceLabel}
           />
         )}
 
@@ -172,9 +181,16 @@ export default function WebGuideView({
               </p>
             </div>
             <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-              {treatAsBuyer
-                ? 'Download your personal copy'
-                : `Download for offline reading — ${downloadPriceLabel}`}
+              {treatAsBuyer ? (
+                'Download your personal copy'
+              ) : campaignDiscountPercent ? (
+                <>
+                  Download for offline reading — {downloadPriceLabel}{' '}
+                  <span className="text-base font-normal text-gray-400 line-through">{formatPrice(guide.price_pence)}</span>
+                </>
+              ) : (
+                `Download for offline reading — ${downloadPriceLabel}`
+              )}
             </h3>
             <p className="text-sm text-gray-600 leading-relaxed mb-5">
               {treatAsBuyer
@@ -213,7 +229,7 @@ function IntroSection({ markdown, autoLinkPhrases }: { markdown: string; autoLin
 // New default: render guide.body_markdown as one continuous doc with
 // an auto-built TOC from H2 headings and a percentage-based paywall.
 function SingleDocBody({
-  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, hideAbout, wsDiscount = false,
+  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, hideAbout, wsDiscount = false, priceLabel,
 }: {
   guide: GuideRow
   aboutUsMarkdown: string
@@ -222,6 +238,7 @@ function SingleDocBody({
   isLoggedIn: boolean
   hideAbout: boolean
   wsDiscount?: boolean
+  priceLabel: string
 }) {
   const fullMd = guide.body_markdown
   const visibleMd = canViewFull
@@ -282,7 +299,7 @@ function SingleDocBody({
             slug={guide.slug}
             hiddenLabel={`${100 - guide.preview_percent}% more`}
             hasOneOff={!!guide.stripe_price_id}
-            priceLabel={formatPrice(guide.price_pence)}
+            priceLabel={priceLabel}
             wsDiscount={wsDiscount}
           />
         )}
@@ -295,7 +312,7 @@ function SingleDocBody({
 // Kept so existing block-based guides (Sri Lanka) keep rendering
 // unchanged. Identical to the previous WebGuideView body.
 function BlocksBody({
-  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, hideAbout, wsDiscount = false,
+  guide, aboutUsMarkdown, autoLinkPhrases, canViewFull, isLoggedIn, hideAbout, wsDiscount = false, priceLabel,
 }: {
   guide: GuideRow
   aboutUsMarkdown: string
@@ -304,6 +321,7 @@ function BlocksBody({
   isLoggedIn: boolean
   hideAbout: boolean
   wsDiscount?: boolean
+  priceLabel: string
 }) {
   const blocks = (guide.sections.blocks ?? []).slice().sort((a, b) => a.order - b.order)
 
@@ -378,7 +396,7 @@ function BlocksBody({
             slug={guide.slug}
             hiddenLabel={`${hiddenCount} more section${hiddenCount === 1 ? '' : 's'}`}
             hasOneOff={!!guide.stripe_price_id}
-            priceLabel={formatPrice(guide.price_pence)}
+            priceLabel={priceLabel}
             wsDiscount={wsDiscount}
           />
         )}

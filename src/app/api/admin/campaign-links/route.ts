@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   if (!(await requireAdmin())) return NextResponse.json({ error: 'Not authorized' }, { status: 404 })
 
   const body = (await request.json().catch(() => null)) as
-    | { code?: string; guideSlug?: string; label?: string | null; sentCount?: number | null }
+    | { code?: string; guideSlug?: string; label?: string | null; sentCount?: number | null; discountCodeId?: string | null }
     | null
   if (!body) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
 
@@ -29,6 +29,7 @@ export async function POST(request: Request) {
   const sentCount = typeof body.sentCount === 'number' && Number.isFinite(body.sentCount) && body.sentCount >= 0
     ? Math.round(body.sentCount)
     : null
+  const discountCodeId = typeof body.discountCodeId === 'string' && body.discountCodeId ? body.discountCodeId : null
 
   if (!code || !CODE_RE.test(code)) {
     return NextResponse.json({ error: 'Code must be lowercase letters, numbers, and hyphens only' }, { status: 400 })
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing guideSlug' }, { status: 400 })
   }
 
-  const result = await createCampaignLink({ code, guideSlug, label, sentCount })
+  const result = await createCampaignLink({ code, guideSlug, label, sentCount, discountCodeId })
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
   return NextResponse.json({ ok: true, code })
 }

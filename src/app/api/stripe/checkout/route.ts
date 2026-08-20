@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getGuideBySlug } from '@/lib/guides-db'
 import { stripeClient } from '@/lib/stripe'
 import { reserveDiscountCode, releaseDiscountReservation, attachSessionToReservation } from '@/lib/discount-code-checkout'
+import { getCampaignDiscountForGuide } from '@/lib/campaign-discount'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -44,10 +45,20 @@ export async function POST(request: Request) {
     )
   }
 
+  // No explicit code typed? Fall back to whatever the visitor's
+  // campaign link auto-applies for this guide (silently, nothing to
+  // fail loudly on — an expired/missing campaign discount just means
+  // no discount, same as never having had a ref at all).
+  let effectiveCode = requestedCode
+  if (!effectiveCode && campaignRef) {
+    const campaignDiscount = await getCampaignDiscountForGuide(guide.slug, campaignRef)
+    if (campaignDiscount) effectiveCode = campaignDiscount.code
+  }
+
   let discountReservation: Awaited<ReturnType<typeof reserveDiscountCode>> = null
-  if (requestedCode) {
-    discountReservation = await reserveDiscountCode(supabase, requestedCode, 'guide', guide.id, user?.id ?? null)
-    if (!discountReservation) {
+  if (effectiveCode) {
+    discountReservation = await reserveDiscountCode(supabase, effectiveCode, 'guide', guide.id, user?.id ?? null)
+    if (!discountReservation && requestedCode) {
       return NextResponse.json(
         { error: "That code isn't valid, has expired, or has already been fully redeemed." },
         { status: 400 },

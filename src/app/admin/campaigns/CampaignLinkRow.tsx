@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Copy, Check, MousePointerClick, Eye, ShoppingCart, CreditCard, ExternalLink, Send } from 'lucide-react'
+import { Copy, Check, MousePointerClick, Eye, ShoppingCart, CreditCard, ExternalLink, Send, Tag } from 'lucide-react'
 import type { CampaignStats } from '@/lib/campaign-links-db'
 
 function pct(n: number, of: number | null): string {
@@ -62,6 +62,11 @@ export default function CampaignLinkRow({ stats, siteUrl }: { stats: CampaignSta
           /{stats.guideSlug} <ExternalLink className="w-3 h-3" />
         </Link>
         {stats.label && <span className="text-xs text-gray-400 italic">{stats.label}</span>}
+        {stats.discountCode && (
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">
+            <Tag className="w-3 h-3" /> {stats.discountCode.percentOff}% off ({stats.discountCode.code})
+          </span>
+        )}
         <button
           type="button"
           onClick={copy}

@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { ShieldCheck, Link2 } from 'lucide-react'
 import { listAllWebGuidesForAdmin } from '@/lib/guides-content-db'
 import { listAllLegacyGuidesForAdmin } from '@/lib/guides-db'
-import { listCampaignStats } from '@/lib/campaign-links-db'
+import { listCampaignStats, listGuideDiscountCodeOptions } from '@/lib/campaign-links-db'
 import CreateCampaignLinkForm from './CreateCampaignLinkForm'
 import CampaignLinkRow from './CampaignLinkRow'
 
@@ -16,15 +16,16 @@ export const dynamic = 'force-dynamic'
 
 export default async function AdminCampaignsPage() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
-  const [webGuides, legacyGuides, stats] = await Promise.all([
+  const [webGuides, legacyGuides, stats, discountCodeOptions] = await Promise.all([
     listAllWebGuidesForAdmin(),
     listAllLegacyGuidesForAdmin(),
     listCampaignStats(),
+    listGuideDiscountCodeOptions(),
   ])
 
   const guideOptions = [
-    ...webGuides.filter(g => g.status === 'published').map(g => ({ slug: g.slug, label: g.title })),
-    ...legacyGuides.filter(g => g.active).map(g => ({ slug: g.slug, label: g.name })),
+    ...webGuides.filter(g => g.status === 'published').map(g => ({ slug: g.slug, label: g.title, pricePence: g.price_pence })),
+    ...legacyGuides.filter(g => g.active).map(g => ({ slug: g.slug, label: g.name, pricePence: g.price_pence })),
   ]
 
   return (
@@ -49,7 +50,7 @@ export default async function AdminCampaignsPage() {
         {guideOptions.length === 0 ? (
           <p className="text-sm text-gray-500">No published guides yet to link to.</p>
         ) : (
-          <CreateCampaignLinkForm guides={guideOptions} siteUrl={siteUrl} />
+          <CreateCampaignLinkForm guides={guideOptions} siteUrl={siteUrl} discountCodes={discountCodeOptions} />
         )}
 
         {stats.length === 0 ? (

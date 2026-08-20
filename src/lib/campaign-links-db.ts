@@ -20,6 +20,9 @@ export type CampaignLink = {
   // How many times this link was actually sent out (DMs, etc.) — not
   // measurable by us, entered and edited by hand. Null = not entered yet.
   sentCount: number | null
+  // When set, landing via this link auto-applies this discount_codes
+  // row to the guide — no code typing needed. See lib/campaign-discount.ts.
+  discountCode: { code: string; percentOff: number } | null
 }
 
 export type CampaignStats = CampaignLink & {
@@ -73,16 +76,38 @@ export async function createCampaignLink(input: {
   guideSlug: string
   label: string | null
   sentCount: number | null
+  discountCodeId: string | null
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const admin = adminClient()
   const { error } = await admin
     .from('campaign_links')
-    .insert({ code: input.code, guide_slug: input.guideSlug, label: input.label, sent_count: input.sentCount })
+    .insert({
+      code: input.code,
+      guide_slug: input.guideSlug,
+      label: input.label,
+      sent_count: input.sentCount,
+      discount_code_id: input.discountCodeId,
+    })
   if (error) {
     if (error.code === '23505') return { ok: false, error: 'That code is already in use.' }
     return { ok: false, error: error.message }
   }
   return { ok: true }
+}
+
+// Active, guide-eligible discount codes, for the "attach a discount"
+// picker on the create-link form. Same source admins already manage
+// on /admin/discount-codes, just filtered to what's usable here.
+export async function listGuideDiscountCodeOptions(): Promise<Array<{ id: string; code: string; percentOff: number }>> {
+  const admin = adminClient()
+  const { data } = await admin
+    .from('discount_codes')
+    .select('id, code, percent_off')
+    .eq('active', true)
+    .eq('applies_to_guides', true)
+    .order('code')
+  return ((data ?? []) as { id: string; code: string; percent_off: number }[])
+    .map(d => ({ id: d.id, code: d.code, percentOff: d.percent_off }))
 }
 
 export async function setCampaignLinkActive(id: string, active: boolean): Promise<void> {
@@ -104,9 +129,18 @@ export async function setCampaignLinkSentCount(id: string, sentCount: number | n
 export async function listCampaignStats(): Promise<CampaignStats[]> {
   const admin = adminClient()
   const [{ data: links }, { data: events }] = await Promise.all([
-    admin.from('campaign_links').select('id, code, guide_slug, label, active, created_at, sent_count').order('created_at', { ascending: false }),
+    admin.from('campaign_links').select('id, code, guide_slug, label, active, created_at, sent_count, discount_code_id').order('created_at', { ascending: false }),
     admin.from('funnel_events').select('campaign_code, event_type'),
   ])
+
+  const discountCodeIds = [...new Set((links ?? []).map(l => l.discount_code_id).filter((id): id is string => !!id))]
+  const discounts = new Map<string, { code: string; percentOff: number }>()
+  if (discountCodeIds.length > 0) {
+    const { data: discountRows } = await admin.from('discount_codes').select('id, code, percent_off').in('id', discountCodeIds)
+    for (const d of (discountRows ?? []) as { id: string; code: string; percent_off: number }[]) {
+      discounts.set(d.id, { code: d.code, percentOff: d.percent_off })
+    }
+  }
 
   const counts = new Map<string, Record<FunnelEventType, number>>()
   for (const e of (events ?? []) as { campaign_code: string; event_type: FunnelEventType }[]) {
@@ -115,7 +149,7 @@ export async function listCampaignStats(): Promise<CampaignStats[]> {
     counts.set(e.campaign_code, row)
   }
 
-  return ((links ?? []) as { id: string; code: string; guide_slug: string; label: string | null; active: boolean; created_at: string; sent_count: number | null }[])
+  return ((links ?? []) as { id: string; code: string; guide_slug: string; label: string | null; active: boolean; created_at: string; sent_count: number | null; discount_code_id: string | null }[])
     .map(l => {
       const c = counts.get(l.code) ?? { click: 0, view: 0, buy_click: 0, purchase: 0 }
       return {
@@ -126,6 +160,7 @@ export async function listCampaignStats(): Promise<CampaignStats[]> {
         active: l.active,
         createdAt: l.created_at,
         sentCount: l.sent_count,
+        discountCode: l.discount_code_id ? discounts.get(l.discount_code_id) ?? null : null,
         clicks: c.click,
         views: c.view,
         buyClicks: c.buy_click,

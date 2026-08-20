@@ -2,11 +2,12 @@
 
 import kontra from 'kontra'
 import type { CountryConfig, Encounter } from './types'
-import { drawDad, drawMum, drawJax, drawTourist, touristKey, type Reaction } from './family'
+import { drawDad, drawMum, drawJax, type Reaction } from './family'
+import { drawSuitcase } from './luggage'
 import { sfxGate, sfxObstacle, sfxFinish, vibrate } from './sound'
 import { propsFor, drawProp } from './scenery'
 import { drawObstacle } from './obstacles'
-import { drawSprite, CHAR_FRAMES, TREE_SPRITES } from './sprites'
+import { TREE_SPRITES, drawSprite } from './sprites'
 
 const FAR_Y = 0.2
 const CROWD_Y = 0.62
@@ -17,17 +18,24 @@ const GAP_MS = 550
 const TRAVEL_S = 0.22
 const REACTION_MS = 650
 const FINISH_MS = 1500
+const FAIL_MS = 1300
 const AIM_MIN = 0.1
 const AIM_MAX = 0.9
+// Fast, careless dragging makes the belt more likely to drop the next
+// case — encourages deliberate aiming over frantic wiggling.
+const FALL_CHANCE_MIN = 0.04
+const FALL_CHANCE_MAX = 0.4
+const FALL_CHANCE_AIM_GAIN = 5
 
 type FloatText = { text: string; x: number; y: number; life: number; color: string }
-type Tourist = { fromX: number; fromY: number; toX: number; toY: number; t: number }
+type Tourist = { fromX: number; fromY: number; toX: number; toY: number; t: number; colorIdx: number }
 type ActiveEncounter = { data: Encounter; startTime: number; resolved: boolean }
-type Casualty = { x: number; y: number; vx: number; vy: number; rot: number; vrot: number; life: number; key: keyof typeof CHAR_FRAMES }
+type Casualty = { x: number; y: number; vx: number; vy: number; rot: number; vrot: number; life: number; colorIdx: number }
 
 export type GameCallbacks = {
   onScoreChange: (score: number) => void
   onFinish: (finalScore: number) => void
+  onFail: () => void
 }
 
 export type GameHandle = {
@@ -74,10 +82,13 @@ export function createGame(
   let playerX = 0.5
   let crowdCount = startingCount
   let paused = false
-  let phase: 'playing' | 'finishing' | 'done' = 'playing'
+  let phase: 'playing' | 'finishing' | 'failed' | 'done' = 'playing'
   let finishStart = 0
+  let failStart = 0
   let fireAcc = 0
   let cannonPulse = 0
+  let aimSpeed = 0
+  let luggageSeq = 0
   let encounterIndex = 0
   let active: ActiveEncounter | null = null
   let gapUntil = 0
@@ -145,7 +156,7 @@ export function createGame(
       const hit = playerX > centerNow - half && playerX < centerNow + half
       if (hit) {
         const before = crowdCount
-        crowdCount = Math.max(1, crowdCount - Math.max(1, Math.floor(crowdCount * enc.data.lossFraction)))
+        crowdCount = Math.max(0, crowdCount - Math.max(1, Math.floor(crowdCount * enc.data.lossFraction)))
         const lost = before - crowdCount
         floaters.push({ text: `−${lost}`, x: worldX, y: worldY, life: 1, color: '#c0392b' })
         setReaction('shock')
@@ -171,8 +182,15 @@ export function createGame(
             rot: 0,
             vrot: (Math.random() - 0.5) * 9,
             life: 1,
-            key: touristKey(idx),
+            colorIdx: idx,
           })
+        }
+
+        if (crowdCount <= 0) {
+          phase = 'failed'
+          failStart = performance.now()
+          active = null
+          return
         }
       } else {
         floaters.push({ text: 'DODGED!', x: worldX, y: worldY, life: 1, color: '#2d8163' })
@@ -192,11 +210,30 @@ export function createGame(
     const now = performance.now()
 
     if (phase === 'playing') {
+      aimSpeed = Math.max(0, aimSpeed - dt * 1.4)
+
       fireAcc += dt * 1000
       while (fireAcc >= config.fireIntervalMs) {
         fireAcc -= config.fireIntervalMs
-        tourists.push({ fromX: playerX * W, fromY: CANNON_Y * H, toX: playerX * W + (Math.random() - 0.5) * 18, toY: CROWD_Y * H, t: 0 })
         cannonPulse = 1
+        const beltX = playerX * W
+        const beltY = CANNON_Y * H
+        const fallChance = clamp(FALL_CHANCE_MIN, FALL_CHANCE_MAX, FALL_CHANCE_MIN + aimSpeed * FALL_CHANCE_AIM_GAIN)
+        if (Math.random() < fallChance) {
+          // Dropped right off the belt — never joins the crowd.
+          casualties.push({
+            x: beltX, y: beltY,
+            vx: (Math.random() - 0.5) * 90,
+            vy: -20 - Math.random() * 20,
+            rot: 0,
+            vrot: (Math.random() - 0.5) * 10,
+            life: 1,
+            colorIdx: luggageSeq++,
+          })
+          sfxObstacle(true)
+        } else {
+          tourists.push({ fromX: beltX, fromY: beltY, toX: beltX + (Math.random() - 0.5) * 18, toY: CROWD_Y * H, t: 0, colorIdx: luggageSeq++ })
+        }
       }
 
       for (let i = tourists.length - 1; i >= 0; i--) {
@@ -217,6 +254,11 @@ export function createGame(
       if (now - finishStart >= FINISH_MS) {
         phase = 'done'
         callbacks.onFinish(crowdCount)
+      }
+    } else if (phase === 'failed') {
+      if (now - failStart >= FAIL_MS) {
+        phase = 'done'
+        callbacks.onFail()
       }
     }
 
@@ -448,35 +490,54 @@ export function createGame(
     }
   }
 
-  function drawCannon(offsetY: number) {
+  function drawConveyor(offsetY: number) {
     const x = playerX * W
     const y = CANNON_Y * H + offsetY
-    const pulse = 1 + cannonPulse * 0.18
-    // wheeled base
+    const pulse = 1 + cannonPulse * 0.22
+
     ctx.fillStyle = 'rgba(0,0,0,0.2)'
     ctx.beginPath()
-    ctx.ellipse(x, y + 16, 26, 7, 0, 0, Math.PI * 2)
+    ctx.ellipse(x, y + 15, 34, 8, 0, 0, Math.PI * 2)
     ctx.fill()
-    const baseGrad = ctx.createLinearGradient(x - 20, 0, x + 20, 0)
-    baseGrad.addColorStop(0, '#2b5f8a')
-    baseGrad.addColorStop(0.5, '#3f7cac')
-    baseGrad.addColorStop(1, '#2b5f8a')
-    ctx.fillStyle = baseGrad
-    roundedRectPath(ctx, x - 20, y - 6, 40, 18, 8)
+
+    // belt frame
+    ctx.fillStyle = '#4a4f57'
+    roundedRectPath(ctx, x - 32, y - 9, 64, 20, 9)
     ctx.fill()
-    ctx.fillStyle = '#1e3a52'
-    ;[x - 13, x + 13].forEach(wx => {
+
+    // moving tread, chevrons scroll to sell "conveyor belt"
+    ctx.save()
+    roundedRectPath(ctx, x - 29, y - 6, 58, 14, 6)
+    ctx.clip()
+    ctx.fillStyle = '#8a8f99'
+    ctx.fillRect(x - 29, y - 6, 58, 14)
+    const scroll = (performance.now() * 0.05) % 16
+    ctx.fillStyle = 'rgba(0,0,0,0.22)'
+    for (let sx = -40; sx < 40; sx += 16) {
       ctx.beginPath()
-      ctx.arc(wx, y + 12, 6, 0, Math.PI * 2)
+      ctx.moveTo(x + sx + scroll, y - 6)
+      ctx.lineTo(x + sx + scroll + 6, y - 6)
+      ctx.lineTo(x + sx + scroll - 2, y + 8)
+      ctx.lineTo(x + sx + scroll - 8, y + 8)
+      ctx.closePath()
       ctx.fill()
-    })
-    // barrel, pulses forward when it fires
-    ctx.fillStyle = config.theme.accent
-    roundedRectPath(ctx, x - 7, y - 30 * pulse, 14, 28 * pulse, 6)
-    ctx.fill()
-    ctx.fillStyle = 'rgba(0,0,0,0.25)'
+    }
+    ctx.restore()
+
+    // end rollers
+    ctx.fillStyle = '#2e3238'
     ctx.beginPath()
-    ctx.ellipse(x, y - 30 * pulse, 7, 3, 0, 0, Math.PI * 2)
+    ctx.arc(x - 30, y, 10 * pulse, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.arc(x + 30, y, 10 * pulse, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.fillStyle = config.theme.accent
+    ctx.beginPath()
+    ctx.arc(x - 30, y, 4 * pulse, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.arc(x + 30, y, 4 * pulse, 0, Math.PI * 2)
     ctx.fill()
   }
 
@@ -494,7 +555,7 @@ export function createGame(
       if (i === 0) drawDad({ ctx, x, y, scale: avatarScale * 1.15, reaction: r, wobble })
       else if (i === 1) drawMum({ ctx, x, y, scale: avatarScale * 1.1, reaction: r, wobble })
       else if (i === 2) drawJax({ ctx, x, y, scale: avatarScale, reaction: r, wobble })
-      else drawTourist(ctx, x, y, avatarScale, i, wobble, r)
+      else drawSuitcase(ctx, x, y, avatarScale, i, wobble, r === 'shock' ? 'shock' : 'idle')
     }
     if (crowdCount > CROWD_RENDER_CAP) {
       ctx.fillStyle = 'rgba(0,0,0,0.6)'
@@ -510,7 +571,7 @@ export function createGame(
       ctx.globalAlpha = clamp(0, 1, c.life)
       ctx.translate(c.x, c.y)
       ctx.rotate(c.rot)
-      drawSprite(ctx, CHAR_FRAMES[c.key][0], 0, 0, 20, 20)
+      drawSuitcase(ctx, 0, 0, 0.85, c.colorIdx, 0, 'shock')
       ctx.restore()
     }
   }
@@ -519,10 +580,7 @@ export function createGame(
     for (const p of tourists) {
       const x = lerp(p.fromX, p.toX, p.t)
       const y = lerp(p.fromY, p.toY, p.t)
-      ctx.fillStyle = '#ffe28a'
-      ctx.beginPath()
-      ctx.arc(x, y, 5, 0, Math.PI * 2)
-      ctx.fill()
+      drawSuitcase(ctx, x, y, 0.6, p.colorIdx, 0, 'idle')
     }
   }
 
@@ -551,10 +609,17 @@ export function createGame(
       ctx.fillRect(0, 0, W, H)
       return
     }
+    if (phase === 'failed') {
+      const t = clamp(0, 1, (performance.now() - failStart) / FAIL_MS)
+      drawCasualties()
+      ctx.fillStyle = `rgba(70,20,20,${t * 0.5})`
+      ctx.fillRect(0, 0, W, H)
+      return
+    }
     drawEncounter()
     drawCrowd(0)
     drawCasualties()
-    drawCannon(0)
+    drawConveyor(0)
     drawTourists()
     drawFloaters()
   }
@@ -565,6 +630,7 @@ export function createGame(
   return {
     nudgeAim(delta: number) {
       playerX = clamp(AIM_MIN, AIM_MAX, playerX + delta)
+      aimSpeed = Math.min(1, aimSpeed + Math.abs(delta) * 3)
     },
     setPaused(p: boolean) {
       paused = p

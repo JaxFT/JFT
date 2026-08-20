@@ -11,6 +11,13 @@ import type { CountryConfig } from './types'
 // imperceptible against the runaway growth. Slower firing + capped
 // multipliers + heavier obstacle loss fractions makes both gates and
 // obstacles feel like they actually matter.
+//
+// Second pass: several gates used to pair a big multiplier against a
+// small one (×2 vs ×3), which is never a real choice — bigger always
+// wins. Most multiply-vs-multiply gates now sit close together
+// (×1.8 vs ×2) so the "right" answer barely matters, while the
+// multiply-vs-add gates stay genuinely count-dependent (right answer
+// flips based on your current total) for the real decisions.
 export const COUNTRIES: CountryConfig[] = [
   {
     slug: 'japan',
@@ -44,7 +51,7 @@ export const COUNTRIES: CountryConfig[] = [
     encounters: [
       { type: 'gate', left: { kind: 'multiply', value: 2, label: '×2' }, right: { kind: 'add', value: 8, label: '+8' } },
       { type: 'obstacle', width: 0.32, centerX: 0.3, moveAmplitude: 0.22, lossFraction: 0.4, label: 'Traffic' },
-      { type: 'gate', left: { kind: 'multiply', value: 2.5, label: '×2.5' }, right: { kind: 'multiply', value: 1.5, label: '×1.5' } },
+      { type: 'gate', left: { kind: 'multiply', value: 1.8, label: '×1.8' }, right: { kind: 'multiply', value: 1.5, label: '×1.5' } },
       { type: 'gate', left: { kind: 'add', value: 15, label: '+15' }, right: { kind: 'multiply', value: 2, label: '×2' } },
       { type: 'obstacle', width: 0.45, centerX: 0.5, lossFraction: 0.35, label: 'Construction' },
     ],
@@ -61,11 +68,11 @@ export const COUNTRIES: CountryConfig[] = [
     fireIntervalMs: 480,
     approachMs: 2700,
     encounters: [
-      { type: 'gate', left: { kind: 'multiply', value: 2, label: '×2' }, right: { kind: 'multiply', value: 2.5, label: '×2.5' } },
+      { type: 'gate', left: { kind: 'multiply', value: 1.8, label: '×1.8' }, right: { kind: 'multiply', value: 2, label: '×2' } },
       { type: 'obstacle', width: 0.3, centerX: 0.7, moveAmplitude: 0.25, lossFraction: 0.45, label: 'Tuk-tuks' },
       { type: 'gate', left: { kind: 'add', value: 20, label: '+20' }, right: { kind: 'multiply', value: 2, label: '×2' } },
       { type: 'obstacle', width: 0.3, centerX: 0.3, moveAmplitude: 0.25, lossFraction: 0.4, label: 'Puddles' },
-      { type: 'gate', left: { kind: 'multiply', value: 3, label: '×3' }, right: { kind: 'multiply', value: 2, label: '×2' } },
+      { type: 'gate', left: { kind: 'multiply', value: 2.2, label: '×2.2' }, right: { kind: 'multiply', value: 2, label: '×2' } },
       { type: 'gate', left: { kind: 'add', value: 10, label: '+10' }, right: { kind: 'multiply', value: 1.5, label: '×1.5' } },
     ],
   },
@@ -81,12 +88,12 @@ export const COUNTRIES: CountryConfig[] = [
     fireIntervalMs: 420,
     approachMs: 2400,
     encounters: [
-      { type: 'gate', left: { kind: 'multiply', value: 2.5, label: '×2.5' }, right: { kind: 'multiply', value: 2, label: '×2' } },
+      { type: 'gate', left: { kind: 'multiply', value: 1.8, label: '×1.8' }, right: { kind: 'multiply', value: 2, label: '×2' } },
       { type: 'obstacle', width: 0.28, centerX: 0.4, moveAmplitude: 0.3, lossFraction: 0.45, label: 'Scooters' },
       { type: 'gate', left: { kind: 'multiply', value: 2, label: '×2' }, right: { kind: 'add', value: 25, label: '+25' } },
-      { type: 'gate', left: { kind: 'multiply', value: 1.5, label: '×1.5' }, right: { kind: 'multiply', value: 3, label: '×3' } },
+      { type: 'gate', left: { kind: 'multiply', value: 1.5, label: '×1.5' }, right: { kind: 'multiply', value: 2.2, label: '×2.2' } },
       { type: 'obstacle', width: 0.35, centerX: 0.6, moveAmplitude: 0.3, lossFraction: 0.4, label: 'Rice carts' },
-      { type: 'gate', left: { kind: 'multiply', value: 2, label: '×2' }, right: { kind: 'multiply', value: 3, label: '×3' } },
+      { type: 'gate', left: { kind: 'multiply', value: 2, label: '×2' }, right: { kind: 'multiply', value: 2.3, label: '×2.3' } },
       { type: 'gate', left: { kind: 'add', value: 30, label: '+30' }, right: { kind: 'multiply', value: 2, label: '×2' } },
     ],
   },

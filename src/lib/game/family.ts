@@ -1,11 +1,11 @@
-// Real sprite-based rendering for the Adventure Game's characters —
-// see sprites.ts for where the art comes from. Dad/Mum/Jax use their
-// dedicated back-view frames (bald/longer-hair/dark-hair respectively,
-// picked to echo the real family photo at
-// public/images/us/bec-oli-jax.webp), generic crowd tourists cycle
-// through the remaining palettes.
+// Real sprite-based rendering for the Adventure Game's family
+// characters — see sprites.ts for where the art comes from.
+// Dad/Mum/Jax use their dedicated back-view frames (bald/longer-hair/
+// dark-hair respectively, picked to echo the real family photo at
+// public/images/us/bec-oli-jax.webp) and always lead the group. The
+// generic crowd is luggage, not people — see luggage.ts.
 
-import { drawSprite, CHAR_FRAMES, DAD_FRAMES, MUM_FRAMES, JAX_FRAMES, type CharKey, CHAR_KEYS } from './sprites'
+import { drawSprite, DAD_FRAMES, MUM_FRAMES, JAX_FRAMES } from './sprites'
 
 export type Reaction = 'idle' | 'cheer' | 'shock'
 
@@ -71,22 +71,4 @@ export function drawMum(o: DrawOpts) {
 
 export function drawJax(o: DrawOpts) {
   drawFamilyMember({ ...o, scale: o.scale * 0.82 }, JAX_FRAMES, 26)
-}
-
-// Deterministic per-slot palette so the crowd reads as a mixed group
-// without per-frame randomness (which would flicker).
-export function touristKey(i: number): CharKey {
-  return CHAR_KEYS[i % CHAR_KEYS.length]
-}
-
-export function drawTourist(ctx: CanvasRenderingContext2D, x: number, y: number, scale: number, index: number, wobble = 0, reaction: Reaction = 'idle') {
-  const key = touristKey(index)
-  const frames = CHAR_FRAMES[key]
-  // offset each tourist's walk-cycle phase by its index so a whole
-  // crowd doesn't bob in perfect unison
-  const frame = walkFrame(frames, wobble + index * 0.7)
-  const size = 22
-  shadow(ctx, x, y + size * 0.4 * scale, size * 0.28 * scale)
-  drawSprite(ctx, frame, x, y, size * scale, size * scale)
-  hitFlash(ctx, x, y, size * 0.4 * scale, reaction)
 }

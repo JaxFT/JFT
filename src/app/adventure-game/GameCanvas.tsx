@@ -10,6 +10,7 @@ type Props = {
   paused: boolean
   onScoreChange: (score: number) => void
   onFinish: (finalScore: number) => void
+  onFail: () => void
 }
 
 // Drag-to-aim, one thumb: horizontal drag delta moves the launcher,
@@ -18,7 +19,7 @@ type Props = {
 const SENSITIVITY = 1.5
 const KEY_STEP = 0.02
 
-export default function GameCanvas({ config, startingCount, paused, onScoreChange, onFinish }: Props) {
+export default function GameCanvas({ config, startingCount, paused, onScoreChange, onFinish, onFail }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const handleRef = useRef<GameHandle | null>(null)
 
@@ -26,7 +27,7 @@ export default function GameCanvas({ config, startingCount, paused, onScoreChang
     const canvas = canvasRef.current
     if (!canvas) return
 
-    const handle = createGame(canvas, config, startingCount, { onScoreChange, onFinish })
+    const handle = createGame(canvas, config, startingCount, { onScoreChange, onFinish, onFail })
     handleRef.current = handle
 
     let dragging = false

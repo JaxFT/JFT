@@ -12,7 +12,7 @@ import type { GameProgress } from '@/lib/game/types'
 import { isMuted, setMuted as persistMuted } from '@/lib/game/sound'
 import PassportStamp from '@/components/passport/PassportStamp'
 
-type Screen = 'menu' | 'playing' | 'results' | 'passport'
+type Screen = 'menu' | 'playing' | 'results' | 'failed' | 'passport'
 
 type LastResult = {
   slug: string
@@ -73,6 +73,10 @@ export default function AdventureGameClient({
     setScreen('results')
   }, [slug, isLoggedIn])
 
+  const handleFail = useCallback(() => {
+    setScreen('failed')
+  }, [])
+
   const toggleMute = () => {
     const next = !muted
     setMuted(next)
@@ -98,6 +102,7 @@ export default function AdventureGameClient({
             paused={paused}
             onScoreChange={setScore}
             onFinish={handleFinish}
+            onFail={handleFail}
           />
 
           {/* HUD */}
@@ -150,6 +155,14 @@ export default function AdventureGameClient({
             if (next) startLevel(next.slug)
           }}
           onPassport={() => setScreen('passport')}
+          onMenu={() => setScreen('menu')}
+        />
+      )}
+
+      {screen === 'failed' && (
+        <FailScreen
+          slug={slug}
+          onPlayAgain={() => startLevel(slug)}
           onMenu={() => setScreen('menu')}
         />
       )}
@@ -221,7 +234,7 @@ function ResultsScreen({
     <div className="max-w-md mx-auto text-center">
       <p className="text-xs font-bold tracking-widest uppercase text-brand-600 mb-2">{country.flag} {country.name.toUpperCase()} COMPLETE!</p>
       <p className="text-6xl font-extrabold text-gray-900 my-4 animate-stamp-burst">{result.score}</p>
-      <p className="text-gray-600 font-semibold mb-4">TRAVELLERS ARRIVED AT {country.landmarkLabel.toUpperCase()}</p>
+      <p className="text-gray-600 font-semibold mb-4">BAGS MADE IT TO {country.landmarkLabel.toUpperCase()}</p>
 
       {result.isNewBest && <p className="text-brand-700 font-bold mb-2">⭐ NEW BEST!</p>}
       <p className="text-sm text-gray-500 mb-6">+{result.score} Adventure Points</p>
@@ -263,6 +276,28 @@ function ResultsScreen({
         Want to see what we actually did in {country.name}?
         <span className="block font-semibold text-brand-700 mt-1">Explore our {country.name} Adventure Pack →</span>
       </Link>
+    </div>
+  )
+}
+
+function FailScreen({ slug, onPlayAgain, onMenu }: { slug: string; onPlayAgain: () => void; onMenu: () => void }) {
+  const country = getCountry(slug)!
+  return (
+    <div className="max-w-md mx-auto text-center">
+      <p className="text-5xl mb-3">🧳💥</p>
+      <p className="text-xs font-bold tracking-widest uppercase text-red-500 mb-2">Lost in transit</p>
+      <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Not this time!</h2>
+      <p className="text-gray-500 mb-8">
+        Every last bag went missing before reaching {country.landmarkLabel}. {country.flag} {country.name} will still be there when you&apos;re ready to try again.
+      </p>
+      <div className="space-y-2">
+        <button onClick={onPlayAgain} className="btn-primary w-full justify-center">
+          <RotateCcw className="w-4 h-4" /> Try Again
+        </button>
+        <button onClick={onMenu} className="text-sm text-gray-400 block w-full py-2">
+          Back to countries
+        </button>
+      </div>
     </div>
   )
 }

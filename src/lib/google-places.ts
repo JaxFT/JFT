@@ -37,9 +37,18 @@ export function extractPlaceId(url: string | null | undefined): string | null {
   return match ? decodeURIComponent(match[1]) : null
 }
 
+// Thrown instead of silently returning [] so callers (and future
+// debugging) can tell "the search genuinely found nothing" apart from
+// "the request itself failed" (missing key, network error, blocked by
+// a content blocker, bad referrer restriction, quota, etc.) — those
+// used to look identical to a user, which made a real outage
+// indistinguishable from an empty result.
+export class PlacesApiError extends Error {}
+
 export async function autocompletePlaces(input: string, sessionToken: string): Promise<PlaceSuggestion[]> {
+  if (!input.trim()) return []
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-  if (!apiKey || !input.trim()) return []
+  if (!apiKey) throw new PlacesApiError('Google Places API key is not configured for this build')
 
   let res: Response
   try {
@@ -52,12 +61,11 @@ export async function autocompletePlaces(input: string, sessionToken: string): P
       body: JSON.stringify({ input, sessionToken }),
     })
   } catch (e) {
-    console.error('Places autocomplete request failed', e)
-    return []
+    throw new PlacesApiError(e instanceof Error ? e.message : 'Network request failed')
   }
   if (!res.ok) {
-    console.error('Places autocomplete error', res.status, await res.text().catch(() => ''))
-    return []
+    const text = await res.text().catch(() => '')
+    throw new PlacesApiError(`Places API returned ${res.status}: ${text.slice(0, 300)}`)
   }
 
   const body = await res.json().catch(() => null) as {

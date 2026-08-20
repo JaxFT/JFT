@@ -49,6 +49,7 @@ export default function RecommendationForm({
   const [searchQuery, setSearchQuery] = useState('')
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([])
   const [searching, setSearching] = useState(false)
+  const [searchError, setSearchError] = useState(false)
   const sessionToken = useRef(newSessionToken())
   const [dateVisited, setDateVisited] = useState(initialValues?.date_visited ?? '')
   const [rating, setRating] = useState(initialValues?.rating ?? 0)
@@ -60,12 +61,17 @@ export default function RecommendationForm({
 
   useEffect(() => {
     const q = searchQuery.trim()
-    if (q.length < 3) { setSuggestions([]); setSearching(false); return }
+    if (q.length < 3) { setSuggestions([]); setSearching(false); setSearchError(false); return }
     setSearching(true)
+    setSearchError(false)
     const t = setTimeout(async () => {
       try {
         const results = await autocompletePlaces(q, sessionToken.current)
         setSuggestions(results)
+      } catch (e) {
+        console.error('Places autocomplete failed', e)
+        setSuggestions([])
+        setSearchError(true)
       } finally {
         setSearching(false)
       }
@@ -152,6 +158,8 @@ export default function RecommendationForm({
             <div className="absolute z-20 left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
               {searching ? (
                 <p className="px-4 py-3 text-sm text-gray-400 flex items-center gap-2"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Searching…</p>
+              ) : searchError ? (
+                <p className="px-4 py-3 text-sm text-red-500">Search is temporarily unavailable, you can still type the name below.</p>
               ) : suggestions.length === 0 ? (
                 <p className="px-4 py-3 text-sm text-gray-500 italic">No matches, you can still type the name below.</p>
               ) : (

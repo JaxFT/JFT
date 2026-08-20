@@ -55,7 +55,12 @@ export default function ResolveList({ initialItems }: { initialItems: ResolveRow
       setRowState(prev => ({ ...prev, [item.id]: { ...prev[item.id], status: 'searching' } }))
       const country = getCountryByIso2(item.iso2)
       const query = `${item.place_name}, ${item.town}${country ? ', ' + country.name : ''}`
-      const results = await autocompletePlaces(query, newSessionToken())
+      let results: PlaceSuggestion[] = []
+      try {
+        results = await autocompletePlaces(query, newSessionToken())
+      } catch (e) {
+        console.error('Places autocomplete failed for', query, e)
+      }
       setRowState(prev => ({ ...prev, [item.id]: { status: 'suggested', suggestions: results.slice(0, 3) } }))
       await new Promise(res => setTimeout(res, 1100))
     }

@@ -38,6 +38,9 @@ export default function PlaceSearchPicker({
     const t = setTimeout(async () => {
       try {
         setSuggestions(await autocompletePlaces(q, sessionToken.current))
+      } catch (e) {
+        console.error('Places autocomplete failed', e)
+        setSuggestions([])
       } finally {
         setSearching(false)
       }

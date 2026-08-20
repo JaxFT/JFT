@@ -106,20 +106,19 @@ export default function AdventureGameClient({
               <p className="text-[10px] font-bold tracking-widest uppercase text-white/80">Jax Family Travels</p>
               <p className="text-white font-bold text-sm flex items-center gap-1">{country.flag} {country.name.toUpperCase()}</p>
             </div>
-            <div className="flex items-center gap-2 pointer-events-auto">
-              <button onClick={toggleMute} className="w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center">
-                {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-              </button>
-              <button onClick={() => setPaused(p => !p)} className="w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center">
-                {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-
-          <div className="absolute top-14 inset-x-0 flex justify-center pointer-events-none">
-            <div className="bg-black/40 rounded-full px-4 py-1.5 text-center">
-              <span className="text-white font-extrabold text-2xl tabular-nums">{score}</span>
-              <span className="text-white/70 text-xs ml-2">best {progress[slug]?.bestScore ?? 0}</span>
+            <div className="flex flex-col items-end gap-2 pointer-events-auto">
+              <div className="bg-black/40 rounded-full px-3 py-1 text-right">
+                <span className="text-white font-extrabold text-lg tabular-nums">{score}</span>
+                <span className="text-white/70 text-[10px] ml-1.5">best {progress[slug]?.bestScore ?? 0}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={toggleMute} className="w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center">
+                  {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                </button>
+                <button onClick={() => setPaused(p => !p)} className="w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center">
+                  {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
           </div>
 

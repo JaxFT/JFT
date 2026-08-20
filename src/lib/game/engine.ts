@@ -2,10 +2,11 @@
 
 import kontra from 'kontra'
 import type { CountryConfig, Encounter } from './types'
-import { drawDad, drawMum, drawJax, drawTourist, type Reaction } from './family'
+import { drawDad, drawMum, drawJax, drawTourist, touristKey, type Reaction } from './family'
 import { sfxGate, sfxObstacle, sfxFinish, vibrate } from './sound'
 import { propsFor, drawProp } from './scenery'
 import { drawObstacle } from './obstacles'
+import { drawSprite, CHAR_FRAMES, TREE_SPRITES } from './sprites'
 
 const FAR_Y = 0.2
 const CROWD_Y = 0.62
@@ -22,6 +23,7 @@ const AIM_MAX = 0.9
 type FloatText = { text: string; x: number; y: number; life: number; color: string }
 type Tourist = { fromX: number; fromY: number; toX: number; toY: number; t: number }
 type ActiveEncounter = { data: Encounter; startTime: number; resolved: boolean }
+type Casualty = { x: number; y: number; vx: number; vy: number; rot: number; vrot: number; life: number; key: keyof typeof CHAR_FRAMES }
 
 export type GameCallbacks = {
   onScoreChange: (score: number) => void
@@ -81,6 +83,7 @@ export function createGame(
   let gapUntil = 0
   const tourists: Tourist[] = []
   const floaters: FloatText[] = []
+  const casualties: Casualty[] = []
   let reaction: Reaction = 'idle'
   let reactionSince = 0
 
@@ -149,6 +152,28 @@ export function createGame(
         sfxObstacle(true)
         vibrate([30, 30, 30])
         callbacks.onScoreChange(crowdCount)
+
+        // A visible "they actually got knocked over" moment — without
+        // this, a lost traveller just silently isn't in next frame's
+        // cluster, which reads as nothing happened at all.
+        const shownBefore = Math.min(before, CROWD_RENDER_CAP)
+        const avatarScaleNow = clamp(0.55, 1.1, 1 - shownBefore / 140)
+        const spawnCount = Math.min(lost, 8)
+        for (let k = 0; k < spawnCount; k++) {
+          const idx = shownBefore - 1 - k
+          if (idx < 3) break
+          const { dx, dy } = clusterOffset(idx)
+          casualties.push({
+            x: worldX + dx * 13 * avatarScaleNow,
+            y: worldY + dy * 13 * avatarScaleNow,
+            vx: (Math.random() - 0.5) * 70,
+            vy: -50 - Math.random() * 40,
+            rot: 0,
+            vrot: (Math.random() - 0.5) * 9,
+            life: 1,
+            key: touristKey(idx),
+          })
+        }
       } else {
         floaters.push({ text: 'DODGED!', x: worldX, y: worldY, life: 1, color: '#2d8163' })
         setReaction('cheer')
@@ -200,6 +225,15 @@ export function createGame(
       floaters[i].life -= dt / 0.9
       floaters[i].y -= dt * 26
       if (floaters[i].life <= 0) floaters.splice(i, 1)
+    }
+    for (let i = casualties.length - 1; i >= 0; i--) {
+      const c = casualties[i]
+      c.vy += dt * 220
+      c.x += c.vx * dt
+      c.y += c.vy * dt
+      c.rot += c.vrot * dt
+      c.life -= dt / 0.85
+      if (c.life <= 0) casualties.splice(i, 1)
     }
   }
 
@@ -295,14 +329,27 @@ export function createGame(
 
   function drawScenery() {
     const kinds = propsFor(config.slug)
-    const bands: [number, number][] = [[0.3, 0], [0.42, 1], [0.55, 0], [0.7, 1]]
+    // Twice the bands of the original pass, alternating hand-drawn
+    // cultural landmarks (torii/pagoda/stupa/etc, nothing generic
+    // covers those) with real tree sprites, for a noticeably busier
+    // roadside than a handful of sparse props.
+    const bands: [number, number][] = [
+      [0.26, 0], [0.3, 1], [0.36, 0], [0.42, 1],
+      [0.48, 0], [0.54, 1], [0.6, 0], [0.66, 1],
+      [0.72, 0], [0.78, 1],
+    ]
     bands.forEach(([yFrac, side], i) => {
       const y = yFrac * H
       const half = roadHalfWidthAt(yFrac)
-      const scale = lerp(0.55, 1.15, clamp(0, 1, (yFrac - FAR_Y) / (CANNON_Y - FAR_Y)))
+      const scale = lerp(0.5, 1.2, clamp(0, 1, (yFrac - FAR_Y) / (CANNON_Y - FAR_Y)))
       const dir = side === 0 ? -1 : 1
       const x = W / 2 + dir * (half + 16 * scale)
-      drawProp(ctx, kinds[i % kinds.length], x, y, scale)
+      if (i % 2 === 0) {
+        drawProp(ctx, kinds[Math.floor(i / 2) % kinds.length], x, y, scale)
+      } else {
+        const tree = i % 4 === 1 ? TREE_SPRITES.green : TREE_SPRITES.autumn
+        drawSprite(ctx, tree, x, y - 10 * scale, 28 * scale, 28 * scale)
+      }
     })
   }
 
@@ -447,13 +494,24 @@ export function createGame(
       if (i === 0) drawDad({ ctx, x, y, scale: avatarScale * 1.15, reaction: r, wobble })
       else if (i === 1) drawMum({ ctx, x, y, scale: avatarScale * 1.1, reaction: r, wobble })
       else if (i === 2) drawJax({ ctx, x, y, scale: avatarScale, reaction: r, wobble })
-      else drawTourist(ctx, x, y, avatarScale, i)
+      else drawTourist(ctx, x, y, avatarScale, i, wobble, r)
     }
     if (crowdCount > CROWD_RENDER_CAP) {
       ctx.fillStyle = 'rgba(0,0,0,0.6)'
       ctx.font = '700 13px system-ui, sans-serif'
       ctx.textAlign = 'center'
       ctx.fillText(`+${crowdCount - CROWD_RENDER_CAP} more`, cx, cy - 46 * avatarScale)
+    }
+  }
+
+  function drawCasualties() {
+    for (const c of casualties) {
+      ctx.save()
+      ctx.globalAlpha = clamp(0, 1, c.life)
+      ctx.translate(c.x, c.y)
+      ctx.rotate(c.rot)
+      drawSprite(ctx, CHAR_FRAMES[c.key][0], 0, 0, 20, 20)
+      ctx.restore()
     }
   }
 
@@ -495,6 +553,7 @@ export function createGame(
     }
     drawEncounter()
     drawCrowd(0)
+    drawCasualties()
     drawCannon(0)
     drawTourists()
     drawFloaters()

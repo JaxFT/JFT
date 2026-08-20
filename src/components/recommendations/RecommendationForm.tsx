@@ -243,15 +243,18 @@ export default function RecommendationForm({
         </div>
       </div>
 
-      <textarea
-        value={note}
-        onChange={e => setNote(e.target.value.slice(0, 500))}
-        rows={2}
-        placeholder="A quick note (optional)"
-        spellCheck
-        lang="en"
-        className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-      />
+      <div>
+        <textarea
+          value={note}
+          onChange={e => setNote(e.target.value.slice(0, 500))}
+          rows={5}
+          placeholder="A quick note (optional)"
+          spellCheck
+          lang="en"
+          className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-y min-h-[7rem]"
+        />
+        <p className="text-xs text-gray-400 text-right mt-1">{note.length}/500</p>
+      </div>
 
       {error && <p className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-md px-3 py-2">{error}</p>}
 

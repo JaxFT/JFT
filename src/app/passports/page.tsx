@@ -11,6 +11,7 @@ import UpgradeButton from '@/components/billing/UpgradeButton'
 import PassportPage from '@/components/passport/PassportPage'
 import PassportStamp from '@/components/passport/PassportStamp'
 import { getWaystaqDiscountState } from '@/lib/waystaq-discount'
+import GameTeaserCard from '@/components/GameTeaserCard'
 // ScatteredStampSheet retired from the marketing mockups; the actual
 // kid passport country pages now use a flex-wrap layout, and the
 // mockups follow.
@@ -75,6 +76,10 @@ export default async function PassportsLanding() {
             </Link>
           </div>
         </section>
+
+        <div className="max-w-3xl mx-auto">
+          <GameTeaserCard />
+        </div>
 
         {/* MOCKUP STRIP — visual proof of what it looks like */}
         <section className="mb-20">

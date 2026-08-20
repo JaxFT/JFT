@@ -6,6 +6,7 @@ import { PACK_META } from '@/lib/adventurePackMeta'
 import AdventurePackBrowser from './AdventurePackBrowser'
 import FrancePackHero from './FrancePackHero'
 import CountryFlag from '@/components/CountryFlag'
+import GameTeaserCard from '@/components/GameTeaserCard'
 
 export const metadata: Metadata = {
   title: 'Adventure Packs',
@@ -87,6 +88,8 @@ export default async function AdventurePacksListing() {
             <a href="/signup?next=/adventure-packs" className="underline font-semibold">create a free account</a>. France is free for every member.
           </div>
         )}
+
+        <GameTeaserCard />
 
         {/* The free France pack gets its own hero block above the
             continent cascade — visual taste of what's in every pack. */}

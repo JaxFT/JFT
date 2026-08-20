@@ -39,15 +39,48 @@ export default function RecommendationsBrowser({
     return COUNTRIES.filter(c => codes.has(c.iso2)).sort((a, b) => a.name.localeCompare(b.name))
   }, [recommendations])
 
+  // A handful of places from different countries, shown by default so
+  // the page reads as "here's a taste of what's out there" rather than
+  // dumping the entire list. Most recent entry per distinct country,
+  // topped up with the next most recent overall if fewer than 4
+  // countries are represented yet.
+  const highlights = useMemo(() => {
+    const seenCountries = new Set<string>()
+    const picks: Recommendation[] = []
+    for (const r of recommendations) {
+      if (seenCountries.has(r.iso2)) continue
+      seenCountries.add(r.iso2)
+      picks.push(r)
+      if (picks.length === 4) break
+    }
+    if (picks.length < 4) {
+      const pickedIds = new Set(picks.map(r => r.id))
+      for (const r of recommendations) {
+        if (pickedIds.has(r.id)) continue
+        picks.push(r)
+        if (picks.length === 4) break
+      }
+    }
+    return picks
+  }, [recommendations])
+
+  const isSearching = category !== 'all' || iso2 !== '' || town.trim() !== ''
+
   const filtered = useMemo(() => {
     const t = town.trim().toLowerCase()
     return recommendations.filter(r =>
       (category === 'all' || r.category === category) &&
       (!iso2 || r.iso2 === iso2) &&
-      (!t || r.town.toLowerCase().includes(t)) &&
+      (!t || r.town.toLowerCase().includes(t) || r.place_name.toLowerCase().includes(t)) &&
       (!authorFilter || r.user_id === authorFilter.id),
     )
   }, [recommendations, category, iso2, town, authorFilter])
+
+  const clearSearch = () => {
+    setCategory('all')
+    setIso2('')
+    setTown('')
+  }
 
   const addRecommendation = async (input: NewRecommendationInput): Promise<string | void> => {
     try {
@@ -101,7 +134,7 @@ export default function RecommendationsBrowser({
                   : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
               }`}
             >
-              {c === 'all' ? 'All' : c === 'food' ? 'Food' : 'Attractions'}
+              {c === 'all' ? 'All' : c === 'food' ? 'Food' : 'Places'}
             </button>
           ))}
         </div>
@@ -122,11 +155,20 @@ export default function RecommendationsBrowser({
               type="search"
               value={town}
               onChange={e => setTown(e.target.value)}
-              placeholder="Filter by town / city…"
+              placeholder="Search by place or town…"
               className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>
         </div>
+        {isSearching && !authorFilter && (
+          <button
+            type="button"
+            onClick={clearSearch}
+            className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-gray-700"
+          >
+            <X className="w-3.5 h-3.5" /> Clear search
+          </button>
+        )}
       </div>
 
       {!currentUserId ? (
@@ -150,10 +192,27 @@ export default function RecommendationsBrowser({
 
       {error && <p className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-md px-3 py-2">{error}</p>}
 
-      {filtered.length === 0 ? (
-        <p className="text-sm text-gray-400 italic text-center py-8">
-          {recommendations.length === 0 ? 'No places added yet, be the first.' : 'Nothing matches those filters.'}
-        </p>
+      {recommendations.length === 0 ? (
+        <p className="text-sm text-gray-400 italic text-center py-8">No places added yet, be the first.</p>
+      ) : !authorFilter && !isSearching ? (
+        <div>
+          <p className="text-sm font-semibold text-gray-900 mb-2">A few of our favourites from around the world</p>
+          <div className="space-y-2">
+            {highlights.map(r => (
+              <RecommendationCard
+                key={r.id}
+                rec={r}
+                showAuthor
+                canInteract={!!currentUserId}
+                canEdit={r.user_id === currentUserId || (isAdmin && adminAuthorIdSet.has(r.user_id))}
+                onRemove={(r.user_id === currentUserId || isAdmin) ? removeRecommendation : undefined}
+              />
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 text-center mt-4">Search above to explore more of what our community has found.</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <p className="text-sm text-gray-400 italic text-center py-8">Nothing matches those filters.</p>
       ) : (
         <div className="space-y-2">
           {filtered.map(r => (

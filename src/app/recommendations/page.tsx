@@ -67,7 +67,12 @@ export default async function RecommendationsPage({
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-1">Recommendations</h1>
-        <p className="text-gray-500 mb-6">Real places, rated by real members. Add somewhere you&apos;ve actually been.</p>
+        <p className="text-gray-500 mb-6">
+          These are places we, and our travel community, have actually visited, along with honest thoughts to give
+          you ideas if you&apos;re researching a destination. Some link through to a longer blog post or guide where
+          we&apos;ve covered it in more detail, and where it&apos;s appropriate, there&apos;s a Google Maps link too,
+          so you can read further reviews and find the exact location.
+        </p>
         <RecommendationsBrowser
           initialRecommendations={recommendations}
           currentUserId={user?.id ?? null}

@@ -104,7 +104,7 @@ export async function GET(request: Request) {
 
   let query = supabase
     .from('recommendations')
-    .select('id, user_id, category, place_name, iso2, town, google_maps_url, link_url, link_label, date_visited, rating, note, created_at')
+    .select('id, user_id, category, place_name, iso2, town, google_maps_url, link_url, link_label, homepage_featured, date_visited, rating, note, created_at')
     .order('created_at', { ascending: false })
 
   if (iso2) query = query.eq('iso2', iso2.toLowerCase())
@@ -166,7 +166,7 @@ export async function POST(request: Request) {
       rating: parsed.rating,
       note: parsed.note || null,
     })
-    .select('id, user_id, category, place_name, iso2, town, google_maps_url, link_url, link_label, date_visited, rating, note, created_at')
+    .select('id, user_id, category, place_name, iso2, town, google_maps_url, link_url, link_label, homepage_featured, date_visited, rating, note, created_at')
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
@@ -238,7 +238,7 @@ export async function PATCH(request: Request) {
     .eq('id', id)
   if (!editingAsAdmin) query = query.eq('user_id', user.id)
   const { data, error } = await query
-    .select('id, user_id, category, place_name, iso2, town, google_maps_url, link_url, link_label, date_visited, rating, note, created_at')
+    .select('id, user_id, category, place_name, iso2, town, google_maps_url, link_url, link_label, homepage_featured, date_visited, rating, note, created_at')
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 

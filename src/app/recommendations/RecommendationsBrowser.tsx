@@ -7,11 +7,11 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Plus, Search, X } from 'lucide-react'
+import { ChevronDown, ChevronUp, Plus, Search, X } from 'lucide-react'
 import { COUNTRIES } from '@/lib/countries'
 import RecommendationForm, { type NewRecommendationInput } from '@/components/recommendations/RecommendationForm'
 import RecommendationCard from '@/components/recommendations/RecommendationCard'
-import type { Recommendation, RecommendationCategory } from '@/components/recommendations/types'
+import { MAX_RECOMMENDATIONS_FEATURED, type Recommendation, type RecommendationCategory } from '@/components/recommendations/types'
 
 export default function RecommendationsBrowser({
   initialRecommendations,
@@ -33,32 +33,40 @@ export default function RecommendationsBrowser({
   const [town, setTown] = useState('')
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState('')
+  const [showAll, setShowAll] = useState(false)
 
   const countriesInUse = useMemo(() => {
     const codes = new Set(recommendations.map(r => r.iso2))
     return COUNTRIES.filter(c => codes.has(c.iso2)).sort((a, b) => a.name.localeCompare(b.name))
   }, [recommendations])
 
-  // A handful of places from different countries, shown by default so
-  // the page reads as "here's a taste of what's out there" rather than
-  // dumping the entire list. Most recent entry per distinct country,
-  // topped up with the next most recent overall if fewer than 4
-  // countries are represented yet.
+  const featuredCount = useMemo(() => recommendations.filter(r => r.homepage_featured).length, [recommendations])
+  const featuredCapReached = featuredCount >= MAX_RECOMMENDATIONS_FEATURED
+
+  // A handful of places shown by default so the page reads as "here's
+  // a taste of what's out there" rather than dumping the entire list.
+  // Admin-pinned (homepage_featured) rows always come first, then
+  // topped up with one per distinct country among the rest, then with
+  // the next most recent overall if still short of 4.
   const highlights = useMemo(() => {
-    const seenCountries = new Set<string>()
-    const picks: Recommendation[] = []
-    for (const r of recommendations) {
-      if (seenCountries.has(r.iso2)) continue
-      seenCountries.add(r.iso2)
-      picks.push(r)
-      if (picks.length === 4) break
+    const picks: Recommendation[] = recommendations.filter(r => r.homepage_featured).slice(0, MAX_RECOMMENDATIONS_FEATURED)
+    const pickedIds = new Set(picks.map(r => r.id))
+    const seenCountries = new Set(picks.map(r => r.iso2))
+    if (picks.length < MAX_RECOMMENDATIONS_FEATURED) {
+      for (const r of recommendations) {
+        if (pickedIds.has(r.id) || seenCountries.has(r.iso2)) continue
+        seenCountries.add(r.iso2)
+        pickedIds.add(r.id)
+        picks.push(r)
+        if (picks.length === MAX_RECOMMENDATIONS_FEATURED) break
+      }
     }
-    if (picks.length < 4) {
-      const pickedIds = new Set(picks.map(r => r.id))
+    if (picks.length < MAX_RECOMMENDATIONS_FEATURED) {
       for (const r of recommendations) {
         if (pickedIds.has(r.id)) continue
+        pickedIds.add(r.id)
         picks.push(r)
-        if (picks.length === 4) break
+        if (picks.length === MAX_RECOMMENDATIONS_FEATURED) break
       }
     }
     return picks
@@ -80,6 +88,13 @@ export default function RecommendationsBrowser({
     setCategory('all')
     setIso2('')
     setTown('')
+    setShowAll(false)
+  }
+
+  const showFullList = isSearching || showAll
+
+  const handleFeaturedChange = (id: string, value: boolean) => {
+    setRecommendations(list => list.map(r => r.id === id ? { ...r, homepage_featured: value } : r))
   }
 
   const addRecommendation = async (input: NewRecommendationInput): Promise<string | void> => {
@@ -194,7 +209,7 @@ export default function RecommendationsBrowser({
 
       {recommendations.length === 0 ? (
         <p className="text-sm text-gray-400 italic text-center py-8">No places added yet, be the first.</p>
-      ) : !authorFilter && !isSearching ? (
+      ) : !authorFilter && !showFullList ? (
         <div>
           <p className="text-sm font-semibold text-gray-900 mb-2">A few of our favourites from around the world</p>
           <div className="space-y-2">
@@ -206,25 +221,52 @@ export default function RecommendationsBrowser({
                 canInteract={!!currentUserId}
                 canEdit={r.user_id === currentUserId || (isAdmin && adminAuthorIdSet.has(r.user_id))}
                 onRemove={(r.user_id === currentUserId || isAdmin) ? removeRecommendation : undefined}
+                isAdmin={isAdmin}
+                featuredCapReached={featuredCapReached}
+                onFeaturedChange={handleFeaturedChange}
               />
             ))}
           </div>
-          <p className="text-xs text-gray-400 text-center mt-4">Search above to explore more of what our community has found.</p>
+          {recommendations.length > highlights.length ? (
+            <button
+              type="button"
+              onClick={() => setShowAll(true)}
+              className="w-full flex items-center justify-center gap-1 text-xs font-semibold text-gray-500 hover:text-brand-700 mt-4"
+            >
+              {recommendations.length - highlights.length} more from around the world <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <p className="text-xs text-gray-400 text-center mt-4">Search above to explore more of what our community has found.</p>
+          )}
         </div>
       ) : filtered.length === 0 ? (
         <p className="text-sm text-gray-400 italic text-center py-8">Nothing matches those filters.</p>
       ) : (
-        <div className="space-y-2">
-          {filtered.map(r => (
-            <RecommendationCard
-              key={r.id}
-              rec={r}
-              showAuthor
-              canInteract={!!currentUserId}
-              canEdit={r.user_id === currentUserId || (isAdmin && adminAuthorIdSet.has(r.user_id))}
-              onRemove={(r.user_id === currentUserId || isAdmin) ? removeRecommendation : undefined}
-            />
-          ))}
+        <div>
+          <div className="space-y-2">
+            {filtered.map(r => (
+              <RecommendationCard
+                key={r.id}
+                rec={r}
+                showAuthor
+                canInteract={!!currentUserId}
+                canEdit={r.user_id === currentUserId || (isAdmin && adminAuthorIdSet.has(r.user_id))}
+                onRemove={(r.user_id === currentUserId || isAdmin) ? removeRecommendation : undefined}
+                isAdmin={isAdmin}
+                featuredCapReached={featuredCapReached}
+                onFeaturedChange={handleFeaturedChange}
+              />
+            ))}
+          </div>
+          {showAll && !isSearching && !authorFilter && (
+            <button
+              type="button"
+              onClick={() => setShowAll(false)}
+              className="w-full flex items-center justify-center gap-1 text-xs font-semibold text-gray-500 hover:text-brand-700 mt-4"
+            >
+              Show fewer <ChevronUp className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       )}
     </div>

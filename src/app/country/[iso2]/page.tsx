@@ -51,7 +51,7 @@ export default async function CountryPage(
   const [{ data: beenRows }, { data: recRows }, relatedPosts, relatedGuides] = await Promise.all([
     supabase.from('travel_profile_places').select('user_id').eq('iso2', iso2).eq('list_type', 'been'),
     supabase.from('recommendations')
-      .select('id, user_id, category, place_name, iso2, town, google_maps_url, link_url, link_label, date_visited, rating, note, created_at')
+      .select('id, user_id, category, place_name, iso2, town, google_maps_url, link_url, link_label, homepage_featured, date_visited, rating, note, created_at')
       .eq('iso2', iso2)
       .order('created_at', { ascending: false }),
     pack ? listPublishedPostsByCountrySlug(pack.slug, { limit: 4 }) : Promise.resolve([]),

@@ -11,7 +11,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { BookOpen, ExternalLink, Flag, Link2, MapPin, MessageCircle, Pencil, Star, ThumbsDown, ThumbsUp, X } from 'lucide-react'
+import { BookOpen, ExternalLink, Flag, Link2, MapPin, MessageCircle, Pencil, Pin, Star, ThumbsDown, ThumbsUp, X } from 'lucide-react'
 import { getCountryByIso2 } from '@/lib/countries'
 import { shortName } from '@/lib/display-name'
 import CountryFlag from '@/components/CountryFlag'
@@ -24,12 +24,21 @@ export default function RecommendationCard({
   canInteract = true,
   canEdit = false,
   onRemove,
+  isAdmin = false,
+  featuredCapReached = false,
+  onFeaturedChange,
 }: {
   rec: Recommendation
   showAuthor?: boolean
   canInteract?: boolean
   canEdit?: boolean
   onRemove?: (id: string) => void
+  // Pin-to-highlights is admin-only and independent of canEdit — an
+  // admin can feature any member's row, not just ones they're allowed
+  // to edit the contents of.
+  isAdmin?: boolean
+  featuredCapReached?: boolean
+  onFeaturedChange?: (id: string, value: boolean) => void
 }) {
   const [fields, setFields] = useState({
     category: rec.category, place_name: rec.place_name, iso2: rec.iso2, town: rec.town,
@@ -40,6 +49,35 @@ export default function RecommendationCard({
   const [editError, setEditError] = useState('')
   const [blogLink, setBlogLink] = useState(rec.blog_link)
   const [author, setAuthor] = useState(rec.author)
+  // Featured lives outside `fields`/the edit form (it's an admin
+  // curation flag, not a field the author edits) and is lifted up to
+  // the parent list via onFeaturedChange, since the "4 highlights"
+  // view needs to know the instant a row's featured state changes.
+  const [featured, setFeatured] = useState(rec.homepage_featured)
+  const [featuredBusy, setFeaturedBusy] = useState(false)
+  const [featuredError, setFeaturedError] = useState('')
+
+  const toggleFeatured = async () => {
+    if (featuredBusy) return
+    const next = !featured
+    setFeaturedError('')
+    setFeaturedBusy(true)
+    try {
+      const res = await fetch(`/api/admin/recommendations/${rec.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ homepage_featured: next }),
+      })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) { setFeaturedError(body.error || 'Could not update'); return }
+      setFeatured(next)
+      onFeaturedChange?.(rec.id, next)
+    } catch {
+      setFeaturedError('Could not update')
+    } finally {
+      setFeaturedBusy(false)
+    }
+  }
 
   const country = getCountryByIso2(fields.iso2)
   const authorName = shortName(author?.full_name) || author?.username || 'A member'
@@ -190,6 +228,11 @@ export default function RecommendationCard({
                 <Star key={n} className={`w-3.5 h-3.5 ${n <= fields.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-200'}`} />
               ))}
             </div>
+            {featured && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full shrink-0">
+                <Pin className="w-2.5 h-2.5 fill-current" /> Featured
+              </span>
+            )}
           </div>
           <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-1.5">
             <CountryFlag iso2={fields.iso2} ariaHidden size="xs" />
@@ -273,6 +316,21 @@ export default function RecommendationCard({
           </div>
         </div>
         <div className="flex items-center gap-0.5 shrink-0">
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={toggleFeatured}
+              disabled={featuredBusy || (featuredCapReached && !featured)}
+              aria-pressed={featured}
+              aria-label={featured ? `Unpin ${fields.place_name} from highlights` : `Pin ${fields.place_name} to highlights`}
+              title={featured ? 'Unpin from highlights' : featuredCapReached ? 'Highlights full, unpin one first' : 'Pin to highlights'}
+              className={`p-1 ${featured ? 'text-amber-500' : 'text-gray-400 hover:text-amber-500'} ${
+                (featuredBusy || (featuredCapReached && !featured)) ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              <Pin className={`w-4 h-4 ${featured ? 'fill-current' : ''}`} />
+            </button>
+          )}
           {canEdit && (
             <button
               type="button"
@@ -295,6 +353,8 @@ export default function RecommendationCard({
           )}
         </div>
       </div>
+
+      {featuredError && <p className="text-xs text-red-600 px-4 pb-2 -mt-2">{featuredError}</p>}
 
       {commentsOpen && (
         <div className="border-t border-gray-100 px-4 py-3 space-y-2.5">

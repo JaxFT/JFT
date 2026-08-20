@@ -27,7 +27,7 @@ export default async function RecommendationsPage({
 
   const { data: rows } = await supabase
     .from('recommendations')
-    .select('id, user_id, category, place_name, iso2, town, google_maps_url, link_url, link_label, date_visited, rating, note, created_at')
+    .select('id, user_id, category, place_name, iso2, town, google_maps_url, link_url, link_label, homepage_featured, date_visited, rating, note, created_at')
     .order('created_at', { ascending: false })
 
   const allRows = rows ?? []

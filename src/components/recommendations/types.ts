@@ -5,6 +5,12 @@
 
 export type RecommendationCategory = 'food' | 'attraction'
 
+// Cap on simultaneously homepage_featured recommendations, enforced
+// server-side in /api/admin/recommendations/[id]. Mirrors
+// MAX_HOMEPAGE_FEATURED for blog posts, sized to match the "4
+// highlights" default view on /recommendations.
+export const MAX_RECOMMENDATIONS_FEATURED = 4
+
 export type Recommendation = {
   id: string
   user_id: string
@@ -15,6 +21,7 @@ export type Recommendation = {
   google_maps_url: string | null
   link_url: string | null
   link_label: string | null
+  homepage_featured: boolean
   date_visited: string | null
   rating: number
   note: string | null

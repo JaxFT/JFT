@@ -46,7 +46,6 @@ const navLinks: NavLink[] = [
     children: [
       { label: 'Adventure Packs', href: '/adventure-packs' },
       { label: 'Adventure Passport', href: '/passports' },
-      { label: 'Adventure Game', href: '/adventure-game' },
     ],
   },
   {

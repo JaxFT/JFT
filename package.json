@@ -20,7 +20,6 @@
     "date-fns": "^3.6.0",
     "gray-matter": "^4.0.3",
     "heic2any": "^0.0.4",
-    "kontra": "^10.0.2",
     "lucide-react": "^0.400.0",
     "marked": "^18.0.4",
     "next": "15.5.18",

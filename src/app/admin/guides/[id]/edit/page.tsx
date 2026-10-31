@@ -1,6 +1,7 @@
 import { redirect, notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getWebGuideById } from '@/lib/guides-content-db'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'Edit guide · Admin',
@@ -14,6 +15,7 @@ export default async function EditGuidePage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  await requireAdminPage()
   const { id } = await params
   const guide = await getWebGuideById(id)
   if (!guide) notFound()

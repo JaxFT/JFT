@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ShieldCheck, Inbox } from 'lucide-react'
 import CallRequestRow from './CallRequestRow'
 import { adminClient, type CallRequestRow as CallRequest, type CallRequestMessageRow } from '@/lib/call-requests-db'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'Admin · Call requests',
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function CallRequestsAdminPage() {
+  await requireAdminPage()
   // The /admin layout has already verified admin email, so service-role
   // is safe here. Saves us granting cookie-auth select policies just
   // for this admin path.

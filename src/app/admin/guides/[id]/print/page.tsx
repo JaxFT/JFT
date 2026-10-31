@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/admin'
 import { getWebGuideById } from '@/lib/guides-content-db'
 import PrintView from '@/components/guide/PrintView'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'Print · Admin',
@@ -22,6 +23,7 @@ export default async function AdminPrintGuidePage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  await requireAdminPage()
   const { id } = await params
 
   const supabase = await createClient()

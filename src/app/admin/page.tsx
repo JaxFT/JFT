@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { PenLine, ArrowRight, ShieldCheck, ShieldAlert, FileText, Upload, MessageCircle, BookOpen, Users, Sparkles, Video, Ticket, Gift, Compass, Link2, MapPin, Star, BarChart3 } from 'lucide-react'
 import type { Metadata } from 'next'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'Admin',
@@ -106,7 +107,8 @@ const TOOLS = [
   },
 ]
 
-export default function AdminHomePage() {
+export default async function AdminHomePage() {
+  await requireAdminPage()
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

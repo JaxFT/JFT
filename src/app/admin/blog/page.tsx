@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { listAllPostsForAdmin, MAX_HOMEPAGE_FEATURED } from '@/lib/blog-db'
 import { loadCountsForSlugs } from '@/lib/blog-social-db'
 import AdminBlogBrowser from './AdminBlogBrowser'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'Admin · Blog Posts',
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function AdminBlogListPage() {
+  await requireAdminPage()
   const posts = await listAllPostsForAdmin()
   const featuredCount = posts.filter(p => p.homepage_featured).length
   const homepageFull = featuredCount >= MAX_HOMEPAGE_FEATURED

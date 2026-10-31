@@ -6,6 +6,7 @@ import { getWebGuideById } from '@/lib/guides-content-db'
 import { getAboutUs } from '@/lib/app-settings'
 import { getAutoLinkPhrases } from '@/lib/blog-links-server'
 import EditablePreview from '@/components/guide/EditablePreview'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'Preview · Admin',
@@ -19,6 +20,7 @@ export default async function AdminGuidePreviewPage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  await requireAdminPage()
   const { id } = await params
 
   // Admin gate. Mirror the API route behaviour: respond 404-ish for non-admins.

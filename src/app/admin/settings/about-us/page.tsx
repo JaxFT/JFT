@@ -3,6 +3,7 @@ import { ShieldCheck, Users } from 'lucide-react'
 import type { Metadata } from 'next'
 import { getAboutUs } from '@/lib/app-settings'
 import AboutForm from './AboutForm'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'Admin · About Us',
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function AdminAboutUsPage() {
+  await requireAdminPage()
   const value = await getAboutUs()
 
   return (

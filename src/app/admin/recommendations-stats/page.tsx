@@ -7,6 +7,7 @@ import { getPublicProfilesByIds } from '@/lib/travel-profile-db'
 import { getSocialCounts } from '@/lib/recommendation-social'
 import { getCountryByIso2 } from '@/lib/countries'
 import { shortName } from '@/lib/display-name'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'Admin · Recommendations stats',
@@ -36,6 +37,7 @@ type RecRow = {
 }
 
 export default async function RecommendationsStatsPage() {
+  await requireAdminPage()
   const supabase = await createClient()
   const { data: rows } = await supabase
     .from('recommendations')

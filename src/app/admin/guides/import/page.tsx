@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft, ShieldCheck } from 'lucide-react'
 import ImportForm from './ImportForm'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'New guide · Admin',
@@ -10,7 +11,8 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
-export default function ImportGuidePage() {
+export default async function ImportGuidePage() {
+  await requireAdminPage()
   return (
     <div className="min-h-screen bg-sand-50 pt-24 pb-20">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">

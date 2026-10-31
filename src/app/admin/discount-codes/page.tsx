@@ -3,6 +3,7 @@ import { ShieldCheck, Ticket } from 'lucide-react'
 import type { Metadata } from 'next'
 import { createClient as createSbClient } from '@supabase/supabase-js'
 import DiscountCodesForm from './DiscountCodesForm'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'Admin · Discount Codes',
@@ -34,6 +35,7 @@ export type DiscountCodeRow = {
 // isAdminEmail gate, and every write still goes through the
 // service-role-backed /api/admin/discount-codes routes.
 export default async function AdminDiscountCodesPage() {
+  await requireAdminPage()
   const admin = createSbClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,

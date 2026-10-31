@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/admin'
 import { getWebGuideById } from '@/lib/guides-content-db'
 import PdfBuilder from './PdfBuilder'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'PDF Builder · Admin',
@@ -17,6 +18,7 @@ export default async function AdminPdfBuilderPage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  await requireAdminPage()
   const { id } = await params
 
   const supabase = await createClient()

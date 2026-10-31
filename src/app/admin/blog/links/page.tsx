@@ -3,6 +3,7 @@ import { ShieldCheck, Link2 } from 'lucide-react'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import LinksForm from './LinksForm'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'Admin · Auto-links',
@@ -14,6 +15,7 @@ export const dynamic = 'force-dynamic'
 type LinkRow = { id: string; phrase: string; url: string; note: string | null }
 
 export default async function AdminBlogLinksPage() {
+  await requireAdminPage()
   const supabase = await createClient()
   const { data: rows } = await supabase
     .from('blog_auto_links')

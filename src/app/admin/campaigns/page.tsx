@@ -6,6 +6,7 @@ import { listAllLegacyGuidesForAdmin } from '@/lib/guides-db'
 import { listCampaignStats, listGuideDiscountCodeOptions } from '@/lib/campaign-links-db'
 import CreateCampaignLinkForm from './CreateCampaignLinkForm'
 import CampaignLinkRow from './CampaignLinkRow'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'Admin · Campaign links',
@@ -15,6 +16,7 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function AdminCampaignsPage() {
+  await requireAdminPage()
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jaxfamilytravels.com'
   const [webGuides, legacyGuides, stats, discountCodeOptions] = await Promise.all([
     listAllWebGuidesForAdmin(),

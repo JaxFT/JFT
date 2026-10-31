@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ShieldCheck } from 'lucide-react'
 import { createClient as createSbClient } from '@supabase/supabase-js'
 import ReelsClient, { type Reel } from './ReelsClient'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'Admin · Reel Analytics',
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function ReelsPage() {
+  await requireAdminPage()
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY!
   const supabase = createSbClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, { auth: { persistSession: false } })
   const { data } = await supabase

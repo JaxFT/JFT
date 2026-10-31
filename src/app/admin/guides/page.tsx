@@ -5,6 +5,7 @@ import { listAllWebGuidesForAdmin } from '@/lib/guides-content-db'
 import { listAllLegacyGuidesForAdmin } from '@/lib/guides-db'
 import LegacyGuideRow from './LegacyGuideRow'
 import DeleteGuideButton from './DeleteGuideButton'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'Admin · Guides',
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function AdminGuidesListPage() {
+  await requireAdminPage()
   const [guides, legacyGuides] = await Promise.all([
     listAllWebGuidesForAdmin(),
     listAllLegacyGuidesForAdmin(),

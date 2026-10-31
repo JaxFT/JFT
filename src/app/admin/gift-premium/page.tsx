@@ -3,6 +3,7 @@ import { ShieldCheck, Gift } from 'lucide-react'
 import type { Metadata } from 'next'
 import { createClient as createSbClient } from '@supabase/supabase-js'
 import GiftPremiumForm from './GiftPremiumForm'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'Admin · Gift Premium',
@@ -28,6 +29,7 @@ export type PremiumGiftRow = {
 // aren't stored on profiles, so they're resolved from auth.users here
 // too (same lookup the API route does for its own GET).
 export default async function AdminGiftPremiumPage() {
+  await requireAdminPage()
   const admin = createSbClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,

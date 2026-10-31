@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { ShieldCheck, Star } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import WriteReviewsList, { type WriteReviewRow } from './WriteReviewsList'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'Admin · Write Google reviews',
@@ -16,6 +17,7 @@ export const dynamic = 'force-dynamic'
 // each admin writes their own Google reviews under their own Google
 // account, there's no shared "write on Bec's behalf" concept here.
 export default async function WriteReviewsPage() {
+  await requireAdminPage()
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login?next=/admin/write-reviews')

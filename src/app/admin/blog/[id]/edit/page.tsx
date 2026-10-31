@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getPostById } from '@/lib/blog-db'
 import EditForm from './EditForm'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'Admin · Edit Post',
@@ -17,6 +18,7 @@ export default async function EditBlogPostPage({
   params: Promise<{ id: string }>
   searchParams: Promise<{ new?: string }>
 }) {
+  await requireAdminPage()
   const { id } = await params
   const { new: isNew } = await searchParams
   const post = await getPostById(id)

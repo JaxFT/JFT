@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { MapPin, ShieldCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import ResolveList, { type ResolveRow } from './ResolveList'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'Admin · Resolve Maps links',
@@ -18,6 +19,7 @@ export const dynamic = 'force-dynamic'
 // fine, that's the actual use case (bulk-imported rows on your own
 // account).
 export default async function ResolveMapsLinksPage() {
+  await requireAdminPage()
   const supabase = await createClient()
   const { data: rows } = await supabase
     .from('recommendations')

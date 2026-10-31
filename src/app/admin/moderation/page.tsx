@@ -4,6 +4,7 @@ import { createClient as createSbClient } from '@supabase/supabase-js'
 import { ShieldCheck, ShieldAlert } from 'lucide-react'
 import { getPublicProfilesByIds } from '@/lib/travel-profile-db'
 import ModerationList, { type ModerationRow } from './ModerationList'
+import { requireAdminPage } from '@/lib/admin-page'
 
 export const metadata: Metadata = {
   title: 'Admin · Moderation',
@@ -23,6 +24,7 @@ function adminClient() {
 // moderation_items has no client-facing RLS policies at all, this
 // page is the only place it's ever read, always via the service role.
 export default async function AdminModerationPage() {
+  await requireAdminPage()
   const admin = adminClient()
   const { data: rows } = await admin
     .from('moderation_items')

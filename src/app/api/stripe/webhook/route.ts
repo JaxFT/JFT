@@ -5,6 +5,7 @@ import { claimWebGuidePurchase } from '@/lib/claim-web-guide-purchase'
 import { claimGuidePurchase } from '@/lib/claim-guide-purchase'
 import { logFunnelEvent } from '@/lib/campaign-links-db'
 import { sendEmail, HELLO_FROM, ADMIN_NOTIFY, emailShell } from '@/lib/email'
+import { isWaystaqObject, isJftPremiumCheckout, isJftPremiumSubscription } from '@/lib/stripe-ownership'
 import type Stripe from 'stripe'
 
 export const dynamic = 'force-dynamic'
@@ -61,7 +62,16 @@ export async function POST(request: Request) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
+        // WayStaq's own sales on the shared Stripe account (see
+        // lib/stripe-ownership). Trip view passes are tagged kind instead
+        // and still get the admin nudge below.
+        if (isWaystaqObject(session) || session.metadata?.plan === 'trip_pass') {
+          return NextResponse.json({ received: true, skipped: 'waystaq' })
+        }
         if (session.mode === 'subscription') {
+          if (!isJftPremiumCheckout(session)) {
+            return NextResponse.json({ received: true, skipped: 'not a JFT Premium checkout' })
+          }
           await handleSubscriptionCheckout(session, admin)
         } else {
           // mode === 'payment'. The 1:1 call Payment Link funnels
@@ -101,6 +111,9 @@ export async function POST(request: Request) {
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
         const sub = event.data.object as Stripe.Subscription
+        if (!isJftPremiumSubscription(sub)) {
+          return NextResponse.json({ received: true, skipped: 'not a JFT Premium subscription' })
+        }
         await handleSubscriptionChange(sub, admin)
         break
       }
